@@ -3,6 +3,8 @@
 #include <vector>
 #include <unordered_map>
 #include <initializer_list>
+#include <memory>
+#include <functional>
 
 namespace Templater {
     namespace html {
@@ -14,31 +16,39 @@ namespace Templater {
             public:
                 explicit Attribute(std::string, std::string);
                 explicit Attribute(std::string);
+                const std::string& getName() const;
+                const std::string& getValue() const;
+        };
+
+        struct InternalObject {
+            const std::string m_tag;
+            std::unordered_map<std::string, std::string> m_attributes;
+            std::vector<std::shared_ptr<InternalObject>> m_children;
+            const bool m_isVoid;
+            bool m_isInTree = false;
         };
 
         class Object {
             private:
-                std::string m_tag;
-                std::string m_id;
-                std::unordered_map<std::string, std::string> m_attributes;
-                std::vector<Object> m_children;
-                bool isVoid;
+                std::shared_ptr<InternalObject> m_object;
+                void recursiveChildrenParse(std::vector<Object>& children, const InternalObject& obj, const std::function<bool(InternalObject&)>& condition) const;
+                bool isInTree() const;
             public:
-                explicit Object(std::string);
-                explicit Object(std::string, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children);
-                explicit Object(std::string, std::initializer_list<Object> children, std::initializer_list<Attribute> attributes);
+                explicit Object(std::string, bool, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children);
+                Object(std::shared_ptr<InternalObject>);
 
-                std::string& getTagName() const;
+                const std::string& getTagName() const;
                 
-                std::vector<Object>& getChildren() const;
-                std::vector<Object>& getChildrenByClassName() const;
-                std::vector<Object>& getChildrenByTagName() const;
-                std::vector<Object>& getChildrenByName() const;
-                std::vector<Object>& getChildrenById() const;
+                std::vector<Object> getChildren() const;
+                std::vector<Object> getChildrenByClassName(const std::string& className) const;
+                std::vector<Object> getChildrenByTagName(const std::string& tagName) const;
+                std::vector<Object> getChildrenByName(const std::string& name) const;
+                std::vector<Object> getChildrenById(const std::string& id) const;
+                std::vector<Object> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
                 
-                std::unordered_map<std::string, std::string> getAttributes() const;
+                const std::unordered_map<std::string, std::string>& getAttributes() const;
                 // TODO: Include override of array operator
-                std::string& getAttributeValue(std::string& name) const;
+                const std::string& getAttributeValue(std::string& name) const;
                 void setAttributeValue(std::string& name, std::string& newValue);
 
                 void addChild(Object&);
