@@ -135,7 +135,7 @@ void html::Object::removeChild(Object & child) {
 std::string html::Object::serialise() {
     std::string result = "<" + getTagName() + " ";
     for (auto& [name, value]: getAttributes()) {
-        result += "name=\"" + value + "\" ";
+        result += "\"" + name + "\"=\"" + value + "\" ";
     }
     result += ">\n";
 
