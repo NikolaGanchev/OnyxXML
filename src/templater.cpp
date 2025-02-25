@@ -16,28 +16,22 @@ const std::string& html::Attribute::getValue() const {
     return m_value;
 }
 
-bool html::Object::isInTree() const {
-    return m_object->m_isInTree;
-}
-
-html::Object::Object(std::string tag, bool isVoid, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children) {
-    m_object = std::make_shared<InternalObject>(InternalObject{tag, {}, {}, isVoid, false});
+html::Object::Object(std::initializer_list<Attribute> attributes, std::initializer_list<Object> children) {
+    m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
     
     for (auto& attribute: attributes) {
         m_object->m_attributes[attribute.getName()] = attribute.getValue();
     }
 
     for (auto& child: children) {
-        m_object->m_children.push_back(child.m_object);
+        (m_object->m_children).push_back(child);
     }
 }
 
-html::Object::Object(std::shared_ptr<InternalObject> ptr) {
-    m_object = ptr;
+html::Object::~Object() {
+    for (auto& child: m_object->m_children) {
+        child.m_object->m_isInTree = false;
 }
-
-const std::string & html::Object::getTagName() const {
-    return m_object->m_tag;
 }
 
 std::vector<html::Object> html::Object::getChildren() const {
@@ -45,27 +39,31 @@ std::vector<html::Object> html::Object::getChildren() const {
     result.reserve(m_object->m_children.size());
     
     for (auto& child: m_object->m_children) {
-        result.push_back(Object(std::move(child)));
+        result.push_back(child);
     }
 
     return result;
 }
 
-void html::Object::recursiveChildrenParse(std::vector<html::Object>& children, const html::InternalObject& obj, const std::function<bool(InternalObject&)>& condition) const {
-    for (auto& child: obj.m_children) {
-        if (condition(*child)) {
-            children.push_back(Object(std::move(child)));
+bool html::Object::isInTree() const {
+    return m_object->m_isInTree;
+}
+
+void html::Object::recursiveChildrenParse(std::vector<html::Object>& children, const html::Object& obj, const std::function<bool(Object&)>& condition) const {
+    for (auto& child: obj.m_object->m_children) {
+        if (condition(child)) {
+            children.push_back(child);
         }
-        recursiveChildrenParse(children, *child, condition);
+        recursiveChildrenParse(children, child, condition);
     }
 }
 
 std::vector<html::Object> html::Object::getChildrenByAttribute(const std::string& attribute, const std::string& value) const {
     std::vector<html::Object> result;
 
-    recursiveChildrenParse(result, *(this->m_object), 
-    ([&attribute, &value](html::InternalObject& obj) -> bool 
-        { return obj.m_attributes.contains(attribute) && obj.m_attributes[attribute] == value; }));
+    recursiveChildrenParse(result, *(this), 
+    ([&attribute, &value](html::Object& obj) -> bool 
+        { return obj.m_object->m_attributes.contains(attribute) && obj.m_object->m_attributes[attribute] == value; }));
 
     return result;
 }
@@ -78,9 +76,9 @@ std::vector<html::Object> html::Object::getChildrenByClassName(const std::string
 std::vector<html::Object> html::Object::getChildrenByTagName(const std::string& tagName) const {
     std::vector<html::Object> result;
 
-    recursiveChildrenParse(result, *(this->m_object), 
-    ([&tagName](html::InternalObject& obj) -> bool 
-        { return obj.m_tag == tagName; }));
+    recursiveChildrenParse(result, *(this), 
+    ([&tagName](html::Object& obj) -> bool 
+        { return obj.getTagName() == tagName; }));
 
     return result;
 }
@@ -110,14 +108,14 @@ void html::Object::setAttributeValue(std::string &name, std::string &newValue) {
     m_object->m_attributes[name] = newValue;
 }
 
-void html::Object::addChild(Object & newChild) {
+void html::Object::addChild(Object& newChild) {
     // Throw exception instead
     if (newChild.isInTree()) {
         return;
     }
 
     newChild.m_object->m_isInTree = true;
-    m_object->m_children.push_back(newChild.m_object);
+    m_object->m_children.push_back(newChild);
 }
 
 void html::Object::removeChild(Object & child) {
@@ -125,9 +123,9 @@ void html::Object::removeChild(Object & child) {
 
     std::vector<html::Object> result;
 
-    recursiveChildrenParse(result, *(this->m_object), 
-    ([&child](html::InternalObject& obj) -> bool 
-        { return &obj == (child.m_object).get(); }));
+    recursiveChildrenParse(result, *(this), 
+    ([&child](html::Object& obj) -> bool 
+        { return (obj.m_object).get() == (child.m_object).get(); }));
     
 }
 

@@ -20,24 +20,25 @@ namespace Templater {
                 const std::string& getValue() const;
         };
 
+        class Object;
+
         struct InternalObject {
-            const std::string m_tag;
             std::unordered_map<std::string, std::string> m_attributes;
-            std::vector<std::shared_ptr<InternalObject>> m_children;
-            const bool m_isVoid;
+            std::vector<Object> m_children;
             bool m_isInTree = false;
         };
 
         class Object {
             private:
                 std::shared_ptr<InternalObject> m_object;
-                void recursiveChildrenParse(std::vector<Object>& children, const InternalObject& obj, const std::function<bool(InternalObject&)>& condition) const;
+                void recursiveChildrenParse(std::vector<Object>& children, const Object& obj, const std::function<bool(Object&)>& condition) const;
                 bool isInTree() const;
             public:
-                explicit Object(std::string, bool, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children);
-                Object(std::shared_ptr<InternalObject>);
+                explicit Object(std::initializer_list<Attribute> attributes, std::initializer_list<Object> children);
+                virtual ~Object();
 
-                const std::string& getTagName() const;
+                virtual const std::string& getTagName() const = 0;
+                virtual bool isVoid() const = 0;
                 
                 std::vector<Object> getChildren() const;
                 std::vector<Object> getChildrenByClassName(const std::string& className) const;
