@@ -41,6 +41,11 @@ namespace Templater {
                 void processConstructorArgs(T&& arg);
                 void processConstructorAttribute(Attribute attribute);
                 void processConstructorObject(Object& child);
+                std::string serialise(std::string& identation) const;
+                // Default: "\t"
+                static std::string identationSequence;
+                // Default: false
+                static bool sortAttributes;
             public:
                 template <typename... Args>
                 explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
@@ -70,6 +75,11 @@ namespace Templater {
                 void removeChild(Object&);
 
                 std::string serialise() const;
+
+                static void setIdentationSequence(const std::string& newSequence);
+                static const std::string& getIdentationSequence();
+                static void setSortAttributes(bool shouldSort);
+                static bool getSortAttributes();
         };
 
         class GenericObject: public Object {

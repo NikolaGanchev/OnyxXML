@@ -1,6 +1,7 @@
 #include "templater.h"
 
 #include <utility>
+#include <map>
 
 using namespace Templater;
 
@@ -128,21 +129,50 @@ void html::Object::removeChild(Object & child) {
     
 }
 
-std::string html::Object::serialise() const {
-    std::string result = "<" + getTagName() + " ";
-    for (auto& [name, value]: getAttributes()) {
-        result += "\"" + name + "\"=\"" + value + "\" ";
+std::string html::Object::serialise(std::string& identation) const {
+    std::string result = identation + "<" + getTagName() + "";
+    
+    if (sortAttributes) {
+        auto attributes = getAttributes();
+        std::map<std::string, std::string> sortedAttributes(attributes.begin(), attributes.end());
+        for (auto& [name, value]: sortedAttributes) {
+            result += " " + name + "=\"" + value + "\"";
+        }
+    } else {
+        for (auto& [name, value]: getAttributes()) {
+            result += " " + name + "=\"" + value + "\"";
+        }
     }
-    result += ">\n";
+    
+    result += ">";
 
     if (!isVoid()) {
-        for (const std::shared_ptr<html::Object>& immediateChildren: m_object->m_children) {
-            result += immediateChildren->serialise();
+        if (!getChildren().empty()) {
+            result += "\n";
+
+            for (const std::shared_ptr<html::Object>& immediateChildren: m_object->m_children) {
+
+                identation += identationSequence;
+
+                result += immediateChildren->serialise(identation);
+
+                // Backtrack identation
+                for (int i = 0; i < identationSequence.size(); i++) {
+                    identation.pop_back();
+                }
+            }
         }
 
-        result += "</" + getTagName() + ">";
+        result += "</" + getTagName() + ">\n";
     }
+ 
+    return result;
+}
 
+std::string html::Object::serialise() const {
+    std::string identation;
+    std::string result = serialise(identation);
+    if(result[result.size() - 1] == '\n') result.pop_back();
     return result;
 }
 
@@ -158,6 +188,26 @@ html::Object& html::Object::operator+(Object& right) {
 html::Object& html::Object::operator+=(Object& right) {
     addChild(right);
     return (*this);
+}
+
+std::string html::Object::identationSequence = "\t";
+
+void html::Object::setIdentationSequence(const std::string& newSequence) {
+    identationSequence = newSequence;
+}
+
+const std::string& html::Object::getIdentationSequence() {
+    return identationSequence;
+}
+
+bool html::Object::sortAttributes = false;
+
+void html::Object::setSortAttributes(bool shouldSort) {
+    sortAttributes = shouldSort;
+}
+
+bool html::Object::getSortAttributes() {
+    return sortAttributes;
 }
         
 html::GenericObject::GenericObject(std::string  tagName, bool isVoid)
