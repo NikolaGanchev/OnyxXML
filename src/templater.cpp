@@ -25,7 +25,7 @@ html::Object::Object(std::initializer_list<Attribute> attributes, std::initializ
 
     for (auto& child: children) {
         if (child.isInTree()) {
-            throw std::runtime_error("Attempted to construct Templater::html::" + getTagName() + " with a child that is already a child of another Templater::html::Object.");
+            throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
         }
         (m_object->m_children).push_back(child);
     }
@@ -142,7 +142,7 @@ std::string html::Object::serialise() {
     }
     result += ">\n";
 
-    if (!isVoid) {
+    if (!isVoid()) {
         for (Object& immediateChildren: m_object->m_children) {
             result += immediateChildren.serialise();
         }
