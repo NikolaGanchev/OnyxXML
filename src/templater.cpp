@@ -167,7 +167,7 @@ html::Object& html::Object::operator+=(Object& right) {
     return (*this);
 }
 
-html::GenericObject::GenericObject(const std::string tagName, bool isVoid, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children)
+html::GenericObject::GenericObject(const std::string& tagName, bool isVoid, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children)
     : Object{attributes, children}, m_tag{std::move(tagName)}, m_isVoid{isVoid} {}
 
 const std::string& html::GenericObject::GenericObject::getTagName() const {
