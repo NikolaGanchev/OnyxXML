@@ -143,27 +143,36 @@ std::string html::Object::serialise(std::string& identation) const {
             result += " " + name + "=\"" + value + "\"";
         }
     }
-    
-    result += ">";
 
     if (!isVoid()) {
+
+        result += ">";
+
         if (!getChildren().empty()) {
+
             result += "\n";
-
-            for (const std::shared_ptr<html::Object>& immediateChildren: m_object->m_children) {
-
+            
+            for (const std::shared_ptr<html::Object>& immediateChild: m_object->m_children) {
                 identation += identationSequence;
 
-                result += immediateChildren->serialise(identation);
+                result += immediateChild->serialise(identation);
 
                 // Backtrack identation
                 for (int i = 0; i < identationSequence.size(); i++) {
                     identation.pop_back();
                 }
+
+                result += "\n";
             }
         }
 
-        result += "</" + getTagName() + ">\n";
+        if (result[result.size() - 1] == '\n') {
+            result += identation;
+        }
+
+        result += "</" + getTagName() + ">";
+    } else {
+        result += "/>";
     }
  
     return result;
@@ -172,7 +181,6 @@ std::string html::Object::serialise(std::string& identation) const {
 std::string html::Object::serialise() const {
     std::string identation;
     std::string result = serialise(identation);
-    if(result[result.size() - 1] == '\n') result.pop_back();
     return result;
 }
 
@@ -213,7 +221,7 @@ bool html::Object::getSortAttributes() {
 html::GenericObject::GenericObject(std::string  tagName, bool isVoid)
         : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object() {}
 
-const std::string& html::GenericObject::GenericObject::getTagName() const {
+const std::string& html::GenericObject::getTagName() const {
     return m_tag;
 }
 
@@ -223,4 +231,32 @@ bool html::GenericObject::isVoid() const {
 
 std::shared_ptr<html::Object> html::GenericObject::clone() const {
     return std::make_shared<GenericObject>(*this);
+}
+
+html::Text::Text(std::string text): m_text(text), Object{} {}
+
+const std::string& html::Text::getText() const {
+    return m_text;
+}
+
+const std::string& html::Text::getTagName() const {
+    static const std::string name = "text";
+    return name;
+}
+
+bool html::Text::isVoid() const {
+    return true;
+}
+
+std::shared_ptr<html::Object> html::Text::clone() const {
+    return std::make_shared<Text>(*this);
+}
+
+std::string html::Text::serialise() const {
+    return m_text;
+}
+
+
+std::string html::Text::serialise(std::string& identation) const {
+    return identation + m_text;
 }

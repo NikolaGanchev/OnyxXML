@@ -41,11 +41,12 @@ namespace Templater {
                 void processConstructorArgs(T&& arg);
                 void processConstructorAttribute(Attribute attribute);
                 void processConstructorObject(Object& child);
-                std::string serialise(std::string& identation) const;
                 // Default: "\t"
                 static std::string identationSequence;
                 // Default: false
                 static bool sortAttributes;
+            protected:
+                virtual std::string serialise(std::string& identation) const;
             public:
                 template <typename... Args>
                 explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
@@ -74,7 +75,7 @@ namespace Templater {
 
                 void removeChild(Object&);
 
-                std::string serialise() const;
+                virtual std::string serialise() const;
 
                 static void setIdentationSequence(const std::string& newSequence);
                 static const std::string& getIdentationSequence();
@@ -93,6 +94,19 @@ namespace Templater {
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
                 std::shared_ptr<Object> clone() const override;
+        };
+
+        class Text: public Object {
+            private:
+                const std::string m_text;
+            public:
+                explicit Text(std::string text); 
+                bool isVoid() const override;
+                std::shared_ptr<Object> clone() const override;
+                std::string serialise() const override;
+                virtual std::string serialise(std::string& identation) const;
+                const std::string& getText() const;
+                const std::string& getTagName() const override;
         };
     }
 }
