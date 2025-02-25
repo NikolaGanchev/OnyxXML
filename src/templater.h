@@ -22,30 +22,41 @@ namespace Templater {
 
         class Object;
 
+        template <typename T>
+        concept isValidObjectConstructorType = std::derived_from<T, Object> || std::same_as<T, Attribute>;
+
         struct InternalObject {
             std::unordered_map<std::string, std::string> m_attributes;
-            std::vector<Object> m_children;
+            std::vector<std::shared_ptr<Object>> m_children;
             bool m_isInTree = false;
         };
 
         class Object {
             private:
                 std::shared_ptr<InternalObject> m_object;
-                void recursiveChildrenParse(std::vector<Object>& children, const Object& obj, const std::function<bool(Object&)>& condition) const;
+                void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
                 bool isInTree() const;
+                
+                template <typename T>
+                void processConstructorArgs(T&& arg);
+                void processConstructorAttribute(Attribute attribute);
+                void processConstructorObject(Object& child);
             public:
-                explicit Object(std::initializer_list<Attribute> attributes = {}, std::initializer_list<Object> children = {});
+                template <typename... Args>
+                explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
+                explicit Object();
                 virtual ~Object();
+                virtual std::shared_ptr<Object> clone() const = 0;
 
                 virtual const std::string& getTagName() const = 0;
                 virtual bool isVoid() const = 0;
                 
-                std::vector<Object> getChildren() const;
-                std::vector<Object> getChildrenByClassName(const std::string& className) const;
-                std::vector<Object> getChildrenByTagName(const std::string& tagName) const;
-                std::vector<Object> getChildrenByName(const std::string& name) const;
-                std::vector<Object> getChildrenById(const std::string& id) const;
-                std::vector<Object> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
+                std::vector<std::shared_ptr<Object>> getChildren() const;
+                std::vector<std::shared_ptr<Object>> getChildrenByClassName(const std::string& className) const;
+                std::vector<std::shared_ptr<Object>> getChildrenByTagName(const std::string& tagName) const;
+                std::vector<std::shared_ptr<Object>> getChildrenByName(const std::string& name) const;
+                std::vector<std::shared_ptr<Object>> getChildrenById(const std::string& id) const;
+                std::vector<std::shared_ptr<Object>> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
                 
                 const std::unordered_map<std::string, std::string>& getAttributes() const;
                 const std::string& getAttributeValue(std::string& name) const;
@@ -58,7 +69,7 @@ namespace Templater {
 
                 void removeChild(Object&);
 
-                std::string serialise();
+                std::string serialise() const;
         };
 
         class GenericObject: public Object {
@@ -66,9 +77,35 @@ namespace Templater {
                 const std::string m_tag;
                 const bool m_isVoid;
             public: 
-                explicit GenericObject(const std::string& tagName, bool isVoid, std::initializer_list<Attribute> attributes = {}, std::initializer_list<Object> children = {});
+                template <typename... Args>
+                explicit GenericObject(std::string  tagName, bool isVoid, Args&&... args);
+                explicit GenericObject(std::string  tagName, bool isVoid);
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
+                std::shared_ptr<Object> clone() const override;
         };
     }
 }
+
+
+        
+
+template <typename... Args>
+Templater::html::Object::Object(Args&&... args) requires (Templater::html::isValidObjectConstructorType<Args>&& ...) { 
+    m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
+
+    (processConstructorArgs(std::forward<Args>(args)), ...);
+}
+
+template <typename T>
+void Templater::html::Object::processConstructorArgs(T&& arg) {
+    if constexpr (std::is_base_of_v<Object, std::decay_t<T>>) {
+        processConstructorObject(arg);
+    } else {
+        processConstructorAttribute(std::forward<T>(arg));
+    }
+}
+
+template <typename... Args>
+Templater::html::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&&... args)
+    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::html::Object(std::forward<Args>(args)...) {}

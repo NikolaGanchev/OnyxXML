@@ -16,29 +16,29 @@ const std::string& html::Attribute::getValue() const {
     return m_value;
 }
 
-html::Object::Object(std::initializer_list<Attribute> attributes, std::initializer_list<Object> children) {
+html::Object::Object() { 
     m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
+}
 
-    for (auto& attribute: attributes) {
-        m_object->m_attributes[attribute.getName()] = attribute.getValue();
-    }
+void html::Object::processConstructorAttribute(Attribute attribute) {
+    m_object->m_attributes[attribute.getName()] = attribute.getValue();
+}
 
-    for (auto& child: children) {
-        if (child.isInTree()) {
-            throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
-        }
-        (m_object->m_children).push_back(child);
+void html::Object::processConstructorObject(Object& child) {
+    if (child.isInTree()) {
+        throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
     }
+    (m_object->m_children).push_back(child.clone());
 }
 
 html::Object::~Object() {
     for (auto& child: m_object->m_children) {
-        child.m_object->m_isInTree = false;
+        child->m_object->m_isInTree = false;
     }
 }
 
-std::vector<html::Object> html::Object::getChildren() const {
-    std::vector<html::Object> result;
+std::vector<std::shared_ptr<html::Object>> html::Object::getChildren() const {
+    std::vector<std::shared_ptr<html::Object>> result;
     result.reserve(m_object->m_children.size());
     
     for (auto& child: m_object->m_children) {
@@ -52,8 +52,8 @@ bool html::Object::isInTree() const {
     return m_object->m_isInTree;
 }
 
-void html::Object::recursiveChildrenParse(std::vector<html::Object>& children, const html::Object& obj, const std::function<bool(Object&)>& condition) const {
-    for (auto& child: obj.m_object->m_children) {
+void html::Object::recursiveChildrenParse(std::vector<std::shared_ptr<html::Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const {
+    for (auto& child: obj->m_object->m_children) {
         if (condition(child)) {
             children.push_back(child);
         }
@@ -61,37 +61,37 @@ void html::Object::recursiveChildrenParse(std::vector<html::Object>& children, c
     }
 }
 
-std::vector<html::Object> html::Object::getChildrenByAttribute(const std::string& attribute, const std::string& value) const {
-    std::vector<html::Object> result;
+std::vector<std::shared_ptr<html::Object>> html::Object::getChildrenByAttribute(const std::string& attribute, const std::string& value) const {
+    std::vector<std::shared_ptr<html::Object>> result;
 
-    recursiveChildrenParse(result, *(this), 
-    ([&attribute, &value](html::Object& obj) -> bool 
-        { return obj.m_object->m_attributes.contains(attribute) && obj.m_object->m_attributes[attribute] == value; }));
+    recursiveChildrenParse(result, this->clone(), 
+    ([&attribute, &value](std::shared_ptr<html::Object> obj) -> bool 
+        { return obj->m_object->m_attributes.contains(attribute) && obj->m_object->m_attributes[attribute] == value; }));
 
     return result;
 }
 
-std::vector<html::Object> html::Object::getChildrenByClassName(const std::string& className) const {
+std::vector<std::shared_ptr<html::Object>> html::Object::getChildrenByClassName(const std::string& className) const {
 
     return getChildrenByAttribute("class", className);
 }
 
-std::vector<html::Object> html::Object::getChildrenByTagName(const std::string& tagName) const {
-    std::vector<html::Object> result;
+std::vector<std::shared_ptr<html::Object>> html::Object::getChildrenByTagName(const std::string& tagName) const {
+    std::vector<std::shared_ptr<html::Object>> result;
 
-    recursiveChildrenParse(result, *(this), 
-    ([&tagName](html::Object& obj) -> bool 
-        { return obj.getTagName() == tagName; }));
+    recursiveChildrenParse(result, this->clone(), 
+    ([&tagName](std::shared_ptr<html::Object> obj) -> bool 
+        { return obj->getTagName() == tagName; }));
 
     return result;
 }
 
-std::vector<html::Object> html::Object::getChildrenByName(const std::string& name) const {
+std::vector<std::shared_ptr<html::Object>> html::Object::getChildrenByName(const std::string& name) const {
 
     return getChildrenByAttribute("name", name);
 }
 
-std::vector<html::Object> html::Object::getChildrenById(const std::string& id) const {
+std::vector<std::shared_ptr<html::Object>> html::Object::getChildrenById(const std::string& id) const {
 
     return getChildrenByAttribute("id", id);
 }
@@ -121,21 +121,21 @@ void html::Object::addChild(Object& newChild) {
     }
 
     newChild.m_object->m_isInTree = true;
-    m_object->m_children.push_back(newChild);
+    m_object->m_children.push_back(newChild.clone());
 }
 
 void html::Object::removeChild(Object & child) {
     if (!child.isInTree()) return;
 
-    std::vector<html::Object> result;
+    std::vector<std::shared_ptr<html::Object>> result;
 
-    recursiveChildrenParse(result, *(this), 
-    ([&child](html::Object& obj) -> bool 
-        { return (obj.m_object).get() == (child.m_object).get(); }));
+    recursiveChildrenParse(result, this->clone(), 
+    ([&child](std::shared_ptr<html::Object> obj) -> bool 
+        { return (obj->m_object).get() == (child.m_object).get(); }));
     
 }
 
-std::string html::Object::serialise() {
+std::string html::Object::serialise() const {
     std::string result = "<" + getTagName() + " ";
     for (auto& [name, value]: getAttributes()) {
         result += "\"" + name + "\"=\"" + value + "\" ";
@@ -143,8 +143,8 @@ std::string html::Object::serialise() {
     result += ">\n";
 
     if (!isVoid()) {
-        for (Object& immediateChildren: m_object->m_children) {
-            result += immediateChildren.serialise();
+        for (const std::shared_ptr<html::Object>& immediateChildren: m_object->m_children) {
+            result += immediateChildren->serialise();
         }
 
         result += "</" + getTagName() + ">";
@@ -166,9 +166,9 @@ html::Object& html::Object::operator+=(Object& right) {
     addChild(right);
     return (*this);
 }
-
-html::GenericObject::GenericObject(const std::string& tagName, bool isVoid, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children)
-    : Object{attributes, children}, m_tag{std::move(tagName)}, m_isVoid{isVoid} {}
+        
+html::GenericObject::GenericObject(std::string  tagName, bool isVoid)
+        : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object() {}
 
 const std::string& html::GenericObject::GenericObject::getTagName() const {
     return m_tag;
@@ -176,4 +176,8 @@ const std::string& html::GenericObject::GenericObject::getTagName() const {
 
 bool html::GenericObject::isVoid() const {
     return m_isVoid;
+}
+
+std::shared_ptr<html::Object> html::GenericObject::clone() const {
+    return std::make_shared<GenericObject>(*this);
 }
