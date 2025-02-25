@@ -31,7 +31,7 @@ html::Object::Object(std::initializer_list<Attribute> attributes, std::initializ
 html::Object::~Object() {
     for (auto& child: m_object->m_children) {
         child.m_object->m_isInTree = false;
-}
+    }
 }
 
 std::vector<html::Object> html::Object::getChildren() const {
@@ -132,4 +132,15 @@ void html::Object::removeChild(Object & child) {
 std::string html::Object::serialise() {
     //TODO
     return "";
+}
+
+html::GenericObject::GenericObject(const std::string tagName, bool isVoid, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children)
+    : Object{attributes, children}, m_tag{std::move(tagName)}, m_isVoid{isVoid} {}
+
+const std::string& html::GenericObject::GenericObject::getTagName() const {
+    return m_tag;
+}
+
+bool html::GenericObject::isVoid() const {
+    return m_isVoid;
 }

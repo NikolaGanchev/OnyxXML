@@ -58,5 +58,15 @@ namespace Templater {
 
                 std::string serialise();
         };
+
+        class GenericObject: public Object {
+            private:
+                const std::string m_tag;
+                const bool m_isVoid;
+            public: 
+                explicit GenericObject(const std::string tagName, bool isVoid, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children);
+                const std::string& getTagName() const override;
+                bool isVoid() const override;
+        };
     }
 }
