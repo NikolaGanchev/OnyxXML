@@ -127,7 +127,7 @@ void html::Object::removeChild(Object & child) {
 
     recursiveChildrenParse(result, *(this->m_object), 
     ([&child](html::InternalObject& obj) -> bool 
-        { return &obj == (child.m_object).get() }));
+        { return &obj == (child.m_object).get(); }));
     
 }
 
