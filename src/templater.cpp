@@ -150,6 +150,20 @@ std::string html::Object::serialise() {
     return result;
 }
 
+std::string& html::Object::operator[](const std::string& name) {
+    return m_object->m_attributes[name];
+}
+
+html::Object& html::Object::operator+(Object& right) {
+    addChild(right);
+    return (*this);
+}
+
+html::Object& html::Object::operator+=(Object& right) {
+    addChild(right);
+    return (*this);
+}
+
 html::GenericObject::GenericObject(const std::string tagName, bool isVoid, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children)
     : Object{attributes, children}, m_tag{std::move(tagName)}, m_isVoid{isVoid} {}
 

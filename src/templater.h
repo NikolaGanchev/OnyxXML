@@ -48,11 +48,13 @@ namespace Templater {
                 std::vector<Object> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
                 
                 const std::unordered_map<std::string, std::string>& getAttributes() const;
-                // TODO: Include override of array operator
                 const std::string& getAttributeValue(std::string& name) const;
                 void setAttributeValue(std::string& name, std::string& newValue);
+                std::string& operator[](const std::string& name);
 
                 void addChild(Object&);
+                Object& operator+(Object& right);
+                Object& operator+=(Object& right);
 
                 void removeChild(Object&);
 
