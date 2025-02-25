@@ -2,3 +2,125 @@
 #include "templater.h"
 
 #include <chrono>
+
+using namespace Templater::html;
+
+TEST_CASE( "HTML is generated", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false)
+    );
+
+    std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head></head>\n</html>";
+
+    INFO ("The generated html is \n" << obj.serialise() );
+
+    CHECK(expected == obj.serialise());
+}
+
+TEST_CASE("Complex test case generates html", "[Object]" ) {
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        
+        GenericObject("head", false,
+            GenericObject("meta", true, 
+                Attribute("charset", "UTF-8")),
+            GenericObject("meta", true, 
+                Attribute("name", "viewport"),
+                Attribute("content", "width=device-width, initial-scale=1.0")),
+            GenericObject("title", false, 
+                Text("Complex Test Page")),
+            GenericObject("link", true,
+                Attribute("rel", "stylesheet"),
+                Attribute("href", "/styles/main.css"))
+        ),
+        
+        GenericObject("body", false, 
+            GenericObject("header", false, 
+                GenericObject("nav", false, 
+                    GenericObject("ul", false, 
+                        GenericObject("li", false, 
+                            GenericObject("a", false,
+                                Attribute("href", "#home"),
+                                Text("Home")
+                            )
+                        ),
+                        GenericObject("li", false, 
+                            GenericObject("a", false,
+                                Attribute("href", "#about"),
+                                Text("About Us")
+                            )
+                        )
+                    )
+                )
+            ),
+            
+            GenericObject("main", false,
+                GenericObject("section", false, 
+                    Attribute("id", "introduction"),
+                    GenericObject("h1", false, Text("Introduction")),
+                    GenericObject("p", false, Text("Welcome to the complex HTML structure test case.")),
+                    GenericObject("p", false, Text("This test includes various nested elements, attributes, and content.")),
+                    GenericObject("form", false, 
+                        Attribute("name", "contact-form"),
+                        GenericObject("label", false,
+                            Attribute("for", "name"),
+                            Text("Your Name:")
+                        ),
+                        GenericObject("input", true, 
+                            Attribute("type", "text"),
+                            Attribute("id", "name"),
+                            Attribute("name", "name")
+                        ),
+                        GenericObject("label", false, 
+                            Attribute("for", "email"),
+                            Text("Your Email:")
+                        ),
+                        GenericObject("input", true, 
+                            Attribute("type", "email"),
+                            Attribute("id", "email"),
+                            Attribute("name", "email")
+                        ),
+                        GenericObject("button", false, 
+                            Attribute("type", "submit"),
+                            Text("Submit")
+                        )
+                    )
+                ),
+                
+                GenericObject("section", false, 
+                    Attribute("id", "features"),
+                    GenericObject("h2", false, Text("Features")),
+                    GenericObject("ul", false, 
+                        GenericObject("li", false, Text("Feature 1")),
+                        GenericObject("li", false, Text("Feature 2")),
+                        GenericObject("li", false, Text("Feature 3"))
+                    ),
+                    GenericObject("p", false, Text("These are the key features of the application."))
+                )
+            ),
+            
+            GenericObject("footer", false,
+                GenericObject("p", false, Text("© 2025 Complex HTML Test Page")),
+                GenericObject("a", false,
+                    Attribute("href", "https://www.example.com"),
+                    Text("Privacy Policy")
+                )
+            )
+        )
+    );
+
+    std::string expected = "<html theme=\"dark\" lang=\"en\">\n\t<head>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#about\">\n\t\t\t\t\t\t\tAbout Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes various nested elements, attributes, and content.\n\t\t\t\t</p>\n\t\t\t\t<form name=\"contact-form\">\n\t\t\t\t\t<label for=\"name\">\n\t\t\t\t\t\tYour Name:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t\t\t<label for=\"email\">\n\t\t\t\t\t\tYour Email:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t\t\t<button type=\"submit\">\n\t\t\t\t\t\tSubmit\n\t\t\t\t\t</button>\n\t\t\t\t</form>\n\t\t\t</section>\n\t\t\t<section id=\"features\">\n\t\t\t\t<h2>\n\t\t\t\t\tFeatures\n\t\t\t\t</h2>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 1\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 2\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are the key features of the application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test Page\n\t\t\t</p>\n\t\t\t<a href=\"https://www.example.com\">\n\t\t\t\tPrivacy Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
+
+    INFO ("The generated html is \n" << obj.serialise() );
+
+    CHECK(expected == obj.serialise());
+}
