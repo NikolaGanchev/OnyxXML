@@ -110,6 +110,9 @@ void html::Object::setAttributeValue(std::string &name, std::string &newValue) {
 
 void html::Object::addChild(Object& newChild) {
     // Throw exception instead
+    if (isVoid()) {
+        return;
+    }
     if (newChild.isInTree()) {
         return;
     }
@@ -130,8 +133,21 @@ void html::Object::removeChild(Object & child) {
 }
 
 std::string html::Object::serialise() {
-    //TODO
-    return "";
+    std::string result = "<" + getTagName() + " ";
+    for (auto& [name, value]: getAttributes()) {
+        result += "name=\"" + value + "\" ";
+    }
+    result += ">\n";
+
+    if (!isVoid) {
+        for (Object& immediateChildren: m_object->m_children) {
+            result += immediateChildren.serialise();
+        }
+
+        result += "</" + getTagName() + ">";
+    }
+
+    return result;
 }
 
 html::GenericObject::GenericObject(const std::string tagName, bool isVoid, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children)
