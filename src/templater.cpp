@@ -109,11 +109,11 @@ void html::Object::setAttributeValue(std::string &name, std::string &newValue) {
 }
 
 void html::Object::addChild(Object& newChild) {
-    // Throw exception instead
     if (isVoid()) {
-        return;
+        throw std::runtime_error("Void objects cannot have children.");
     }
     if (newChild.isInTree()) {
+        throw std::runtime_error("The object is already in a tree.");
         return;
     }
 
