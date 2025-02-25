@@ -34,7 +34,7 @@ namespace Templater {
                 void recursiveChildrenParse(std::vector<Object>& children, const Object& obj, const std::function<bool(Object&)>& condition) const;
                 bool isInTree() const;
             public:
-                explicit Object(std::initializer_list<Attribute> attributes, std::initializer_list<Object> children);
+                explicit Object(std::initializer_list<Attribute> attributes = {}, std::initializer_list<Object> children = {});
                 virtual ~Object();
 
                 virtual const std::string& getTagName() const = 0;
@@ -66,7 +66,7 @@ namespace Templater {
                 const std::string m_tag;
                 const bool m_isVoid;
             public: 
-                explicit GenericObject(const std::string tagName, bool isVoid, std::initializer_list<Attribute> attributes, std::initializer_list<Object> children);
+                explicit GenericObject(const std::string tagName, bool isVoid, std::initializer_list<Attribute> attributes = {}, std::initializer_list<Object> children = {});
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
         };
