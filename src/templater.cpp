@@ -18,12 +18,15 @@ const std::string& html::Attribute::getValue() const {
 
 html::Object::Object(std::initializer_list<Attribute> attributes, std::initializer_list<Object> children) {
     m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
-    
+
     for (auto& attribute: attributes) {
         m_object->m_attributes[attribute.getName()] = attribute.getValue();
     }
 
     for (auto& child: children) {
+        if (child.isInTree()) {
+            throw std::runtime_error("Attempted to construct Templater::html::" + getTagName() + " with a child that is already a child of another Templater::html::Object.");
+        }
         (m_object->m_children).push_back(child);
     }
 }
@@ -110,10 +113,10 @@ void html::Object::setAttributeValue(std::string &name, std::string &newValue) {
 
 void html::Object::addChild(Object& newChild) {
     if (isVoid()) {
-        throw std::runtime_error("Void objects cannot have children.");
+        throw std::runtime_error("Void Templater::html::" + getTagName() + " cannot have children.");
     }
     if (newChild.isInTree()) {
-        throw std::runtime_error("The object is already in a tree.");
+        throw std::runtime_error("Attempted to add child to Templater::html::" + getTagName() + "  that is already a child of another Templater::html::Object.");
         return;
     }
 
