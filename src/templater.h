@@ -51,7 +51,7 @@ namespace Templater {
                 virtual const std::string& getTagName() const = 0;
                 virtual bool isVoid() const = 0;
                 
-                std::vector<std::shared_ptr<Object>> getChildren() const;
+                const std::vector<std::shared_ptr<Object>>& getChildren() const;
                 std::vector<std::shared_ptr<Object>> getChildrenByClassName(const std::string& className) const;
                 std::vector<std::shared_ptr<Object>> getChildrenByTagName(const std::string& tagName) const;
                 std::vector<std::shared_ptr<Object>> getChildrenByName(const std::string& name) const;
@@ -86,9 +86,6 @@ namespace Templater {
         };
     }
 }
-
-
-        
 
 template <typename... Args>
 Templater::html::Object::Object(Args&&... args) requires (Templater::html::isValidObjectConstructorType<Args>&& ...) { 

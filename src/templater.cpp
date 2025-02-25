@@ -37,15 +37,8 @@ html::Object::~Object() {
     }
 }
 
-std::vector<std::shared_ptr<html::Object>> html::Object::getChildren() const {
-    std::vector<std::shared_ptr<html::Object>> result;
-    result.reserve(m_object->m_children.size());
-    
-    for (auto& child: m_object->m_children) {
-        result.push_back(child);
-    }
-
-    return result;
+const std::vector<std::shared_ptr<html::Object>>& html::Object::getChildren() const {
+    return m_object->m_children;
 }
 
 bool html::Object::isInTree() const {
