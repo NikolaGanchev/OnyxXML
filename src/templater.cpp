@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <map>
+#include <iostream>
 
 using namespace Templater;
 
@@ -115,15 +116,32 @@ const std::unordered_map<std::string, std::string>& html::Object::getAttributes(
     return m_object->m_attributes;
 }
 
-void html::Object::removeChild(Object& child) {
-    if (!child.isInTree()) return;
+bool html::Object::removeChild(Object& childToRemove, Object& currentRoot) {
+    auto& children = currentRoot.m_object->m_children;
 
-    std::vector<std::shared_ptr<html::Object>> result;
+    for (int i = 0; i < children.size(); i++) {
+        if (*(children[i].get()) == childToRemove) {
+            childToRemove.m_object->m_isInTree = false;
+            children.erase(children.begin() + i);
+            return true;
+        } else {
+            if(removeChild(childToRemove, *(children[i].get()))) {
+                return true;
+            }
+        }
+    }
 
-    recursiveChildrenParse(result, this->clone(), 
-    ([&child](std::shared_ptr<html::Object> obj) -> bool 
-        { return (obj->m_object).get() == (child.m_object).get(); }));
-    
+    return false;
+}
+
+bool html::Object::removeChild(Object& childToRemove) {
+    if (!childToRemove.isInTree()) return false;
+
+    return removeChild(childToRemove, *this);
+}
+
+bool html::Object::removeChild(std::shared_ptr<Object> childToRemove) {
+    return removeChild(*(childToRemove.get()));
 }
 
 const std::string & html::Object::getAttributeValue(const std::string &name) const {

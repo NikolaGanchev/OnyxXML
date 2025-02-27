@@ -43,6 +43,7 @@ namespace Templater {
                 void processConstructorArgs(T&& arg);
                 void processConstructorAttribute(Attribute attribute);
                 void processConstructorObject(Object& child);
+                bool removeChild(Object& childToRemove, Object& currentRoot);
                 // Default: "\t"
                 static std::string identationSequence;
                 // Default: false
@@ -60,7 +61,9 @@ namespace Templater {
                 virtual bool isVoid() const = 0;
 
                 bool isInTree() const;
+                // Returns a live list of the direct children
                 const std::vector<std::shared_ptr<Object>>& getChildren() const;
+                // Returns a static list of all children in the tree that fullfil the condition
                 std::vector<std::shared_ptr<Object>> getChildrenByClassName(const std::string& className) const;
                 std::vector<std::shared_ptr<Object>> getChildrenByTagName(const std::string& tagName) const;
                 std::vector<std::shared_ptr<Object>> getChildrenByName(const std::string& name) const;
@@ -81,7 +84,8 @@ namespace Templater {
                 // A && version is not needed, as it would be illogical to compare pointers with a temporary object
                 bool operator==(Object& right);
 
-                void removeChild(Object& child);
+                bool removeChild(Object& childToRemove);
+                bool removeChild(std::shared_ptr<Object> childToRemove);
 
                 virtual std::string serialise() const;
 
