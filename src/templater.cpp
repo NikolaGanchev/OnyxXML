@@ -202,6 +202,10 @@ html::Object& html::Object::operator+=(html::Object&& right) {
     return (*this);
 }
 
+bool html::Object::operator==(html::Object& right) {
+    return m_object.get() == right.m_object.get();
+}
+
 std::string html::Object::identationSequence = "\t";
 
 void html::Object::setIdentationSequence(const std::string& newSequence) {

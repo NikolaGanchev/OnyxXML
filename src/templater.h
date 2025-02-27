@@ -35,7 +35,6 @@ namespace Templater {
             private:
                 std::shared_ptr<InternalObject> m_object;
                 void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
-                bool isInTree() const;
                 
                 template <typename T>
                 void processConstructorArgs(T&& arg);
@@ -56,7 +55,8 @@ namespace Templater {
 
                 virtual const std::string& getTagName() const = 0;
                 virtual bool isVoid() const = 0;
-                
+
+                bool isInTree() const;
                 const std::vector<std::shared_ptr<Object>>& getChildren() const;
                 std::vector<std::shared_ptr<Object>> getChildrenByClassName(const std::string& className) const;
                 std::vector<std::shared_ptr<Object>> getChildrenByTagName(const std::string& tagName) const;
@@ -74,6 +74,9 @@ namespace Templater {
 
                 Object& operator+=(Object& right);
                 Object& operator+=(Object&& right);
+                // Checks equality by pointer to InternalObject
+                // A && version is not needed, as it would be illogical to compare pointers with a temporary object
+                bool operator==(Object& right);
 
                 void removeChild(Object& child);
 
