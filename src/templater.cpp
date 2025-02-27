@@ -29,14 +29,17 @@ void html::Object::processConstructorObject(Object& child) {
     if (child.isInTree()) {
         throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
     }
+    child.m_object->m_isInTree = true;
     (m_object->m_children).push_back(child.clone());
 }
 
-html::Object::~Object() {
-    for (auto& child: m_object->m_children) {
+html::InternalObject::~InternalObject() {
+    for (auto& child: m_children) {
         child->m_object->m_isInTree = false;
     }
 }
+
+html::Object::~Object() {}
 
 void html::Object::addChild(Object& newChild)  {
     if (isVoid()) {

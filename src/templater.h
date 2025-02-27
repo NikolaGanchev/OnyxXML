@@ -29,9 +29,12 @@ namespace Templater {
             std::unordered_map<std::string, std::string> m_attributes;
             std::vector<std::shared_ptr<Object>> m_children;
             bool m_isInTree = false;
+
+            ~InternalObject();
         };
 
         class Object {
+            friend InternalObject;
             private:
                 std::shared_ptr<InternalObject> m_object;
                 void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
