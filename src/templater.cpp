@@ -2,7 +2,6 @@
 
 #include <utility>
 #include <map>
-#include <iostream>
 
 using namespace Templater;
 
