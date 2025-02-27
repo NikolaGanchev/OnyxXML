@@ -5,7 +5,7 @@
 
 using namespace Templater::html;
 
-TEST_CASE( "HTML is generated", "[Object]" ) {
+TEST_CASE("HTML is generated", "[Object]" ) {
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -123,4 +123,254 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
     INFO ("The generated html is \n" << obj.serialise() );
 
     CHECK(expected == obj.serialise());
+}
+
+TEST_CASE("Children return by tag name works", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false, 
+            GenericObject("div", false, Attribute("id", "0"), 
+                GenericObject("div", false, Attribute("id", "1"),
+                    GenericObject("div", false, Attribute("id", "2"))),
+            GenericObject("div", false, Attribute("id", "3")),
+            GenericObject("div", false, Attribute("id", "4")))
+    ));
+
+    auto children = obj.getChildrenByTagName("div");
+
+    for (int i = 0; i < 5; i++) {
+        CHECK(children[i]->getAttributeValue("id") == std::to_string(i));
+    }
+}
+
+TEST_CASE("Children return by id works", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false, 
+            GenericObject("div", false, Attribute("id", "0"), 
+                GenericObject("div", false, Attribute("id", "1"),
+                    GenericObject("div", false, Attribute("id", "2"),
+                        GenericObject("p", false, Attribute("id", "11")))),
+            GenericObject("div", false, Attribute("id", "3")),
+            GenericObject("div", false, Attribute("id", "4")))
+    ));
+
+    auto children = obj.getChildrenById("11");
+
+    CHECK(children[0]->getAttributeValue("id") == std::to_string(11));
+    CHECK(children[0]->getTagName() == "p");
+}
+
+TEST_CASE("Children return by name works", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false, 
+            GenericObject("div", false, Attribute("name", "d"), Attribute("id", "0"), 
+                GenericObject("div", false, Attribute("name", "d"), Attribute("id", "1"), 
+                    GenericObject("div", false, Attribute("name", "d"), Attribute("id", "2"), 
+                        GenericObject("p", false, Attribute("name", "p"), Attribute("id", "11")))),
+            GenericObject("div", false, Attribute("name", "d"), Attribute("id", "3")),
+            GenericObject("div", false, Attribute("name", "d"), Attribute("id", "4")))
+    ));
+
+    auto children = obj.getChildrenByName("d");
+
+    for (int i = 0; i < 5; i++) {
+        CHECK(children[i]->getAttributeValue("id") == std::to_string(i));
+    }
+
+    children = obj.getChildrenByName("p");
+    
+    CHECK(children[0]->getAttributeValue("id") == "11");
+}
+
+TEST_CASE("Children return by class name works", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false, 
+            GenericObject("div", false, Attribute("class", "d"), Attribute("id", "0"), 
+                GenericObject("div", false, Attribute("class", "d"), Attribute("id", "1"), 
+                    GenericObject("div", false, Attribute("class", "d"), Attribute("id", "2"), 
+                        GenericObject("p", false, Attribute("class", "p"), Attribute("id", "11")))),
+            GenericObject("div", false, Attribute("class", "d"), Attribute("id", "3")),
+            GenericObject("div", false, Attribute("class", "d"), Attribute("id", "4")))
+    ));
+
+    auto children = obj.getChildrenByClassName("d");
+
+    for (int i = 0; i < 5; i++) {
+        CHECK(children[i]->getAttributeValue("id") == std::to_string(i));
+    }
+
+    children = obj.getChildrenByClassName("p");
+    
+    CHECK(children[0]->getAttributeValue("id") == "11");
+}
+
+TEST_CASE("Child add works", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false));
+
+    auto children = obj.getChildrenByTagName("body");
+
+    GenericObject child = GenericObject(
+        "div", false, Attribute("id", "1")
+    );
+
+    children[0]->addChild(child);
+
+    children = obj.getChildrenById("1");
+
+    CHECK(children[0].get()->isInTree());
+    CHECK(*(children[0].get()) == child);
+}
+
+TEST_CASE("Child remove works", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject child = GenericObject(
+        "div", false, Attribute("id", "1")
+    );
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false, child));
+
+    CHECK(child.isInTree());
+
+    auto children = obj.getChildrenById("1");
+
+    CHECK(children.size() == 1);
+    CHECK(children[0]->isInTree());
+
+    bool result = obj.removeChild(children[0]);
+
+    CHECK(result);
+
+    children = obj.getChildrenById("1");
+
+    CHECK(children.size() == 0);
+    CHECK(!child.isInTree());
+}
+
+TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject child = GenericObject(
+        "div", false, Attribute("id", "1")
+    );
+
+    {
+        GenericObject obj = GenericObject(
+            "html", false,
+            Attribute("lang", "en"),
+            Attribute("theme", "dark"),
+            GenericObject("head", false),
+            GenericObject("body", false, child));
+    
+        CHECK(child.isInTree());    
+    }
+    
+    CHECK(!child.isInTree());  
+}
+
+TEST_CASE("Children do not get disowned upon pointer to parent destruction", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject child = GenericObject(
+        "div", false, Attribute("id", "1")
+    );
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false, child));
+
+    {
+        GenericObject obj2 = obj; 
+    }  
+    
+    CHECK(child.isInTree());  
+}
+
+TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false));
+
+    CHECK(obj["lang"] == "en");
+
+    obj["theme"] = "light";
+
+    CHECK(obj["theme"] == "light");    
+}
+
+TEST_CASE("Operator += works for child add", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false));
+
+    auto children = obj.getChildrenByTagName("body");
+
+    GenericObject child = GenericObject(
+        "div", false, Attribute("id", "1")
+    );
+
+    *(children[0].get()) += child;
+
+    children = obj.getChildrenById("1");
+
+    CHECK(children[0].get()->isInTree());
+    CHECK(*(children[0].get()) == child);
 }
