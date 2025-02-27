@@ -139,8 +139,8 @@ bool html::Object::removeChild(Object& childToRemove) {
     return removeChild(childToRemove, *this);
 }
 
-bool html::Object::removeChild(std::shared_ptr<Object> childToRemove) {
-    return removeChild(*(childToRemove.get()));
+bool html::Object::removeChild(const std::shared_ptr<Object>& childToRemove) {
+    return removeChild(*(childToRemove));
 }
 
 const std::string & html::Object::getAttributeValue(const std::string &name) const {
@@ -283,7 +283,6 @@ std::shared_ptr<html::Object> html::Text::clone() const {
 std::string html::Text::serialise() const {
     return m_text;
 }
-
 
 std::string html::Text::serialise(std::string& identation) const {
     return identation + m_text;

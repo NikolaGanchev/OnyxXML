@@ -85,7 +85,7 @@ namespace Templater {
                 bool operator==(Object& right);
 
                 bool removeChild(Object& childToRemove);
-                bool removeChild(std::shared_ptr<Object> childToRemove);
+                bool removeChild(const std::shared_ptr<Object>& childToRemove);
 
                 virtual std::string serialise() const;
 
