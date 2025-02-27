@@ -38,6 +38,23 @@ html::Object::~Object() {
     }
 }
 
+void html::Object::addChild(Object& newChild)  {
+    if (isVoid()) {
+        throw std::runtime_error("Void Templater::html::" + getTagName() + " cannot have children.");
+    }
+    if (newChild.isInTree()) {
+        throw std::runtime_error("Attempted to add child to Templater::html::" + getTagName() + "  that is already a child of another Templater::html::Object.");
+        return;
+    }
+
+    newChild.m_object->m_isInTree = true;
+    m_object->m_children.push_back(newChild.clone());
+}
+
+void html::Object::addChild(Object&& newChild)  {
+    addChild(newChild);
+}
+
 const std::vector<std::shared_ptr<html::Object>>& html::Object::getChildren() const {
     return m_object->m_children;
 }
@@ -95,30 +112,7 @@ const std::unordered_map<std::string, std::string>& html::Object::getAttributes(
     return m_object->m_attributes;
 }
 
-const std::string & html::Object::getAttributeValue(std::string &name) const {
-
-    return m_object->m_attributes[name];
-}
-
-void html::Object::setAttributeValue(std::string &name, std::string &newValue) {
-
-    m_object->m_attributes[name] = newValue;
-}
-
-void html::Object::addChild(Object& newChild) {
-    if (isVoid()) {
-        throw std::runtime_error("Void Templater::html::" + getTagName() + " cannot have children.");
-    }
-    if (newChild.isInTree()) {
-        throw std::runtime_error("Attempted to add child to Templater::html::" + getTagName() + "  that is already a child of another Templater::html::Object.");
-        return;
-    }
-
-    newChild.m_object->m_isInTree = true;
-    m_object->m_children.push_back(newChild.clone());
-}
-
-void html::Object::removeChild(Object & child) {
+void html::Object::removeChild(Object& child) {
     if (!child.isInTree()) return;
 
     std::vector<std::shared_ptr<html::Object>> result;
@@ -127,6 +121,16 @@ void html::Object::removeChild(Object & child) {
     ([&child](std::shared_ptr<html::Object> obj) -> bool 
         { return (obj->m_object).get() == (child.m_object).get(); }));
     
+}
+
+const std::string & html::Object::getAttributeValue(const std::string &name) const {
+
+    return m_object->m_attributes[name];
+}
+
+void html::Object::setAttributeValue(const std::string &name, const std::string &newValue) {
+
+    m_object->m_attributes[name] = newValue;
 }
 
 std::string html::Object::serialise(std::string& identation) const {
@@ -188,12 +192,12 @@ std::string& html::Object::operator[](const std::string& name) {
     return m_object->m_attributes[name];
 }
 
-html::Object& html::Object::operator+(Object& right) {
+html::Object& html::Object::operator+=(html::Object& right) {
     addChild(right);
     return (*this);
 }
 
-html::Object& html::Object::operator+=(Object& right) {
+html::Object& html::Object::operator+=(html::Object&& right) {
     addChild(right);
     return (*this);
 }

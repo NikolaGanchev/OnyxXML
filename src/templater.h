@@ -65,15 +65,17 @@ namespace Templater {
                 std::vector<std::shared_ptr<Object>> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
                 
                 const std::unordered_map<std::string, std::string>& getAttributes() const;
-                const std::string& getAttributeValue(std::string& name) const;
-                void setAttributeValue(std::string& name, std::string& newValue);
+                const std::string& getAttributeValue(const std::string& name) const;
+                void setAttributeValue(const std::string& name, const std::string& newValue);
                 std::string& operator[](const std::string& name);
 
-                void addChild(Object&);
-                Object& operator+(Object& right);
-                Object& operator+=(Object& right);
+                void addChild(Object& child);
+                void addChild(Object&& child);
 
-                void removeChild(Object&);
+                Object& operator+=(Object& right);
+                Object& operator+=(Object&& right);
+
+                void removeChild(Object& child);
 
                 virtual std::string serialise() const;
 
