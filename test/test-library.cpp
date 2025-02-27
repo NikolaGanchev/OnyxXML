@@ -1,5 +1,6 @@
 #include "catch2/catch_all.hpp"
 #include "templater.h"
+#include "tags.h"
 
 #include <chrono>
 
@@ -373,4 +374,103 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
 
     CHECK(children[0].get()->isInTree());
     CHECK(*(children[0].get()) == child);
+}
+
+
+TEST_CASE("Complex html with tags", "[Object]" ) {
+    using namespace Templater::html::dtags;
+
+    html obj = html(
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        
+        head(
+            meta(Attribute("charset", "UTF-8")),
+            meta(Attribute("name", "viewport"), 
+                Attribute("content", "width=device-width, initial-scale=1.0")),
+            title(Text("Complex Test Page")),
+            link(Attribute("rel", "stylesheet"),
+                Attribute("href", "/styles/main.css"))
+        ),
+        
+        body(
+            header(
+                nav(
+                    ul(
+                        li(
+                            a(
+                                Attribute("href", "#home"),
+                                Text("Home")
+                            )
+                        ),
+                        li(
+                            a(
+                                Attribute("href", "#about"),
+                                Text("About Us")
+                            )
+                        )
+                    )
+                )
+            ),
+            
+            main(
+                section(
+                    Attribute("id", "introduction"),
+                    h1(Text("Introduction")),
+                    p(Text("Welcome to the complex HTML structure test case.")),
+                    p(Text("This test includes various nested elements, attributes, and content.")),
+                    form(
+                        Attribute("name", "contact-form"),
+                        label(
+                            Attribute("for", "name"),
+                            Text("Your Name:")
+                        ),
+                        input(
+                            Attribute("type", "text"),
+                            Attribute("id", "name"),
+                            Attribute("name", "name")
+                        ),
+                        label(
+                            Attribute("for", "email"),
+                            Text("Your Email:")
+                        ),
+                        input(
+                            Attribute("type", "email"),
+                            Attribute("id", "email"),
+                            Attribute("name", "email")
+                        ),
+                        button(
+                            Attribute("type", "submit"),
+                            Text("Submit")
+                        )
+                    )
+                ),
+                
+                section(
+                    Attribute("id", "features"),
+                    h2(Text("Features")),
+                    ul(
+                        li(Text("Feature 1")),
+                        li(Text("Feature 2")),
+                        li(Text("Feature 3"))
+                    ),
+                    p(Text("These are the key features of the application."))
+                )
+            ),
+            
+            footer(
+                p(Text("© 2025 Complex HTML Test Page")),
+                a(
+                    Attribute("href", "https://www.example.com"),
+                    Text("Privacy Policy")
+                )
+            )
+        )
+    );
+
+    std::string expected = "<html theme=\"dark\" lang=\"en\">\n\t<head>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#about\">\n\t\t\t\t\t\t\tAbout Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes various nested elements, attributes, and content.\n\t\t\t\t</p>\n\t\t\t\t<form name=\"contact-form\">\n\t\t\t\t\t<label for=\"name\">\n\t\t\t\t\t\tYour Name:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t\t\t<label for=\"email\">\n\t\t\t\t\t\tYour Email:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t\t\t<button type=\"submit\">\n\t\t\t\t\t\tSubmit\n\t\t\t\t\t</button>\n\t\t\t\t</form>\n\t\t\t</section>\n\t\t\t<section id=\"features\">\n\t\t\t\t<h2>\n\t\t\t\t\tFeatures\n\t\t\t\t</h2>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 1\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 2\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are the key features of the application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test Page\n\t\t\t</p>\n\t\t\t<a href=\"https://www.example.com\">\n\t\t\t\tPrivacy Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
+
+    INFO ("The generated html is \n" << obj.serialise() );
+
+    CHECK(expected == obj.serialise());
 }
