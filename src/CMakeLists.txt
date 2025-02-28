@@ -8,12 +8,12 @@ target_sources(
     PRIVATE
         "html_object.cpp"
         "html_object.h"
-        "generated/tags.h"
-        "generated/tags.cpp"
+        "dynamic/tags.h"
+        "dynamic/tags.cpp"
 )
 
-set(GENERATED_TAGS_H ${CMAKE_SOURCE_DIR}/src/generated/tags.h)
-set(GENERATED_TAGS_CPP ${CMAKE_SOURCE_DIR}/src/generated/tags.cpp)
+set(GENERATED_TAGS_H ${CMAKE_SOURCE_DIR}/src/dynamic/tags.h)
+set(GENERATED_TAGS_CPP ${CMAKE_SOURCE_DIR}/src/dynamic/tags.cpp)
 
 add_executable(generate ${CMAKE_SOURCE_DIR}/src/generate_tags_classes.cpp)
 

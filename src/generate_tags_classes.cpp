@@ -38,12 +38,12 @@ int main() {
     std::vector<Tag> tags{};
     readTags(tags);
     
-    if (!std::filesystem::exists("./generated")) {
-        std::filesystem::create_directory("./generated");
+    if (!std::filesystem::exists("./dynamic")) {
+        std::filesystem::create_directory("./dynamic");
     }
 
-    std::ofstream header_file("./generated/tags.h");
-    std::ofstream cpp_file("./generated/tags.cpp");
+    std::ofstream header_file("./dynamic/tags.h");
+    std::ofstream cpp_file("./dynamic/tags.cpp");
 
     header_file << "#pragma once\n";
     header_file << "#include \"html_object.h\" \n\n";
