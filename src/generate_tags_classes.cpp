@@ -2,7 +2,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
-#include <format>
+#include <filesystem>
 
 struct Tag {
     std::string name;
@@ -38,8 +38,12 @@ int main() {
     std::vector<Tag> tags{};
     readTags(tags);
     
-    std::ofstream header_file("tags.h");
-    std::ofstream cpp_file("tags.cpp");
+    if (!std::filesystem::exists("./generated")) {
+        std::filesystem::create_directory("./generated");
+    }
+
+    std::ofstream header_file("./generated/tags.h");
+    std::ofstream cpp_file("./generated/tags.cpp");
 
     header_file << "#pragma once\n";
     header_file << "#include \"templater.h\" \n\n";
