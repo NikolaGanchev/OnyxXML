@@ -46,7 +46,7 @@ int main() {
     std::ofstream cpp_file("./generated/tags.cpp");
 
     header_file << "#pragma once\n";
-    header_file << "#include \"templater.h\" \n\n";
+    header_file << "#include \"html_object.h\" \n\n";
     header_file << "namespace Templater::html::dtags {\n";
     header_file << "    using namespace Templater::html; \n";
 

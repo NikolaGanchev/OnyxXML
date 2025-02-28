@@ -6,10 +6,10 @@ set_target_properties(samplelib PROPERTIES OUTPUT_NAME "sample")
 target_sources(
     samplelib
     PRIVATE
-        "templater.cpp"
-        "templater.h"
-        "/generated/tags.h"
-        "/generated/tags.cpp"
+        "html_object.cpp"
+        "html_object.h"
+        "generated/tags.h"
+        "generated/tags.cpp"
 )
 
 set(GENERATED_TAGS_H ${CMAKE_SOURCE_DIR}/src/generated/tags.h)
