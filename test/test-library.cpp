@@ -1,5 +1,6 @@
 #include "catch2/catch_all.hpp"
 #include "templater.h"
+#include "document.h"
 
 #include <chrono>
 
@@ -472,4 +473,26 @@ TEST_CASE("Complex html with tags", "[Object]" ) {
     INFO ("The generated html is \n" << obj.serialise() );
 
     CHECK(expected == obj.serialise());
+}
+
+TEST_CASE("Static library check", "[Object]" ) {
+    using namespace Templater::html::ctags;
+
+    using doc = Document<html<
+                            ctags::Attribute<"lang", "en">,
+                            head<>,
+                            body<ctags::Text<"Hello world!">>
+    >>;
+
+    std::string expected = "<html lang=\"en\">\n\t<head>\n\t</head>\n\t<body>\n\t\tHello world!\n\t</body>\n</html>";
+
+    using attr = ctags::Attribute<"lang", "en">;
+
+    INFO("started loop");
+    for(const char& c : attr::attr()) {
+        INFO(c);
+    }
+    INFO("ended loop");
+
+    CHECK(doc::value() == expected);
 }

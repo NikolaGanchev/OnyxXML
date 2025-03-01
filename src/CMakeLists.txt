@@ -10,6 +10,8 @@ target_sources(
         "html_object.h"
         "dynamic/tags.h"
         "dynamic/tags.cpp"
+        "document.h"
+        "document.cpp"
 )
 
 set(GENERATED_TAGS_H ${CMAKE_SOURCE_DIR}/src/dynamic/tags.h)
