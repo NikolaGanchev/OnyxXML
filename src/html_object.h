@@ -55,6 +55,7 @@ namespace Templater {
             public:
                 template <typename... Args>
                 explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
+                explicit Object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
                 explicit Object();
                 virtual ~Object();
                 virtual std::shared_ptr<Object> clone() const = 0;
@@ -105,6 +106,7 @@ namespace Templater {
                 template <typename... Args>
                 explicit GenericObject(std::string  tagName, bool isVoid, Args&&... args);
                 explicit GenericObject(std::string  tagName, bool isVoid);
+                explicit GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
                 std::shared_ptr<Object> clone() const override;
@@ -115,6 +117,7 @@ namespace Templater {
             public: 
                 template <typename... Args>
                 explicit EmptyTag(Args&&... args);
+                explicit EmptyTag(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
                 std::shared_ptr<Object> clone() const override;

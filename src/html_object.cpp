@@ -21,6 +21,19 @@ html::Object::Object() {
     m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
 }
 
+html::Object::Object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children) { 
+    std::unordered_map<std::string, std::string> attributesMap;
+    for (auto& attr: attributes) {
+        attributesMap[attr.getName()] = attr.getValue();
+    }
+
+    for (auto& child: children) {
+        child->m_object->m_isInTree = true;
+    }
+
+    m_object = std::make_shared<InternalObject>(InternalObject{attributesMap, children});
+}
+
 void html::Object::processConstructorAttribute(Attribute attribute) {
     m_object->m_attributes[attribute.getName()] = attribute.getValue();
 }
@@ -256,6 +269,9 @@ bool html::Object::getSortAttributes() {
 html::GenericObject::GenericObject(std::string  tagName, bool isVoid)
         : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object() {}
 
+html::GenericObject::GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+        : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object(std::move(attributes), std::move(children)) {}
+
 const std::string& html::GenericObject::getTagName() const {
     return m_tag;
 }
@@ -294,6 +310,11 @@ std::string html::Text::serialise() const {
 std::string html::Text::serialise(std::string& identation) const {
     return identation + m_text;
 }
+
+
+html::EmptyTag::EmptyTag(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+        : Object(std::move(attributes), std::move(children)) {}
+
 
 const std::string& html::EmptyTag::getTagName() const {
     static const std::string name = "";

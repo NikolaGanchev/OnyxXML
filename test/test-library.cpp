@@ -24,6 +24,27 @@ TEST_CASE("HTML is generated", "[Object]" ) {
     CHECK(expected == obj.serialise());
 }
 
+TEST_CASE("Vector constructor works", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    std::vector<Attribute> attributes;
+    std::vector<std::shared_ptr<Object>> children;
+
+    attributes.emplace_back("id", "list");
+    for (int i = 1; i <= 3; i++) {
+        children.push_back(dtags::li(Text(std::to_string(i))).clone());
+    }
+
+    dtags::ul obj = dtags::ul(attributes, children);
+
+    std::string expected = "<ul id=\"list\">\n\t<li>\n\t\t1\n\t</li>\n\t<li>\n\t\t2\n\t</li>\n\t<li>\n\t\t3\n\t</li>\n</ul>";
+
+    INFO ("The generated html is \n" << obj.serialise() );
+
+    CHECK(expected == obj.serialise());
+}
+
 TEST_CASE("Complex test case generates html", "[Object]" ) {
 
     GenericObject obj = GenericObject(
