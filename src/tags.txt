@@ -1,4 +1,4 @@
-name,is_void
+canonical,is_void,dynamic,compile
 a,0
 abbr,0
 address,0
@@ -27,7 +27,7 @@ del,0
 details,0
 dfn,0
 dialog,0
-div,0
+div,0,div,cdiv
 dl,0
 dt,0
 em,0
@@ -103,7 +103,7 @@ svg,0
 table,0
 tbody,0
 td,0
-htemplate,0,template
+template,0,ctemplate,ctemplate
 textarea,0
 tfoot,0
 th,0

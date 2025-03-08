@@ -5,9 +5,10 @@
 #include <filesystem>
 
 struct Tag {
-    std::string name;
+    std::string tagName;
     bool isVoid;
-    std::string htmlTag;
+    std::string dynamicName;
+    std::string compileName;
 };
 
 void readTags(std::vector<Tag>& tags) {
@@ -20,15 +21,22 @@ void readTags(std::vector<Tag>& tags) {
 
     while (std::getline(input_file, line))
     {
-        int delimeterPos = line.find(',');
-        std::string tag = line.substr(0, delimeterPos);
-        char isVoidChar = line[delimeterPos+1];
-        bool isVoid = isVoidChar != '0';
-        std::string htmlTag = tag;
-        if (line.size() > delimeterPos+3) {
-            htmlTag = line.substr(delimeterPos+3);
+        std::string tagName = line.substr(0, line.find(','));
+        line.erase(0, line.find(',') + 1);
+        char isVoidChar = line[0];
+        line.erase(0, 1);
+
+        std::string dynamicName = tagName;
+        std::string compileName = tagName;
+
+        if (line[0] == ',') {
+            line.erase(0, 1);
+            dynamicName = line.substr(0, line.find(','));
+            line.erase(0, line.find(',') + 1);
+            compileName = line;
         }
-        tags.emplace_back(tag, isVoid, htmlTag);
+
+        tags.emplace_back(tagName, isVoidChar != '0', dynamicName, compileName);
     }
 
     input_file.close();
@@ -45,33 +53,33 @@ void generateDynamic(const std::vector<Tag>& tags) {
 
     headerDynamic << "#pragma once\n";
     headerDynamic << "#include \"html_object.h\" \n\n";
-    headerDynamic << "namespace Templater::html::dtags {\n";
-    headerDynamic << "    using namespace Templater::html; \n";
+    headerDynamic << "namespace Templater::dynamic::dtags {\n";
+    headerDynamic << "    using namespace Templater::dynamic; \n";
 
     cppDynamic << "#include \"tags.h\"\n\n";
 
     for (auto& tag: tags) {
-        headerDynamic << "    class " << tag.name << ": public Object {\n"
+        headerDynamic << "    class " << tag.dynamicName << ": public Object {\n"
                                     "        public:\n"
                                     "            template <typename... Args>\n"
-                                    "            explicit " << tag.name << "(Args&&... args);\n"
-                                    "            explicit " << tag.name << "(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);\n"
+                                    "            explicit " << tag.dynamicName << "(Args&&... args);\n"
+                                    "            explicit " << tag.dynamicName << "(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);\n"
                                     "            bool isVoid() const override;\n"
                                     "            std::shared_ptr<Object> clone() const override;\n"
                                     "            const std::string& getTagName() const override;\n"
                                     "    };\n";
         
-        cppDynamic << "const std::string& Templater::html::dtags::" << tag.name << "::getTagName() const {\n"
-                                    "    static const std::string name = \"" << tag.htmlTag << "\";\n"
+        cppDynamic << "const std::string& Templater::dynamic::dtags::" << tag.dynamicName << "::getTagName() const {\n"
+                                    "    static const std::string name = \"" << tag.tagName << "\";\n"
                                     "    return name;\n"
                                     "}\n\n"
-                                    "Templater::html::dtags::" << tag.name << "::" << tag.name << "(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)\n"
-                                    "   : Templater::html::Object(std::move(attributes), std::move(children)) {}\n\n"
-                                    "bool Templater::html::dtags::" << tag.name << "::isVoid() const {\n"
+                                    "Templater::dynamic::dtags::" << tag.dynamicName << "::" << tag.dynamicName << "(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)\n"
+                                    "   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}\n\n"
+                                    "bool Templater::dynamic::dtags::" << tag.dynamicName << "::isVoid() const {\n"
                                     "    return " << (int) (tag.isVoid) << ";\n"
                                     "}\n\n"
-                                    "std::shared_ptr<Templater::html::Object> Templater::html::dtags::" << tag.name << "::clone() const {\n"
-                                    "    return std::make_shared<" << tag.name << ">(*this);\n"
+                                    "std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::" << tag.dynamicName << "::clone() const {\n"
+                                    "    return std::make_shared<" << tag.dynamicName << ">(*this);\n"
                                     "}\n";
     }
 
@@ -79,8 +87,8 @@ void generateDynamic(const std::vector<Tag>& tags) {
 
     for (auto& tag: tags) {
         headerDynamic << "template <typename... Args>\n"
-                                "Templater::html::dtags::" << tag.name << "::" << tag.name << "(Args&&... args)\n"
-                                "    : Templater::html::Object(std::forward<Args>(args)...) {}\n\n";
+                                "Templater::dynamic::dtags::" << tag.dynamicName << "::" << tag.dynamicName << "(Args&&... args)\n"
+                                "    : Templater::dynamic::Object(std::forward<Args>(args)...) {}\n\n";
     }
 
     headerDynamic.close();
@@ -98,13 +106,13 @@ void generateCompile(const std::vector<Tag>& tags) {
     headerCompile << "#pragma once\n";
     headerCompile << "#include \"document.h\" \n";
     headerCompile << "#include \"dynamic/tags.h\" \n\n";
-    headerCompile << "namespace Templater::html::ctags {\n";
+    headerCompile << "namespace Templater::compile::ctags {\n";
 
     for (auto& tag: tags) {
         headerCompile << "    template <typename... Children>\n"
-                            "    struct " << tag.name << " {\n"
-                                    "        static constexpr std::shared_ptr<Object> value() {\n"
-                                    "            Templater::html::dtags::" << tag.name << " node = Templater::html::dtags::" << tag.name << "();\n"
+                            "    struct " << tag.compileName << " {\n"
+                                    "        static constexpr std::shared_ptr<Templater::dynamic::Object> value() {\n"
+                                    "            Templater::dynamic::dtags::" << tag.dynamicName << " node = Templater::dynamic::dtags::" << tag.dynamicName << "();\n"
                                     "            (parseChildren<Children>(node), ...);\n"
                                     "            return node.clone();\n"
                                     "        }\n"

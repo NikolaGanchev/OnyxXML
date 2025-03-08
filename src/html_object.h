@@ -7,7 +7,7 @@
 #include <functional>
 
 namespace Templater {
-    namespace html {
+    namespace dynamic {
 
         class Attribute {
             private:
@@ -141,14 +141,14 @@ namespace Templater {
 }
 
 template <typename... Args>
-Templater::html::Object::Object(Args&&... args) requires (Templater::html::isValidObjectConstructorType<Args>&& ...) { 
+Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic::isValidObjectConstructorType<Args>&& ...) { 
     m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
 template <typename T>
-void Templater::html::Object::processConstructorArgs(T&& arg) {
+void Templater::dynamic::Object::processConstructorArgs(T&& arg) {
     if constexpr (std::is_base_of_v<Object, std::decay_t<T>>) {
         processConstructorObject(arg);
     } else {
@@ -157,10 +157,10 @@ void Templater::html::Object::processConstructorArgs(T&& arg) {
 }
 
 template <typename... Args>
-Templater::html::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&&... args)
-    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&&... args)
+    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
     
 template <typename... Args>
-Templater::html::EmptyTag::EmptyTag(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::EmptyTag::EmptyTag(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}

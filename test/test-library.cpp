@@ -3,9 +3,9 @@
 
 #include <chrono>
 
-using namespace Templater::html;
-
 TEST_CASE("HTML is generated", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -24,6 +24,8 @@ TEST_CASE("HTML is generated", "[Object]" ) {
 }
 
 TEST_CASE("serialise() arguments override global identation rules", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -42,6 +44,8 @@ TEST_CASE("serialise() arguments override global identation rules", "[Object]" )
 }
 
 TEST_CASE("Vector constructor works", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -63,6 +67,7 @@ TEST_CASE("Vector constructor works", "[Object]" ) {
 }
 
 TEST_CASE("Complex test case generates html", "[Object]" ) {
+    using namespace Templater::dynamic;
 
     GenericObject obj = GenericObject(
         "html", false,
@@ -165,6 +170,8 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
 }
 
 TEST_CASE("Children return by tag name works", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -189,6 +196,8 @@ TEST_CASE("Children return by tag name works", "[Object]" ) {
 }
 
 TEST_CASE("Children return by id works", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -213,6 +222,8 @@ TEST_CASE("Children return by id works", "[Object]" ) {
 }
 
 TEST_CASE("Children return by name works", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -242,6 +253,8 @@ TEST_CASE("Children return by name works", "[Object]" ) {
 }
 
 TEST_CASE("Children return by class name works", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -271,6 +284,8 @@ TEST_CASE("Children return by class name works", "[Object]" ) {
 }
 
 TEST_CASE("Child add works", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -296,6 +311,8 @@ TEST_CASE("Child add works", "[Object]" ) {
 }
 
 TEST_CASE("Child remove works", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -328,6 +345,8 @@ TEST_CASE("Child remove works", "[Object]" ) {
 }
 
 TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -350,6 +369,8 @@ TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" )
 }
 
 TEST_CASE("Children do not get disowned upon pointer to parent destruction", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -372,6 +393,8 @@ TEST_CASE("Children do not get disowned upon pointer to parent destruction", "[O
 }
 
 TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -390,6 +413,8 @@ TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
 }
 
 TEST_CASE("Operator += works for child add", "[Object]" ) {
+    using namespace Templater::dynamic;
+
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
 
@@ -416,7 +441,7 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
 
 
 TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
-    using namespace Templater::html::dtags;
+    using namespace Templater::dynamic::dtags;
 
     html obj = html(
         Attribute("lang", "en"),
@@ -514,7 +539,8 @@ TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
 }
 
 TEST_CASE("Compile-time html serialises correctly", "[Object]" ) {
-    using namespace Templater::html::ctags;
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
 
     using doc = Document<html<
                             ctags::Attribute<"lang", "en">,
@@ -528,7 +554,8 @@ TEST_CASE("Compile-time html serialises correctly", "[Object]" ) {
 }
 
 TEST_CASE("Compile-time html enforces given identation rules", "[Object]" ) {
-    using namespace Templater::html::ctags;
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
 
     using doc = Document<html<
                             ctags::Attribute<"theme", "light">,
@@ -543,7 +570,8 @@ TEST_CASE("Compile-time html enforces given identation rules", "[Object]" ) {
 }
 
 TEST_CASE("HTML fragment using Document serialises correctly", "[Object]" ) {
-    using namespace Templater::html::ctags;
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
 
     using list = Document<
         li<ctags::Text<"1">>,
@@ -557,39 +585,39 @@ TEST_CASE("HTML fragment using Document serialises correctly", "[Object]" ) {
 }
 
 TEST_CASE("Complex html with constant tags", "[Object]" ) {
-    using namespace Templater::html::ctags;
+    using namespace Templater::compile::ctags;
 
     
-    using doc = Document<html<
-        ctags::Attribute<"lang", "en">,
+    using doc = Templater::compile::Document<html<
+        Attribute<"lang", "en">,
         head<
-            title<ctags::Text<"Test Page">>,
-            meta<ctags::Attribute<"charset", "UTF-8">>,
-            meta<ctags::Attribute<"name", "viewport">, ctags::Attribute<"content", "width=device-width, initial-scale=1.0">>,
-            link<ctags::Attribute<"rel", "stylesheet">, ctags::Attribute<"href", "styles.css">>
+            title<Text<"Test Page">>,
+            meta<Attribute<"charset", "UTF-8">>,
+            meta<Attribute<"name", "viewport">, Attribute<"content", "width=device-width, initial-scale=1.0">>,
+            link<Attribute<"rel", "stylesheet">, Attribute<"href", "styles.css">>
         >,
         body<
-            h1<ctags::Text<"Welcome to the Test Page">>,
-            p<ctags::Text<"This is a paragraph demonstrating compile-time HTML generation.">>,
-            ctags::div<
-                ctags::Attribute<"class", "container">,
-                p<ctags::Text<"Inside a div element.">>,
+            h1<Text<"Welcome to the Test Page">>,
+            p<Text<"This is a paragraph demonstrating compile-time HTML generation.">>,
+            cdiv<
+                Attribute<"class", "container">,
+                p<Text<"Inside a div element.">>,
                 ul<
-                    li<ctags::Text<"Item 1">>,
-                    li<ctags::Text<"Item 2">>,
-                    li<ctags::Text<"Item 3">>
+                    li<Text<"Item 1">>,
+                    li<Text<"Item 2">>,
+                    li<Text<"Item 3">>
                 >
             >,
             form<
-                ctags::Attribute<"action", "/submit">,
-                ctags::Attribute<"method", "post">,
-                label<ctags::Attribute<"for", "name">, ctags::Text<"Name: ">>,
-                input<ctags::Attribute<"type", "text">, ctags::Attribute<"id", "name">, ctags::Attribute<"name", "name">>,
+                Attribute<"action", "/submit">,
+                Attribute<"method", "post">,
+                label<Attribute<"for", "name">, Text<"Name: ">>,
+                input<Attribute<"type", "text">, Attribute<"id", "name">, Attribute<"name", "name">>,
                 br<>,
-                label<ctags::Attribute<"for", "email">, ctags::Text<"Email: ">>,
-                input<ctags::Attribute<"type", "email">, ctags::Attribute<"id", "email">, ctags::Attribute<"name", "email">>,
+                label<Attribute<"for", "email">, Text<"Email: ">>,
+                input<Attribute<"type", "email">, Attribute<"id", "email">, Attribute<"name", "email">>,
                 br<>,
-                button<ctags::Attribute<"type", "submit">, ctags::Text<"Submit">>
+                button<Attribute<"type", "submit">, Text<"Submit">>
             >
         >
         >>;

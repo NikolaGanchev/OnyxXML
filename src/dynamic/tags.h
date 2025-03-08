@@ -1,8 +1,8 @@
 #pragma once
 #include "html_object.h" 
 
-namespace Templater::html::dtags {
-    using namespace Templater::html; 
+namespace Templater::dynamic::dtags {
+    using namespace Templater::dynamic; 
     class a: public Object {
         public:
             template <typename... Args>
@@ -939,11 +939,11 @@ namespace Templater::html::dtags {
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
     };
-    class htemplate: public Object {
+    class ctemplate: public Object {
         public:
             template <typename... Args>
-            explicit htemplate(Args&&... args);
-            explicit htemplate(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
+            explicit ctemplate(Args&&... args);
+            explicit ctemplate(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -1068,474 +1068,474 @@ namespace Templater::html::dtags {
 }
 
 template <typename... Args>
-Templater::html::dtags::a::a(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::a::a(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::abbr::abbr(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::abbr::abbr(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::address::address(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::address::address(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::area::area(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::area::area(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::article::article(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::article::article(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::aside::aside(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::aside::aside(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::audio::audio(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::audio::audio(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::b::b(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::b::b(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::base::base(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::base::base(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::bdi::bdi(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::bdi::bdi(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::bdo::bdo(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::bdo::bdo(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::blockquote::blockquote(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::blockquote::blockquote(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::body::body(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::body::body(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::br::br(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::br::br(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::button::button(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::button::button(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::canvas::canvas(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::canvas::canvas(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::caption::caption(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::caption::caption(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::cite::cite(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::cite::cite(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::code::code(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::code::code(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::col::col(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::col::col(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::colgroup::colgroup(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::colgroup::colgroup(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::data::data(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::data::data(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::datalist::datalist(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::datalist::datalist(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::dd::dd(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::dd::dd(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::del::del(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::del::del(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::details::details(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::details::details(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::dfn::dfn(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::dfn::dfn(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::dialog::dialog(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::dialog::dialog(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::div::div(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::div::div(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::dl::dl(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::dl::dl(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::dt::dt(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::dt::dt(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::em::em(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::em::em(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::embed::embed(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::embed::embed(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::fieldset::fieldset(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::fieldset::fieldset(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::figcaption::figcaption(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::figcaption::figcaption(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::figure::figure(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::figure::figure(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::footer::footer(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::footer::footer(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::form::form(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::form::form(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::h1::h1(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::h1::h1(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::h2::h2(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::h2::h2(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::h3::h3(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::h3::h3(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::h4::h4(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::h4::h4(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::h5::h5(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::h5::h5(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::h6::h6(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::h6::h6(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::head::head(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::head::head(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::header::header(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::header::header(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::hgroup::hgroup(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::hgroup::hgroup(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::hr::hr(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::hr::hr(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::html::html(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::html::html(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::i::i(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::i::i(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::iframe::iframe(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::iframe::iframe(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::img::img(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::img::img(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::input::input(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::input::input(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::ins::ins(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::ins::ins(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::kbd::kbd(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::kbd::kbd(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::label::label(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::label::label(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::legend::legend(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::legend::legend(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::li::li(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::li::li(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::link::link(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::link::link(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::main::main(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::main::main(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::map::map(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::map::map(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::mark::mark(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::mark::mark(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::math::math(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::math::math(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::menu::menu(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::menu::menu(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::menuitem::menuitem(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::menuitem::menuitem(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::meta::meta(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::meta::meta(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::meter::meter(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::meter::meter(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::nav::nav(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::nav::nav(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::noscript::noscript(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::noscript::noscript(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::object::object(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::object::object(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::ol::ol(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::ol::ol(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::optgroup::optgroup(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::optgroup::optgroup(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::option::option(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::option::option(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::output::output(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::output::output(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::p::p(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::p::p(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::param::param(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::param::param(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::picture::picture(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::picture::picture(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::pre::pre(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::pre::pre(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::progress::progress(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::progress::progress(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::q::q(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::q::q(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::rb::rb(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::rb::rb(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::rp::rp(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::rp::rp(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::rt::rt(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::rt::rt(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::rtc::rtc(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::rtc::rtc(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::ruby::ruby(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::ruby::ruby(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::s::s(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::s::s(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::samp::samp(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::samp::samp(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::script::script(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::script::script(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::search::search(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::search::search(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::section::section(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::section::section(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::select::select(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::select::select(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::slot::slot(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::slot::slot(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::small::small(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::small::small(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::source::source(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::source::source(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::span::span(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::span::span(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::strong::strong(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::strong::strong(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::style::style(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::style::style(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::sub::sub(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::sub::sub(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::summary::summary(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::summary::summary(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::sup::sup(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::sup::sup(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::svg::svg(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::svg::svg(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::table::table(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::table::table(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::tbody::tbody(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::tbody::tbody(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::td::td(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::td::td(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::htemplate::htemplate(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::ctemplate::ctemplate(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::textarea::textarea(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::textarea::textarea(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::tfoot::tfoot(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::tfoot::tfoot(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::th::th(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::th::th(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::thead::thead(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::thead::thead(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::time::time(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::time::time(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::title::title(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::title::title(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::tr::tr(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::tr::tr(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::track::track(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::track::track(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::u::u(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::u::u(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::ul::ul(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::ul::ul(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::var::var(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::var::var(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::video::video(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::video::video(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
 template <typename... Args>
-Templater::html::dtags::wbr::wbr(Args&&... args)
-    : Templater::html::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::wbr::wbr(Args&&... args)
+    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
 

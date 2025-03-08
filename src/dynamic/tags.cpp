@@ -1,1772 +1,1772 @@
 #include "tags.h"
 
-const std::string& Templater::html::dtags::a::getTagName() const {
+const std::string& Templater::dynamic::dtags::a::getTagName() const {
     static const std::string name = "a";
     return name;
 }
 
-Templater::html::dtags::a::a(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::a::a(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::a::isVoid() const {
+bool Templater::dynamic::dtags::a::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::a::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::a::clone() const {
     return std::make_shared<a>(*this);
 }
-const std::string& Templater::html::dtags::abbr::getTagName() const {
+const std::string& Templater::dynamic::dtags::abbr::getTagName() const {
     static const std::string name = "abbr";
     return name;
 }
 
-Templater::html::dtags::abbr::abbr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::abbr::abbr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::abbr::isVoid() const {
+bool Templater::dynamic::dtags::abbr::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::abbr::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::abbr::clone() const {
     return std::make_shared<abbr>(*this);
 }
-const std::string& Templater::html::dtags::address::getTagName() const {
+const std::string& Templater::dynamic::dtags::address::getTagName() const {
     static const std::string name = "address";
     return name;
 }
 
-Templater::html::dtags::address::address(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::address::address(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::address::isVoid() const {
+bool Templater::dynamic::dtags::address::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::address::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::address::clone() const {
     return std::make_shared<address>(*this);
 }
-const std::string& Templater::html::dtags::area::getTagName() const {
+const std::string& Templater::dynamic::dtags::area::getTagName() const {
     static const std::string name = "area";
     return name;
 }
 
-Templater::html::dtags::area::area(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::area::area(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::area::isVoid() const {
+bool Templater::dynamic::dtags::area::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::area::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::area::clone() const {
     return std::make_shared<area>(*this);
 }
-const std::string& Templater::html::dtags::article::getTagName() const {
+const std::string& Templater::dynamic::dtags::article::getTagName() const {
     static const std::string name = "article";
     return name;
 }
 
-Templater::html::dtags::article::article(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::article::article(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::article::isVoid() const {
+bool Templater::dynamic::dtags::article::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::article::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::article::clone() const {
     return std::make_shared<article>(*this);
 }
-const std::string& Templater::html::dtags::aside::getTagName() const {
+const std::string& Templater::dynamic::dtags::aside::getTagName() const {
     static const std::string name = "aside";
     return name;
 }
 
-Templater::html::dtags::aside::aside(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::aside::aside(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::aside::isVoid() const {
+bool Templater::dynamic::dtags::aside::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::aside::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::aside::clone() const {
     return std::make_shared<aside>(*this);
 }
-const std::string& Templater::html::dtags::audio::getTagName() const {
+const std::string& Templater::dynamic::dtags::audio::getTagName() const {
     static const std::string name = "audio";
     return name;
 }
 
-Templater::html::dtags::audio::audio(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::audio::audio(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::audio::isVoid() const {
+bool Templater::dynamic::dtags::audio::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::audio::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::audio::clone() const {
     return std::make_shared<audio>(*this);
 }
-const std::string& Templater::html::dtags::b::getTagName() const {
+const std::string& Templater::dynamic::dtags::b::getTagName() const {
     static const std::string name = "b";
     return name;
 }
 
-Templater::html::dtags::b::b(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::b::b(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::b::isVoid() const {
+bool Templater::dynamic::dtags::b::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::b::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::b::clone() const {
     return std::make_shared<b>(*this);
 }
-const std::string& Templater::html::dtags::base::getTagName() const {
+const std::string& Templater::dynamic::dtags::base::getTagName() const {
     static const std::string name = "base";
     return name;
 }
 
-Templater::html::dtags::base::base(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::base::base(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::base::isVoid() const {
+bool Templater::dynamic::dtags::base::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::base::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::base::clone() const {
     return std::make_shared<base>(*this);
 }
-const std::string& Templater::html::dtags::bdi::getTagName() const {
+const std::string& Templater::dynamic::dtags::bdi::getTagName() const {
     static const std::string name = "bdi";
     return name;
 }
 
-Templater::html::dtags::bdi::bdi(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::bdi::bdi(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::bdi::isVoid() const {
+bool Templater::dynamic::dtags::bdi::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::bdi::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::bdi::clone() const {
     return std::make_shared<bdi>(*this);
 }
-const std::string& Templater::html::dtags::bdo::getTagName() const {
+const std::string& Templater::dynamic::dtags::bdo::getTagName() const {
     static const std::string name = "bdo";
     return name;
 }
 
-Templater::html::dtags::bdo::bdo(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::bdo::bdo(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::bdo::isVoid() const {
+bool Templater::dynamic::dtags::bdo::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::bdo::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::bdo::clone() const {
     return std::make_shared<bdo>(*this);
 }
-const std::string& Templater::html::dtags::blockquote::getTagName() const {
+const std::string& Templater::dynamic::dtags::blockquote::getTagName() const {
     static const std::string name = "blockquote";
     return name;
 }
 
-Templater::html::dtags::blockquote::blockquote(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::blockquote::blockquote(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::blockquote::isVoid() const {
+bool Templater::dynamic::dtags::blockquote::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::blockquote::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::blockquote::clone() const {
     return std::make_shared<blockquote>(*this);
 }
-const std::string& Templater::html::dtags::body::getTagName() const {
+const std::string& Templater::dynamic::dtags::body::getTagName() const {
     static const std::string name = "body";
     return name;
 }
 
-Templater::html::dtags::body::body(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::body::body(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::body::isVoid() const {
+bool Templater::dynamic::dtags::body::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::body::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::body::clone() const {
     return std::make_shared<body>(*this);
 }
-const std::string& Templater::html::dtags::br::getTagName() const {
+const std::string& Templater::dynamic::dtags::br::getTagName() const {
     static const std::string name = "br";
     return name;
 }
 
-Templater::html::dtags::br::br(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::br::br(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::br::isVoid() const {
+bool Templater::dynamic::dtags::br::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::br::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::br::clone() const {
     return std::make_shared<br>(*this);
 }
-const std::string& Templater::html::dtags::button::getTagName() const {
+const std::string& Templater::dynamic::dtags::button::getTagName() const {
     static const std::string name = "button";
     return name;
 }
 
-Templater::html::dtags::button::button(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::button::button(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::button::isVoid() const {
+bool Templater::dynamic::dtags::button::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::button::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::button::clone() const {
     return std::make_shared<button>(*this);
 }
-const std::string& Templater::html::dtags::canvas::getTagName() const {
+const std::string& Templater::dynamic::dtags::canvas::getTagName() const {
     static const std::string name = "canvas";
     return name;
 }
 
-Templater::html::dtags::canvas::canvas(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::canvas::canvas(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::canvas::isVoid() const {
+bool Templater::dynamic::dtags::canvas::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::canvas::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::canvas::clone() const {
     return std::make_shared<canvas>(*this);
 }
-const std::string& Templater::html::dtags::caption::getTagName() const {
+const std::string& Templater::dynamic::dtags::caption::getTagName() const {
     static const std::string name = "caption";
     return name;
 }
 
-Templater::html::dtags::caption::caption(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::caption::caption(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::caption::isVoid() const {
+bool Templater::dynamic::dtags::caption::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::caption::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::caption::clone() const {
     return std::make_shared<caption>(*this);
 }
-const std::string& Templater::html::dtags::cite::getTagName() const {
+const std::string& Templater::dynamic::dtags::cite::getTagName() const {
     static const std::string name = "cite";
     return name;
 }
 
-Templater::html::dtags::cite::cite(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::cite::cite(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::cite::isVoid() const {
+bool Templater::dynamic::dtags::cite::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::cite::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::cite::clone() const {
     return std::make_shared<cite>(*this);
 }
-const std::string& Templater::html::dtags::code::getTagName() const {
+const std::string& Templater::dynamic::dtags::code::getTagName() const {
     static const std::string name = "code";
     return name;
 }
 
-Templater::html::dtags::code::code(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::code::code(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::code::isVoid() const {
+bool Templater::dynamic::dtags::code::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::code::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::code::clone() const {
     return std::make_shared<code>(*this);
 }
-const std::string& Templater::html::dtags::col::getTagName() const {
+const std::string& Templater::dynamic::dtags::col::getTagName() const {
     static const std::string name = "col";
     return name;
 }
 
-Templater::html::dtags::col::col(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::col::col(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::col::isVoid() const {
+bool Templater::dynamic::dtags::col::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::col::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::col::clone() const {
     return std::make_shared<col>(*this);
 }
-const std::string& Templater::html::dtags::colgroup::getTagName() const {
+const std::string& Templater::dynamic::dtags::colgroup::getTagName() const {
     static const std::string name = "colgroup";
     return name;
 }
 
-Templater::html::dtags::colgroup::colgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::colgroup::colgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::colgroup::isVoid() const {
+bool Templater::dynamic::dtags::colgroup::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::colgroup::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::colgroup::clone() const {
     return std::make_shared<colgroup>(*this);
 }
-const std::string& Templater::html::dtags::data::getTagName() const {
+const std::string& Templater::dynamic::dtags::data::getTagName() const {
     static const std::string name = "data";
     return name;
 }
 
-Templater::html::dtags::data::data(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::data::data(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::data::isVoid() const {
+bool Templater::dynamic::dtags::data::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::data::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::data::clone() const {
     return std::make_shared<data>(*this);
 }
-const std::string& Templater::html::dtags::datalist::getTagName() const {
+const std::string& Templater::dynamic::dtags::datalist::getTagName() const {
     static const std::string name = "datalist";
     return name;
 }
 
-Templater::html::dtags::datalist::datalist(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::datalist::datalist(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::datalist::isVoid() const {
+bool Templater::dynamic::dtags::datalist::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::datalist::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::datalist::clone() const {
     return std::make_shared<datalist>(*this);
 }
-const std::string& Templater::html::dtags::dd::getTagName() const {
+const std::string& Templater::dynamic::dtags::dd::getTagName() const {
     static const std::string name = "dd";
     return name;
 }
 
-Templater::html::dtags::dd::dd(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::dd::dd(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::dd::isVoid() const {
+bool Templater::dynamic::dtags::dd::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::dd::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::dd::clone() const {
     return std::make_shared<dd>(*this);
 }
-const std::string& Templater::html::dtags::del::getTagName() const {
+const std::string& Templater::dynamic::dtags::del::getTagName() const {
     static const std::string name = "del";
     return name;
 }
 
-Templater::html::dtags::del::del(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::del::del(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::del::isVoid() const {
+bool Templater::dynamic::dtags::del::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::del::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::del::clone() const {
     return std::make_shared<del>(*this);
 }
-const std::string& Templater::html::dtags::details::getTagName() const {
+const std::string& Templater::dynamic::dtags::details::getTagName() const {
     static const std::string name = "details";
     return name;
 }
 
-Templater::html::dtags::details::details(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::details::details(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::details::isVoid() const {
+bool Templater::dynamic::dtags::details::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::details::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::details::clone() const {
     return std::make_shared<details>(*this);
 }
-const std::string& Templater::html::dtags::dfn::getTagName() const {
+const std::string& Templater::dynamic::dtags::dfn::getTagName() const {
     static const std::string name = "dfn";
     return name;
 }
 
-Templater::html::dtags::dfn::dfn(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::dfn::dfn(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::dfn::isVoid() const {
+bool Templater::dynamic::dtags::dfn::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::dfn::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::dfn::clone() const {
     return std::make_shared<dfn>(*this);
 }
-const std::string& Templater::html::dtags::dialog::getTagName() const {
+const std::string& Templater::dynamic::dtags::dialog::getTagName() const {
     static const std::string name = "dialog";
     return name;
 }
 
-Templater::html::dtags::dialog::dialog(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::dialog::dialog(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::dialog::isVoid() const {
+bool Templater::dynamic::dtags::dialog::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::dialog::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::dialog::clone() const {
     return std::make_shared<dialog>(*this);
 }
-const std::string& Templater::html::dtags::div::getTagName() const {
+const std::string& Templater::dynamic::dtags::div::getTagName() const {
     static const std::string name = "div";
     return name;
 }
 
-Templater::html::dtags::div::div(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::div::div(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::div::isVoid() const {
+bool Templater::dynamic::dtags::div::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::div::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::div::clone() const {
     return std::make_shared<div>(*this);
 }
-const std::string& Templater::html::dtags::dl::getTagName() const {
+const std::string& Templater::dynamic::dtags::dl::getTagName() const {
     static const std::string name = "dl";
     return name;
 }
 
-Templater::html::dtags::dl::dl(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::dl::dl(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::dl::isVoid() const {
+bool Templater::dynamic::dtags::dl::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::dl::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::dl::clone() const {
     return std::make_shared<dl>(*this);
 }
-const std::string& Templater::html::dtags::dt::getTagName() const {
+const std::string& Templater::dynamic::dtags::dt::getTagName() const {
     static const std::string name = "dt";
     return name;
 }
 
-Templater::html::dtags::dt::dt(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::dt::dt(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::dt::isVoid() const {
+bool Templater::dynamic::dtags::dt::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::dt::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::dt::clone() const {
     return std::make_shared<dt>(*this);
 }
-const std::string& Templater::html::dtags::em::getTagName() const {
+const std::string& Templater::dynamic::dtags::em::getTagName() const {
     static const std::string name = "em";
     return name;
 }
 
-Templater::html::dtags::em::em(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::em::em(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::em::isVoid() const {
+bool Templater::dynamic::dtags::em::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::em::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::em::clone() const {
     return std::make_shared<em>(*this);
 }
-const std::string& Templater::html::dtags::embed::getTagName() const {
+const std::string& Templater::dynamic::dtags::embed::getTagName() const {
     static const std::string name = "embed";
     return name;
 }
 
-Templater::html::dtags::embed::embed(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::embed::embed(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::embed::isVoid() const {
+bool Templater::dynamic::dtags::embed::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::embed::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::embed::clone() const {
     return std::make_shared<embed>(*this);
 }
-const std::string& Templater::html::dtags::fieldset::getTagName() const {
+const std::string& Templater::dynamic::dtags::fieldset::getTagName() const {
     static const std::string name = "fieldset";
     return name;
 }
 
-Templater::html::dtags::fieldset::fieldset(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::fieldset::fieldset(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::fieldset::isVoid() const {
+bool Templater::dynamic::dtags::fieldset::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::fieldset::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::fieldset::clone() const {
     return std::make_shared<fieldset>(*this);
 }
-const std::string& Templater::html::dtags::figcaption::getTagName() const {
+const std::string& Templater::dynamic::dtags::figcaption::getTagName() const {
     static const std::string name = "figcaption";
     return name;
 }
 
-Templater::html::dtags::figcaption::figcaption(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::figcaption::figcaption(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::figcaption::isVoid() const {
+bool Templater::dynamic::dtags::figcaption::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::figcaption::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::figcaption::clone() const {
     return std::make_shared<figcaption>(*this);
 }
-const std::string& Templater::html::dtags::figure::getTagName() const {
+const std::string& Templater::dynamic::dtags::figure::getTagName() const {
     static const std::string name = "figure";
     return name;
 }
 
-Templater::html::dtags::figure::figure(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::figure::figure(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::figure::isVoid() const {
+bool Templater::dynamic::dtags::figure::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::figure::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::figure::clone() const {
     return std::make_shared<figure>(*this);
 }
-const std::string& Templater::html::dtags::footer::getTagName() const {
+const std::string& Templater::dynamic::dtags::footer::getTagName() const {
     static const std::string name = "footer";
     return name;
 }
 
-Templater::html::dtags::footer::footer(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::footer::footer(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::footer::isVoid() const {
+bool Templater::dynamic::dtags::footer::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::footer::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::footer::clone() const {
     return std::make_shared<footer>(*this);
 }
-const std::string& Templater::html::dtags::form::getTagName() const {
+const std::string& Templater::dynamic::dtags::form::getTagName() const {
     static const std::string name = "form";
     return name;
 }
 
-Templater::html::dtags::form::form(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::form::form(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::form::isVoid() const {
+bool Templater::dynamic::dtags::form::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::form::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::form::clone() const {
     return std::make_shared<form>(*this);
 }
-const std::string& Templater::html::dtags::h1::getTagName() const {
+const std::string& Templater::dynamic::dtags::h1::getTagName() const {
     static const std::string name = "h1";
     return name;
 }
 
-Templater::html::dtags::h1::h1(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::h1::h1(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::h1::isVoid() const {
+bool Templater::dynamic::dtags::h1::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::h1::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::h1::clone() const {
     return std::make_shared<h1>(*this);
 }
-const std::string& Templater::html::dtags::h2::getTagName() const {
+const std::string& Templater::dynamic::dtags::h2::getTagName() const {
     static const std::string name = "h2";
     return name;
 }
 
-Templater::html::dtags::h2::h2(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::h2::h2(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::h2::isVoid() const {
+bool Templater::dynamic::dtags::h2::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::h2::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::h2::clone() const {
     return std::make_shared<h2>(*this);
 }
-const std::string& Templater::html::dtags::h3::getTagName() const {
+const std::string& Templater::dynamic::dtags::h3::getTagName() const {
     static const std::string name = "h3";
     return name;
 }
 
-Templater::html::dtags::h3::h3(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::h3::h3(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::h3::isVoid() const {
+bool Templater::dynamic::dtags::h3::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::h3::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::h3::clone() const {
     return std::make_shared<h3>(*this);
 }
-const std::string& Templater::html::dtags::h4::getTagName() const {
+const std::string& Templater::dynamic::dtags::h4::getTagName() const {
     static const std::string name = "h4";
     return name;
 }
 
-Templater::html::dtags::h4::h4(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::h4::h4(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::h4::isVoid() const {
+bool Templater::dynamic::dtags::h4::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::h4::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::h4::clone() const {
     return std::make_shared<h4>(*this);
 }
-const std::string& Templater::html::dtags::h5::getTagName() const {
+const std::string& Templater::dynamic::dtags::h5::getTagName() const {
     static const std::string name = "h5";
     return name;
 }
 
-Templater::html::dtags::h5::h5(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::h5::h5(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::h5::isVoid() const {
+bool Templater::dynamic::dtags::h5::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::h5::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::h5::clone() const {
     return std::make_shared<h5>(*this);
 }
-const std::string& Templater::html::dtags::h6::getTagName() const {
+const std::string& Templater::dynamic::dtags::h6::getTagName() const {
     static const std::string name = "h6";
     return name;
 }
 
-Templater::html::dtags::h6::h6(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::h6::h6(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::h6::isVoid() const {
+bool Templater::dynamic::dtags::h6::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::h6::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::h6::clone() const {
     return std::make_shared<h6>(*this);
 }
-const std::string& Templater::html::dtags::head::getTagName() const {
+const std::string& Templater::dynamic::dtags::head::getTagName() const {
     static const std::string name = "head";
     return name;
 }
 
-Templater::html::dtags::head::head(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::head::head(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::head::isVoid() const {
+bool Templater::dynamic::dtags::head::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::head::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::head::clone() const {
     return std::make_shared<head>(*this);
 }
-const std::string& Templater::html::dtags::header::getTagName() const {
+const std::string& Templater::dynamic::dtags::header::getTagName() const {
     static const std::string name = "header";
     return name;
 }
 
-Templater::html::dtags::header::header(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::header::header(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::header::isVoid() const {
+bool Templater::dynamic::dtags::header::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::header::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::header::clone() const {
     return std::make_shared<header>(*this);
 }
-const std::string& Templater::html::dtags::hgroup::getTagName() const {
+const std::string& Templater::dynamic::dtags::hgroup::getTagName() const {
     static const std::string name = "hgroup";
     return name;
 }
 
-Templater::html::dtags::hgroup::hgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::hgroup::hgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::hgroup::isVoid() const {
+bool Templater::dynamic::dtags::hgroup::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::hgroup::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::hgroup::clone() const {
     return std::make_shared<hgroup>(*this);
 }
-const std::string& Templater::html::dtags::hr::getTagName() const {
+const std::string& Templater::dynamic::dtags::hr::getTagName() const {
     static const std::string name = "hr";
     return name;
 }
 
-Templater::html::dtags::hr::hr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::hr::hr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::hr::isVoid() const {
+bool Templater::dynamic::dtags::hr::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::hr::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::hr::clone() const {
     return std::make_shared<hr>(*this);
 }
-const std::string& Templater::html::dtags::html::getTagName() const {
+const std::string& Templater::dynamic::dtags::html::getTagName() const {
     static const std::string name = "html";
     return name;
 }
 
-Templater::html::dtags::html::html(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::html::html(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::html::isVoid() const {
+bool Templater::dynamic::dtags::html::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::html::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::html::clone() const {
     return std::make_shared<html>(*this);
 }
-const std::string& Templater::html::dtags::i::getTagName() const {
+const std::string& Templater::dynamic::dtags::i::getTagName() const {
     static const std::string name = "i";
     return name;
 }
 
-Templater::html::dtags::i::i(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::i::i(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::i::isVoid() const {
+bool Templater::dynamic::dtags::i::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::i::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::i::clone() const {
     return std::make_shared<i>(*this);
 }
-const std::string& Templater::html::dtags::iframe::getTagName() const {
+const std::string& Templater::dynamic::dtags::iframe::getTagName() const {
     static const std::string name = "iframe";
     return name;
 }
 
-Templater::html::dtags::iframe::iframe(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::iframe::iframe(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::iframe::isVoid() const {
+bool Templater::dynamic::dtags::iframe::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::iframe::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::iframe::clone() const {
     return std::make_shared<iframe>(*this);
 }
-const std::string& Templater::html::dtags::img::getTagName() const {
+const std::string& Templater::dynamic::dtags::img::getTagName() const {
     static const std::string name = "img";
     return name;
 }
 
-Templater::html::dtags::img::img(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::img::img(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::img::isVoid() const {
+bool Templater::dynamic::dtags::img::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::img::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::img::clone() const {
     return std::make_shared<img>(*this);
 }
-const std::string& Templater::html::dtags::input::getTagName() const {
+const std::string& Templater::dynamic::dtags::input::getTagName() const {
     static const std::string name = "input";
     return name;
 }
 
-Templater::html::dtags::input::input(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::input::input(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::input::isVoid() const {
+bool Templater::dynamic::dtags::input::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::input::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::input::clone() const {
     return std::make_shared<input>(*this);
 }
-const std::string& Templater::html::dtags::ins::getTagName() const {
+const std::string& Templater::dynamic::dtags::ins::getTagName() const {
     static const std::string name = "ins";
     return name;
 }
 
-Templater::html::dtags::ins::ins(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::ins::ins(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::ins::isVoid() const {
+bool Templater::dynamic::dtags::ins::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::ins::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::ins::clone() const {
     return std::make_shared<ins>(*this);
 }
-const std::string& Templater::html::dtags::kbd::getTagName() const {
+const std::string& Templater::dynamic::dtags::kbd::getTagName() const {
     static const std::string name = "kbd";
     return name;
 }
 
-Templater::html::dtags::kbd::kbd(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::kbd::kbd(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::kbd::isVoid() const {
+bool Templater::dynamic::dtags::kbd::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::kbd::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::kbd::clone() const {
     return std::make_shared<kbd>(*this);
 }
-const std::string& Templater::html::dtags::label::getTagName() const {
+const std::string& Templater::dynamic::dtags::label::getTagName() const {
     static const std::string name = "label";
     return name;
 }
 
-Templater::html::dtags::label::label(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::label::label(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::label::isVoid() const {
+bool Templater::dynamic::dtags::label::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::label::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::label::clone() const {
     return std::make_shared<label>(*this);
 }
-const std::string& Templater::html::dtags::legend::getTagName() const {
+const std::string& Templater::dynamic::dtags::legend::getTagName() const {
     static const std::string name = "legend";
     return name;
 }
 
-Templater::html::dtags::legend::legend(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::legend::legend(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::legend::isVoid() const {
+bool Templater::dynamic::dtags::legend::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::legend::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::legend::clone() const {
     return std::make_shared<legend>(*this);
 }
-const std::string& Templater::html::dtags::li::getTagName() const {
+const std::string& Templater::dynamic::dtags::li::getTagName() const {
     static const std::string name = "li";
     return name;
 }
 
-Templater::html::dtags::li::li(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::li::li(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::li::isVoid() const {
+bool Templater::dynamic::dtags::li::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::li::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::li::clone() const {
     return std::make_shared<li>(*this);
 }
-const std::string& Templater::html::dtags::link::getTagName() const {
+const std::string& Templater::dynamic::dtags::link::getTagName() const {
     static const std::string name = "link";
     return name;
 }
 
-Templater::html::dtags::link::link(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::link::link(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::link::isVoid() const {
+bool Templater::dynamic::dtags::link::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::link::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::link::clone() const {
     return std::make_shared<link>(*this);
 }
-const std::string& Templater::html::dtags::main::getTagName() const {
+const std::string& Templater::dynamic::dtags::main::getTagName() const {
     static const std::string name = "main";
     return name;
 }
 
-Templater::html::dtags::main::main(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::main::main(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::main::isVoid() const {
+bool Templater::dynamic::dtags::main::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::main::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::main::clone() const {
     return std::make_shared<main>(*this);
 }
-const std::string& Templater::html::dtags::map::getTagName() const {
+const std::string& Templater::dynamic::dtags::map::getTagName() const {
     static const std::string name = "map";
     return name;
 }
 
-Templater::html::dtags::map::map(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::map::map(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::map::isVoid() const {
+bool Templater::dynamic::dtags::map::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::map::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::map::clone() const {
     return std::make_shared<map>(*this);
 }
-const std::string& Templater::html::dtags::mark::getTagName() const {
+const std::string& Templater::dynamic::dtags::mark::getTagName() const {
     static const std::string name = "mark";
     return name;
 }
 
-Templater::html::dtags::mark::mark(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::mark::mark(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::mark::isVoid() const {
+bool Templater::dynamic::dtags::mark::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::mark::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::mark::clone() const {
     return std::make_shared<mark>(*this);
 }
-const std::string& Templater::html::dtags::math::getTagName() const {
+const std::string& Templater::dynamic::dtags::math::getTagName() const {
     static const std::string name = "math";
     return name;
 }
 
-Templater::html::dtags::math::math(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::math::math(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::math::isVoid() const {
+bool Templater::dynamic::dtags::math::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::math::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::math::clone() const {
     return std::make_shared<math>(*this);
 }
-const std::string& Templater::html::dtags::menu::getTagName() const {
+const std::string& Templater::dynamic::dtags::menu::getTagName() const {
     static const std::string name = "menu";
     return name;
 }
 
-Templater::html::dtags::menu::menu(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::menu::menu(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::menu::isVoid() const {
+bool Templater::dynamic::dtags::menu::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::menu::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::menu::clone() const {
     return std::make_shared<menu>(*this);
 }
-const std::string& Templater::html::dtags::menuitem::getTagName() const {
+const std::string& Templater::dynamic::dtags::menuitem::getTagName() const {
     static const std::string name = "menuitem";
     return name;
 }
 
-Templater::html::dtags::menuitem::menuitem(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::menuitem::menuitem(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::menuitem::isVoid() const {
+bool Templater::dynamic::dtags::menuitem::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::menuitem::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::menuitem::clone() const {
     return std::make_shared<menuitem>(*this);
 }
-const std::string& Templater::html::dtags::meta::getTagName() const {
+const std::string& Templater::dynamic::dtags::meta::getTagName() const {
     static const std::string name = "meta";
     return name;
 }
 
-Templater::html::dtags::meta::meta(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::meta::meta(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::meta::isVoid() const {
+bool Templater::dynamic::dtags::meta::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::meta::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::meta::clone() const {
     return std::make_shared<meta>(*this);
 }
-const std::string& Templater::html::dtags::meter::getTagName() const {
+const std::string& Templater::dynamic::dtags::meter::getTagName() const {
     static const std::string name = "meter";
     return name;
 }
 
-Templater::html::dtags::meter::meter(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::meter::meter(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::meter::isVoid() const {
+bool Templater::dynamic::dtags::meter::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::meter::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::meter::clone() const {
     return std::make_shared<meter>(*this);
 }
-const std::string& Templater::html::dtags::nav::getTagName() const {
+const std::string& Templater::dynamic::dtags::nav::getTagName() const {
     static const std::string name = "nav";
     return name;
 }
 
-Templater::html::dtags::nav::nav(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::nav::nav(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::nav::isVoid() const {
+bool Templater::dynamic::dtags::nav::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::nav::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::nav::clone() const {
     return std::make_shared<nav>(*this);
 }
-const std::string& Templater::html::dtags::noscript::getTagName() const {
+const std::string& Templater::dynamic::dtags::noscript::getTagName() const {
     static const std::string name = "noscript";
     return name;
 }
 
-Templater::html::dtags::noscript::noscript(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::noscript::noscript(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::noscript::isVoid() const {
+bool Templater::dynamic::dtags::noscript::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::noscript::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::noscript::clone() const {
     return std::make_shared<noscript>(*this);
 }
-const std::string& Templater::html::dtags::object::getTagName() const {
+const std::string& Templater::dynamic::dtags::object::getTagName() const {
     static const std::string name = "object";
     return name;
 }
 
-Templater::html::dtags::object::object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::object::object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::object::isVoid() const {
+bool Templater::dynamic::dtags::object::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::object::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::object::clone() const {
     return std::make_shared<object>(*this);
 }
-const std::string& Templater::html::dtags::ol::getTagName() const {
+const std::string& Templater::dynamic::dtags::ol::getTagName() const {
     static const std::string name = "ol";
     return name;
 }
 
-Templater::html::dtags::ol::ol(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::ol::ol(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::ol::isVoid() const {
+bool Templater::dynamic::dtags::ol::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::ol::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::ol::clone() const {
     return std::make_shared<ol>(*this);
 }
-const std::string& Templater::html::dtags::optgroup::getTagName() const {
+const std::string& Templater::dynamic::dtags::optgroup::getTagName() const {
     static const std::string name = "optgroup";
     return name;
 }
 
-Templater::html::dtags::optgroup::optgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::optgroup::optgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::optgroup::isVoid() const {
+bool Templater::dynamic::dtags::optgroup::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::optgroup::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::optgroup::clone() const {
     return std::make_shared<optgroup>(*this);
 }
-const std::string& Templater::html::dtags::option::getTagName() const {
+const std::string& Templater::dynamic::dtags::option::getTagName() const {
     static const std::string name = "option";
     return name;
 }
 
-Templater::html::dtags::option::option(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::option::option(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::option::isVoid() const {
+bool Templater::dynamic::dtags::option::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::option::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::option::clone() const {
     return std::make_shared<option>(*this);
 }
-const std::string& Templater::html::dtags::output::getTagName() const {
+const std::string& Templater::dynamic::dtags::output::getTagName() const {
     static const std::string name = "output";
     return name;
 }
 
-Templater::html::dtags::output::output(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::output::output(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::output::isVoid() const {
+bool Templater::dynamic::dtags::output::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::output::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::output::clone() const {
     return std::make_shared<output>(*this);
 }
-const std::string& Templater::html::dtags::p::getTagName() const {
+const std::string& Templater::dynamic::dtags::p::getTagName() const {
     static const std::string name = "p";
     return name;
 }
 
-Templater::html::dtags::p::p(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::p::p(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::p::isVoid() const {
+bool Templater::dynamic::dtags::p::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::p::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::p::clone() const {
     return std::make_shared<p>(*this);
 }
-const std::string& Templater::html::dtags::param::getTagName() const {
+const std::string& Templater::dynamic::dtags::param::getTagName() const {
     static const std::string name = "param";
     return name;
 }
 
-Templater::html::dtags::param::param(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::param::param(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::param::isVoid() const {
+bool Templater::dynamic::dtags::param::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::param::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::param::clone() const {
     return std::make_shared<param>(*this);
 }
-const std::string& Templater::html::dtags::picture::getTagName() const {
+const std::string& Templater::dynamic::dtags::picture::getTagName() const {
     static const std::string name = "picture";
     return name;
 }
 
-Templater::html::dtags::picture::picture(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::picture::picture(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::picture::isVoid() const {
+bool Templater::dynamic::dtags::picture::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::picture::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::picture::clone() const {
     return std::make_shared<picture>(*this);
 }
-const std::string& Templater::html::dtags::pre::getTagName() const {
+const std::string& Templater::dynamic::dtags::pre::getTagName() const {
     static const std::string name = "pre";
     return name;
 }
 
-Templater::html::dtags::pre::pre(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::pre::pre(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::pre::isVoid() const {
+bool Templater::dynamic::dtags::pre::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::pre::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::pre::clone() const {
     return std::make_shared<pre>(*this);
 }
-const std::string& Templater::html::dtags::progress::getTagName() const {
+const std::string& Templater::dynamic::dtags::progress::getTagName() const {
     static const std::string name = "progress";
     return name;
 }
 
-Templater::html::dtags::progress::progress(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::progress::progress(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::progress::isVoid() const {
+bool Templater::dynamic::dtags::progress::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::progress::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::progress::clone() const {
     return std::make_shared<progress>(*this);
 }
-const std::string& Templater::html::dtags::q::getTagName() const {
+const std::string& Templater::dynamic::dtags::q::getTagName() const {
     static const std::string name = "q";
     return name;
 }
 
-Templater::html::dtags::q::q(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::q::q(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::q::isVoid() const {
+bool Templater::dynamic::dtags::q::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::q::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::q::clone() const {
     return std::make_shared<q>(*this);
 }
-const std::string& Templater::html::dtags::rb::getTagName() const {
+const std::string& Templater::dynamic::dtags::rb::getTagName() const {
     static const std::string name = "rb";
     return name;
 }
 
-Templater::html::dtags::rb::rb(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::rb::rb(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::rb::isVoid() const {
+bool Templater::dynamic::dtags::rb::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::rb::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::rb::clone() const {
     return std::make_shared<rb>(*this);
 }
-const std::string& Templater::html::dtags::rp::getTagName() const {
+const std::string& Templater::dynamic::dtags::rp::getTagName() const {
     static const std::string name = "rp";
     return name;
 }
 
-Templater::html::dtags::rp::rp(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::rp::rp(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::rp::isVoid() const {
+bool Templater::dynamic::dtags::rp::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::rp::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::rp::clone() const {
     return std::make_shared<rp>(*this);
 }
-const std::string& Templater::html::dtags::rt::getTagName() const {
+const std::string& Templater::dynamic::dtags::rt::getTagName() const {
     static const std::string name = "rt";
     return name;
 }
 
-Templater::html::dtags::rt::rt(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::rt::rt(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::rt::isVoid() const {
+bool Templater::dynamic::dtags::rt::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::rt::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::rt::clone() const {
     return std::make_shared<rt>(*this);
 }
-const std::string& Templater::html::dtags::rtc::getTagName() const {
+const std::string& Templater::dynamic::dtags::rtc::getTagName() const {
     static const std::string name = "rtc";
     return name;
 }
 
-Templater::html::dtags::rtc::rtc(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::rtc::rtc(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::rtc::isVoid() const {
+bool Templater::dynamic::dtags::rtc::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::rtc::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::rtc::clone() const {
     return std::make_shared<rtc>(*this);
 }
-const std::string& Templater::html::dtags::ruby::getTagName() const {
+const std::string& Templater::dynamic::dtags::ruby::getTagName() const {
     static const std::string name = "ruby";
     return name;
 }
 
-Templater::html::dtags::ruby::ruby(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::ruby::ruby(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::ruby::isVoid() const {
+bool Templater::dynamic::dtags::ruby::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::ruby::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::ruby::clone() const {
     return std::make_shared<ruby>(*this);
 }
-const std::string& Templater::html::dtags::s::getTagName() const {
+const std::string& Templater::dynamic::dtags::s::getTagName() const {
     static const std::string name = "s";
     return name;
 }
 
-Templater::html::dtags::s::s(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::s::s(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::s::isVoid() const {
+bool Templater::dynamic::dtags::s::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::s::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::s::clone() const {
     return std::make_shared<s>(*this);
 }
-const std::string& Templater::html::dtags::samp::getTagName() const {
+const std::string& Templater::dynamic::dtags::samp::getTagName() const {
     static const std::string name = "samp";
     return name;
 }
 
-Templater::html::dtags::samp::samp(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::samp::samp(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::samp::isVoid() const {
+bool Templater::dynamic::dtags::samp::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::samp::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::samp::clone() const {
     return std::make_shared<samp>(*this);
 }
-const std::string& Templater::html::dtags::script::getTagName() const {
+const std::string& Templater::dynamic::dtags::script::getTagName() const {
     static const std::string name = "script";
     return name;
 }
 
-Templater::html::dtags::script::script(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::script::script(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::script::isVoid() const {
+bool Templater::dynamic::dtags::script::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::script::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::script::clone() const {
     return std::make_shared<script>(*this);
 }
-const std::string& Templater::html::dtags::search::getTagName() const {
+const std::string& Templater::dynamic::dtags::search::getTagName() const {
     static const std::string name = "search";
     return name;
 }
 
-Templater::html::dtags::search::search(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::search::search(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::search::isVoid() const {
+bool Templater::dynamic::dtags::search::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::search::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::search::clone() const {
     return std::make_shared<search>(*this);
 }
-const std::string& Templater::html::dtags::section::getTagName() const {
+const std::string& Templater::dynamic::dtags::section::getTagName() const {
     static const std::string name = "section";
     return name;
 }
 
-Templater::html::dtags::section::section(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::section::section(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::section::isVoid() const {
+bool Templater::dynamic::dtags::section::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::section::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::section::clone() const {
     return std::make_shared<section>(*this);
 }
-const std::string& Templater::html::dtags::select::getTagName() const {
+const std::string& Templater::dynamic::dtags::select::getTagName() const {
     static const std::string name = "select";
     return name;
 }
 
-Templater::html::dtags::select::select(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::select::select(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::select::isVoid() const {
+bool Templater::dynamic::dtags::select::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::select::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::select::clone() const {
     return std::make_shared<select>(*this);
 }
-const std::string& Templater::html::dtags::slot::getTagName() const {
+const std::string& Templater::dynamic::dtags::slot::getTagName() const {
     static const std::string name = "slot";
     return name;
 }
 
-Templater::html::dtags::slot::slot(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::slot::slot(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::slot::isVoid() const {
+bool Templater::dynamic::dtags::slot::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::slot::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::slot::clone() const {
     return std::make_shared<slot>(*this);
 }
-const std::string& Templater::html::dtags::small::getTagName() const {
+const std::string& Templater::dynamic::dtags::small::getTagName() const {
     static const std::string name = "small";
     return name;
 }
 
-Templater::html::dtags::small::small(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::small::small(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::small::isVoid() const {
+bool Templater::dynamic::dtags::small::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::small::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::small::clone() const {
     return std::make_shared<small>(*this);
 }
-const std::string& Templater::html::dtags::source::getTagName() const {
+const std::string& Templater::dynamic::dtags::source::getTagName() const {
     static const std::string name = "source";
     return name;
 }
 
-Templater::html::dtags::source::source(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::source::source(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::source::isVoid() const {
+bool Templater::dynamic::dtags::source::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::source::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::source::clone() const {
     return std::make_shared<source>(*this);
 }
-const std::string& Templater::html::dtags::span::getTagName() const {
+const std::string& Templater::dynamic::dtags::span::getTagName() const {
     static const std::string name = "span";
     return name;
 }
 
-Templater::html::dtags::span::span(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::span::span(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::span::isVoid() const {
+bool Templater::dynamic::dtags::span::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::span::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::span::clone() const {
     return std::make_shared<span>(*this);
 }
-const std::string& Templater::html::dtags::strong::getTagName() const {
+const std::string& Templater::dynamic::dtags::strong::getTagName() const {
     static const std::string name = "strong";
     return name;
 }
 
-Templater::html::dtags::strong::strong(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::strong::strong(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::strong::isVoid() const {
+bool Templater::dynamic::dtags::strong::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::strong::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::strong::clone() const {
     return std::make_shared<strong>(*this);
 }
-const std::string& Templater::html::dtags::style::getTagName() const {
+const std::string& Templater::dynamic::dtags::style::getTagName() const {
     static const std::string name = "style";
     return name;
 }
 
-Templater::html::dtags::style::style(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::style::style(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::style::isVoid() const {
+bool Templater::dynamic::dtags::style::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::style::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::style::clone() const {
     return std::make_shared<style>(*this);
 }
-const std::string& Templater::html::dtags::sub::getTagName() const {
+const std::string& Templater::dynamic::dtags::sub::getTagName() const {
     static const std::string name = "sub";
     return name;
 }
 
-Templater::html::dtags::sub::sub(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::sub::sub(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::sub::isVoid() const {
+bool Templater::dynamic::dtags::sub::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::sub::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::sub::clone() const {
     return std::make_shared<sub>(*this);
 }
-const std::string& Templater::html::dtags::summary::getTagName() const {
+const std::string& Templater::dynamic::dtags::summary::getTagName() const {
     static const std::string name = "summary";
     return name;
 }
 
-Templater::html::dtags::summary::summary(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::summary::summary(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::summary::isVoid() const {
+bool Templater::dynamic::dtags::summary::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::summary::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::summary::clone() const {
     return std::make_shared<summary>(*this);
 }
-const std::string& Templater::html::dtags::sup::getTagName() const {
+const std::string& Templater::dynamic::dtags::sup::getTagName() const {
     static const std::string name = "sup";
     return name;
 }
 
-Templater::html::dtags::sup::sup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::sup::sup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::sup::isVoid() const {
+bool Templater::dynamic::dtags::sup::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::sup::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::sup::clone() const {
     return std::make_shared<sup>(*this);
 }
-const std::string& Templater::html::dtags::svg::getTagName() const {
+const std::string& Templater::dynamic::dtags::svg::getTagName() const {
     static const std::string name = "svg";
     return name;
 }
 
-Templater::html::dtags::svg::svg(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::svg::svg(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::svg::isVoid() const {
+bool Templater::dynamic::dtags::svg::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::svg::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::svg::clone() const {
     return std::make_shared<svg>(*this);
 }
-const std::string& Templater::html::dtags::table::getTagName() const {
+const std::string& Templater::dynamic::dtags::table::getTagName() const {
     static const std::string name = "table";
     return name;
 }
 
-Templater::html::dtags::table::table(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::table::table(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::table::isVoid() const {
+bool Templater::dynamic::dtags::table::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::table::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::table::clone() const {
     return std::make_shared<table>(*this);
 }
-const std::string& Templater::html::dtags::tbody::getTagName() const {
+const std::string& Templater::dynamic::dtags::tbody::getTagName() const {
     static const std::string name = "tbody";
     return name;
 }
 
-Templater::html::dtags::tbody::tbody(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::tbody::tbody(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::tbody::isVoid() const {
+bool Templater::dynamic::dtags::tbody::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::tbody::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::tbody::clone() const {
     return std::make_shared<tbody>(*this);
 }
-const std::string& Templater::html::dtags::td::getTagName() const {
+const std::string& Templater::dynamic::dtags::td::getTagName() const {
     static const std::string name = "td";
     return name;
 }
 
-Templater::html::dtags::td::td(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::td::td(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::td::isVoid() const {
+bool Templater::dynamic::dtags::td::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::td::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::td::clone() const {
     return std::make_shared<td>(*this);
 }
-const std::string& Templater::html::dtags::htemplate::getTagName() const {
+const std::string& Templater::dynamic::dtags::ctemplate::getTagName() const {
     static const std::string name = "template";
     return name;
 }
 
-Templater::html::dtags::htemplate::htemplate(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::ctemplate::ctemplate(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::htemplate::isVoid() const {
+bool Templater::dynamic::dtags::ctemplate::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::htemplate::clone() const {
-    return std::make_shared<htemplate>(*this);
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::ctemplate::clone() const {
+    return std::make_shared<ctemplate>(*this);
 }
-const std::string& Templater::html::dtags::textarea::getTagName() const {
+const std::string& Templater::dynamic::dtags::textarea::getTagName() const {
     static const std::string name = "textarea";
     return name;
 }
 
-Templater::html::dtags::textarea::textarea(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::textarea::textarea(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::textarea::isVoid() const {
+bool Templater::dynamic::dtags::textarea::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::textarea::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::textarea::clone() const {
     return std::make_shared<textarea>(*this);
 }
-const std::string& Templater::html::dtags::tfoot::getTagName() const {
+const std::string& Templater::dynamic::dtags::tfoot::getTagName() const {
     static const std::string name = "tfoot";
     return name;
 }
 
-Templater::html::dtags::tfoot::tfoot(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::tfoot::tfoot(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::tfoot::isVoid() const {
+bool Templater::dynamic::dtags::tfoot::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::tfoot::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::tfoot::clone() const {
     return std::make_shared<tfoot>(*this);
 }
-const std::string& Templater::html::dtags::th::getTagName() const {
+const std::string& Templater::dynamic::dtags::th::getTagName() const {
     static const std::string name = "th";
     return name;
 }
 
-Templater::html::dtags::th::th(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::th::th(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::th::isVoid() const {
+bool Templater::dynamic::dtags::th::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::th::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::th::clone() const {
     return std::make_shared<th>(*this);
 }
-const std::string& Templater::html::dtags::thead::getTagName() const {
+const std::string& Templater::dynamic::dtags::thead::getTagName() const {
     static const std::string name = "thead";
     return name;
 }
 
-Templater::html::dtags::thead::thead(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::thead::thead(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::thead::isVoid() const {
+bool Templater::dynamic::dtags::thead::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::thead::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::thead::clone() const {
     return std::make_shared<thead>(*this);
 }
-const std::string& Templater::html::dtags::time::getTagName() const {
+const std::string& Templater::dynamic::dtags::time::getTagName() const {
     static const std::string name = "time";
     return name;
 }
 
-Templater::html::dtags::time::time(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::time::time(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::time::isVoid() const {
+bool Templater::dynamic::dtags::time::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::time::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::time::clone() const {
     return std::make_shared<time>(*this);
 }
-const std::string& Templater::html::dtags::title::getTagName() const {
+const std::string& Templater::dynamic::dtags::title::getTagName() const {
     static const std::string name = "title";
     return name;
 }
 
-Templater::html::dtags::title::title(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::title::title(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::title::isVoid() const {
+bool Templater::dynamic::dtags::title::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::title::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::title::clone() const {
     return std::make_shared<title>(*this);
 }
-const std::string& Templater::html::dtags::tr::getTagName() const {
+const std::string& Templater::dynamic::dtags::tr::getTagName() const {
     static const std::string name = "tr";
     return name;
 }
 
-Templater::html::dtags::tr::tr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::tr::tr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::tr::isVoid() const {
+bool Templater::dynamic::dtags::tr::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::tr::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::tr::clone() const {
     return std::make_shared<tr>(*this);
 }
-const std::string& Templater::html::dtags::track::getTagName() const {
+const std::string& Templater::dynamic::dtags::track::getTagName() const {
     static const std::string name = "track";
     return name;
 }
 
-Templater::html::dtags::track::track(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::track::track(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::track::isVoid() const {
+bool Templater::dynamic::dtags::track::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::track::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::track::clone() const {
     return std::make_shared<track>(*this);
 }
-const std::string& Templater::html::dtags::u::getTagName() const {
+const std::string& Templater::dynamic::dtags::u::getTagName() const {
     static const std::string name = "u";
     return name;
 }
 
-Templater::html::dtags::u::u(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::u::u(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::u::isVoid() const {
+bool Templater::dynamic::dtags::u::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::u::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::u::clone() const {
     return std::make_shared<u>(*this);
 }
-const std::string& Templater::html::dtags::ul::getTagName() const {
+const std::string& Templater::dynamic::dtags::ul::getTagName() const {
     static const std::string name = "ul";
     return name;
 }
 
-Templater::html::dtags::ul::ul(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::ul::ul(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::ul::isVoid() const {
+bool Templater::dynamic::dtags::ul::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::ul::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::ul::clone() const {
     return std::make_shared<ul>(*this);
 }
-const std::string& Templater::html::dtags::var::getTagName() const {
+const std::string& Templater::dynamic::dtags::var::getTagName() const {
     static const std::string name = "var";
     return name;
 }
 
-Templater::html::dtags::var::var(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::var::var(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::var::isVoid() const {
+bool Templater::dynamic::dtags::var::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::var::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::var::clone() const {
     return std::make_shared<var>(*this);
 }
-const std::string& Templater::html::dtags::video::getTagName() const {
+const std::string& Templater::dynamic::dtags::video::getTagName() const {
     static const std::string name = "video";
     return name;
 }
 
-Templater::html::dtags::video::video(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::video::video(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::video::isVoid() const {
+bool Templater::dynamic::dtags::video::isVoid() const {
     return 0;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::video::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::video::clone() const {
     return std::make_shared<video>(*this);
 }
-const std::string& Templater::html::dtags::wbr::getTagName() const {
+const std::string& Templater::dynamic::dtags::wbr::getTagName() const {
     static const std::string name = "wbr";
     return name;
 }
 
-Templater::html::dtags::wbr::wbr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+Templater::dynamic::dtags::wbr::wbr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}
 
-bool Templater::html::dtags::wbr::isVoid() const {
+bool Templater::dynamic::dtags::wbr::isVoid() const {
     return 1;
 }
 
-std::shared_ptr<Templater::html::Object> Templater::html::dtags::wbr::clone() const {
+std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::wbr::clone() const {
     return std::make_shared<wbr>(*this);
 }
