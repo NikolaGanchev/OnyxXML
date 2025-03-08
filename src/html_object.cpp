@@ -173,7 +173,7 @@ void html::Object::setAttributeValue(const std::string &name, const std::string 
     m_object->m_attributes[name] = newValue;
 }
 
-std::string html::Object::serialise(std::string& identation) const {
+std::string html::Object::serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const {
     std::string result = identation + "<" + getTagName() + "";
     
     if (sortAttributes) {
@@ -199,7 +199,7 @@ std::string html::Object::serialise(std::string& identation) const {
             for (const std::shared_ptr<html::Object>& immediateChild: m_object->m_children) {
                 identation += identationSequence;
 
-                result += immediateChild->serialise(identation);
+                result += immediateChild->serialiseRecursive(identation, identationSequence, sortAttributes);
 
                 // Backtrack identation
                 for (int i = 0; i < identationSequence.size(); i++) {
@@ -222,9 +222,9 @@ std::string html::Object::serialise(std::string& identation) const {
     return result;
 }
 
-std::string html::Object::serialise() const {
+std::string html::Object::serialise(const std::string& identationSequence, bool sortAttributes) const {
     std::string identation;
-    std::string result = serialise(identation);
+    std::string result = serialiseRecursive(identation, identationSequence, sortAttributes);
     return result;
 }
 
@@ -303,18 +303,12 @@ std::shared_ptr<html::Object> html::Text::clone() const {
     return std::make_shared<Text>(*this);
 }
 
-std::string html::Text::serialise() const {
-    return m_text;
-}
-
-std::string html::Text::serialise(std::string& identation) const {
+std::string html::Text::serialiseRecursive(std::string& identation, const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const {
     return identation + m_text;
 }
 
-
 html::EmptyTag::EmptyTag(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
         : Object(std::move(attributes), std::move(children)) {}
-
 
 const std::string& html::EmptyTag::getTagName() const {
     static const std::string name = "";
@@ -329,11 +323,11 @@ std::shared_ptr<html::Object> html::EmptyTag::clone() const {
     return std::make_shared<EmptyTag>(*this);
 }
 
-std::string html::EmptyTag::serialise(std::string& identation) const {
+std::string html::EmptyTag::serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const {
     std::string res;
 
     for (const std::shared_ptr<html::Object>& immediateChild: getChildren()) {
-        res += identation + immediateChild->serialise(identation);
+        res += identation + immediateChild->serialiseRecursive(identation, identationSequence, sortAttributes);
         res += "\n";
     }
 
@@ -341,10 +335,4 @@ std::string html::EmptyTag::serialise(std::string& identation) const {
     res.pop_back();
 
     return res;
-}
-
-std::string html::EmptyTag::serialise() const {
-    std::string identation;
-    std::string result = serialise(identation);
-    return result;
 }

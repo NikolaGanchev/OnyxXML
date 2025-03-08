@@ -23,6 +23,24 @@ TEST_CASE("HTML is generated", "[Object]" ) {
     CHECK(expected == obj.serialise());
 }
 
+TEST_CASE("serialise() arguments override global identation rules", "[Object]" ) {
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    GenericObject obj = GenericObject(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false)
+    );
+
+    std::string expected = "<html lang=\"en\" theme=\"dark\">\n    <head></head>\n</html>";
+
+    INFO ("The generated html is \n" << obj.serialise("    ") );
+
+    CHECK(expected == obj.serialise("    "));
+}
+
 TEST_CASE("Vector constructor works", "[Object]" ) {
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);

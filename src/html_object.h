@@ -51,7 +51,7 @@ namespace Templater {
                 // Default: false
                 static bool sortAttributes;
             protected:
-                virtual std::string serialise(std::string& identation) const;
+                virtual std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const;
             public:
                 template <typename... Args>
                 explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
@@ -90,7 +90,7 @@ namespace Templater {
                 bool removeChild(Object& childToRemove);
                 bool removeChild(const std::shared_ptr<Object>& childToRemove);
 
-                virtual std::string serialise() const;
+                std::string serialise(const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const;
 
                 static void setIdentationSequence(const std::string& newSequence);
                 static const std::string& getIdentationSequence();
@@ -114,6 +114,8 @@ namespace Templater {
 
         // Used to create a tree without a root
         class EmptyTag: public Object {
+            protected:
+                std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
             public: 
                 template <typename... Args>
                 explicit EmptyTag(Args&&... args);
@@ -121,19 +123,17 @@ namespace Templater {
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
                 std::shared_ptr<Object> clone() const override;
-                std::string serialise() const override;
-                std::string serialise(std::string& identation) const override;
         };
 
         class Text: public Object {
             private:
                 const std::string m_text;
+            protected:
+                std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
             public:
                 explicit Text(std::string text); 
                 bool isVoid() const override;
                 std::shared_ptr<Object> clone() const override;
-                std::string serialise() const override;
-                std::string serialise(std::string& identation) const override;
                 const std::string& getText() const;
                 const std::string& getTagName() const override;
         };
