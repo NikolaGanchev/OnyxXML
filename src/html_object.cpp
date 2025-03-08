@@ -287,3 +287,36 @@ std::string html::Text::serialise() const {
 std::string html::Text::serialise(std::string& identation) const {
     return identation + m_text;
 }
+
+const std::string& html::EmptyTag::getTagName() const {
+    static const std::string name = "";
+    return name;
+}
+
+bool html::EmptyTag::isVoid() const {
+    return false;
+}
+
+std::shared_ptr<html::Object> html::EmptyTag::clone() const {
+    return std::make_shared<EmptyTag>(*this);
+}
+
+std::string html::EmptyTag::serialise(std::string& identation) const {
+    std::string res;
+
+    for (const std::shared_ptr<html::Object>& immediateChild: getChildren()) {
+        res += immediateChild->serialise(identation);
+        res += "\n";
+    }
+
+    // Remove last newline
+    res.pop_back();
+
+    return res;
+}
+
+std::string html::EmptyTag::serialise() const {
+    std::string identation;
+    std::string result = serialise(identation);
+    return result;
+}

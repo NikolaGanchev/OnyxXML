@@ -21,6 +21,7 @@ namespace Templater {
         };
 
         class Object;
+        class EmptyTag;
 
         template <typename T>
         concept isValidObjectConstructorType = std::derived_from<T, Object> || std::same_as<T, Attribute>;
@@ -35,6 +36,7 @@ namespace Templater {
 
         class Object {
             friend InternalObject;
+            friend EmptyTag;
             private:
                 std::shared_ptr<InternalObject> m_object;
                 void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
@@ -108,6 +110,18 @@ namespace Templater {
                 std::shared_ptr<Object> clone() const override;
         };
 
+        // Used to create a tree without a root
+        class EmptyTag: public Object {
+            public: 
+                template <typename... Args>
+                explicit EmptyTag(Args&&... args);
+                const std::string& getTagName() const override;
+                bool isVoid() const override;
+                std::shared_ptr<Object> clone() const override;
+                std::string serialise() const override;
+                std::string serialise(std::string& identation) const override;
+        };
+
         class Text: public Object {
             private:
                 const std::string m_text;
@@ -116,7 +130,7 @@ namespace Templater {
                 bool isVoid() const override;
                 std::shared_ptr<Object> clone() const override;
                 std::string serialise() const override;
-                virtual std::string serialise(std::string& identation) const;
+                std::string serialise(std::string& identation) const override;
                 const std::string& getText() const;
                 const std::string& getTagName() const override;
         };
@@ -142,3 +156,8 @@ void Templater::html::Object::processConstructorArgs(T&& arg) {
 template <typename... Args>
 Templater::html::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&&... args)
     : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::html::Object(std::forward<Args>(args)...) {}
+
+    
+template <typename... Args>
+Templater::html::EmptyTag::EmptyTag(Args&&... args)
+    : Templater::html::Object(std::forward<Args>(args)...) {}
