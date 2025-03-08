@@ -58,8 +58,15 @@ void html::Object::addChild(Object&& newChild)  {
     addChild(newChild);
 }
 
-const std::vector<std::shared_ptr<html::Object>>& html::Object::getChildren() const {
-    return m_object->m_children;
+const std::vector<std::shared_ptr<html::Object>> html::Object::getChildren() const {
+    std::vector<std::shared_ptr<html::Object>> copy;
+
+    copy.reserve(m_object->m_children.size());
+    for (const auto& child : m_object->m_children) {
+        copy.push_back(child);
+    }
+
+    return copy;
 }
 
 bool html::Object::isInTree() const {
