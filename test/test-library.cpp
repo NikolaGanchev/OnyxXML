@@ -541,3 +541,17 @@ TEST_CASE("Compile-time html enforces given identation rules", "[Object]" ) {
 
     CHECK(doc::value("    ", true) == expected);
 }
+
+TEST_CASE("HTML fragment using Document serialises correctly", "[Object]" ) {
+    using namespace Templater::html::ctags;
+
+    using list = Document<
+        li<ctags::Text<"1">>,
+        li<ctags::Text<"2">>,
+        li<ctags::Text<"3">>
+    >;
+
+    std::string expected = "<li>\n\t1\n</li>\n<li>\n\t2\n</li>\n<li>\n\t3\n</li>";
+
+    CHECK(list::value() == expected);
+}
