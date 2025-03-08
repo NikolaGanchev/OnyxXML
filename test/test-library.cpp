@@ -513,7 +513,7 @@ TEST_CASE("Complex html with tags", "[Object]" ) {
     CHECK(expected == obj.serialise());
 }
 
-TEST_CASE("Static library check", "[Object]" ) {
+TEST_CASE("Compile-time html serialises correctly", "[Object]" ) {
     using namespace Templater::html::ctags;
 
     using doc = Document<html<
@@ -525,4 +525,19 @@ TEST_CASE("Static library check", "[Object]" ) {
     std::string expected = "<html lang=\"en\">\n\t<head></head>\n\t<body>\n\t\tHello world!\n\t</body>\n</html>";
 
     CHECK(doc::value() == expected);
+}
+
+TEST_CASE("Compile-time html enforces given identation rules", "[Object]" ) {
+    using namespace Templater::html::ctags;
+
+    using doc = Document<html<
+                            ctags::Attribute<"theme", "light">,
+                            ctags::Attribute<"lang", "en">,
+                            head<>,
+                            body<ctags::Text<"Hello world!">>
+    >>;
+
+    std::string expected = "<html lang=\"en\" theme=\"light\">\n    <head></head>\n    <body>\n        Hello world!\n    </body>\n</html>";
+
+    CHECK(doc::value("    ", true) == expected);
 }

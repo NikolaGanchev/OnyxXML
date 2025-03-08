@@ -63,7 +63,7 @@ namespace Templater::html {
 
     template <typename... Children>
     struct Document {
-        static constexpr std::string value() {
+        static constexpr std::string value(const std::string& identationSequence = Object::getIdentationSequence(), bool sortAttributes = Object::getSortAttributes()) {
             EmptyTag obj;
             if constexpr (sizeof...(Children) == 0)
             {
@@ -80,7 +80,7 @@ namespace Templater::html {
                     }
                 }()), ...);
             }
-            return obj.serialise();
+            return obj.serialise(identationSequence, sortAttributes);
         }
     };
 
