@@ -484,15 +484,7 @@ TEST_CASE("Static library check", "[Object]" ) {
                             body<ctags::Text<"Hello world!">>
     >>;
 
-    std::string expected = "<html lang=\"en\">\n\t<head>\n\t</head>\n\t<body>\n\t\tHello world!\n\t</body>\n</html>";
-
-    using attr = ctags::Attribute<"lang", "en">;
-
-    INFO("started loop");
-    for(const char& c : attr::attr()) {
-        INFO(c);
-    }
-    INFO("ended loop");
+    std::string expected = "<html lang=\"en\">\n\t<head></head>\n\t<body>\n\t\tHello world!\n\t</body>\n</html>";
 
     CHECK(doc::value() == expected);
 }

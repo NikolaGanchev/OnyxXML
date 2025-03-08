@@ -2,6 +2,8 @@
 #include <iostream>
 #include <algorithm>
 #include <string_view>
+#include "html_object.h"
+#include "dynamic/tags.h"
 
 namespace Templater::html {
 
@@ -30,106 +32,77 @@ namespace Templater::html {
 
         template <CompileString Name, CompileString Value>
         struct Attribute {
-            static constexpr std::string attr() {
-                return " " + std::string(Name) + "=\"" + std::string(Value) + "\"";
+            static constexpr std::shared_ptr<Templater::html::Attribute> attr() {
+                return std::make_shared<Templater::html::Attribute>(Name, Value);
             }
         };
 
         template <typename T>
         concept isAttribute = requires(T) {
-            { T::attr() } -> std::same_as<std::string>;
+            { T::attr() } -> std::same_as<std::shared_ptr<Templater::html::Attribute>>;
         };
 
         template <CompileString Str>
         struct Text {
-            static constexpr std::string value(int indent_level = 0) {
-                constexpr const char indent_char = '\t';
-                std::string indent(indent_level, indent_char);
-                return indent + std::string(Str);
+            static constexpr std::shared_ptr<Object> value() {
+                return Templater::html::Text(Str).clone();
             }
         };
 
         template <typename... Children>
         struct html {
-            static constexpr std::string value(int indent_level = 0) {
-                constexpr const char indent_char = '\t';
-                std::string indent(indent_level, indent_char);
-                if constexpr (sizeof...(Children) == 0)
-                {
-                    return std::string("<html>\n</html>\n");
-                }
-                else
-                {   
-                    std::string attributes;
-                    std::string children_content;
+            static constexpr std::shared_ptr<Object> value() {
+                dtags::html node = dtags::html();
+                (([&] {
+                    if constexpr(isAttribute<Children>) {
+                        std::shared_ptr<Templater::html::Attribute> attr = Children::attr();
+                        node[attr->getName()] = attr->getValue();
+                    }
+                    else {
+                        std::shared_ptr<Object> attr = Children::value();
+                        node.addChild(*Children::value());
+                    }
+                }()), ...);
 
-                    (([&] {
-                        if constexpr(isAttribute<Children>) {
-                            attributes += Children::attr();
-                        }
-                        else {
-                            children_content += Children::value(indent_level + 1);
-                        }
-                    }()), ...);
-
-                    return indent + std::string("<html") + attributes + ">" + "\n" + children_content + "\n" + indent + std::string("</html>\n");
-                }
+                return node.clone();
             }
         };
 
         template <typename... Children>
         struct head {
-            static constexpr std::string value(int indent_level = 0) {
-                constexpr const char indent_char = '\t';
-                std::string indent(indent_level, indent_char);
-                if constexpr (sizeof...(Children) == 0)
-                {
-                    return std::string("<head>\n</head>\n");
-                }
-                else
-                {   
-                    std::string attributes;
-                    std::string children_content;
+            static constexpr std::shared_ptr<Object> value() {
+                dtags::head node = dtags::head();
+                (([&] {
+                    if constexpr(isAttribute<Children>) {
+                        std::shared_ptr<Templater::html::Attribute> attr = Children::value();
+                        node[attr->getName()] = attr->getValue();
+                    }
+                    else {
+                        std::shared_ptr<Object> attr = Children::value();
+                        node.addChild(*Children::value());
+                    }
+                }()), ...);
 
-                    (([&] {
-                        if constexpr(isAttribute<Children>) {
-                            attributes += Children::attr();
-                        }
-                        else {
-                            children_content += Children::value(indent_level + 1);
-                        }
-                    }()), ...);
-
-                    return indent + std::string("<head") + attributes + ">" + "\n" + children_content + "\n" + indent + std::string("</head>\n");
-                }
+                return node.clone();
             }
         };
 
         template <typename... Children>
         struct body {
-            static constexpr std::string value(int indent_level = 0) {
-                constexpr const char indent_char = '\t';
-                std::string indent(indent_level, indent_char);
-                if constexpr (sizeof...(Children) == 0)
-                {
-                    return std::string("<body>\n</body>\n");
-                }
-                else
-                {   
-                    std::string attributes;
-                    std::string children_content;
+            static constexpr std::shared_ptr<Object> value() {
+                dtags::body node = dtags::body();
+                (([&] {
+                    if constexpr(isAttribute<Children>) {
+                        std::shared_ptr<Templater::html::Attribute> attr = Children::value();
+                        node[attr->getName()] = attr->getValue();
+                    }
+                    else {
+                        std::shared_ptr<Object> attr = Children::value();
+                        node.addChild(*Children::value());
+                    }
+                }()), ...);
 
-                    (([&] {
-                        if constexpr(isAttribute<Children>) {
-                            attributes += Children::attr();
-                        }
-                        else {
-                            children_content += Children::value(indent_level + 1);
-                        }
-                    }()), ...);
-
-                    return indent + std::string("<body") + attributes + ">" + "\n" + children_content + "\n" + indent + std::string("</body>\n");
-                }
+                return node.clone();
             }
         };
     }
@@ -137,17 +110,23 @@ namespace Templater::html {
     template <typename... Children>
     struct Document {
         static constexpr std::string value() {
-            std::string res;
+            EmptyTag obj;
             if constexpr (sizeof...(Children) == 0)
             {
                 return std::string("");
             }
             else
             {
-                res = (... + Children::value());
+                (([&] {
+                    if constexpr(Templater::html::ctags::isAttribute<Children>) {
+                        return "Error. Trying to read attribute as root node";
+                    }
+                    else {
+                        obj.addChild(*Children::value());
+                    }
+                }()), ...);
             }
-            if (res[res.size() - 1] == '\n') res.pop_back();
-            return res;
+            return obj.serialise();
         }
     };
 
