@@ -12,10 +12,12 @@ target_sources(
         "dynamic/tags.cpp"
         "document.h"
         "document.cpp"
+        "compile/tags.h"
 )
 
 set(GENERATED_TAGS_H ${CMAKE_SOURCE_DIR}/src/dynamic/tags.h)
 set(GENERATED_TAGS_CPP ${CMAKE_SOURCE_DIR}/src/dynamic/tags.cpp)
+set(GENERATED_TAGS_COMPILE_H ${CMAKE_SOURCE_DIR}/src/compile/tags.h)
 
 add_executable(generate ${CMAKE_SOURCE_DIR}/src/generate_tags_classes.cpp)
 
@@ -24,13 +26,13 @@ add_custom_command(
     COMMAND generate
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/
     DEPENDS generate ${CMAKE_SOURCE_DIR}/src/tags.txt ${CMAKE_SOURCE_DIR}/src/generate_tags_classes.cpp
-    COMMENT "Running the generate executable to generate the html tags classes files"
+    COMMENT "Running the generate executable to generate the html tags files"
     VERBATIM
 )
 
 add_custom_target(
     generate_files ALL
-    DEPENDS ${GENERATED_TAGS_H} ${GENERATED_TAGS_CPP}
+    DEPENDS ${GENERATED_TAGS_H} ${GENERATED_TAGS_CPP} ${GENERATED_TAGS_COMPILE_H}
     COMMENT "Ensuring generated files are up-to-date"
 )
 

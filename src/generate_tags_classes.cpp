@@ -34,26 +34,24 @@ void readTags(std::vector<Tag>& tags) {
     input_file.close();
 }
 
-int main() {
-    std::vector<Tag> tags{};
-    readTags(tags);
-    
+void generateDynamic(const std::vector<Tag>& tags) {
+
     if (!std::filesystem::exists("./dynamic")) {
         std::filesystem::create_directory("./dynamic");
     }
 
-    std::ofstream header_file("./dynamic/tags.h");
-    std::ofstream cpp_file("./dynamic/tags.cpp");
+    std::ofstream headerDynamic("./dynamic/tags.h");
+    std::ofstream cppDynamic("./dynamic/tags.cpp");
 
-    header_file << "#pragma once\n";
-    header_file << "#include \"html_object.h\" \n\n";
-    header_file << "namespace Templater::html::dtags {\n";
-    header_file << "    using namespace Templater::html; \n";
+    headerDynamic << "#pragma once\n";
+    headerDynamic << "#include \"html_object.h\" \n\n";
+    headerDynamic << "namespace Templater::html::dtags {\n";
+    headerDynamic << "    using namespace Templater::html; \n";
 
-    cpp_file << "#include \"tags.h\"\n\n";
+    cppDynamic << "#include \"tags.h\"\n\n";
 
     for (auto& tag: tags) {
-        header_file << "    class " << tag.name << ": public Object {\n"
+        headerDynamic << "    class " << tag.name << ": public Object {\n"
                                     "        public:\n"
                                     "            template <typename... Args>\n"
                                     "            explicit " << tag.name << "(Args&&... args);\n"
@@ -63,7 +61,7 @@ int main() {
                                     "            const std::string& getTagName() const override;\n"
                                     "    };\n";
         
-        cpp_file << "const std::string& Templater::html::dtags::" << tag.name << "::getTagName() const {\n"
+        cppDynamic << "const std::string& Templater::html::dtags::" << tag.name << "::getTagName() const {\n"
                                     "    static const std::string name = \"" << tag.htmlTag << "\";\n"
                                     "    return name;\n"
                                     "}\n\n"
@@ -77,16 +75,53 @@ int main() {
                                     "}\n";
     }
 
-    header_file << "}\n\n";
+    headerDynamic << "}\n\n";
 
     for (auto& tag: tags) {
-        header_file << "template <typename... Args>\n"
+        headerDynamic << "template <typename... Args>\n"
                                 "Templater::html::dtags::" << tag.name << "::" << tag.name << "(Args&&... args)\n"
                                 "    : Templater::html::Object(std::forward<Args>(args)...) {}\n\n";
     }
 
-    header_file.close();
-    cpp_file.close();
+    headerDynamic.close();
+    cppDynamic.close();
+}
+
+void generateCompile(const std::vector<Tag>& tags) {
+
+    if (!std::filesystem::exists("./compile")) {
+        std::filesystem::create_directory("./compile");
+    }
+
+    std::ofstream headerCompile("./compile/tags.h");
+
+    headerCompile << "#pragma once\n";
+    headerCompile << "#include \"document.h\" \n";
+    headerCompile << "#include \"dynamic/tags.h\" \n\n";
+    headerCompile << "namespace Templater::html::ctags {\n";
+
+    for (auto& tag: tags) {
+        headerCompile << "    template <typename... Children>\n"
+                            "    struct " << tag.name << " {\n"
+                                    "        static constexpr std::shared_ptr<Object> value() {\n"
+                                    "            Templater::html::dtags::" << tag.name << " node = Templater::html::dtags::" << tag.name << "();\n"
+                                    "            (parseChildren<Children>(node), ...);\n"
+                                    "            return node.clone();\n"
+                                    "        }\n"
+                                    "    };\n";
+    }
+
+    headerCompile << "}\n\n";
+
+    headerCompile.close();
+}
+
+int main() {
+    std::vector<Tag> tags{};
+    readTags(tags);
+    
+    generateDynamic(tags);
+    generateCompile(tags);
 
     return 0;
 }

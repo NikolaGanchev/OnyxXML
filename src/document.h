@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <string_view>
 #include "html_object.h"
-#include "dynamic/tags.h"
 
 namespace Templater::html {
 
@@ -49,62 +48,17 @@ namespace Templater::html {
             }
         };
 
-        template <typename... Children>
-        struct html {
-            static constexpr std::shared_ptr<Object> value() {
-                dtags::html node = dtags::html();
-                (([&] {
-                    if constexpr(isAttribute<Children>) {
-                        std::shared_ptr<Templater::html::Attribute> attr = Children::attr();
-                        node[attr->getName()] = attr->getValue();
-                    }
-                    else {
-                        std::shared_ptr<Object> attr = Children::value();
-                        node.addChild(*Children::value());
-                    }
-                }()), ...);
-
-                return node.clone();
+        template <typename Child>
+        constexpr void parseChildren(Object& node) {
+            if constexpr(isAttribute<Child>) {
+                std::shared_ptr<Templater::html::Attribute> attr = Child::attr();
+                node[attr->getName()] = attr->getValue();
             }
-        };
-
-        template <typename... Children>
-        struct head {
-            static constexpr std::shared_ptr<Object> value() {
-                dtags::head node = dtags::head();
-                (([&] {
-                    if constexpr(isAttribute<Children>) {
-                        std::shared_ptr<Templater::html::Attribute> attr = Children::value();
-                        node[attr->getName()] = attr->getValue();
-                    }
-                    else {
-                        std::shared_ptr<Object> attr = Children::value();
-                        node.addChild(*Children::value());
-                    }
-                }()), ...);
-
-                return node.clone();
+            else {
+                std::shared_ptr<Object> attr = Child::value();
+                node.addChild(*Child::value());
             }
-        };
-
-        template <typename... Children>
-        struct body {
-            static constexpr std::shared_ptr<Object> value() {
-                dtags::body node = dtags::body();
-                (([&] {
-                    if constexpr(isAttribute<Children>) {
-                        std::shared_ptr<Templater::html::Attribute> attr = Children::value();
-                        node[attr->getName()] = attr->getValue();
-                    }
-                    else {
-                        std::shared_ptr<Object> attr = Children::value();
-                        node.addChild(*Children::value());
-                    }
-                }()), ...);
-
-                return node.clone();
-            }
-        };
+        }
     }
 
     template <typename... Children>
