@@ -305,7 +305,7 @@ std::string html::EmptyTag::serialise(std::string& identation) const {
     std::string res;
 
     for (const std::shared_ptr<html::Object>& immediateChild: getChildren()) {
-        res += immediateChild->serialise(identation);
+        res += identation + immediateChild->serialise(identation);
         res += "\n";
     }
 
