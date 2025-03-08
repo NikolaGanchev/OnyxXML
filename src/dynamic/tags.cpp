@@ -5,6 +5,9 @@ const std::string& Templater::html::dtags::a::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::a::a(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::a::isVoid() const {
     return 0;
 }
@@ -16,6 +19,9 @@ const std::string& Templater::html::dtags::abbr::getTagName() const {
     static const std::string name = "abbr";
     return name;
 }
+
+Templater::html::dtags::abbr::abbr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::abbr::isVoid() const {
     return 0;
@@ -29,6 +35,9 @@ const std::string& Templater::html::dtags::address::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::address::address(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::address::isVoid() const {
     return 0;
 }
@@ -40,6 +49,9 @@ const std::string& Templater::html::dtags::area::getTagName() const {
     static const std::string name = "area";
     return name;
 }
+
+Templater::html::dtags::area::area(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::area::isVoid() const {
     return 1;
@@ -53,6 +65,9 @@ const std::string& Templater::html::dtags::article::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::article::article(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::article::isVoid() const {
     return 0;
 }
@@ -64,6 +79,9 @@ const std::string& Templater::html::dtags::aside::getTagName() const {
     static const std::string name = "aside";
     return name;
 }
+
+Templater::html::dtags::aside::aside(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::aside::isVoid() const {
     return 0;
@@ -77,6 +95,9 @@ const std::string& Templater::html::dtags::audio::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::audio::audio(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::audio::isVoid() const {
     return 0;
 }
@@ -88,6 +109,9 @@ const std::string& Templater::html::dtags::b::getTagName() const {
     static const std::string name = "b";
     return name;
 }
+
+Templater::html::dtags::b::b(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::b::isVoid() const {
     return 0;
@@ -101,6 +125,9 @@ const std::string& Templater::html::dtags::base::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::base::base(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::base::isVoid() const {
     return 1;
 }
@@ -112,6 +139,9 @@ const std::string& Templater::html::dtags::bdi::getTagName() const {
     static const std::string name = "bdi";
     return name;
 }
+
+Templater::html::dtags::bdi::bdi(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::bdi::isVoid() const {
     return 0;
@@ -125,6 +155,9 @@ const std::string& Templater::html::dtags::bdo::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::bdo::bdo(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::bdo::isVoid() const {
     return 0;
 }
@@ -136,6 +169,9 @@ const std::string& Templater::html::dtags::blockquote::getTagName() const {
     static const std::string name = "blockquote";
     return name;
 }
+
+Templater::html::dtags::blockquote::blockquote(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::blockquote::isVoid() const {
     return 0;
@@ -149,6 +185,9 @@ const std::string& Templater::html::dtags::body::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::body::body(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::body::isVoid() const {
     return 0;
 }
@@ -160,6 +199,9 @@ const std::string& Templater::html::dtags::br::getTagName() const {
     static const std::string name = "br";
     return name;
 }
+
+Templater::html::dtags::br::br(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::br::isVoid() const {
     return 1;
@@ -173,6 +215,9 @@ const std::string& Templater::html::dtags::button::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::button::button(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::button::isVoid() const {
     return 0;
 }
@@ -184,6 +229,9 @@ const std::string& Templater::html::dtags::canvas::getTagName() const {
     static const std::string name = "canvas";
     return name;
 }
+
+Templater::html::dtags::canvas::canvas(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::canvas::isVoid() const {
     return 0;
@@ -197,6 +245,9 @@ const std::string& Templater::html::dtags::caption::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::caption::caption(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::caption::isVoid() const {
     return 0;
 }
@@ -208,6 +259,9 @@ const std::string& Templater::html::dtags::cite::getTagName() const {
     static const std::string name = "cite";
     return name;
 }
+
+Templater::html::dtags::cite::cite(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::cite::isVoid() const {
     return 0;
@@ -221,6 +275,9 @@ const std::string& Templater::html::dtags::code::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::code::code(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::code::isVoid() const {
     return 0;
 }
@@ -232,6 +289,9 @@ const std::string& Templater::html::dtags::col::getTagName() const {
     static const std::string name = "col";
     return name;
 }
+
+Templater::html::dtags::col::col(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::col::isVoid() const {
     return 1;
@@ -245,6 +305,9 @@ const std::string& Templater::html::dtags::colgroup::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::colgroup::colgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::colgroup::isVoid() const {
     return 0;
 }
@@ -256,6 +319,9 @@ const std::string& Templater::html::dtags::data::getTagName() const {
     static const std::string name = "data";
     return name;
 }
+
+Templater::html::dtags::data::data(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::data::isVoid() const {
     return 0;
@@ -269,6 +335,9 @@ const std::string& Templater::html::dtags::datalist::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::datalist::datalist(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::datalist::isVoid() const {
     return 0;
 }
@@ -280,6 +349,9 @@ const std::string& Templater::html::dtags::dd::getTagName() const {
     static const std::string name = "dd";
     return name;
 }
+
+Templater::html::dtags::dd::dd(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::dd::isVoid() const {
     return 0;
@@ -293,6 +365,9 @@ const std::string& Templater::html::dtags::del::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::del::del(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::del::isVoid() const {
     return 0;
 }
@@ -304,6 +379,9 @@ const std::string& Templater::html::dtags::details::getTagName() const {
     static const std::string name = "details";
     return name;
 }
+
+Templater::html::dtags::details::details(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::details::isVoid() const {
     return 0;
@@ -317,6 +395,9 @@ const std::string& Templater::html::dtags::dfn::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::dfn::dfn(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::dfn::isVoid() const {
     return 0;
 }
@@ -328,6 +409,9 @@ const std::string& Templater::html::dtags::dialog::getTagName() const {
     static const std::string name = "dialog";
     return name;
 }
+
+Templater::html::dtags::dialog::dialog(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::dialog::isVoid() const {
     return 0;
@@ -341,6 +425,9 @@ const std::string& Templater::html::dtags::div::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::div::div(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::div::isVoid() const {
     return 0;
 }
@@ -352,6 +439,9 @@ const std::string& Templater::html::dtags::dl::getTagName() const {
     static const std::string name = "dl";
     return name;
 }
+
+Templater::html::dtags::dl::dl(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::dl::isVoid() const {
     return 0;
@@ -365,6 +455,9 @@ const std::string& Templater::html::dtags::dt::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::dt::dt(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::dt::isVoid() const {
     return 0;
 }
@@ -376,6 +469,9 @@ const std::string& Templater::html::dtags::em::getTagName() const {
     static const std::string name = "em";
     return name;
 }
+
+Templater::html::dtags::em::em(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::em::isVoid() const {
     return 0;
@@ -389,6 +485,9 @@ const std::string& Templater::html::dtags::embed::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::embed::embed(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::embed::isVoid() const {
     return 1;
 }
@@ -400,6 +499,9 @@ const std::string& Templater::html::dtags::fieldset::getTagName() const {
     static const std::string name = "fieldset";
     return name;
 }
+
+Templater::html::dtags::fieldset::fieldset(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::fieldset::isVoid() const {
     return 0;
@@ -413,6 +515,9 @@ const std::string& Templater::html::dtags::figcaption::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::figcaption::figcaption(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::figcaption::isVoid() const {
     return 0;
 }
@@ -424,6 +529,9 @@ const std::string& Templater::html::dtags::figure::getTagName() const {
     static const std::string name = "figure";
     return name;
 }
+
+Templater::html::dtags::figure::figure(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::figure::isVoid() const {
     return 0;
@@ -437,6 +545,9 @@ const std::string& Templater::html::dtags::footer::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::footer::footer(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::footer::isVoid() const {
     return 0;
 }
@@ -448,6 +559,9 @@ const std::string& Templater::html::dtags::form::getTagName() const {
     static const std::string name = "form";
     return name;
 }
+
+Templater::html::dtags::form::form(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::form::isVoid() const {
     return 0;
@@ -461,6 +575,9 @@ const std::string& Templater::html::dtags::h1::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::h1::h1(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::h1::isVoid() const {
     return 0;
 }
@@ -472,6 +589,9 @@ const std::string& Templater::html::dtags::h2::getTagName() const {
     static const std::string name = "h2";
     return name;
 }
+
+Templater::html::dtags::h2::h2(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::h2::isVoid() const {
     return 0;
@@ -485,6 +605,9 @@ const std::string& Templater::html::dtags::h3::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::h3::h3(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::h3::isVoid() const {
     return 0;
 }
@@ -496,6 +619,9 @@ const std::string& Templater::html::dtags::h4::getTagName() const {
     static const std::string name = "h4";
     return name;
 }
+
+Templater::html::dtags::h4::h4(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::h4::isVoid() const {
     return 0;
@@ -509,6 +635,9 @@ const std::string& Templater::html::dtags::h5::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::h5::h5(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::h5::isVoid() const {
     return 0;
 }
@@ -520,6 +649,9 @@ const std::string& Templater::html::dtags::h6::getTagName() const {
     static const std::string name = "h6";
     return name;
 }
+
+Templater::html::dtags::h6::h6(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::h6::isVoid() const {
     return 0;
@@ -533,6 +665,9 @@ const std::string& Templater::html::dtags::head::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::head::head(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::head::isVoid() const {
     return 0;
 }
@@ -544,6 +679,9 @@ const std::string& Templater::html::dtags::header::getTagName() const {
     static const std::string name = "header";
     return name;
 }
+
+Templater::html::dtags::header::header(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::header::isVoid() const {
     return 0;
@@ -557,6 +695,9 @@ const std::string& Templater::html::dtags::hgroup::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::hgroup::hgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::hgroup::isVoid() const {
     return 0;
 }
@@ -568,6 +709,9 @@ const std::string& Templater::html::dtags::hr::getTagName() const {
     static const std::string name = "hr";
     return name;
 }
+
+Templater::html::dtags::hr::hr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::hr::isVoid() const {
     return 1;
@@ -581,6 +725,9 @@ const std::string& Templater::html::dtags::html::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::html::html(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::html::isVoid() const {
     return 0;
 }
@@ -592,6 +739,9 @@ const std::string& Templater::html::dtags::i::getTagName() const {
     static const std::string name = "i";
     return name;
 }
+
+Templater::html::dtags::i::i(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::i::isVoid() const {
     return 0;
@@ -605,6 +755,9 @@ const std::string& Templater::html::dtags::iframe::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::iframe::iframe(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::iframe::isVoid() const {
     return 0;
 }
@@ -616,6 +769,9 @@ const std::string& Templater::html::dtags::img::getTagName() const {
     static const std::string name = "img";
     return name;
 }
+
+Templater::html::dtags::img::img(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::img::isVoid() const {
     return 1;
@@ -629,6 +785,9 @@ const std::string& Templater::html::dtags::input::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::input::input(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::input::isVoid() const {
     return 1;
 }
@@ -640,6 +799,9 @@ const std::string& Templater::html::dtags::ins::getTagName() const {
     static const std::string name = "ins";
     return name;
 }
+
+Templater::html::dtags::ins::ins(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::ins::isVoid() const {
     return 0;
@@ -653,6 +815,9 @@ const std::string& Templater::html::dtags::kbd::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::kbd::kbd(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::kbd::isVoid() const {
     return 0;
 }
@@ -664,6 +829,9 @@ const std::string& Templater::html::dtags::label::getTagName() const {
     static const std::string name = "label";
     return name;
 }
+
+Templater::html::dtags::label::label(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::label::isVoid() const {
     return 0;
@@ -677,6 +845,9 @@ const std::string& Templater::html::dtags::legend::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::legend::legend(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::legend::isVoid() const {
     return 0;
 }
@@ -688,6 +859,9 @@ const std::string& Templater::html::dtags::li::getTagName() const {
     static const std::string name = "li";
     return name;
 }
+
+Templater::html::dtags::li::li(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::li::isVoid() const {
     return 0;
@@ -701,6 +875,9 @@ const std::string& Templater::html::dtags::link::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::link::link(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::link::isVoid() const {
     return 1;
 }
@@ -712,6 +889,9 @@ const std::string& Templater::html::dtags::main::getTagName() const {
     static const std::string name = "main";
     return name;
 }
+
+Templater::html::dtags::main::main(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::main::isVoid() const {
     return 0;
@@ -725,6 +905,9 @@ const std::string& Templater::html::dtags::map::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::map::map(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::map::isVoid() const {
     return 0;
 }
@@ -736,6 +919,9 @@ const std::string& Templater::html::dtags::mark::getTagName() const {
     static const std::string name = "mark";
     return name;
 }
+
+Templater::html::dtags::mark::mark(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::mark::isVoid() const {
     return 0;
@@ -749,6 +935,9 @@ const std::string& Templater::html::dtags::math::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::math::math(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::math::isVoid() const {
     return 0;
 }
@@ -760,6 +949,9 @@ const std::string& Templater::html::dtags::menu::getTagName() const {
     static const std::string name = "menu";
     return name;
 }
+
+Templater::html::dtags::menu::menu(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::menu::isVoid() const {
     return 0;
@@ -773,6 +965,9 @@ const std::string& Templater::html::dtags::menuitem::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::menuitem::menuitem(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::menuitem::isVoid() const {
     return 1;
 }
@@ -784,6 +979,9 @@ const std::string& Templater::html::dtags::meta::getTagName() const {
     static const std::string name = "meta";
     return name;
 }
+
+Templater::html::dtags::meta::meta(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::meta::isVoid() const {
     return 1;
@@ -797,6 +995,9 @@ const std::string& Templater::html::dtags::meter::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::meter::meter(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::meter::isVoid() const {
     return 0;
 }
@@ -808,6 +1009,9 @@ const std::string& Templater::html::dtags::nav::getTagName() const {
     static const std::string name = "nav";
     return name;
 }
+
+Templater::html::dtags::nav::nav(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::nav::isVoid() const {
     return 0;
@@ -821,6 +1025,9 @@ const std::string& Templater::html::dtags::noscript::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::noscript::noscript(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::noscript::isVoid() const {
     return 0;
 }
@@ -832,6 +1039,9 @@ const std::string& Templater::html::dtags::object::getTagName() const {
     static const std::string name = "object";
     return name;
 }
+
+Templater::html::dtags::object::object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::object::isVoid() const {
     return 0;
@@ -845,6 +1055,9 @@ const std::string& Templater::html::dtags::ol::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::ol::ol(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::ol::isVoid() const {
     return 0;
 }
@@ -856,6 +1069,9 @@ const std::string& Templater::html::dtags::optgroup::getTagName() const {
     static const std::string name = "optgroup";
     return name;
 }
+
+Templater::html::dtags::optgroup::optgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::optgroup::isVoid() const {
     return 0;
@@ -869,6 +1085,9 @@ const std::string& Templater::html::dtags::option::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::option::option(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::option::isVoid() const {
     return 0;
 }
@@ -880,6 +1099,9 @@ const std::string& Templater::html::dtags::output::getTagName() const {
     static const std::string name = "output";
     return name;
 }
+
+Templater::html::dtags::output::output(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::output::isVoid() const {
     return 0;
@@ -893,6 +1115,9 @@ const std::string& Templater::html::dtags::p::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::p::p(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::p::isVoid() const {
     return 0;
 }
@@ -904,6 +1129,9 @@ const std::string& Templater::html::dtags::param::getTagName() const {
     static const std::string name = "param";
     return name;
 }
+
+Templater::html::dtags::param::param(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::param::isVoid() const {
     return 1;
@@ -917,6 +1145,9 @@ const std::string& Templater::html::dtags::picture::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::picture::picture(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::picture::isVoid() const {
     return 0;
 }
@@ -928,6 +1159,9 @@ const std::string& Templater::html::dtags::pre::getTagName() const {
     static const std::string name = "pre";
     return name;
 }
+
+Templater::html::dtags::pre::pre(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::pre::isVoid() const {
     return 0;
@@ -941,6 +1175,9 @@ const std::string& Templater::html::dtags::progress::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::progress::progress(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::progress::isVoid() const {
     return 0;
 }
@@ -952,6 +1189,9 @@ const std::string& Templater::html::dtags::q::getTagName() const {
     static const std::string name = "q";
     return name;
 }
+
+Templater::html::dtags::q::q(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::q::isVoid() const {
     return 0;
@@ -965,6 +1205,9 @@ const std::string& Templater::html::dtags::rb::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::rb::rb(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::rb::isVoid() const {
     return 0;
 }
@@ -976,6 +1219,9 @@ const std::string& Templater::html::dtags::rp::getTagName() const {
     static const std::string name = "rp";
     return name;
 }
+
+Templater::html::dtags::rp::rp(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::rp::isVoid() const {
     return 0;
@@ -989,6 +1235,9 @@ const std::string& Templater::html::dtags::rt::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::rt::rt(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::rt::isVoid() const {
     return 0;
 }
@@ -1000,6 +1249,9 @@ const std::string& Templater::html::dtags::rtc::getTagName() const {
     static const std::string name = "rtc";
     return name;
 }
+
+Templater::html::dtags::rtc::rtc(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::rtc::isVoid() const {
     return 0;
@@ -1013,6 +1265,9 @@ const std::string& Templater::html::dtags::ruby::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::ruby::ruby(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::ruby::isVoid() const {
     return 0;
 }
@@ -1024,6 +1279,9 @@ const std::string& Templater::html::dtags::s::getTagName() const {
     static const std::string name = "s";
     return name;
 }
+
+Templater::html::dtags::s::s(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::s::isVoid() const {
     return 0;
@@ -1037,6 +1295,9 @@ const std::string& Templater::html::dtags::samp::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::samp::samp(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::samp::isVoid() const {
     return 0;
 }
@@ -1048,6 +1309,9 @@ const std::string& Templater::html::dtags::script::getTagName() const {
     static const std::string name = "script";
     return name;
 }
+
+Templater::html::dtags::script::script(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::script::isVoid() const {
     return 0;
@@ -1061,6 +1325,9 @@ const std::string& Templater::html::dtags::search::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::search::search(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::search::isVoid() const {
     return 0;
 }
@@ -1072,6 +1339,9 @@ const std::string& Templater::html::dtags::section::getTagName() const {
     static const std::string name = "section";
     return name;
 }
+
+Templater::html::dtags::section::section(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::section::isVoid() const {
     return 0;
@@ -1085,6 +1355,9 @@ const std::string& Templater::html::dtags::select::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::select::select(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::select::isVoid() const {
     return 0;
 }
@@ -1096,6 +1369,9 @@ const std::string& Templater::html::dtags::slot::getTagName() const {
     static const std::string name = "slot";
     return name;
 }
+
+Templater::html::dtags::slot::slot(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::slot::isVoid() const {
     return 0;
@@ -1109,6 +1385,9 @@ const std::string& Templater::html::dtags::small::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::small::small(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::small::isVoid() const {
     return 0;
 }
@@ -1120,6 +1399,9 @@ const std::string& Templater::html::dtags::source::getTagName() const {
     static const std::string name = "source";
     return name;
 }
+
+Templater::html::dtags::source::source(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::source::isVoid() const {
     return 1;
@@ -1133,6 +1415,9 @@ const std::string& Templater::html::dtags::span::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::span::span(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::span::isVoid() const {
     return 0;
 }
@@ -1144,6 +1429,9 @@ const std::string& Templater::html::dtags::strong::getTagName() const {
     static const std::string name = "strong";
     return name;
 }
+
+Templater::html::dtags::strong::strong(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::strong::isVoid() const {
     return 0;
@@ -1157,6 +1445,9 @@ const std::string& Templater::html::dtags::style::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::style::style(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::style::isVoid() const {
     return 0;
 }
@@ -1168,6 +1459,9 @@ const std::string& Templater::html::dtags::sub::getTagName() const {
     static const std::string name = "sub";
     return name;
 }
+
+Templater::html::dtags::sub::sub(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::sub::isVoid() const {
     return 0;
@@ -1181,6 +1475,9 @@ const std::string& Templater::html::dtags::summary::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::summary::summary(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::summary::isVoid() const {
     return 0;
 }
@@ -1192,6 +1489,9 @@ const std::string& Templater::html::dtags::sup::getTagName() const {
     static const std::string name = "sup";
     return name;
 }
+
+Templater::html::dtags::sup::sup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::sup::isVoid() const {
     return 0;
@@ -1205,6 +1505,9 @@ const std::string& Templater::html::dtags::svg::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::svg::svg(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::svg::isVoid() const {
     return 0;
 }
@@ -1216,6 +1519,9 @@ const std::string& Templater::html::dtags::table::getTagName() const {
     static const std::string name = "table";
     return name;
 }
+
+Templater::html::dtags::table::table(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::table::isVoid() const {
     return 0;
@@ -1229,6 +1535,9 @@ const std::string& Templater::html::dtags::tbody::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::tbody::tbody(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::tbody::isVoid() const {
     return 0;
 }
@@ -1240,6 +1549,9 @@ const std::string& Templater::html::dtags::td::getTagName() const {
     static const std::string name = "td";
     return name;
 }
+
+Templater::html::dtags::td::td(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::td::isVoid() const {
     return 0;
@@ -1253,6 +1565,9 @@ const std::string& Templater::html::dtags::htemplate::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::htemplate::htemplate(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::htemplate::isVoid() const {
     return 0;
 }
@@ -1264,6 +1579,9 @@ const std::string& Templater::html::dtags::textarea::getTagName() const {
     static const std::string name = "textarea";
     return name;
 }
+
+Templater::html::dtags::textarea::textarea(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::textarea::isVoid() const {
     return 0;
@@ -1277,6 +1595,9 @@ const std::string& Templater::html::dtags::tfoot::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::tfoot::tfoot(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::tfoot::isVoid() const {
     return 0;
 }
@@ -1288,6 +1609,9 @@ const std::string& Templater::html::dtags::th::getTagName() const {
     static const std::string name = "th";
     return name;
 }
+
+Templater::html::dtags::th::th(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::th::isVoid() const {
     return 0;
@@ -1301,6 +1625,9 @@ const std::string& Templater::html::dtags::thead::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::thead::thead(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::thead::isVoid() const {
     return 0;
 }
@@ -1312,6 +1639,9 @@ const std::string& Templater::html::dtags::time::getTagName() const {
     static const std::string name = "time";
     return name;
 }
+
+Templater::html::dtags::time::time(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::time::isVoid() const {
     return 0;
@@ -1325,6 +1655,9 @@ const std::string& Templater::html::dtags::title::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::title::title(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::title::isVoid() const {
     return 0;
 }
@@ -1336,6 +1669,9 @@ const std::string& Templater::html::dtags::tr::getTagName() const {
     static const std::string name = "tr";
     return name;
 }
+
+Templater::html::dtags::tr::tr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::tr::isVoid() const {
     return 0;
@@ -1349,6 +1685,9 @@ const std::string& Templater::html::dtags::track::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::track::track(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::track::isVoid() const {
     return 1;
 }
@@ -1360,6 +1699,9 @@ const std::string& Templater::html::dtags::u::getTagName() const {
     static const std::string name = "u";
     return name;
 }
+
+Templater::html::dtags::u::u(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::u::isVoid() const {
     return 0;
@@ -1373,6 +1715,9 @@ const std::string& Templater::html::dtags::ul::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::ul::ul(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::ul::isVoid() const {
     return 0;
 }
@@ -1384,6 +1729,9 @@ const std::string& Templater::html::dtags::var::getTagName() const {
     static const std::string name = "var";
     return name;
 }
+
+Templater::html::dtags::var::var(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::var::isVoid() const {
     return 0;
@@ -1397,6 +1745,9 @@ const std::string& Templater::html::dtags::video::getTagName() const {
     return name;
 }
 
+Templater::html::dtags::video::video(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
+
 bool Templater::html::dtags::video::isVoid() const {
     return 0;
 }
@@ -1408,6 +1759,9 @@ const std::string& Templater::html::dtags::wbr::getTagName() const {
     static const std::string name = "wbr";
     return name;
 }
+
+Templater::html::dtags::wbr::wbr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+   : Templater::html::Object(std::move(attributes), std::move(children)) {}
 
 bool Templater::html::dtags::wbr::isVoid() const {
     return 1;

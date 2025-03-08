@@ -7,6 +7,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit a(Args&&... args);
+            explicit a(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -15,6 +16,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit abbr(Args&&... args);
+            explicit abbr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -23,6 +25,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit address(Args&&... args);
+            explicit address(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -31,6 +34,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit area(Args&&... args);
+            explicit area(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -39,6 +43,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit article(Args&&... args);
+            explicit article(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -47,6 +52,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit aside(Args&&... args);
+            explicit aside(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -55,6 +61,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit audio(Args&&... args);
+            explicit audio(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -63,6 +70,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit b(Args&&... args);
+            explicit b(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -71,6 +79,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit base(Args&&... args);
+            explicit base(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -79,6 +88,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit bdi(Args&&... args);
+            explicit bdi(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -87,6 +97,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit bdo(Args&&... args);
+            explicit bdo(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -95,6 +106,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit blockquote(Args&&... args);
+            explicit blockquote(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -103,6 +115,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit body(Args&&... args);
+            explicit body(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -111,6 +124,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit br(Args&&... args);
+            explicit br(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -119,6 +133,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit button(Args&&... args);
+            explicit button(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -127,6 +142,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit canvas(Args&&... args);
+            explicit canvas(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -135,6 +151,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit caption(Args&&... args);
+            explicit caption(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -143,6 +160,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit cite(Args&&... args);
+            explicit cite(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -151,6 +169,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit code(Args&&... args);
+            explicit code(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -159,6 +178,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit col(Args&&... args);
+            explicit col(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -167,6 +187,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit colgroup(Args&&... args);
+            explicit colgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -175,6 +196,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit data(Args&&... args);
+            explicit data(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -183,6 +205,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit datalist(Args&&... args);
+            explicit datalist(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -191,6 +214,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit dd(Args&&... args);
+            explicit dd(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -199,6 +223,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit del(Args&&... args);
+            explicit del(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -207,6 +232,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit details(Args&&... args);
+            explicit details(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -215,6 +241,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit dfn(Args&&... args);
+            explicit dfn(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -223,6 +250,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit dialog(Args&&... args);
+            explicit dialog(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -231,6 +259,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit div(Args&&... args);
+            explicit div(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -239,6 +268,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit dl(Args&&... args);
+            explicit dl(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -247,6 +277,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit dt(Args&&... args);
+            explicit dt(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -255,6 +286,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit em(Args&&... args);
+            explicit em(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -263,6 +295,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit embed(Args&&... args);
+            explicit embed(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -271,6 +304,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit fieldset(Args&&... args);
+            explicit fieldset(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -279,6 +313,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit figcaption(Args&&... args);
+            explicit figcaption(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -287,6 +322,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit figure(Args&&... args);
+            explicit figure(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -295,6 +331,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit footer(Args&&... args);
+            explicit footer(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -303,6 +340,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit form(Args&&... args);
+            explicit form(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -311,6 +349,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit h1(Args&&... args);
+            explicit h1(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -319,6 +358,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit h2(Args&&... args);
+            explicit h2(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -327,6 +367,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit h3(Args&&... args);
+            explicit h3(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -335,6 +376,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit h4(Args&&... args);
+            explicit h4(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -343,6 +385,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit h5(Args&&... args);
+            explicit h5(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -351,6 +394,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit h6(Args&&... args);
+            explicit h6(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -359,6 +403,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit head(Args&&... args);
+            explicit head(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -367,6 +412,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit header(Args&&... args);
+            explicit header(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -375,6 +421,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit hgroup(Args&&... args);
+            explicit hgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -383,6 +430,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit hr(Args&&... args);
+            explicit hr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -391,6 +439,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit html(Args&&... args);
+            explicit html(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -399,6 +448,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit i(Args&&... args);
+            explicit i(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -407,6 +457,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit iframe(Args&&... args);
+            explicit iframe(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -415,6 +466,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit img(Args&&... args);
+            explicit img(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -423,6 +475,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit input(Args&&... args);
+            explicit input(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -431,6 +484,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit ins(Args&&... args);
+            explicit ins(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -439,6 +493,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit kbd(Args&&... args);
+            explicit kbd(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -447,6 +502,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit label(Args&&... args);
+            explicit label(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -455,6 +511,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit legend(Args&&... args);
+            explicit legend(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -463,6 +520,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit li(Args&&... args);
+            explicit li(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -471,6 +529,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit link(Args&&... args);
+            explicit link(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -479,6 +538,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit main(Args&&... args);
+            explicit main(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -487,6 +547,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit map(Args&&... args);
+            explicit map(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -495,6 +556,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit mark(Args&&... args);
+            explicit mark(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -503,6 +565,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit math(Args&&... args);
+            explicit math(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -511,6 +574,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit menu(Args&&... args);
+            explicit menu(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -519,6 +583,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit menuitem(Args&&... args);
+            explicit menuitem(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -527,6 +592,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit meta(Args&&... args);
+            explicit meta(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -535,6 +601,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit meter(Args&&... args);
+            explicit meter(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -543,6 +610,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit nav(Args&&... args);
+            explicit nav(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -551,6 +619,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit noscript(Args&&... args);
+            explicit noscript(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -559,6 +628,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit object(Args&&... args);
+            explicit object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -567,6 +637,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit ol(Args&&... args);
+            explicit ol(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -575,6 +646,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit optgroup(Args&&... args);
+            explicit optgroup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -583,6 +655,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit option(Args&&... args);
+            explicit option(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -591,6 +664,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit output(Args&&... args);
+            explicit output(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -599,6 +673,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit p(Args&&... args);
+            explicit p(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -607,6 +682,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit param(Args&&... args);
+            explicit param(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -615,6 +691,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit picture(Args&&... args);
+            explicit picture(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -623,6 +700,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit pre(Args&&... args);
+            explicit pre(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -631,6 +709,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit progress(Args&&... args);
+            explicit progress(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -639,6 +718,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit q(Args&&... args);
+            explicit q(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -647,6 +727,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit rb(Args&&... args);
+            explicit rb(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -655,6 +736,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit rp(Args&&... args);
+            explicit rp(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -663,6 +745,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit rt(Args&&... args);
+            explicit rt(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -671,6 +754,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit rtc(Args&&... args);
+            explicit rtc(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -679,6 +763,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit ruby(Args&&... args);
+            explicit ruby(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -687,6 +772,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit s(Args&&... args);
+            explicit s(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -695,6 +781,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit samp(Args&&... args);
+            explicit samp(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -703,6 +790,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit script(Args&&... args);
+            explicit script(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -711,6 +799,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit search(Args&&... args);
+            explicit search(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -719,6 +808,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit section(Args&&... args);
+            explicit section(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -727,6 +817,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit select(Args&&... args);
+            explicit select(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -735,6 +826,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit slot(Args&&... args);
+            explicit slot(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -743,6 +835,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit small(Args&&... args);
+            explicit small(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -751,6 +844,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit source(Args&&... args);
+            explicit source(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -759,6 +853,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit span(Args&&... args);
+            explicit span(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -767,6 +862,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit strong(Args&&... args);
+            explicit strong(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -775,6 +871,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit style(Args&&... args);
+            explicit style(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -783,6 +880,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit sub(Args&&... args);
+            explicit sub(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -791,6 +889,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit summary(Args&&... args);
+            explicit summary(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -799,6 +898,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit sup(Args&&... args);
+            explicit sup(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -807,6 +907,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit svg(Args&&... args);
+            explicit svg(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -815,6 +916,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit table(Args&&... args);
+            explicit table(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -823,6 +925,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit tbody(Args&&... args);
+            explicit tbody(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -831,6 +934,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit td(Args&&... args);
+            explicit td(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -839,6 +943,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit htemplate(Args&&... args);
+            explicit htemplate(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -847,6 +952,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit textarea(Args&&... args);
+            explicit textarea(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -855,6 +961,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit tfoot(Args&&... args);
+            explicit tfoot(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -863,6 +970,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit th(Args&&... args);
+            explicit th(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -871,6 +979,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit thead(Args&&... args);
+            explicit thead(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -879,6 +988,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit time(Args&&... args);
+            explicit time(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -887,6 +997,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit title(Args&&... args);
+            explicit title(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -895,6 +1006,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit tr(Args&&... args);
+            explicit tr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -903,6 +1015,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit track(Args&&... args);
+            explicit track(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -911,6 +1024,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit u(Args&&... args);
+            explicit u(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -919,6 +1033,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit ul(Args&&... args);
+            explicit ul(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -927,6 +1042,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit var(Args&&... args);
+            explicit var(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -935,6 +1051,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit video(Args&&... args);
+            explicit video(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
@@ -943,6 +1060,7 @@ namespace Templater::html::dtags {
         public:
             template <typename... Args>
             explicit wbr(Args&&... args);
+            explicit wbr(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             bool isVoid() const override;
             std::shared_ptr<Object> clone() const override;
             const std::string& getTagName() const override;
