@@ -11,7 +11,6 @@ target_sources(
         "dynamic/tags.h"
         "dynamic/tags.cpp"
         "document.h"
-        "document.cpp"
         "compile/tags.h"
 )
 
