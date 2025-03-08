@@ -415,7 +415,7 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
 }
 
 
-TEST_CASE("Complex html with tags", "[Object]" ) {
+TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
     using namespace Templater::html::dtags;
 
     html obj = html(
@@ -554,4 +554,49 @@ TEST_CASE("HTML fragment using Document serialises correctly", "[Object]" ) {
     std::string expected = "<li>\n\t1\n</li>\n<li>\n\t2\n</li>\n<li>\n\t3\n</li>";
 
     CHECK(list::value() == expected);
+}
+
+TEST_CASE("Complex html with constant tags", "[Object]" ) {
+    using namespace Templater::html::ctags;
+
+    
+    using doc = Document<html<
+        ctags::Attribute<"lang", "en">,
+        head<
+            title<ctags::Text<"Test Page">>,
+            meta<ctags::Attribute<"charset", "UTF-8">>,
+            meta<ctags::Attribute<"name", "viewport">, ctags::Attribute<"content", "width=device-width, initial-scale=1.0">>,
+            link<ctags::Attribute<"rel", "stylesheet">, ctags::Attribute<"href", "styles.css">>
+        >,
+        body<
+            h1<ctags::Text<"Welcome to the Test Page">>,
+            p<ctags::Text<"This is a paragraph demonstrating compile-time HTML generation.">>,
+            ctags::div<
+                ctags::Attribute<"class", "container">,
+                p<ctags::Text<"Inside a div element.">>,
+                ul<
+                    li<ctags::Text<"Item 1">>,
+                    li<ctags::Text<"Item 2">>,
+                    li<ctags::Text<"Item 3">>
+                >
+            >,
+            form<
+                ctags::Attribute<"action", "/submit">,
+                ctags::Attribute<"method", "post">,
+                label<ctags::Attribute<"for", "name">, ctags::Text<"Name: ">>,
+                input<ctags::Attribute<"type", "text">, ctags::Attribute<"id", "name">, ctags::Attribute<"name", "name">>,
+                br<>,
+                label<ctags::Attribute<"for", "email">, ctags::Text<"Email: ">>,
+                input<ctags::Attribute<"type", "email">, ctags::Attribute<"id", "email">, ctags::Attribute<"name", "email">>,
+                br<>,
+                button<ctags::Attribute<"type", "submit">, ctags::Text<"Submit">>
+            >
+        >
+        >>;
+
+    std::string expected = "<html lang=\"en\">\n\t<head>\n\t\t<title>\n\t\t\tTest Page\n\t\t</title>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<link href=\"styles.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<h1>\n\t\t\tWelcome to the Test Page\n\t\t</h1>\n\t\t<p>\n\t\t\tThis is a paragraph demonstrating compile-time HTML generation.\n\t\t</p>\n\t\t<div class=\"container\">\n\t\t\t<p>\n\t\t\t\tInside a div element.\n\t\t\t</p>\n\t\t\t<ul>\n\t\t\t\t<li>\n\t\t\t\t\tItem 1\n\t\t\t\t</li>\n\t\t\t\t<li>\n\t\t\t\t\tItem 2\n\t\t\t\t</li>\n\t\t\t\t<li>\n\t\t\t\t\tItem 3\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t</div>\n\t\t<form method=\"post\" action=\"/submit\">\n\t\t\t<label for=\"name\">\n\t\t\t\tName: \n\t\t\t</label>\n\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t<br/>\n\t\t\t<label for=\"email\">\n\t\t\t\tEmail: \n\t\t\t</label>\n\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t<br/>\n\t\t\t<button type=\"submit\">\n\t\t\t\tSubmit\n\t\t\t</button>\n\t\t</form>\n\t</body>\n</html>";
+
+    INFO ("The generated html is \n" << doc::value() );
+
+    CHECK(expected == doc::value());
 }
