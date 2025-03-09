@@ -336,3 +336,49 @@ std::string dynamic::dtags::EmptyTag::serialiseRecursive(std::string& identation
 
     return res;
 }
+
+std::string Templater::dynamic::text::escape(const std::string& str) {
+    static constexpr std::array<const char*, 128> charsToEscape = [] {
+        std::array<const char*, 128> arr{};
+        arr['&'] = "&amp;";
+        arr['<'] = "&lt;";
+        arr['>'] = "&gt;";
+        arr['\"'] = "&quot;";
+        arr['\''] = "&apos;";
+        return arr;
+    }();
+
+    size_t escapedSize = 0;
+    
+    for (int i = 0; i < str.size(); i++) {
+        if (str[i] < 128 && charsToEscape[str[i]] != 0) {
+            escapedSize += strlen(charsToEscape[str[i]]);
+        } else {
+            escapedSize++;
+        }
+    }
+
+    std::string escaped(escapedSize, '\0');
+
+    const char* read = &str[0];
+    char* write = escaped.data();
+    const char* escapeSequence = 0;
+
+    while (*read != '\0') {
+        if (*read < 128 && charsToEscape[*read] != 0) {
+            escapeSequence = &(charsToEscape[*read][0]);
+            while (*escapeSequence != '\0') {
+                *write = *escapeSequence;
+                escapeSequence++;
+                write++;
+            }
+            read++;
+        } else {
+           *write = *read;
+           read++;
+           write++;
+        }
+    }
+
+    return escaped;
+}

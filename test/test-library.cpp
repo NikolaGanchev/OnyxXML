@@ -628,3 +628,13 @@ TEST_CASE("Complex html with constant tags", "[Object]" ) {
 
     CHECK(expected == doc::value());
 }
+
+TEST_CASE("Escapes html", "text::escape()" ) {
+    using namespace Templater::dynamic::text;
+
+    std::string textToEscape = "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
+
+    std::string escaped = "&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&apos;s date is: &lt;script&gt;alert(&apos;Hacked!&apos;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;";
+
+    CHECK(escaped == escape(textToEscape));
+}

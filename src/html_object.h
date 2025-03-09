@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <memory>
 #include <functional>
+#include <cstring>
 
 
     namespace Templater::dynamic {
@@ -141,6 +142,12 @@
                     const std::string& getText() const;
                     const std::string& getTagName() const override;
             };
+        }
+
+        namespace text {
+
+            // Currently assumes an ASCII string
+            std::string escape(const std::string& str);
         }
 
     }
