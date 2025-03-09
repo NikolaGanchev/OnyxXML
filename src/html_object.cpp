@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <map>
+#include <unordered_map>
 
 using namespace Templater;
 
@@ -338,21 +339,19 @@ std::string dynamic::dtags::EmptyTag::serialiseRecursive(std::string& identation
 }
 
 std::string Templater::dynamic::text::escape(const std::string& str) {
-    static constexpr std::array<const char*, 128> charsToEscape = [] {
-        std::array<const char*, 128> arr{};
-        arr['&'] = "&amp;";
-        arr['<'] = "&lt;";
-        arr['>'] = "&gt;";
-        arr['\"'] = "&quot;";
-        arr['\''] = "&apos;";
-        return arr;
-    }();
+    static const std::unordered_map<char, const std::string> charsToEscape = {
+        {'&', "&amp;"},
+        {'<', "&lt;"},
+        {'>', "&gt;"},
+        {'\"', "&quot;"},
+        {'\'', "&apos;"}
+    };
 
     size_t escapedSize = 0;
     
     for (int i = 0; i < str.size(); i++) {
-        if (str[i] < 128 && charsToEscape[str[i]] != 0) {
-            escapedSize += strlen(charsToEscape[str[i]]);
+        if (charsToEscape.contains(str[i])) {
+            escapedSize += (charsToEscape.find(str[i])->second).size();
         } else {
             escapedSize++;
         }
@@ -365,8 +364,8 @@ std::string Templater::dynamic::text::escape(const std::string& str) {
     const char* escapeSequence = 0;
 
     while (*read != '\0') {
-        if (*read < 128 && charsToEscape[*read] != 0) {
-            escapeSequence = &(charsToEscape[*read][0]);
+        if (charsToEscape.contains(*read)) {
+            escapeSequence = &((charsToEscape.find(*read)->second)[0]);
             while (*escapeSequence != '\0') {
                 *write = *escapeSequence;
                 escapeSequence++;
