@@ -266,64 +266,64 @@ bool dynamic::Object::getSortAttributes() {
     return sortAttributes;
 }
         
-dynamic::GenericObject::GenericObject(std::string  tagName, bool isVoid)
+dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid)
         : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object() {}
 
-dynamic::GenericObject::GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
         : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object(std::move(attributes), std::move(children)) {}
 
-const std::string& dynamic::GenericObject::getTagName() const {
+const std::string& dynamic::dtags::GenericObject::getTagName() const {
     return m_tag;
 }
 
-bool dynamic::GenericObject::isVoid() const {
+bool dynamic::dtags::GenericObject::isVoid() const {
     return m_isVoid;
 }
 
-std::shared_ptr<dynamic::Object> dynamic::GenericObject::clone() const {
+std::shared_ptr<dynamic::Object> dynamic::dtags::GenericObject::clone() const {
     return std::make_shared<GenericObject>(*this);
 }
 
-dynamic::Text::Text(std::string text): m_text(text), Object{} {}
+dynamic::dtags::Text::Text(std::string text): m_text(text), Object{} {}
 
-const std::string& dynamic::Text::getText() const {
+const std::string& dynamic::dtags::Text::getText() const {
     return m_text;
 }
 
-const std::string& dynamic::Text::getTagName() const {
+const std::string& dynamic::dtags::Text::getTagName() const {
     static const std::string name = "text";
     return name;
 }
 
-bool dynamic::Text::isVoid() const {
+bool dynamic::dtags::Text::isVoid() const {
     return true;
 }
 
-std::shared_ptr<dynamic::Object> dynamic::Text::clone() const {
+std::shared_ptr<dynamic::Object> dynamic::dtags::Text::clone() const {
     return std::make_shared<Text>(*this);
 }
 
-std::string dynamic::Text::serialiseRecursive(std::string& identation, const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const {
+std::string dynamic::dtags::Text::serialiseRecursive(std::string& identation, const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const {
     return identation + m_text;
 }
 
-dynamic::EmptyTag::EmptyTag(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+dynamic::dtags::EmptyTag::EmptyTag(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
         : Object(std::move(attributes), std::move(children)) {}
 
-const std::string& dynamic::EmptyTag::getTagName() const {
+const std::string& dynamic::dtags::EmptyTag::getTagName() const {
     static const std::string name = "";
     return name;
 }
 
-bool dynamic::EmptyTag::isVoid() const {
+bool dynamic::dtags::EmptyTag::isVoid() const {
     return false;
 }
 
-std::shared_ptr<dynamic::Object> dynamic::EmptyTag::clone() const {
+std::shared_ptr<dynamic::Object> dynamic::dtags::EmptyTag::clone() const {
     return std::make_shared<EmptyTag>(*this);
 }
 
-std::string dynamic::EmptyTag::serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const {
+std::string dynamic::dtags::EmptyTag::serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const {
     std::string res;
 
     for (const std::shared_ptr<dynamic::Object>& immediateChild: getChildren()) {

@@ -45,7 +45,7 @@ namespace Templater::compile {
         template <CompileString Str>
         struct Text {
             static constexpr std::shared_ptr<Templater::dynamic::Object> value() {
-                return Templater::dynamic::Text(Str).clone();
+                return Templater::dynamic::dtags::Text(Str).clone();
             }
         };
 
@@ -66,7 +66,7 @@ namespace Templater::compile {
         static constexpr std::string value(
             const std::string& identationSequence = Templater::dynamic::Object::getIdentationSequence(), 
             bool sortAttributes = Templater::dynamic::Object::getSortAttributes()) {
-            Templater::dynamic::EmptyTag obj;
+            Templater::dynamic::dtags::EmptyTag obj;
             if constexpr (sizeof...(Children) == 0)
             {
                 return std::string("");

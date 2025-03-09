@@ -7,7 +7,7 @@
 
 
     namespace Templater::dynamic {
-
+        
         class Attribute {
             private:
                 std::string m_name;
@@ -20,7 +20,10 @@
         };
 
         class Object;
-        class EmptyTag;
+
+        namespace dtags {
+            class EmptyTag;
+        }
 
         template <typename T>
         concept isValidObjectConstructorType = std::derived_from<T, Object> || std::same_as<T, Attribute>;
@@ -35,7 +38,7 @@
 
         class Object {
             friend InternalObject;
-            friend EmptyTag;
+            friend dtags::EmptyTag;
             private:
                 std::shared_ptr<InternalObject> m_object;
                 void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
@@ -97,45 +100,49 @@
                 static bool getSortAttributes();
         };
 
-        class GenericObject: public Object {
-            private:
-                const std::string m_tag;
-                const bool m_isVoid;
-            public: 
-                template <typename... Args>
-                explicit GenericObject(std::string  tagName, bool isVoid, Args&&... args);
-                explicit GenericObject(std::string  tagName, bool isVoid);
-                explicit GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
-                const std::string& getTagName() const override;
-                bool isVoid() const override;
-                std::shared_ptr<Object> clone() const override;
-        };
+        namespace dtags {
 
-        // Used to create a tree without a root
-        class EmptyTag: public Object {
-            protected:
-                std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
-            public: 
-                template <typename... Args>
-                explicit EmptyTag(Args&&... args);
-                explicit EmptyTag(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
-                const std::string& getTagName() const override;
-                bool isVoid() const override;
-                std::shared_ptr<Object> clone() const override;
-        };
+            class GenericObject: public Object {
+                private:
+                    const std::string m_tag;
+                    const bool m_isVoid;
+                public: 
+                    template <typename... Args>
+                    explicit GenericObject(std::string  tagName, bool isVoid, Args&&... args);
+                    explicit GenericObject(std::string  tagName, bool isVoid);
+                    explicit GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
+                    const std::string& getTagName() const override;
+                    bool isVoid() const override;
+                    std::shared_ptr<Object> clone() const override;
+            };
+    
+            // Used to create a tree without a root
+            class EmptyTag: public Object {
+                protected:
+                    std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
+                public: 
+                    template <typename... Args>
+                    explicit EmptyTag(Args&&... args);
+                    explicit EmptyTag(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
+                    const std::string& getTagName() const override;
+                    bool isVoid() const override;
+                    std::shared_ptr<Object> clone() const override;
+            };
+    
+            class Text: public Object {
+                private:
+                    const std::string m_text;
+                protected:
+                    std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
+                public:
+                    explicit Text(std::string text); 
+                    bool isVoid() const override;
+                    std::shared_ptr<Object> clone() const override;
+                    const std::string& getText() const;
+                    const std::string& getTagName() const override;
+            };
+        }
 
-        class Text: public Object {
-            private:
-                const std::string m_text;
-            protected:
-                std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
-            public:
-                explicit Text(std::string text); 
-                bool isVoid() const override;
-                std::shared_ptr<Object> clone() const override;
-                const std::string& getText() const;
-                const std::string& getTagName() const override;
-        };
     }
 
 
@@ -156,10 +163,10 @@ void Templater::dynamic::Object::processConstructorArgs(T&& arg) {
 }
 
 template <typename... Args>
-Templater::dynamic::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&&... args)
+Templater::dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&&... args)
     : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
     
 template <typename... Args>
-Templater::dynamic::EmptyTag::EmptyTag(Args&&... args)
+Templater::dynamic::dtags::EmptyTag::EmptyTag(Args&&... args)
     : Templater::dynamic::Object(std::forward<Args>(args)...) {}

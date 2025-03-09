@@ -4,7 +4,7 @@
 #include <chrono>
 
 TEST_CASE("HTML is generated", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -24,7 +24,7 @@ TEST_CASE("HTML is generated", "[Object]" ) {
 }
 
 TEST_CASE("serialise() arguments override global identation rules", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -44,7 +44,7 @@ TEST_CASE("serialise() arguments override global identation rules", "[Object]" )
 }
 
 TEST_CASE("Vector constructor works", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -67,7 +67,7 @@ TEST_CASE("Vector constructor works", "[Object]" ) {
 }
 
 TEST_CASE("Complex test case generates html", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     GenericObject obj = GenericObject(
         "html", false,
@@ -170,7 +170,7 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
 }
 
 TEST_CASE("Children return by tag name works", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -196,7 +196,7 @@ TEST_CASE("Children return by tag name works", "[Object]" ) {
 }
 
 TEST_CASE("Children return by id works", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -222,7 +222,7 @@ TEST_CASE("Children return by id works", "[Object]" ) {
 }
 
 TEST_CASE("Children return by name works", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -253,7 +253,7 @@ TEST_CASE("Children return by name works", "[Object]" ) {
 }
 
 TEST_CASE("Children return by class name works", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -284,7 +284,7 @@ TEST_CASE("Children return by class name works", "[Object]" ) {
 }
 
 TEST_CASE("Child add works", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -311,7 +311,7 @@ TEST_CASE("Child add works", "[Object]" ) {
 }
 
 TEST_CASE("Child remove works", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -345,7 +345,7 @@ TEST_CASE("Child remove works", "[Object]" ) {
 }
 
 TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -369,7 +369,7 @@ TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" )
 }
 
 TEST_CASE("Children do not get disowned upon pointer to parent destruction", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -393,7 +393,7 @@ TEST_CASE("Children do not get disowned upon pointer to parent destruction", "[O
 }
 
 TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
@@ -413,7 +413,7 @@ TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
 }
 
 TEST_CASE("Operator += works for child add", "[Object]" ) {
-    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
 
     Object::setIdentationSequence("\t");
     Object::setSortAttributes(true);
