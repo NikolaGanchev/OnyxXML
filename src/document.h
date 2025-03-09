@@ -1,5 +1,6 @@
+#pragma once
+
 #include <string>
-#include <iostream>
 #include <algorithm>
 #include <string_view>
 #include "html_object.h"

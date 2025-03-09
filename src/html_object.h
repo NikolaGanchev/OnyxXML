@@ -2,12 +2,11 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <initializer_list>
 #include <memory>
 #include <functional>
 
-namespace Templater {
-    namespace dynamic {
+
+    namespace Templater::dynamic {
 
         class Attribute {
             private:
@@ -138,7 +137,7 @@ namespace Templater {
                 const std::string& getTagName() const override;
         };
     }
-}
+
 
 template <typename... Args>
 Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic::isValidObjectConstructorType<Args>&& ...) { 
