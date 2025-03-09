@@ -304,7 +304,7 @@ std::shared_ptr<dynamic::Object> dynamic::dtags::Text::clone() const {
 }
 
 std::string dynamic::dtags::Text::serialiseRecursive(std::string& identation, const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const {
-    return identation + m_text;
+    return identation + dynamic::text::escape(m_text);
 }
 
 dynamic::dtags::EmptyTag::EmptyTag(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
