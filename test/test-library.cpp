@@ -635,7 +635,7 @@ TEST_CASE("Complex html with constant tags", "[Object]" ) {
     CHECK(expected == doc::value());
 }
 
-TEST_CASE("Escapes html", "text::escape()" ) {
+TEST_CASE("Escapes complex html", "[escape]" ) {
     using namespace Templater::dynamic::text;
 
     std::string textToEscape = "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
@@ -643,6 +643,55 @@ TEST_CASE("Escapes html", "text::escape()" ) {
     std::string escaped = "&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&apos;s date is: &lt;script&gt;alert(&apos;Hacked!&apos;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;";
 
     CHECK(escaped == escape(textToEscape));
+}
+
+TEST_CASE("Empty string remains unchanged", "[escape]") {
+    using namespace Templater::dynamic::text;
+    std::string input = "";
+    std::string expected = "";
+    REQUIRE(escape(input, true) == expected);
+}
+
+TEST_CASE("Reserved HTML characters are properly escaped", "[escape]") {
+    using namespace Templater::dynamic::text;
+    std::string input = "&<>\"'";
+    std::string expected = "&amp;&lt;&gt;&quot;&apos;";
+    REQUIRE(escape(input) == expected);
+}
+
+TEST_CASE("Non-escaping ASCII characters remain unchanged", "[escape]") {
+    using namespace Templater::dynamic::text;
+    std::string input = "Hello, World!";
+    std::string expected = "Hello, World!";
+    REQUIRE(escape(input) == expected);
+}
+
+TEST_CASE("Single non-ASCII character is converted to a numeric entity when multi-byte escaping is enabled", "[escape]") {
+    using namespace Templater::dynamic::text;
+    std::string input = "café";
+    std::string expected = "caf&#xe9;";
+    REQUIRE(escape(input, true) == expected);
+}
+
+TEST_CASE("Single non-ASCII character is not converted to a numeric entity when multi-byte escaping is disabled", "[escape]") {
+    using namespace Templater::dynamic::text;
+    std::string input = "café";
+    std::string expected = "café";
+    REQUIRE(escape(input, false) == expected);
+}
+
+TEST_CASE("Emoji (4-byte sequence) is converted to a numeric entity", "[escape]") {
+    using namespace Templater::dynamic::text;
+    std::string input = "😊";
+    std::string expected = "&#x1f60a;";
+    REQUIRE(escape(input, true) == expected);
+}
+
+TEST_CASE("Mixed content with ASCII, reserved characters, and multi-byte sequences", "[escape]") {
+    using namespace Templater::dynamic::text;
+    std::string input = "Hello <world> & café 😊";
+    std::string expected = "Hello &lt;world&gt; &amp; caf&#xe9; &#x1f60a;";
+    REQUIRE(escape(input, true) == expected);
 }
 
 TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
@@ -656,6 +705,36 @@ TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
     dtags::div d = dtags::div(Text(textToEscape));
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&apos;s date is: &lt;script&gt;alert(&apos;Hacked!&apos;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
+
+    CHECK(d.serialise() == expected);
+}
+
+TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "[dynamic::dtags::Text]" ) {
+    using namespace Templater::dynamic::dtags;
+
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
+
+    dtags::div d = dtags::div(Text(textToEscape, true));
+
+    std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;&#x1f600;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&apos;s date is: &lt;script&gt;alert(&apos;Hacked!&apos;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
+
+    CHECK(d.serialise() == expected);
+}
+
+TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "[dynamic::dtags::Text]" ) {
+    using namespace Templater::dynamic::dtags;
+
+    Object::setIdentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
+
+    dtags::div d = dtags::div(Text(textToEscape, false));
+
+    std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;😀Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&apos;s date is: &lt;script&gt;alert(&apos;Hacked!&apos;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
     CHECK(d.serialise() == expected);
 }

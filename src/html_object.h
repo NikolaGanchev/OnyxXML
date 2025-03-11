@@ -133,10 +133,11 @@
             class Text: public Object {
                 private:
                     const std::string m_text;
+                    const bool m_escapeMultiByte;
                 protected:
                     std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
                 public:
-                    explicit Text(std::string text); 
+                    explicit Text(std::string text, bool escapeMultiByte = false); 
                     bool isVoid() const override;
                     std::shared_ptr<Object> clone() const override;
                     const std::string& getText() const;
@@ -145,9 +146,11 @@
         }
 
         namespace text {
+            std::string escape(const std::string& str, bool escapeMultiByte = false);
 
-            // Currently assumes an ASCII string
-            std::string escape(const std::string& str);
+            std::string numericEntity(uint32_t codepoint);
+
+            uint32_t getUnicodeCodepoint(const char* read);
         }
 
     }
