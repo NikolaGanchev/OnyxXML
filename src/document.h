@@ -5,6 +5,8 @@
 #include <string_view>
 #include "html_object.h"
 
+#define COMPILE_DOCUMENT(...) Templater::compile::Document<__VA_ARGS__>
+
 namespace Templater::compile {
 
     template <size_t N>
