@@ -4,8 +4,18 @@
 #include <algorithm>
 #include <string_view>
 #include "html_object.h"
+#include <fstream>
 
-#define COMPILE_DOCUMENT(...) Templater::compile::Document<__VA_ARGS__>
+#define COMPILE_DOCUMENT(...) Templater::compile::Document<__VA_ARGS__>; \
+                                static const bool _register_##__LINE__ = [](){ \
+                                    std::string str = Templater::compile::Document<__VA_ARGS__>::value();\
+                                    std::ofstream output("./output.txt", std::ios::app); \
+                                    output << "Registered specialization for: " << std::endl;\
+                                    output << ""#__VA_ARGS__ << std::endl;\
+                                    output << "With result: " << std::endl;\
+                                    output << str << std::endl; \
+                                    return true; \
+                                }();
 
 namespace Templater::compile {
 
