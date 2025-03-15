@@ -14,30 +14,65 @@ target_sources(
         "compile/tags.h"
 )
 
-set(GENERATED_TAGS_H ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.h)
-set(GENERATED_TAGS_CPP ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.cpp)
-set(GENERATED_TAGS_COMPILE_H ${CMAKE_CURRENT_SOURCE_DIR}/compile/tags.h)
+set(GENERATED_TAGS_H "${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.h")
+set(GENERATED_TAGS_CPP "${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.cpp")
+set(GENERATED_TAGS_COMPILE_H "${CMAKE_CURRENT_SOURCE_DIR}/compile/tags.h")
+set(GENERATED_COMPILE_H "${CMAKE_CURRENT_SOURCE_DIR}/compile/documents.h")
 
-add_executable(generate ${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp)
+add_executable(generate "${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp")
 
 add_custom_command(
-    OUTPUT ${GENERATED_TAGS_H} ${GENERATED_TAGS_CPP} ${GENERATED_TAGS_COMPILE_H}
+    OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
     COMMAND generate
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS generate ${CMAKE_CURRENT_SOURCE_DIR}/tags.txt ${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    DEPENDS generate "${CMAKE_CURRENT_SOURCE_DIR}/tags.txt" "${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp"
     COMMENT "Running the generate executable to generate the html tags files"
     VERBATIM
 )
 
 add_custom_target(
     generate_files ALL
-    DEPENDS ${GENERATED_TAGS_H} ${GENERATED_TAGS_CPP} ${GENERATED_TAGS_COMPILE_H}
+    DEPENDS "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
     COMMENT "Ensuring generated files are up-to-date"
 )
 
 add_dependencies(samplelib generate_files)
 
 add_dependencies(generate_files generate)
+
+if(DEFINED COMPILE_TIME_DOCUMENT_COMPILATION_ENABLED AND COMPILE_TIME_DOCUMENT_COMPILATION_ENABLED STREQUAL "true")
+    message(STATUS "Compile-time html generation is enabled.")
+
+    # Ensure we have a valid path extraction file
+    if(EXISTS "${FOUND_DOCUMENTS_FILE}")
+        message(STATUS "Found documents file: ${FOUND_DOCUMENTS_FILE}. Currently in ${CMAKE_CURRENT_SOURCE_DIR}")
+
+        # Generate compile time html
+        add_executable(generate_compile_document "${CMAKE_CURRENT_SOURCE_DIR}/generate_compile_time.cpp")
+
+        target_sources(
+            generate_compile_document
+            PRIVATE
+                "html_object.cpp"
+                "html_object.h"
+        )
+
+        add_custom_command(
+            OUTPUT "${GENERATED_COMPILE_H}"
+            COMMAND generate_compile_document
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            DEPENDS generate_compile_document "${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp" "${FOUND_DOCUMENTS_FILE}"
+            COMMENT "Running the generate executable to speicalise the html"
+            VERBATIM
+        )
+
+        add_custom_target(
+            generate_compile_document_task ALL
+            DEPENDS "${GENERATED_COMPILE_H}" generate_compile_document
+            COMMENT "Ensuring generated files are up-to-date"
+        )
+    endif()
+endif()
 
 add_executable(application)
 
