@@ -14,9 +14,5 @@ target_sources(
         "test-library.cpp"
 )
 
-include(../src/compile_html.cmake)
-
-#register_compile_html_executable(unit-tests)
-
 # Automatically register all tests
 catch_discover_tests(unit-tests)

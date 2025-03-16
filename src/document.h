@@ -9,19 +9,10 @@
 #define COMPILE_DOCUMENT(...) [](){ \
     using namespace Templater::compile::ctags;\
     static std::string str = Templater::compile::Document<__VA_ARGS__>::value();\
-    static bool hasRan = false;\
-    if (!hasRan) {\
-        std::ofstream output("./output.txt", std::ios::app); \
-        output << "Registered specialization for: " << std::endl;\
-        output << "FILE: \"" << __FILE__ << "\""  << std::endl;\
-        output << "LINE: " << __LINE__ << std::endl;\
-        output << ""#__VA_ARGS__ << std::endl;\
-        output << "With result: " << std::endl;\
-        output << str << std::endl; \
-        hasRan = true;\
-    }\
     return str; \
-}();\
+}();
+
+#define RAW_TEMPLATE(...) std::string(#__VA_ARGS__)
 
 namespace Templater::compile {
 
