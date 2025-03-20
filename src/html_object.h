@@ -101,6 +101,7 @@ namespace Templater::dynamic {
 
             bool removeChild(Object& childToRemove);
             bool removeChild(const std::shared_ptr<Object>& childToRemove);
+            size_t size();
             
             std::string serialise(const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const;
 

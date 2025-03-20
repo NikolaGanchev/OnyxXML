@@ -18,8 +18,6 @@ TEST_CASE("HTML is generated", "[Object]" ) {
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head></head>\n</html>";
 
-    INFO ("The generated html is \n" << obj.serialise() );
-
     CHECK(expected == obj.serialise());
 }
 
@@ -37,8 +35,6 @@ TEST_CASE("serialise() arguments override global identation rules", "[Object]" )
     );
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n    <head></head>\n</html>";
-
-    INFO ("The generated html is \n" << obj.serialise("    ") );
 
     CHECK(expected == obj.serialise("    "));
 }
@@ -60,8 +56,6 @@ TEST_CASE("Vector constructor works", "[Object]" ) {
     dtags::ul obj = dtags::ul(attributes, children);
 
     std::string expected = "<ul id=\"list\">\n\t<li>\n\t\t1\n\t</li>\n\t<li>\n\t\t2\n\t</li>\n\t<li>\n\t\t3\n\t</li>\n</ul>";
-
-    INFO ("The generated html is \n" << obj.serialise() );
 
     CHECK(expected == obj.serialise());
 }
@@ -166,8 +160,6 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
     );
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#about\">\n\t\t\t\t\t\t\tAbout Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes various nested elements, attributes, and content.\n\t\t\t\t</p>\n\t\t\t\t<form name=\"contact-form\">\n\t\t\t\t\t<label for=\"name\">\n\t\t\t\t\t\tYour Name:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t\t\t<label for=\"email\">\n\t\t\t\t\t\tYour Email:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t\t\t<button type=\"submit\">\n\t\t\t\t\t\tSubmit\n\t\t\t\t\t</button>\n\t\t\t\t</form>\n\t\t\t</section>\n\t\t\t<section id=\"features\">\n\t\t\t\t<h2>\n\t\t\t\t\tFeatures\n\t\t\t\t</h2>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 1\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 2\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are the key features of the application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test Page\n\t\t\t</p>\n\t\t\t<a href=\"https://www.example.com\">\n\t\t\t\tPrivacy Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
-
-    INFO ("The generated html is \n" << obj.serialise() );
 
     CHECK(expected == obj.serialise());
 }
@@ -539,9 +531,101 @@ TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#about\">\n\t\t\t\t\t\t\tAbout Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes various nested elements, attributes, and content.\n\t\t\t\t</p>\n\t\t\t\t<form name=\"contact-form\">\n\t\t\t\t\t<label for=\"name\">\n\t\t\t\t\t\tYour Name:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t\t\t<label for=\"email\">\n\t\t\t\t\t\tYour Email:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t\t\t<button type=\"submit\">\n\t\t\t\t\t\tSubmit\n\t\t\t\t\t</button>\n\t\t\t\t</form>\n\t\t\t</section>\n\t\t\t<section id=\"features\">\n\t\t\t\t<h2>\n\t\t\t\t\tFeatures\n\t\t\t\t</h2>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 1\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 2\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are the key features of the application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test Page\n\t\t\t</p>\n\t\t\t<a href=\"https://www.example.com\">\n\t\t\t\tPrivacy Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
 
-    INFO ("The generated html is \n" << obj.serialise() );
-
     CHECK(expected == obj.serialise());
+}
+
+std::string generateRandomString(size_t length) {
+    const std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    std::string result;
+    result.reserve(length);
+    
+    std::srand(42); // Fixed seed for reproducibility
+    for (size_t i = 0; i < length; ++i) {
+        result += chars[std::rand() % chars.size()];
+    }
+    return result;
+}
+
+void addChildren(std::shared_ptr<Templater::dynamic::Object> root, int level) {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<section> s = std::make_shared<section>();
+    if (level > 0) {
+        addChildren(s, level-1);
+    }
+
+    root->addChild(*s);
+}
+
+
+TEST_CASE("Empty html tree has size 1", "[Object::size()]") {
+    using namespace Templater::dynamic::dtags;
+    html root;
+    REQUIRE(root.size() == 1);
+}
+
+TEST_CASE("Html tree with one child has size 2", "[Object::size()]") {
+    using namespace Templater::dynamic::dtags;
+    html root;
+    body child;
+    root.addChild(child);
+    REQUIRE(root.size() == 2);
+}
+
+TEST_CASE("Html tree with 5 nodes has size 6", "[Object::size()]") {
+    using namespace Templater::dynamic::dtags;
+    html root = html(
+        p(),
+        p(),
+        p(),
+        p(),
+        p()
+    );
+    REQUIRE(root.size() == 6);
+}
+
+TEST_CASE("Html tree with 5001 nodes has size 5001", "[Object::size()]") {
+    using namespace Templater::dynamic::dtags;
+    html root;
+    for (int i = 0; i < 1000; i++) {
+        section child = section(
+            dtags::div(
+                p(Text("Text")),
+                p()
+            )
+        );
+        root.addChild(child);
+    }
+    REQUIRE(root.size() == 5001);
+}
+
+TEST_CASE("25000 tags serialise in under 1s", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    section root{};
+
+    for (int i = 0; i < 5000; i++) {
+        p paragraph{};
+        for (int i = 0; i < 30; i++) {
+            paragraph[generateRandomString(10)] = generateRandomString(20);
+        }
+        paragraph.addChild(Text(generateRandomString(200)));
+        addChildren(paragraph.clone(), 2);
+        root.addChild(paragraph);
+    }
+
+    auto t1 = high_resolution_clock::now();
+    root.serialise();
+    auto t2 = high_resolution_clock::now();
+    
+    duration<double, std::milli> time = t2 - t1;
+    INFO(root.size());
+
+    REQUIRE(time.count() < 1000);
 }
 
 TEST_CASE("Compile-time html serialises correctly", "[Object]" ) {
@@ -635,8 +719,6 @@ TEST_CASE("Complex html with constant tags", "[Object]" ) {
     );
     
     std::string expected = "<html lang=\"en\">\n\t<head>\n\t\t<title>\n\t\t\tTest Page\n\t\t</title>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<link href=\"styles.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<h1>\n\t\t\tWelcome to the Test Page\n\t\t</h1>\n\t\t<p>\n\t\t\tThis is a paragraph demonstrating compile-time HTML generation.\n\t\t</p>\n\t\t<div class=\"container\">\n\t\t\t<p>\n\t\t\t\tInside a div element.\n\t\t\t</p>\n\t\t\t<ul>\n\t\t\t\t<li>\n\t\t\t\t\tItem 1\n\t\t\t\t</li>\n\t\t\t\t<li>\n\t\t\t\t\tItem 2\n\t\t\t\t</li>\n\t\t\t\t<li>\n\t\t\t\t\tItem 3\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t</div>\n\t\t<form method=\"post\" action=\"/submit\">\n\t\t\t<label for=\"name\">\n\t\t\t\tName: \n\t\t\t</label>\n\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t<br/>\n\t\t\t<label for=\"email\">\n\t\t\t\tEmail: \n\t\t\t</label>\n\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t<br/>\n\t\t\t<button type=\"submit\">\n\t\t\t\tSubmit\n\t\t\t</button>\n\t\t</form>\n\t</body>\n</html>";
-
-    INFO ("The generated html is \n" << doc4 );
 
     CHECK(expected == doc4);
 }

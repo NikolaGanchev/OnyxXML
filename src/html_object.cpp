@@ -191,6 +191,14 @@ bool dynamic::Object::removeChild(const std::shared_ptr<Object>& childToRemove) 
     return removeChild(*(childToRemove));
 }
 
+size_t dynamic::Object::size() {
+    size_t size = 1;
+    for (auto& child: m_object->m_children) {
+        size += child->size();
+    }
+    return size;
+}
+
 const std::string & dynamic::Object::getAttributeValue(const std::string &name) const {
 
     return m_object->m_attributes[name];
