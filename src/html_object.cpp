@@ -12,11 +12,19 @@ dynamic::Attribute::Attribute(std::string name, std::string value): m_name(std::
 
 dynamic::Attribute::Attribute(std::string name): m_name(std::move(name)), m_value("") {}
 
+void dynamic::Attribute::setValue(const std::string& value) {
+    m_value = value;
+}
+
 const std::string& dynamic::Attribute::getName() const {
     return m_name;
 }
 
 const std::string& dynamic::Attribute::getValue() const {
+    return m_value;
+}
+
+std::string& dynamic::Attribute::getValueMutable() {
     return m_value;
 }
 
@@ -28,21 +36,16 @@ dynamic::Object::Object(const Object& other): m_object{other.m_object} {}
 
 dynamic::Object::Object(Object&& other): m_object{std::move(other.m_object)} {}
 
-dynamic::Object::Object(const std::vector<Attribute>& attributes, std::vector<std::shared_ptr<Object>> children) { 
-    std::unordered_map<std::string, std::string> attributesMap;
-    for (auto& attr: attributes) {
-        attributesMap[attr.getName()] = attr.getValue();
-    }
-
+dynamic::Object::Object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children) {
     for (auto& child: children) {
         child->m_object->m_isInTree = true;
     }
 
-    m_object = std::make_shared<Data>(Data{attributesMap, std::move(children)});
+    m_object = std::make_shared<Data>(Data{std::move(attributes), std::move(children)});
 }
 
 void dynamic::Object::processConstructorAttribute(const Attribute& attribute) {
-    m_object->m_attributes[attribute.getName()] = attribute.getValue();
+    m_object->m_attributes.push_back(attribute);
 }
 
 void dynamic::Object::processConstructorObject(Object& child) {
@@ -54,7 +57,7 @@ void dynamic::Object::processConstructorObject(Object& child) {
 }
 
 void dynamic::Object::processConstructorAttribute(Attribute&& attribute) {
-    m_object->m_attributes[std::move(attribute.getName())] = std::move(attribute.getValue());
+    this->operator[](std::move(attribute.getName())) = std::move(attribute.getValue());
 }
 
 void dynamic::Object::processConstructorObject(Object&& child) {
@@ -128,7 +131,7 @@ std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenByAttr
 
     recursiveChildrenParse(result, this->clone(), 
     ([&attribute, &value](std::shared_ptr<dynamic::Object> obj) -> bool 
-        { return obj->m_object->m_attributes.contains(attribute) && obj->m_object->m_attributes[attribute] == value; }));
+        { return obj->hasAttributeValue(attribute) && obj->getAttributeValue(attribute) == value; }));
 
     return result;
 }
@@ -158,7 +161,7 @@ std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenById(c
     return getChildrenByAttribute("id", id);
 }
 
-const std::unordered_map<std::string, std::string>& dynamic::Object::getAttributes() const {
+const std::vector<dynamic::Attribute>& dynamic::Object::getAttributes() const {
 
     return m_object->m_attributes;
 }
@@ -199,29 +202,50 @@ size_t dynamic::Object::size() {
     return size;
 }
 
-const std::string & dynamic::Object::getAttributeValue(const std::string &name) const {
+bool dynamic::Object::hasAttributeValue(const std::string &name) const {
+    for (auto& attr: m_object->m_attributes) {
+        if (attr.getName() == name) {
+            return true;
+        }
+    }
 
-    return m_object->m_attributes[name];
+    return false;
+}
+
+const std::string & dynamic::Object::getAttributeValue(const std::string &name) const {
+    for (auto& attr: m_object->m_attributes) {
+        if (attr.getName() == name) {
+            return attr.getValue();
+        }
+    }
+
+    throw std::runtime_error("Trying to get Attribute which does not exist: " + name);
 }
 
 void dynamic::Object::setAttributeValue(const std::string &name, const std::string &newValue) {
-
-    m_object->m_attributes[name] = newValue;
+    for (auto& attr: m_object->m_attributes) {
+        if (attr.getName() == name) {
+            attr.setValue(newValue);
+            return;
+        }
+    }
+    
+    m_object->m_attributes.emplace_back(name, newValue);
 }
 
 std::string dynamic::Object::serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const {
     std::string result = identation + "<" + getTagName() + "";
-    
+
+    auto attributes = getAttributes();
     if (sortAttributes) {
-        auto attributes = getAttributes();
-        std::map<std::string, std::string> sortedAttributes(attributes.begin(), attributes.end());
-        for (auto& [name, value]: sortedAttributes) {
-            result += " " + name + "=\"" + value + "\"";
-        }
-    } else {
-        for (auto& [name, value]: getAttributes()) {
-            result += " " + name + "=\"" + value + "\"";
-        }
+        sort(attributes.begin(), attributes.end(), [](const Attribute& lhs, const Attribute& rhs)
+        {
+            return lhs.getName() <= rhs.getName();
+        });
+    }
+    
+    for (auto& attr: attributes) {
+        result += " " + attr.getName() + "=\"" + attr.getValue() + "\"";
     }
 
     if (!isVoid()) {
@@ -265,7 +289,15 @@ std::string dynamic::Object::serialise(const std::string& identationSequence, bo
 }
 
 std::string& dynamic::Object::operator[](const std::string& name) {
-    return m_object->m_attributes[name];
+    if (!hasAttributeValue(name)) {
+        setAttributeValue(name, "");
+    }
+    
+    for (auto& attr: m_object->m_attributes) {
+        if (attr.getName() == name) {
+            return attr.getValueMutable();
+        }
+    }
 }
 
 dynamic::Object& dynamic::Object::operator+=(dynamic::Object& right) {
@@ -305,7 +337,7 @@ bool dynamic::Object::getSortAttributes() {
 dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid)
         : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object() {}
 
-dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid, const std::vector<Attribute>& attributes, std::vector<std::shared_ptr<Object>> children)
+dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
         : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object{attributes, std::move(children)} {}
 
 const std::string& dynamic::dtags::GenericObject::getTagName() const {

@@ -8,19 +8,21 @@
 
 
 namespace Templater::dynamic {
-    
+    class Object;
+
     class Attribute {
+        friend Object;
         private:
             std::string m_name;
             std::string m_value;
+            void setValue(const std::string&);
+            std::string& getValueMutable();
         public:
             explicit Attribute(std::string, std::string);
             explicit Attribute(std::string);
             const std::string& getName() const;
             const std::string& getValue() const;
     };
-
-    class Object;
 
     namespace dtags {
         class EmptyTag;
@@ -33,7 +35,7 @@ namespace Templater::dynamic {
         friend dtags::EmptyTag;
         private:
             struct Data {
-                std::unordered_map<std::string, std::string> m_attributes;
+                std::vector<Attribute> m_attributes;
                 std::vector<std::shared_ptr<Object>> m_children;
                 bool m_isInTree = false;
 
@@ -63,7 +65,7 @@ namespace Templater::dynamic {
             explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
             template <typename... Args>
             explicit Object(Args&... args) requires (isValidObjectConstructorType<Args>&& ...);
-            explicit Object(const std::vector<Attribute>& attributes, std::vector<std::shared_ptr<Object>> children);
+            explicit Object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             explicit Object(const Object& other);
             explicit Object(Object&& other);
             explicit Object();
@@ -83,7 +85,8 @@ namespace Templater::dynamic {
             std::vector<std::shared_ptr<Object>> getChildrenById(const std::string& id) const;
             std::vector<std::shared_ptr<Object>> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
             
-            const std::unordered_map<std::string, std::string>& getAttributes() const;
+            bool hasAttributeValue(const std::string& name) const;
+            const std::vector<Attribute>& getAttributes() const;
             const std::string& getAttributeValue(const std::string& name) const;
             void setAttributeValue(const std::string& name, const std::string& newValue);
             std::string& operator[](const std::string& name);
@@ -121,7 +124,7 @@ namespace Templater::dynamic {
                 template <typename... Args>
                 explicit GenericObject(std::string  tagName, bool isVoid, Args&... args) requires (isValidObjectConstructorType<Args>&& ...);
                 explicit GenericObject(std::string  tagName, bool isVoid);
-                explicit GenericObject(std::string  tagName, bool isVoid, const std::vector<Attribute>& attributes, std::vector<std::shared_ptr<Object>> children);
+                explicit GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
                 explicit GenericObject(const Object& other);
                 explicit GenericObject(Object&& other);
                 const std::string& getTagName() const override;
