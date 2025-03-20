@@ -21,7 +21,7 @@ const std::string& dynamic::Attribute::getValue() const {
 }
 
 dynamic::Object::Object() { 
-    m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
+    m_object = std::make_shared<Data>(Data{{}, {}, false});
 }
 
 dynamic::Object::Object(const Object& other): m_object{other.m_object} {}
@@ -38,7 +38,7 @@ dynamic::Object::Object(const std::vector<Attribute>& attributes, std::vector<st
         child->m_object->m_isInTree = true;
     }
 
-    m_object = std::make_shared<InternalObject>(InternalObject{attributesMap, std::move(children)});
+    m_object = std::make_shared<Data>(Data{attributesMap, std::move(children)});
 }
 
 void dynamic::Object::processConstructorAttribute(const Attribute& attribute) {
@@ -65,7 +65,7 @@ void dynamic::Object::processConstructorObject(Object&& child) {
     (m_object->m_children).push_back(std::move(child.clone()));
 }
 
-dynamic::InternalObject::~InternalObject() {
+dynamic::Object::Data::~Data() {
     for (auto& child: m_children) {
         child->m_object->m_isInTree = false;
     }

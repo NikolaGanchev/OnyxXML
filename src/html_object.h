@@ -29,20 +29,18 @@ namespace Templater::dynamic {
     template <typename T>
     concept isValidObjectConstructorType = std::derived_from<T, Object> || std::same_as<T, Attribute>;
 
-    struct InternalObject {
-        std::unordered_map<std::string, std::string> m_attributes;
-        std::vector<std::shared_ptr<Object>> m_children;
-        bool m_isInTree = false;
-
-        ~InternalObject();
-    };
-
     class Object {
-        friend InternalObject;
         friend dtags::EmptyTag;
-
         private:
-            std::shared_ptr<InternalObject> m_object;
+            struct Data {
+                std::unordered_map<std::string, std::string> m_attributes;
+                std::vector<std::shared_ptr<Object>> m_children;
+                bool m_isInTree = false;
+
+                ~Data();
+            };
+
+            std::shared_ptr<Data> m_object;
             void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
             
             template <typename T>
@@ -172,14 +170,14 @@ namespace Templater::dynamic {
 
 template <typename... Args>
 Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic::isValidObjectConstructorType<Args>&& ...) { 
-    m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
+    m_object = std::make_shared<Data>(Data{{}, {}, false});
 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
 template <typename... Args>
 Templater::dynamic::Object::Object(Args&... args) requires (isValidObjectConstructorType<Args>&& ...) {    
-    m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
+    m_object = std::make_shared<Data>(Data{{}, {}, false});
 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
