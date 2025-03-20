@@ -40,13 +40,18 @@ namespace Templater::dynamic {
     class Object {
         friend InternalObject;
         friend dtags::EmptyTag;
+
         private:
             std::shared_ptr<InternalObject> m_object;
             void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
             
             template <typename T>
             void processConstructorArgs(T&& arg);
-            void processConstructorAttribute(Attribute attribute);
+            void processConstructorAttribute(Attribute&& attribute);
+            void processConstructorObject(Object&& child);
+            template <typename T>
+            void processConstructorArgs(T& arg);
+            void processConstructorAttribute(const Attribute& attribute);
             void processConstructorObject(Object& child);
             bool removeChild(Object& childToRemove, Object& currentRoot);
             // Default: "\t"
@@ -58,7 +63,11 @@ namespace Templater::dynamic {
         public:
             template <typename... Args>
             explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
-            explicit Object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
+            template <typename... Args>
+            explicit Object(Args&... args) requires (isValidObjectConstructorType<Args>&& ...);
+            explicit Object(const std::vector<Attribute>& attributes, std::vector<std::shared_ptr<Object>> children);
+            explicit Object(const Object& other);
+            explicit Object(Object&& other);
             explicit Object();
             virtual ~Object();
             virtual std::shared_ptr<Object> clone() const = 0; 
@@ -110,8 +119,12 @@ namespace Templater::dynamic {
             public: 
                 template <typename... Args>
                 explicit GenericObject(std::string  tagName, bool isVoid, Args&&... args);
+                template <typename... Args>
+                explicit GenericObject(std::string  tagName, bool isVoid, Args&... args) requires (isValidObjectConstructorType<Args>&& ...);
                 explicit GenericObject(std::string  tagName, bool isVoid);
-                explicit GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
+                explicit GenericObject(std::string  tagName, bool isVoid, const std::vector<Attribute>& attributes, std::vector<std::shared_ptr<Object>> children);
+                explicit GenericObject(const Object& other);
+                explicit GenericObject(Object&& other);
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
                 std::shared_ptr<Object> clone() const override;
@@ -122,9 +135,7 @@ namespace Templater::dynamic {
             protected:
                 std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
             public: 
-                template <typename... Args>
-                explicit EmptyTag(Args&&... args);
-                explicit EmptyTag(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
+                using Object::Object;
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
                 std::shared_ptr<Object> clone() const override;
@@ -138,6 +149,8 @@ namespace Templater::dynamic {
                 std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
             public:
                 explicit Text(std::string text, bool escapeMultiByte = false); 
+                explicit Text(const Text& other); 
+                explicit Text(Text&& other); 
                 bool isVoid() const override;
                 std::shared_ptr<Object> clone() const override;
                 const std::string& getText() const;
@@ -163,12 +176,28 @@ Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic:
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
+template <typename... Args>
+Templater::dynamic::Object::Object(Args&... args) requires (isValidObjectConstructorType<Args>&& ...) {    
+    m_object = std::make_shared<InternalObject>(InternalObject{{}, {}, false});
+
+    (processConstructorArgs(std::forward<Args>(args)), ...);
+}
+
 template <typename T>
 void Templater::dynamic::Object::processConstructorArgs(T&& arg) {
     if constexpr (std::is_base_of_v<Object, std::decay_t<T>>) {
+        processConstructorObject(std::move(arg));
+    } else {
+        processConstructorAttribute(std::move(arg));
+    }
+}
+
+template <typename T>
+void Templater::dynamic::Object::processConstructorArgs(T& arg) {
+    if constexpr (std::is_base_of_v<Object, std::decay_t<T>>) {
         processConstructorObject(arg);
     } else {
-        processConstructorAttribute(std::forward<T>(arg));
+        processConstructorAttribute(arg);
     }
 }
 
@@ -176,7 +205,7 @@ template <typename... Args>
 Templater::dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&&... args)
     : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::dynamic::Object(std::forward<Args>(args)...) {}
 
-    
+
 template <typename... Args>
-Templater::dynamic::dtags::EmptyTag::EmptyTag(Args&&... args)
-    : Templater::dynamic::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&... args) requires (isValidObjectConstructorType<Args>&& ...) 
+: m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::dynamic::Object(std::forward<Args>(args)...) {}

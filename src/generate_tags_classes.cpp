@@ -61,9 +61,7 @@ void generateDynamic(const std::vector<Tag>& tags) {
     for (auto& tag: tags) {
         headerDynamic << "    class " << tag.dynamicName << ": public Object {\n"
                                     "        public:\n"
-                                    "            template <typename... Args>\n"
-                                    "            explicit " << tag.dynamicName << "(Args&&... args);\n"
-                                    "            explicit " << tag.dynamicName << "(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);\n"
+                                    "            using Object::Object;\n"
                                     "            bool isVoid() const override;\n"
                                     "            std::shared_ptr<Object> clone() const override;\n"
                                     "            const std::string& getTagName() const override;\n"
@@ -73,8 +71,6 @@ void generateDynamic(const std::vector<Tag>& tags) {
                                     "    static const std::string name = \"" << tag.tagName << "\";\n"
                                     "    return name;\n"
                                     "}\n\n"
-                                    "Templater::dynamic::dtags::" << tag.dynamicName << "::" << tag.dynamicName << "(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)\n"
-                                    "   : Templater::dynamic::Object(std::move(attributes), std::move(children)) {}\n\n"
                                     "bool Templater::dynamic::dtags::" << tag.dynamicName << "::isVoid() const {\n"
                                     "    return " << (int) (tag.isVoid) << ";\n"
                                     "}\n\n"
@@ -84,12 +80,6 @@ void generateDynamic(const std::vector<Tag>& tags) {
     }
 
     headerDynamic << "}\n\n";
-
-    for (auto& tag: tags) {
-        headerDynamic << "template <typename... Args>\n"
-                                "Templater::dynamic::dtags::" << tag.dynamicName << "::" << tag.dynamicName << "(Args&&... args)\n"
-                                "    : Templater::dynamic::Object(std::forward<Args>(args)...) {}\n\n";
-    }
 
     headerDynamic.close();
     cppDynamic.close();
