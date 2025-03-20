@@ -408,7 +408,6 @@ std::string dynamic::dtags::EmptyTag::serialiseRecursive(std::string& identation
 
     return res;
 }
-
 // Escapes a given string so that it is safe for use in HTML contexts.
 // This function replaces reserved HTML characters with their corresponding entities
 // and converts non-ASCII characters to numeric HTML entities if enabled
@@ -424,8 +423,9 @@ std::string Templater::dynamic::text::escape(const std::string& str, bool escape
         {'\'', "&apos;"}
     };
 
-    // Queue to hold numeric HTML entities for multi-byte (non-ASCII) Unicode characters.
-    std::queue<std::string> unicodeHtmlEntities;
+    // A Queue to hold numeric HTML entities for multi-byte (non-ASCII) Unicode characters.
+    std::queue<uint32_t> codepointSequence;
+    std::unordered_map<uint32_t, std::string> dictionary{};
 
     // Calculate the total size required for the escaped string.
     // This pre-calculation helps in allocating the exact amount of memory needed.
@@ -448,10 +448,12 @@ std::string Templater::dynamic::text::escape(const std::string& str, bool escape
                 escapedSize += 1;
             } else {
                 // For non-ASCII characters, convert the codepoint to a numeric HTML entity.
-                std::string htmlEntity = numericEntity(codepoint);
-                escapedSize += htmlEntity.size();
-                // Save the computed HTML entity in a queue to use later when outputting.
-                unicodeHtmlEntities.push(htmlEntity);
+                if (!dictionary.contains(codepoint)) {
+                    // Save the computed HTML entity in a queue to use later when outputting.
+                    dictionary[codepoint] = numericEntity(codepoint);
+                }
+                escapedSize += dictionary[codepoint].size();
+                codepointSequence.emplace(codepoint);
             }
         }
     }
@@ -506,9 +508,9 @@ std::string Templater::dynamic::text::escape(const std::string& str, bool escape
                 }
 
                 // Retrieve the pre-computed HTML entity for this Unicode character.
-                std::string entity = unicodeHtmlEntities.front();
-                unicodeHtmlEntities.pop();
-                 // Write the entity into the output.
+                const std::string& entity = dictionary[codepointSequence.front()];
+                codepointSequence.pop();
+                // Write the entity into the output.
                 for (int i = 0; i < entity.size(); i++) {
                     *write = entity[i];
                     *write++;

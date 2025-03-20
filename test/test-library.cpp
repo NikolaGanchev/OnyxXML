@@ -783,6 +783,55 @@ TEST_CASE("Mixed content with ASCII, reserved characters, and multi-byte sequenc
     REQUIRE(escape(input, true) == expected);
 }
 
+TEST_CASE("Escapes 1 million characters in under 150ms", "[escape]") {
+    using namespace Templater::dynamic::text;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    std::string input = 
+    R"~(<script>alert('Hacked!');</script><img src=x onerror=alert(1)><a href="javascript:alert('XSS')">Click me</a>🌀✨🔥💀🎉🚀👾🤖👻<div style="background:url(javascript:alert('XSS'))">Test</div>
+<p onclick="alert('XSS')">Click here</p>&lt;iframe src="javascript:alert('XSS')"&gt;&lt;/iframe&gt;©®™✓😈💣💥🌍📢💾🔑🎵💡🏆🤯🥳<svg onload=alert('XSS')></svg>
+💖🧡💛💚💙💜🖤🤍🤎💢💬🗯️🔥👀🚨⚠️<input type="text" value="&lt;script&gt;alert('XSS')&lt;/script&gt;">☀️🌧️🌩️🌈☃️🌊🦄🎭🎨🎤🎮🎻🔮📱💻🖥️🖨️⌨️🖱️🖲️🎥📸📹🔍🔎💰💳💎
+&lt;math&gt;&lt;mtext&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;/mtext&gt;&lt;/math&gt;🎵🎶🎼🥁🎷🎸🎺🎻🪕📢📣🔊🔔🛎️🔕🏆🥇🥈🥉🏅🎖️🎗️🎟️🎫🔑🔐🗝️💡💰💴💵💶💷💳💸💎
+𐍈𐌰𐌼𐍃𐍂𐍈𐌰𐌼𐍃𐍂𐍈𐌰𐌼𐍃𐍂𐍈𐌰𐌼𐍃𐍂𐍈𐌰𐌼𐍃𐍂𐍈𐌰𐌼𐍃𐍂𐍈𐌰𐌼𐍃𐍂𐍈𐌰𐌼𐍃𐍂𐍈𐌰𐌼𐍃𐍂)~";
+
+    for (int i = 0; i < 10; i++) {
+        input += input;
+    } 
+
+    INFO(input.size());
+
+    auto t1 = high_resolution_clock::now();
+    std::string result = escape(input, true);
+    auto t2 = high_resolution_clock::now();
+    
+    duration<double, std::milli> time = t2 - t1;
+
+    REQUIRE(time.count() < 150);
+}
+
+TEST_CASE("Escape 1 million character safe string in under 100ms", "[escape]") {
+    using namespace Templater::dynamic::text;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    std::string input(1'000'000, 'a');
+
+    INFO(input.size());
+
+    auto t1 = high_resolution_clock::now();
+    std::string result = escape(input, true);
+    auto t2 = high_resolution_clock::now();
+    
+    duration<double, std::milli> time = t2 - t1;
+
+    REQUIRE(time.count() < 100);
+}
+
 TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
 
