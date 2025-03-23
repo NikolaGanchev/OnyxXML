@@ -6,7 +6,7 @@ set_target_properties(samplelib PROPERTIES OUTPUT_NAME "sample")
 target_sources(
     samplelib
     PRIVATE
-        "html_object.cpp"
+        "object.cpp"
         "dynamic/tags.cpp"
         "text.cpp"
 )

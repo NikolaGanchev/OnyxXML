@@ -1,9 +1,9 @@
 #pragma once
 
+#include "object.h"
 #include <string>
 #include <algorithm>
 #include <string_view>
-#include "html_object.h"
 #include <fstream>
 
 #define COMPILE_DOCUMENT(...) [](){ \
