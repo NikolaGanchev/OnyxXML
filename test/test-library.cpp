@@ -729,7 +729,7 @@ TEST_CASE("Escapes complex html", "[escape]" ) {
 
     std::string textToEscape = "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
-    std::string escaped = "&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&apos;s date is: &lt;script&gt;alert(&apos;Hacked!&apos;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;";
+    std::string escaped = "&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;";
 
     CHECK(escaped == escape(textToEscape));
 }
@@ -744,7 +744,7 @@ TEST_CASE("Empty string remains unchanged", "[escape]") {
 TEST_CASE("Reserved HTML characters are properly escaped", "[escape]") {
     using namespace Templater::dynamic::text;
     std::string input = "&<>\"'";
-    std::string expected = "&amp;&lt;&gt;&quot;&apos;";
+    std::string expected = "&amp;&lt;&gt;&quot;&#39;";
     REQUIRE(escape(input) == expected);
 }
 
@@ -842,7 +842,7 @@ TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
 
     dtags::div d = dtags::div(Text(textToEscape));
 
-    std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&apos;s date is: &lt;script&gt;alert(&apos;Hacked!&apos;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
+    std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
     CHECK(d.serialise() == expected);
 }
@@ -857,7 +857,7 @@ TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "
 
     dtags::div d = dtags::div(Text(textToEscape, true));
 
-    std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;&#x1f600;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&apos;s date is: &lt;script&gt;alert(&apos;Hacked!&apos;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
+    std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;&#x1f600;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
     CHECK(d.serialise() == expected);
 }
@@ -872,7 +872,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
 
     dtags::div d = dtags::div(Text(textToEscape, false));
 
-    std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;😀Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&apos;s date is: &lt;script&gt;alert(&apos;Hacked!&apos;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
+    std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;😀Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
     CHECK(d.serialise() == expected);
 }

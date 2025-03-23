@@ -451,7 +451,7 @@ std::string Templater::dynamic::text::escape(const std::string& str, bool escape
         {'<', "&lt;"},
         {'>', "&gt;"},
         {'\"', "&quot;"},
-        {'\'', "&apos;"}
+        {'\'', "&#39;"}
     };
 
     // A Queue to hold numeric HTML entities for multi-byte (non-ASCII) Unicode characters.
