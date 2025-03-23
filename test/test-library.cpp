@@ -534,29 +534,6 @@ TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
     CHECK(expected == obj.serialise());
 }
 
-std::string generateRandomString(size_t length) {
-    const std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    std::string result;
-    result.reserve(length);
-    
-    std::srand(42); // Fixed seed for reproducibility
-    for (size_t i = 0; i < length; ++i) {
-        result += chars[std::rand() % chars.size()];
-    }
-    return result;
-}
-
-void addChildren(std::shared_ptr<Templater::dynamic::Object> root, int level) {
-    using namespace Templater::dynamic::dtags;
-
-    std::shared_ptr<section> s = std::make_shared<section>();
-    if (level > 0) {
-        addChildren(s, level-1);
-    }
-
-    root->addChild(*s);
-}
-
 
 TEST_CASE("Empty html tree has size 1", "[Object::size()]") {
     using namespace Templater::dynamic::dtags;
@@ -599,7 +576,30 @@ TEST_CASE("Html tree with 5001 nodes has size 5001", "[Object::size()]") {
     REQUIRE(root.size() == 5001);
 }
 
-TEST_CASE("25000 tags serialise in under 1s", "[Object]") {
+std::string generateRandomString(size_t length) {
+    const std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789><\"\'";
+    std::string result;
+    result.reserve(length);
+    
+    std::srand(42); // Fixed seed for reproducibility
+    for (size_t i = 0; i < length; ++i) {
+        result += chars[std::rand() % chars.size()];
+    }
+    return result;
+}
+
+void addChildren(std::shared_ptr<Templater::dynamic::Object> root, int level) {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<section> s = std::make_shared<section>();
+    if (level > 0) {
+        addChildren(s, level-1);
+    }
+
+    root->addChild(*s);
+}
+
+TEST_CASE("3000 tags serialise in under 50ms", "[Object]") {
     using namespace Templater::dynamic::dtags;
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
@@ -608,24 +608,24 @@ TEST_CASE("25000 tags serialise in under 1s", "[Object]") {
 
     section root{};
 
-    for (int i = 0; i < 5000; i++) {
+    for (int i = 0; i < 500; i++) {
         p paragraph{};
         for (int i = 0; i < 30; i++) {
             paragraph[generateRandomString(10)] = generateRandomString(20);
         }
         paragraph.addChild(Text(generateRandomString(200)));
-        addChildren(paragraph.clone(), 2);
+        addChildren(paragraph.clone(), 3);
         root.addChild(paragraph);
     }
 
     auto t1 = high_resolution_clock::now();
-    root.serialise();
+    root.serialise("\t", true);
     auto t2 = high_resolution_clock::now();
     
     duration<double, std::milli> time = t2 - t1;
     INFO(root.size());
 
-    REQUIRE(time.count() < 1000);
+    REQUIRE(time.count() < 50);
 }
 
 TEST_CASE("Compile-time html serialises correctly", "[Object]" ) {

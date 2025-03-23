@@ -58,8 +58,6 @@ namespace Templater::dynamic {
             static std::string identationSequence;
             // Default: false
             static bool sortAttributes;
-        protected:
-            virtual std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const;
         public:
             template <typename... Args>
             explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
@@ -102,9 +100,9 @@ namespace Templater::dynamic {
 
             bool removeChild(Object& childToRemove);
             bool removeChild(const std::shared_ptr<Object>& childToRemove);
-            size_t size();
+            size_t size() const;
             
-            std::string serialise(const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const;
+            virtual std::string serialise(const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const;
 
             static void setIdentationSequence(const std::string& newSequence);
             static const std::string& getIdentationSequence();
@@ -134,8 +132,6 @@ namespace Templater::dynamic {
 
         // Used to create a tree without a root
         class EmptyTag: public Object {
-            protected:
-                std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
             public: 
                 using Object::Object;
                 const std::string& getTagName() const override;
@@ -147,8 +143,6 @@ namespace Templater::dynamic {
             private:
                 const std::string m_text;
                 const bool m_escapeMultiByte;
-            protected:
-                std::string serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const override;
             public:
                 explicit Text(std::string text, bool escapeMultiByte = false); 
                 explicit Text(const Text& other); 
@@ -157,6 +151,7 @@ namespace Templater::dynamic {
                 std::shared_ptr<Object> clone() const override;
                 const std::string& getText() const;
                 const std::string& getTagName() const override;
+                std::string serialise(const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const override;
         };
     }
 

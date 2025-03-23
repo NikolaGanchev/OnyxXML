@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <sstream>
 #include <queue>
+#include <stack>
 
 using namespace Templater;
 
@@ -194,7 +195,7 @@ bool dynamic::Object::removeChild(const std::shared_ptr<Object>& childToRemove) 
     return removeChild(*(childToRemove));
 }
 
-size_t dynamic::Object::size() {
+size_t dynamic::Object::size() const {
     size_t size = 1;
     for (auto& child: m_object->m_children) {
         size += child->size();
@@ -233,59 +234,102 @@ void dynamic::Object::setAttributeValue(const std::string &name, const std::stri
     m_object->m_attributes.emplace_back(name, newValue);
 }
 
-std::string dynamic::Object::serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const {
-    std::string result = identation + "<" + getTagName() + "";
-
-    auto attributes = getAttributes();
-    if (sortAttributes) {
-        sort(attributes.begin(), attributes.end(), [](const Attribute& lhs, const Attribute& rhs)
-        {
-            return lhs.getName() <= rhs.getName();
-        });
-    }
-    
-    for (auto& attr: attributes) {
-        result += " " + attr.getName() + "=\"" + attr.getValue() + "\"";
-    }
-
-    if (!isVoid()) {
-
-        result += ">";
-
-        if (!getChildren().empty()) {
-
-            result += "\n";
-            
-            for (const std::shared_ptr<dynamic::Object>& immediateChild: m_object->m_children) {
-                identation += identationSequence;
-
-                result += immediateChild->serialiseRecursive(identation, identationSequence, sortAttributes);
-
-                // Backtrack identation
-                for (int i = 0; i < identationSequence.size(); i++) {
-                    identation.pop_back();
-                }
-
-                result += "\n";
-            }
-        }
-
-        if (result[result.size() - 1] == '\n') {
-            result += identation;
-        }
-
-        result += "</" + getTagName() + ">";
-    } else {
-        result += "/>";
-    }
- 
-    return result;
-}
-
 std::string dynamic::Object::serialise(const std::string& identationSequence, bool sortAttributes) const {
+    struct Node {
+        const Templater::dynamic::Object* obj;
+        bool visited;
+    };
+
+    std::vector<Node> s;
+    
     std::string identation;
-    std::string result = serialiseRecursive(identation, identationSequence, sortAttributes);
-    return result;
+    std::ostringstream result; 
+    result.imbue(std::locale::classic());
+    
+    std::vector<Attribute*> attributes;
+
+    s.emplace_back(this, false);
+
+    while(!s.empty()) {
+        Node& node = s.back();
+        const Object* obj = node.obj;
+
+        if (obj == nullptr) {
+            identation.resize(identation.size() - identationSequence.size());
+            s.pop_back();
+            continue;
+        }
+
+        const std::string& tagName = obj->getTagName();
+
+        if (node.visited) {
+            result << identation << "</" << tagName << ">\n";
+            s.pop_back();
+            continue;
+        }
+        node.visited = true;
+
+        if (tagName == "text") {
+            result << identation << obj->serialise(identationSequence, sortAttributes) << "\n";
+            s.pop_back();
+            continue;
+        }
+        
+        if (tagName == "empty") {
+            s.pop_back();
+            const std::vector<std::shared_ptr<Object>>& children = obj->m_object->m_children;
+            for (size_t i = children.size(); i > 0; --i) {
+                s.emplace_back(children[i-1].get(), false);
+            }
+            continue;
+        }
+
+        result << identation << "<" << tagName << "";
+
+        attributes.clear();
+        for (int i = 0; i < obj->m_object->m_attributes.size(); i++) {
+            attributes.push_back(&obj->m_object->m_attributes[i]);
+        }
+        if (sortAttributes) {
+            sort(attributes.begin(), attributes.end(), [](const Attribute* lhs, const Attribute* rhs)
+            {
+                return lhs->getName() < rhs->getName();
+            });
+        }
+
+        for (const auto& attr: attributes) {
+            result << " " << attr->getName() << "=\"" << Templater::dynamic::text::escape(attr->getValue()) << "\"";
+        }
+
+        if (!(obj->isVoid())) {
+            
+            const std::vector<std::shared_ptr<Object>>& children = obj->m_object->m_children;
+            if (!children.empty()) {
+                result << ">\n";
+                s.emplace_back(nullptr, false);
+                identation += identationSequence;
+                for (size_t i = children.size(); i > 0; --i) {
+                    s.emplace_back(children[i-1].get(), false);
+                }
+            } else {
+                result << "></" << tagName << ">\n";
+                s.pop_back();
+                continue;
+            }
+        } else {
+            result << "/>\n";
+            s.pop_back();
+            continue;
+        }
+    }
+
+    std::string strResult = result.str();
+
+    if (strResult[strResult.size() - 1] == '\n') {
+        strResult.pop_back();
+    }
+
+    return strResult;
 }
 
 std::string& dynamic::Object::operator[](const std::string& name) {
@@ -378,12 +422,12 @@ std::shared_ptr<dynamic::Object> dynamic::dtags::Text::clone() const {
     return std::make_shared<Text>(*this);
 }
 
-std::string dynamic::dtags::Text::serialiseRecursive(std::string& identation, const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const {
-    return identation + dynamic::text::escape(m_text, m_escapeMultiByte);
+std::string dynamic::dtags::Text::serialise(const std::string& identationSequence, bool sortAttributes) const {
+    return dynamic::text::escape(m_text, m_escapeMultiByte);
 }
 
 const std::string& dynamic::dtags::EmptyTag::getTagName() const {
-    static const std::string name = "";
+    static const std::string name = "empty";
     return name;
 }
 
@@ -395,19 +439,6 @@ std::shared_ptr<dynamic::Object> dynamic::dtags::EmptyTag::clone() const {
     return std::make_shared<EmptyTag>(*this);
 }
 
-std::string dynamic::dtags::EmptyTag::serialiseRecursive(std::string& identation, const std::string& identationSequence, bool sortAttributes) const {
-    std::string res;
-
-    for (const std::shared_ptr<dynamic::Object>& immediateChild: getChildren()) {
-        res += identation + immediateChild->serialiseRecursive(identation, identationSequence, sortAttributes);
-        res += "\n";
-    }
-
-    // Remove last newline
-    res.pop_back();
-
-    return res;
-}
 // Escapes a given string so that it is safe for use in HTML contexts.
 // This function replaces reserved HTML characters with their corresponding entities
 // and converts non-ASCII characters to numeric HTML entities if enabled
@@ -430,12 +461,14 @@ std::string Templater::dynamic::text::escape(const std::string& str, bool escape
     // Calculate the total size required for the escaped string.
     // This pre-calculation helps in allocating the exact amount of memory needed.
     size_t escapedSize = 0;
+    bool safe = true;
     
     for (int i = 0; i < str.size(); i++) {
         // If the current character can cause injections
         if (charsToEscape.contains(str[i])) {
             // Add the length of its escape sequence to the total size.
             escapedSize += (charsToEscape.find(str[i])->second).size();
+            safe = false;
         } else {
             // If multi-byte escaping is disabled, just increment
             if (!escapeMultiByte) {
@@ -454,9 +487,12 @@ std::string Templater::dynamic::text::escape(const std::string& str, bool escape
                 }
                 escapedSize += dictionary[codepoint].size();
                 codepointSequence.emplace(codepoint);
+                safe = false;
             }
         }
     }
+
+    if (safe) return std::string(str);
 
     // Create a new string with the computed size.
     // Initialize with null characters as placeholders.
