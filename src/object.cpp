@@ -273,7 +273,7 @@ std::string dynamic::Object::serialise(const std::string& identationSequence, bo
             continue;
         }
         
-        if (tagName == "empty") {
+        if (tagName == "") {
             s.pop_back();
             const std::vector<std::shared_ptr<Object>>& children = obj->m_object->m_children;
             for (size_t i = children.size(); i > 0; --i) {
@@ -282,7 +282,7 @@ std::string dynamic::Object::serialise(const std::string& identationSequence, bo
             continue;
         }
 
-        result << identation << "<" << tagName << "";
+        result << identation << "<" << tagName;
 
         attributes.clear();
         for (int i = 0; i < obj->m_object->m_attributes.size(); i++) {
@@ -425,7 +425,7 @@ std::string dynamic::dtags::Text::serialise(const std::string& identationSequenc
 }
 
 const std::string& dynamic::dtags::EmptyTag::getTagName() const {
-    static const std::string name = "empty";
+    static const std::string name = "";
     return name;
 }
 
