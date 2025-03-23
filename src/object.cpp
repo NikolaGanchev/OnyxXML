@@ -7,9 +7,10 @@
 
 using namespace Templater;
 
-dynamic::Attribute::Attribute(std::string name, std::string value): m_name(std::move(name)), m_value(std::move(value)) {}
+dynamic::Attribute::Attribute(std::string name, std::string value, bool shouldEscape) 
+    : m_name(std::move(name)), m_value(std::move(value)), m_shouldEscape(shouldEscape) {}
 
-dynamic::Attribute::Attribute(std::string name): m_name(std::move(name)), m_value("") {}
+dynamic::Attribute::Attribute(std::string name): m_name(std::move(name)), m_value(""), m_shouldEscape(true) {}
 
 void dynamic::Attribute::setValue(const std::string& value) {
     m_value = value;
@@ -25,6 +26,10 @@ const std::string& dynamic::Attribute::getValue() const {
 
 std::string& dynamic::Attribute::getValueMutable() {
     return m_value;
+}
+
+bool dynamic::Attribute::shouldEscape() const {
+    return m_shouldEscape;
 }
 
 dynamic::Object::Object() { 
@@ -296,7 +301,8 @@ std::string dynamic::Object::serialise(const std::string& indentationSequence, b
         }
 
         for (const auto& attr: attributes) {
-            result << " " << attr->getName() << "=\"" << Templater::dynamic::text::escape(attr->getValue()) << "\"";
+            result << " " << attr->getName() << "=\"" << 
+                (attr->shouldEscape() ? Templater::dynamic::text::escape(attr->getValue()) : attr->getValue()) << "\"";
         }
 
         if (!(obj->isVoid())) {

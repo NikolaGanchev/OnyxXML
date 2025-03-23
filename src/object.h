@@ -14,13 +14,15 @@ namespace Templater::dynamic {
         private:
             std::string m_name;
             std::string m_value;
+            bool m_shouldEscape;
             void setValue(const std::string&);
             std::string& getValueMutable();
         public:
-            explicit Attribute(std::string, std::string);
-            explicit Attribute(std::string);
+            explicit Attribute(std::string name, std::string value, bool shouldEscape = true);
+            explicit Attribute(std::string name);
             const std::string& getName() const;
             const std::string& getValue() const;
+            bool shouldEscape() const;
     };
 
     namespace dtags {
