@@ -6,7 +6,6 @@
 #include <functional>
 #include <cstring>
 
-
 namespace Templater::dynamic {
     class Object;
 
@@ -154,17 +153,7 @@ namespace Templater::dynamic {
                 std::string serialise(const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const override;
         };
     }
-
-    namespace text {
-        std::string escape(const std::string& str, bool escapeMultiByte = false);
-
-        std::string numericEntity(uint32_t codepoint);
-
-        uint32_t getUnicodeCodepoint(const char* read);
-    }
-    
 }
-
 
 template <typename... Args>
 Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic::isValidObjectConstructorType<Args>&& ...) { 

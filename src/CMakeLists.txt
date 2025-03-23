@@ -7,11 +7,8 @@ target_sources(
     samplelib
     PRIVATE
         "html_object.cpp"
-        "html_object.h"
-        "dynamic/tags.h"
         "dynamic/tags.cpp"
-        "document.h"
-        "compile/tags.h"
+        "text.cpp"
 )
 
 set(GENERATED_TAGS_H "${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.h")
