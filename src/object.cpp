@@ -232,7 +232,7 @@ void dynamic::Object::setAttributeValue(const std::string &name, const std::stri
     m_object->m_attributes.emplace_back(name, newValue);
 }
 
-std::string dynamic::Object::serialise(const std::string& identationSequence, bool sortAttributes) const {
+std::string dynamic::Object::serialise(const std::string& indentationSequence, bool sortAttributes) const {
     struct Node {
         const Templater::dynamic::Object* obj;
         bool visited;
@@ -240,7 +240,7 @@ std::string dynamic::Object::serialise(const std::string& identationSequence, bo
 
     std::vector<Node> s;
     
-    std::string identation;
+    std::string indentation;
     std::ostringstream result; 
     result.imbue(std::locale::classic());
     
@@ -253,7 +253,7 @@ std::string dynamic::Object::serialise(const std::string& identationSequence, bo
         const Object* obj = node.obj;
 
         if (obj == nullptr) {
-            identation.resize(identation.size() - identationSequence.size());
+            indentation.resize(indentation.size() - indentationSequence.size());
             s.pop_back();
             continue;
         }
@@ -261,14 +261,14 @@ std::string dynamic::Object::serialise(const std::string& identationSequence, bo
         const std::string& tagName = obj->getTagName();
 
         if (node.visited) {
-            result << identation << "</" << tagName << ">\n";
+            result << indentation << "</" << tagName << ">\n";
             s.pop_back();
             continue;
         }
         node.visited = true;
 
         if (tagName == "text") {
-            result << identation << obj->serialise(identationSequence, sortAttributes) << "\n";
+            result << indentation << obj->serialise(indentationSequence, sortAttributes) << "\n";
             s.pop_back();
             continue;
         }
@@ -282,7 +282,7 @@ std::string dynamic::Object::serialise(const std::string& identationSequence, bo
             continue;
         }
 
-        result << identation << "<" << tagName;
+        result << indentation << "<" << tagName;
 
         attributes.clear();
         for (int i = 0; i < obj->m_object->m_attributes.size(); i++) {
@@ -305,7 +305,7 @@ std::string dynamic::Object::serialise(const std::string& identationSequence, bo
             if (!children.empty()) {
                 result << ">\n";
                 s.emplace_back(nullptr, false);
-                identation += identationSequence;
+                indentation += indentationSequence;
                 for (size_t i = children.size(); i > 0; --i) {
                     s.emplace_back(children[i-1].get(), false);
                 }
@@ -356,14 +356,14 @@ bool dynamic::Object::operator==(dynamic::Object& right) {
     return m_object.get() == right.m_object.get();
 }
 
-std::string dynamic::Object::identationSequence = "\t";
+std::string dynamic::Object::indentationSequence = "\t";
 
-void dynamic::Object::setIdentationSequence(const std::string& newSequence) {
-    identationSequence = newSequence;
+void dynamic::Object::setIndentationSequence(const std::string& newSequence) {
+    indentationSequence = newSequence;
 }
 
-const std::string& dynamic::Object::getIdentationSequence() {
-    return identationSequence;
+const std::string& dynamic::Object::getIndentationSequence() {
+    return indentationSequence;
 }
 
 bool dynamic::Object::sortAttributes = false;
@@ -420,7 +420,7 @@ std::shared_ptr<dynamic::Object> dynamic::dtags::Text::clone() const {
     return std::make_shared<Text>(*this);
 }
 
-std::string dynamic::dtags::Text::serialise(const std::string& identationSequence, bool sortAttributes) const {
+std::string dynamic::dtags::Text::serialise(const std::string& indentationSequence, bool sortAttributes) const {
     return dynamic::text::escape(m_text, m_escapeMultiByte);
 }
 

@@ -54,7 +54,7 @@ namespace Templater::dynamic {
             void processConstructorObject(Object& child);
             bool removeChild(Object& childToRemove, Object& currentRoot);
             // Default: "\t"
-            static std::string identationSequence;
+            static std::string indentationSequence;
             // Default: false
             static bool sortAttributes;
         public:
@@ -101,10 +101,10 @@ namespace Templater::dynamic {
             bool removeChild(const std::shared_ptr<Object>& childToRemove);
             size_t size() const;
             
-            virtual std::string serialise(const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const;
+            virtual std::string serialise(const std::string& indentationSequence = getIndentationSequence(), bool sortAttributes = getSortAttributes()) const;
 
-            static void setIdentationSequence(const std::string& newSequence);
-            static const std::string& getIdentationSequence();
+            static void setIndentationSequence(const std::string& newSequence);
+            static const std::string& getIndentationSequence();
             static void setSortAttributes(bool shouldSort);
             static bool getSortAttributes();
     };
@@ -150,7 +150,7 @@ namespace Templater::dynamic {
                 std::shared_ptr<Object> clone() const override;
                 const std::string& getText() const;
                 const std::string& getTagName() const override;
-                std::string serialise(const std::string& identationSequence = getIdentationSequence(), bool sortAttributes = getSortAttributes()) const override;
+                std::string serialise(const std::string& indentationSequence = getIndentationSequence(), bool sortAttributes = getSortAttributes()) const override;
         };
     }
 }

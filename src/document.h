@@ -73,7 +73,7 @@ namespace Templater::compile {
     template <typename... Children>
     struct Document {
         static constexpr std::string value(
-            const std::string& identationSequence = Templater::dynamic::Object::getIdentationSequence(), 
+            const std::string& indentationSequence = Templater::dynamic::Object::getIndentationSequence(), 
             bool sortAttributes = Templater::dynamic::Object::getSortAttributes()) {
             Templater::dynamic::dtags::EmptyTag obj;
             if constexpr (sizeof...(Children) == 0)
@@ -91,7 +91,7 @@ namespace Templater::compile {
                     }
                 }()), ...);
             }
-            return obj.serialise(identationSequence, sortAttributes);
+            return obj.serialise(indentationSequence, sortAttributes);
         }
     };
 

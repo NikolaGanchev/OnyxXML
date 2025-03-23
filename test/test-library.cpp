@@ -6,7 +6,7 @@
 TEST_CASE("HTML is generated", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -21,10 +21,10 @@ TEST_CASE("HTML is generated", "[Object]" ) {
     CHECK(expected == obj.serialise());
 }
 
-TEST_CASE("serialise() arguments override global identation rules", "[Object]" ) {
+TEST_CASE("serialise() arguments override global indentation rules", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -42,7 +42,7 @@ TEST_CASE("serialise() arguments override global identation rules", "[Object]" )
 TEST_CASE("Vector constructor works", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     std::vector<Attribute> attributes;
@@ -63,7 +63,7 @@ TEST_CASE("Vector constructor works", "[Object]" ) {
 TEST_CASE("Complex test case generates html", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -167,7 +167,7 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
 TEST_CASE("Children return by tag name works", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -193,7 +193,7 @@ TEST_CASE("Children return by tag name works", "[Object]" ) {
 TEST_CASE("Children return by id works", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -219,7 +219,7 @@ TEST_CASE("Children return by id works", "[Object]" ) {
 TEST_CASE("Children return by name works", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -250,7 +250,7 @@ TEST_CASE("Children return by name works", "[Object]" ) {
 TEST_CASE("Children return by class name works", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -281,7 +281,7 @@ TEST_CASE("Children return by class name works", "[Object]" ) {
 TEST_CASE("Child add works", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -308,7 +308,7 @@ TEST_CASE("Child add works", "[Object]" ) {
 TEST_CASE("Child remove works", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject child = GenericObject(
@@ -342,7 +342,7 @@ TEST_CASE("Child remove works", "[Object]" ) {
 TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject child = GenericObject(
@@ -366,7 +366,7 @@ TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" )
 TEST_CASE("Children do not get disowned upon pointer to parent destruction", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject child = GenericObject(
@@ -390,7 +390,7 @@ TEST_CASE("Children do not get disowned upon pointer to parent destruction", "[O
 TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -410,7 +410,7 @@ TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
 TEST_CASE("Operator += works for child add", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     GenericObject obj = GenericObject(
@@ -438,7 +438,7 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
 TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     html obj = html(
@@ -647,7 +647,7 @@ TEST_CASE("Compile-time html serialises correctly", "[Object]" ) {
     CHECK(doc1 == expected);
 }
 
-TEST_CASE("Compile-time html enforces given identation rules", "[Object]" ) {
+TEST_CASE("Compile-time html enforces given indentation rules", "[Object]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -837,7 +837,7 @@ TEST_CASE("Escape 1 million character safe string in under 100ms", "[escape]") {
 TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     std::string textToEscape = "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
@@ -852,7 +852,7 @@ TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
 TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
@@ -867,7 +867,7 @@ TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "
 TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIdentationSequence("\t");
+    Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
