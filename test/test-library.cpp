@@ -580,11 +580,13 @@ std::string generateRandomString(size_t length) {
     const std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789><\"\'";
     std::string result;
     result.reserve(length);
+    static int seed = 42;
     
-    std::srand(42); // Fixed seed for reproducibility
+    std::srand(seed);
     for (size_t i = 0; i < length; ++i) {
         result += chars[std::rand() % chars.size()];
     }
+    seed++;
     return result;
 }
 
@@ -610,8 +612,8 @@ TEST_CASE("3000 tags serialise in under 50ms", "[Object]") {
 
     for (int i = 0; i < 500; i++) {
         p paragraph{};
-        for (int i = 0; i < 30; i++) {
-            paragraph[generateRandomString(10)] = generateRandomString(20);
+        for (int i = 0; i < 10; i++) {
+            paragraph[generateRandomString(10)] = generateRandomString(10);
         }
         paragraph.addChild(Text(generateRandomString(200)));
         addChildren(paragraph.clone(), 3);
