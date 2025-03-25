@@ -8,6 +8,7 @@
 
 namespace Templater::dynamic {
     class Object;
+    class Index;
 
     class Attribute {
         friend Object;
@@ -38,9 +39,27 @@ namespace Templater::dynamic {
             struct Data {
                 std::vector<Attribute> m_attributes;
                 std::vector<std::shared_ptr<Object>> m_children;
+                std::vector<std::shared_ptr<Index>> indeces;
                 bool m_isInTree = false;
 
                 ~Data();
+            };
+
+            class ObservableStringRef {
+                private:
+                    std::string* m_ptr;
+                    std::function<void()> m_callback;
+                
+                public:
+                    ObservableStringRef(std::string* ref, std::function<void()> callback);
+                
+                    operator const std::string*() const;
+                
+                    const std::string* operator->() const;
+                    const std::string& operator*() const;
+                    bool operator==(const std::string& str) const;
+                
+                    ObservableStringRef& operator=(std::string newPtr);
             };
 
             std::shared_ptr<Data> m_object;
@@ -88,7 +107,7 @@ namespace Templater::dynamic {
             const std::vector<Attribute>& getAttributes() const;
             const std::string& getAttributeValue(const std::string& name) const;
             void setAttributeValue(const std::string& name, const std::string& newValue);
-            std::string& operator[](const std::string& name);
+            ObservableStringRef operator[](const std::string& name);
 
             void addChild(Object& child);
             void addChild(Object&& child);
@@ -98,6 +117,9 @@ namespace Templater::dynamic {
             // Checks equality by pointer to InternalObject
             // A && version is not needed, as it would be illogical to compare pointers with a temporary object
             bool operator==(Object& right);
+
+            void addIndex(std::shared_ptr<Index> index);
+            void removeIndex(std::shared_ptr<Index> index);
 
             bool removeChild(Object& childToRemove);
             bool removeChild(const std::shared_ptr<Object>& childToRemove);
@@ -109,6 +131,13 @@ namespace Templater::dynamic {
             static const std::string& getIndentationSequence();
             static void setSortAttributes(bool shouldSort);
             static bool getSortAttributes();
+    };
+
+    class Index {
+        public:
+            virtual bool putIfNeeded(const Object& obj) = 0;
+            virtual bool removeIfNeeded(const Object& obj) = 0;
+            virtual bool update(const Object& obj) = 0;
     };
 
     namespace dtags {
@@ -159,14 +188,14 @@ namespace Templater::dynamic {
 
 template <typename... Args>
 Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic::isValidObjectConstructorType<Args>&& ...) { 
-    m_object = std::make_shared<Data>(Data{{}, {}, false});
+    m_object = std::make_shared<Data>(Data{{}, {}, {}, false});
 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
 template <typename... Args>
 Templater::dynamic::Object::Object(Args&... args) requires (isValidObjectConstructorType<Args>&& ...) {    
-    m_object = std::make_shared<Data>(Data{{}, {}, false});
+    m_object = std::make_shared<Data>(Data{{}, {}, {}, false});
 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }

@@ -33,7 +33,7 @@ bool dynamic::Attribute::shouldEscape() const {
 }
 
 dynamic::Object::Object() { 
-    m_object = std::make_shared<Data>(Data{{}, {}, false});
+    m_object = std::make_shared<Data>(Data{{}, {}, {}, false});
 }
 
 dynamic::Object::Object(const Object& other): m_object{other.m_object} {}
@@ -90,6 +90,9 @@ void dynamic::Object::addChild(Object& newChild)  {
     }
 
     newChild.m_object->m_isInTree = true;
+    for (auto& index: m_object->indeces) {
+        newChild.addIndex(index);
+    }
     m_object->m_children.push_back(newChild.clone());
 }
 
@@ -103,6 +106,9 @@ void dynamic::Object::addChild(Object&& newChild)  {
     }
 
     newChild.m_object->m_isInTree = true;
+    for (auto& index: m_object->indeces) {
+        newChild.addIndex(index);
+    }
     m_object->m_children.push_back(std::move(newChild.clone()));
 }
 
@@ -119,6 +125,55 @@ const std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildren
 
 bool dynamic::Object::isInTree() const {
     return m_object->m_isInTree;
+}
+
+// Iteratively adds the index to this node and all its children
+void dynamic::Object::addIndex(std::shared_ptr<Index> index) {
+    std::vector<Object*> s;
+
+    s.push_back(this);
+
+    while(!s.empty()) {
+        Object* obj = s.back();
+
+        obj->m_object->indeces.push_back(index);
+
+        index->putIfNeeded(*obj);
+
+        s.pop_back();
+
+        const std::vector<std::shared_ptr<Object>>& children = obj->m_object->m_children;
+        for (int i = 0; i < children.size(); i++) {
+            s.push_back(children[i].get());
+        }
+    }
+}
+
+
+void dynamic::Object::removeIndex(std::shared_ptr<Index> index) {
+    std::vector<Object*> s;
+
+    s.push_back(this);
+
+    while(!s.empty()) {
+        Object* obj = s.back();
+
+        auto& indeces = obj->m_object->indeces;
+        for (int i = 0; i < indeces.size(); i++) {
+            if (index.get() == indeces[i].get()) {
+                indeces.erase(indeces.begin() + i);
+                index->removeIfNeeded(*obj);
+                break;
+            }
+        }
+
+        s.pop_back();
+
+        const std::vector<std::shared_ptr<Object>>& children = obj->m_object->m_children;
+        for (int i = 0; i < children.size(); i++) {
+            s.push_back(children[i].get());
+        }
+    }
 }
 
 void dynamic::Object::recursiveChildrenParse(std::vector<std::shared_ptr<dynamic::Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const {
@@ -175,8 +230,17 @@ bool dynamic::Object::removeChild(Object& childToRemove, Object& currentRoot) {
 
     for (int i = 0; i < children.size(); i++) {
         if (*(children[i].get()) == childToRemove) {
+
+            // Remove every index that has been added to the child by the parent
+            const auto& indeces = m_object->indeces;
+
+            for (int j = 0; j < indeces.size(); j++) {
+                childToRemove.removeIndex(indeces[j]);
+            }
+
             childToRemove.m_object->m_isInTree = false;
             children.erase(children.begin() + i);
+            
             return true;
         } else {
             if(removeChild(childToRemove, *(children[i].get()))) {
@@ -230,11 +294,17 @@ void dynamic::Object::setAttributeValue(const std::string &name, const std::stri
     for (auto& attr: m_object->m_attributes) {
         if (attr.getName() == name) {
             attr.setValue(newValue);
+            for (auto& index: m_object->indeces) {
+                index->update(*this);
+            }
             return;
         }
     }
     
     m_object->m_attributes.emplace_back(name, newValue);
+    for (auto& index: m_object->indeces) {
+        index->update(*this);
+    }
 }
 
 std::string dynamic::Object::serialise(const std::string& indentationSequence, bool sortAttributes) const {
@@ -336,14 +406,45 @@ std::string dynamic::Object::serialise(const std::string& indentationSequence, b
     return strResult;
 }
 
-std::string& dynamic::Object::operator[](const std::string& name) {
+Templater::dynamic::Object::ObservableStringRef::ObservableStringRef(std::string* ref, std::function<void()> callback) 
+                        : m_ptr(ref), m_callback(std::move(callback)) {}
+                
+Templater::dynamic::Object::ObservableStringRef::operator const std::string*() const { 
+    return m_ptr; 
+}
+                
+const std::string* Templater::dynamic::Object::ObservableStringRef::operator->() const { 
+    return m_ptr; 
+}
+
+const std::string& Templater::dynamic::Object::ObservableStringRef::operator*() const { 
+    return *m_ptr; 
+}
+
+bool Templater::dynamic::Object::ObservableStringRef::operator==(const std::string& str) const { 
+    return *m_ptr == str; 
+}
+                
+Templater::dynamic::Object::ObservableStringRef& Templater::dynamic::Object::ObservableStringRef::operator=(std::string newPtr) {
+    if (*m_ptr != newPtr) {
+        *m_ptr = newPtr;
+        m_callback();
+    }
+    return *this;
+}
+
+Templater::dynamic::Object::ObservableStringRef dynamic::Object::operator[](const std::string& name) {
     if (!hasAttributeValue(name)) {
         setAttributeValue(name, "");
     }
     
     for (auto& attr: m_object->m_attributes) {
         if (attr.getName() == name) {
-            return attr.getValueMutable();
+            return ObservableStringRef(&(attr.getValueMutable()), [this]() { 
+                for (auto& index: this->m_object->indeces) {
+                    index->update(*this);
+                }
+             });
         }
     }
 }

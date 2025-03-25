@@ -404,7 +404,8 @@ TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
 
     obj["theme"] = "light";
 
-    CHECK(obj["theme"] == "light");    
+    CHECK(obj["theme"] == "light"); 
+    CHECK(obj.getAttributeValue("theme") == "light");   
 }
 
 TEST_CASE("Operator += works for child add", "[Object]" ) {
