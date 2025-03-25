@@ -52,7 +52,7 @@ void generateDynamic(const std::vector<Tag>& tags) {
     std::ofstream cppDynamic("./dynamic/tags.cpp");
 
     headerDynamic << "#pragma once\n";
-    headerDynamic << "#include \"html_object.h\" \n\n";
+    headerDynamic << "#include \"object.h\" \n\n";
     headerDynamic << "namespace Templater::dynamic::dtags {\n";
     headerDynamic << "    using namespace Templater::dynamic; \n";
 
