@@ -63,7 +63,8 @@ namespace Templater::dynamic {
             };
 
             std::shared_ptr<Data> m_object;
-            void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
+            void iterativeChildrenProcessor(Object& object, std::function<void(std::shared_ptr<Object>)> process);
+            std::vector<std::shared_ptr<Object>> iterativeChildrenParse(const Object& object, std::function<bool(std::shared_ptr<Object>)> condition) const;
             
             template <typename T>
             void processConstructorArgs(T&& arg);

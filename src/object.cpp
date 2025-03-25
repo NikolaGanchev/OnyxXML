@@ -57,6 +57,7 @@ void dynamic::Object::processConstructorObject(Object& child) {
         throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
     }
     child.m_object->m_isInTree = true;
+
     (m_object->m_children).push_back(child.clone());
 }
 
@@ -129,35 +130,14 @@ bool dynamic::Object::isInTree() const {
 
 // Iteratively adds the index to this node and all its children
 void dynamic::Object::addIndex(std::shared_ptr<Index> index) {
-    std::vector<Object*> s;
-
-    s.push_back(this);
-
-    while(!s.empty()) {
-        Object* obj = s.back();
-
+    iterativeChildrenProcessor(*this, [&index](std::shared_ptr<Object> obj) -> void {
         obj->m_object->indeces.push_back(index);
-
         index->putIfNeeded(*obj);
-
-        s.pop_back();
-
-        const std::vector<std::shared_ptr<Object>>& children = obj->m_object->m_children;
-        for (int i = 0; i < children.size(); i++) {
-            s.push_back(children[i].get());
-        }
-    }
+    });
 }
 
-
 void dynamic::Object::removeIndex(std::shared_ptr<Index> index) {
-    std::vector<Object*> s;
-
-    s.push_back(this);
-
-    while(!s.empty()) {
-        Object* obj = s.back();
-
+    iterativeChildrenProcessor(*this, [&index](std::shared_ptr<Object> obj) -> void {
         auto& indeces = obj->m_object->indeces;
         for (int i = 0; i < indeces.size(); i++) {
             if (index.get() == indeces[i].get()) {
@@ -166,33 +146,57 @@ void dynamic::Object::removeIndex(std::shared_ptr<Index> index) {
                 break;
             }
         }
+    });
+}
+
+
+void dynamic::Object::iterativeChildrenProcessor(Object& object, std::function<void(std::shared_ptr<Object>)> process) {
+    std::vector<std::shared_ptr<Object>> s;
+
+    while(!s.empty()) {
+        std::shared_ptr<Object> obj = s.back();
+
+        process(obj);
 
         s.pop_back();
 
         const std::vector<std::shared_ptr<Object>>& children = obj->m_object->m_children;
         for (int i = 0; i < children.size(); i++) {
-            s.push_back(children[i].get());
+            s.push_back(children[i]);
         }
     }
 }
 
-void dynamic::Object::recursiveChildrenParse(std::vector<std::shared_ptr<dynamic::Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const {
-    for (auto& child: obj->m_object->m_children) {
-        if (condition(child)) {
-            children.push_back(child);
-        }
-        recursiveChildrenParse(children, child, condition);
+std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::iterativeChildrenParse(const Object& object, std::function<bool(std::shared_ptr<Object>)> condition) const {
+    std::vector<std::shared_ptr<Object>> s;
+    std::vector<std::shared_ptr<Object>> result;
+
+    const auto& objectChildren = object.m_object->m_children;
+    for (int i = 0; i < objectChildren.size(); i++) {
+        s.push_back(objectChildren[i]);
     }
+
+    while(!s.empty()) {
+        const std::shared_ptr<Object> obj = s.back();
+
+        if (condition(obj)) {
+            result.push_back(obj);
+        }
+
+        s.pop_back();
+
+        const auto& children = obj->m_object->m_children;
+        for (int i = children.size()-1; i >= 0; i--) {
+            s.push_back(children[i]);
+        }
+    }
+
+    return result;
 }
 
 std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenByAttribute(const std::string& attribute, const std::string& value) const {
-    std::vector<std::shared_ptr<dynamic::Object>> result;
-
-    recursiveChildrenParse(result, this->clone(), 
-    ([&attribute, &value](std::shared_ptr<dynamic::Object> obj) -> bool 
-        { return obj->hasAttributeValue(attribute) && obj->getAttributeValue(attribute) == value; }));
-
-    return result;
+    return iterativeChildrenParse(*this, ([&attribute, &value](std::shared_ptr<Object> obj) -> bool 
+    {  return obj->hasAttributeValue(attribute) && obj->getAttributeValue(attribute) == value; }));
 }
 
 std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenByClassName(const std::string& className) const {
@@ -201,13 +205,8 @@ std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenByClas
 }
 
 std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenByTagName(const std::string& tagName) const {
-    std::vector<std::shared_ptr<dynamic::Object>> result;
-
-    recursiveChildrenParse(result, this->clone(), 
-    ([&tagName](std::shared_ptr<dynamic::Object> obj) -> bool 
+    return iterativeChildrenParse(*this, ([&tagName](std::shared_ptr<dynamic::Object> obj) -> bool 
         { return obj->getTagName() == tagName; }));
-
-    return result;
 }
 
 std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenByName(const std::string& name) const {
@@ -240,7 +239,7 @@ bool dynamic::Object::removeChild(Object& childToRemove, Object& currentRoot) {
 
             childToRemove.m_object->m_isInTree = false;
             children.erase(children.begin() + i);
-            
+
             return true;
         } else {
             if(removeChild(childToRemove, *(children[i].get()))) {

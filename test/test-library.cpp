@@ -212,7 +212,9 @@ TEST_CASE("Children return by id works", "[Object]" ) {
 
     auto children = obj.getChildrenById("11");
 
-    CHECK(children[0]->getAttributeValue("id") == std::to_string(11));
+    REQUIRE(children.size() == 1);
+
+    CHECK(children[0]->getAttributeValue("id") == "11");
     CHECK(children[0]->getTagName() == "p");
 }
 
@@ -244,6 +246,8 @@ TEST_CASE("Children return by name works", "[Object]" ) {
 
     children = obj.getChildrenByName("p");
     
+    REQUIRE(children.size() == 1);
+
     CHECK(children[0]->getAttributeValue("id") == "11");
 }
 
@@ -268,13 +272,15 @@ TEST_CASE("Children return by class name works", "[Object]" ) {
     ));
 
     auto children = obj.getChildrenByClassName("d");
-
+    
     for (int i = 0; i < 5; i++) {
         CHECK(children[i]->getAttributeValue("id") == std::to_string(i));
     }
 
     children = obj.getChildrenByClassName("p");
     
+    REQUIRE(children.size() == 1);
+
     CHECK(children[0]->getAttributeValue("id") == "11");
 }
 
@@ -301,6 +307,7 @@ TEST_CASE("Child add works", "[Object]" ) {
 
     children = obj.getChildrenById("1");
 
+    REQUIRE(children.size() == 1);
     CHECK(children[0].get()->isInTree());
     CHECK(*(children[0].get()) == child);
 }
@@ -326,7 +333,7 @@ TEST_CASE("Child remove works", "[Object]" ) {
 
     auto children = obj.getChildrenById("1");
 
-    CHECK(children.size() == 1);
+    REQUIRE(children.size() == 1);
     CHECK(children[0]->isInTree());
 
     bool result = obj.removeChild(children[0]);
@@ -335,7 +342,7 @@ TEST_CASE("Child remove works", "[Object]" ) {
 
     children = obj.getChildrenById("1");
 
-    CHECK(children.size() == 0);
+    REQUIRE(children.size() == 0);
     CHECK(!child.isInTree());
 }
 
@@ -427,10 +434,12 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
         "div", false, Attribute("id", "1")
     );
 
+    REQUIRE(children.size() == 1);
     *(children[0].get()) += child;
 
     children = obj.getChildrenById("1");
 
+    REQUIRE(children.size() == 1);
     CHECK(children[0].get()->isInTree());
     CHECK(*(children[0].get()) == child);
 }
