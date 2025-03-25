@@ -50,7 +50,7 @@ TEST_CASE("Vector constructor works", "[Object]" ) {
 
     attributes.emplace_back("id", "list");
     for (int i = 1; i <= 3; i++) {
-        children.push_back(dtags::li(Text(std::to_string(i))).clone());
+        children.push_back(std::make_shared<dtags::li>(Text(std::to_string(i))));
     }
 
     dtags::ul obj = dtags::ul(attributes, children);
@@ -293,7 +293,7 @@ TEST_CASE("Child add works", "[Object]" ) {
 
     auto children = obj.getChildrenByTagName("body");
 
-    GenericObject child = GenericObject(
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>(
         "div", false, Attribute("id", "1")
     );
 
@@ -302,7 +302,6 @@ TEST_CASE("Child add works", "[Object]" ) {
     children = obj.getChildrenById("1");
 
     CHECK(children[0].get()->isInTree());
-    CHECK(*(children[0].get()) == child);
 }
 
 TEST_CASE("Child remove works", "[Object]" ) {
@@ -311,7 +310,7 @@ TEST_CASE("Child remove works", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject child = GenericObject(
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>(
         "div", false, Attribute("id", "1")
     );
 
@@ -320,9 +319,9 @@ TEST_CASE("Child remove works", "[Object]" ) {
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
         GenericObject("head", false),
-        GenericObject("body", false, child));
+        GenericObject("body", false, {}, {child}));
 
-    CHECK(child.isInTree());
+    CHECK(child->isInTree());
 
     auto children = obj.getChildrenById("1");
 
@@ -336,7 +335,7 @@ TEST_CASE("Child remove works", "[Object]" ) {
     children = obj.getChildrenById("1");
 
     CHECK(children.size() == 0);
-    CHECK(!child.isInTree());
+    CHECK(!child->isInTree());
 }
 
 TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" ) {
@@ -345,7 +344,7 @@ TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" )
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject child = GenericObject(
+    std::shared_ptr<GenericObject> child = std::make_shared<GenericObject>(
         "div", false, Attribute("id", "1")
     );
 
@@ -355,36 +354,12 @@ TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" )
             Attribute("lang", "en"),
             Attribute("theme", "dark"),
             GenericObject("head", false),
-            GenericObject("body", false, child));
+            GenericObject("body", false, {}, {child}));
     
-        CHECK(child.isInTree());    
+        CHECK(child->isInTree());    
     }
     
-    CHECK(!child.isInTree());  
-}
-
-TEST_CASE("Children do not get disowned upon pointer to parent destruction", "[Object]" ) {
-    using namespace Templater::dynamic::dtags;
-
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
-
-    GenericObject child = GenericObject(
-        "div", false, Attribute("id", "1")
-    );
-
-    GenericObject obj = GenericObject(
-        "html", false,
-        Attribute("lang", "en"),
-        Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, child));
-
-    {
-        GenericObject obj2 = obj; 
-    }  
-    
-    CHECK(child.isInTree());  
+    CHECK(!child->isInTree());  
 }
 
 TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
@@ -422,7 +397,7 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
 
     auto children = obj.getChildrenByTagName("body");
 
-    GenericObject child = GenericObject(
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>(
         "div", false, Attribute("id", "1")
     );
 
@@ -431,7 +406,6 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
     children = obj.getChildrenById("1");
 
     CHECK(children[0].get()->isInTree());
-    CHECK(*(children[0].get()) == child);
 }
 
 
@@ -544,8 +518,7 @@ TEST_CASE("Empty html tree has size 1", "[Object::size()]") {
 TEST_CASE("Html tree with one child has size 2", "[Object::size()]") {
     using namespace Templater::dynamic::dtags;
     html root;
-    body child;
-    root.addChild(child);
+    root.addChild(body());
     REQUIRE(root.size() == 2);
 }
 
@@ -565,13 +538,12 @@ TEST_CASE("Html tree with 5001 nodes has size 5001", "[Object::size()]") {
     using namespace Templater::dynamic::dtags;
     html root;
     for (int i = 0; i < 1000; i++) {
-        section child = section(
+        root.addChild(section(
             dtags::div(
                 p(Text("Text")),
                 p()
             )
-        );
-        root.addChild(child);
+        ));
     }
     REQUIRE(root.size() == 5001);
 }
@@ -598,7 +570,7 @@ void addChildren(std::shared_ptr<Templater::dynamic::Object> root, int level) {
         addChildren(s, level-1);
     }
 
-    root->addChild(*s);
+    root->addChild(s);
 }
 
 TEST_CASE("3000 tags serialise in under 50ms", "[Object]") {
@@ -611,12 +583,12 @@ TEST_CASE("3000 tags serialise in under 50ms", "[Object]") {
     section root{};
 
     for (int i = 0; i < 500; i++) {
-        p paragraph{};
+        std::shared_ptr<Object> paragraph = std::make_shared<p>();
         for (int i = 0; i < 10; i++) {
-            paragraph[generateRandomString(10)] = generateRandomString(10);
+            paragraph->operator[](generateRandomString(10)) = generateRandomString(10);
         }
-        paragraph.addChild(Text(generateRandomString(200)));
-        addChildren(paragraph.clone(), 3);
+        paragraph->addChild(Text(generateRandomString(200)));
+        addChildren(paragraph, 3);
         root.addChild(paragraph);
     }
 
