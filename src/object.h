@@ -67,6 +67,7 @@ namespace Templater::dynamic {
             explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
             explicit Object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
             explicit Object(const Object& other) = delete;
+            Object& operator=(const Object& other) = delete;
             explicit Object(Object&& other);
             explicit Object();
             virtual ~Object();
