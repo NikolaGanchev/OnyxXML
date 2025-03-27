@@ -31,29 +31,32 @@ namespace Templater::dynamic {
 
     template <typename T>
     concept isValidObjectConstructorType = std::derived_from<T, Object> || std::same_as<T, Attribute>;
+    
+    template <typename T>
+    concept isValidObjectConstructorTypePtr = std::same_as<T, std::shared_ptr<Object>> || std::same_as<T, Attribute>;
+
+    template <typename T>
+    concept isObject = std::derived_from<T, Object>;
 
     class Object {
         friend dtags::EmptyTag;
         private:
-            struct Data {
-                std::vector<Attribute> m_attributes;
-                std::vector<std::shared_ptr<Object>> m_children;
-                bool m_isInTree = false;
+            std::vector<Attribute> m_attributes;
+            std::vector<std::shared_ptr<Object>> m_children;
+            bool m_isInTree = false;
 
-                ~Data();
-            };
-
-            std::shared_ptr<Data> m_object;
-            void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
+            void recursiveChildrenParse(std::vector<std::shared_ptr<Object>>& children, 
+                const Object& obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const;
             
             template <typename T>
             void processConstructorArgs(T&& arg);
             void processConstructorAttribute(Attribute&& attribute);
-            void processConstructorObject(Object&& child);
+            template <typename T>
+            void processConstructorObjectMove(T&& child) requires (isObject<T>);
             template <typename T>
             void processConstructorArgs(T& arg);
+            void processConstructorObject(std::shared_ptr<Object>& child);
             void processConstructorAttribute(const Attribute& attribute);
-            void processConstructorObject(Object& child);
             bool removeChild(Object& childToRemove, Object& currentRoot);
             // Default: "\t"
             static std::string indentationSequence;
@@ -62,14 +65,12 @@ namespace Templater::dynamic {
         public:
             template <typename... Args>
             explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
-            template <typename... Args>
-            explicit Object(Args&... args) requires (isValidObjectConstructorType<Args>&& ...);
             explicit Object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
-            explicit Object(const Object& other);
+            explicit Object(const Object& other) = delete;
+            Object& operator=(const Object& other) = delete;
             explicit Object(Object&& other);
             explicit Object();
             virtual ~Object();
-            virtual std::shared_ptr<Object> clone() const = 0; 
 
             virtual const std::string& getTagName() const = 0;
             virtual bool isVoid() const = 0;
@@ -90,11 +91,13 @@ namespace Templater::dynamic {
             void setAttributeValue(const std::string& name, const std::string& newValue);
             std::string& operator[](const std::string& name);
 
-            void addChild(Object& child);
-            void addChild(Object&& child);
+            void addChild(std::shared_ptr<Object> child);
+            template <typename T>
+            void addChild(T&& child) requires (isObject<T>);
 
-            Object& operator+=(Object& right);
-            Object& operator+=(Object&& right);
+            Object& operator+=(std::shared_ptr<Object>& right);
+            template <typename T>
+            Object& operator+=(T&& right) requires (isObject<T>);
             // Checks equality by pointer to InternalObject
             // A && version is not needed, as it would be illogical to compare pointers with a temporary object
             bool operator==(Object& right);
@@ -120,15 +123,11 @@ namespace Templater::dynamic {
             public: 
                 template <typename... Args>
                 explicit GenericObject(std::string  tagName, bool isVoid, Args&&... args);
-                template <typename... Args>
-                explicit GenericObject(std::string  tagName, bool isVoid, Args&... args) requires (isValidObjectConstructorType<Args>&& ...);
                 explicit GenericObject(std::string  tagName, bool isVoid);
                 explicit GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
-                explicit GenericObject(const Object& other);
                 explicit GenericObject(Object&& other);
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
-                std::shared_ptr<Object> clone() const override;
         };
 
         // Used to create a tree without a root
@@ -137,7 +136,6 @@ namespace Templater::dynamic {
                 using Object::Object;
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
-                std::shared_ptr<Object> clone() const override;
         };
 
         class Text: public Object {
@@ -149,7 +147,6 @@ namespace Templater::dynamic {
                 explicit Text(const Text& other); 
                 explicit Text(Text&& other); 
                 bool isVoid() const override;
-                std::shared_ptr<Object> clone() const override;
                 const std::string& getText() const;
                 const std::string& getTagName() const override;
                 std::string serialise(const std::string& indentationSequence = getIndentationSequence(), bool sortAttributes = getSortAttributes()) const override;
@@ -158,26 +155,50 @@ namespace Templater::dynamic {
 }
 
 template <typename... Args>
-Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic::isValidObjectConstructorType<Args>&& ...) { 
-    m_object = std::make_shared<Data>(Data{{}, {}, false});
-
-    (processConstructorArgs(std::forward<Args>(args)), ...);
-}
-
-template <typename... Args>
-Templater::dynamic::Object::Object(Args&... args) requires (isValidObjectConstructorType<Args>&& ...) {    
-    m_object = std::make_shared<Data>(Data{{}, {}, false});
-
+Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic::isValidObjectConstructorType<Args>&& ...)
+    : m_attributes{}, m_children{}, m_isInTree{false} { 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
 template <typename T>
 void Templater::dynamic::Object::processConstructorArgs(T&& arg) {
     if constexpr (std::is_base_of_v<Object, std::decay_t<T>>) {
-        processConstructorObject(std::move(arg));
+        processConstructorObjectMove(std::move(arg));
     } else {
         processConstructorAttribute(std::move(arg));
     }
+}
+
+template <typename T>
+void Templater::dynamic::Object::addChild(T&& newChild) requires (isObject<T>) {
+    if (isVoid()) {
+        throw std::runtime_error("Void Templater::html::" + getTagName() + " cannot have children.");
+    }
+    if (newChild.isInTree()) {
+        throw std::runtime_error("Attempted to add child to Templater::html::" + getTagName() + "  that is already a child of another Templater::html::Object.");
+        return;
+    }
+    std::shared_ptr<T> obj = std::make_shared<std::decay_t<T>>(std::forward<T>(newChild));
+    (dynamic_cast<Object*>(obj.get()))->m_isInTree = true;
+    m_children.push_back(obj);
+}
+
+template <typename T>
+void Templater::dynamic::Object::processConstructorObjectMove(T&& child) requires (isObject<T>) {
+    if (child.isInTree()) {
+        throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
+    }
+
+    std::shared_ptr<T> obj = std::make_shared<std::decay_t<T>>(std::forward<T>(child));
+    
+    (dynamic_cast<Object*>(obj.get()))->m_isInTree = true;
+    m_children.push_back(obj);
+}
+
+template <typename T>
+Templater::dynamic::Object& Templater::dynamic::Object::operator+=(T&& right) requires (isObject<T>) {
+    addChild(std::move(right));
+    return (*this);
 }
 
 template <typename T>
@@ -190,10 +211,5 @@ void Templater::dynamic::Object::processConstructorArgs(T& arg) {
 }
 
 template <typename... Args>
-Templater::dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&&... args)
-    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::dynamic::Object(std::forward<Args>(args)...) {}
-
-
-template <typename... Args>
-Templater::dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid, Args&... args) requires (isValidObjectConstructorType<Args>&& ...) 
-: m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::dynamic::Object(std::forward<Args>(args)...) {}
+Templater::dynamic::dtags::GenericObject::GenericObject(std::string tagName, bool isVoid, Args&&... args)
+    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::dynamic::Object(std::move(args)...) {}

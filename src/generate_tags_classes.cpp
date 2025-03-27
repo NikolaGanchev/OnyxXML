@@ -63,7 +63,6 @@ void generateDynamic(const std::vector<Tag>& tags) {
                                     "        public:\n"
                                     "            using Object::Object;\n"
                                     "            bool isVoid() const override;\n"
-                                    "            std::shared_ptr<Object> clone() const override;\n"
                                     "            const std::string& getTagName() const override;\n"
                                     "    };\n";
         
@@ -73,10 +72,7 @@ void generateDynamic(const std::vector<Tag>& tags) {
                                     "}\n\n"
                                     "bool Templater::dynamic::dtags::" << tag.dynamicName << "::isVoid() const {\n"
                                     "    return " << (int) (tag.isVoid) << ";\n"
-                                    "}\n\n"
-                                    "std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::" << tag.dynamicName << "::clone() const {\n"
-                                    "    return std::make_shared<" << tag.dynamicName << ">(*this);\n"
-                                    "}\n";
+                                    "}\n\n";
     }
 
     headerDynamic << "}\n\n";
@@ -102,9 +98,9 @@ void generateCompile(const std::vector<Tag>& tags) {
         headerCompile << "    template <typename... Children>\n"
                             "    struct " << tag.compileName << " {\n"
                                     "        static constexpr std::shared_ptr<Templater::dynamic::Object> value() {\n"
-                                    "            Templater::dynamic::dtags::" << tag.dynamicName << " node = Templater::dynamic::dtags::" << tag.dynamicName << "();\n"
+                                    "            std::shared_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_shared<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
                                     "            (parseChildren<Children>(node), ...);\n"
-                                    "            return node.clone();\n"
+                                    "            return node;\n"
                                     "        }\n"
                                     "    };\n";
     }

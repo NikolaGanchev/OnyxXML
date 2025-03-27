@@ -54,18 +54,18 @@ namespace Templater::compile {
         template <CompileString Str>
         struct Text {
             static constexpr std::shared_ptr<Templater::dynamic::Object> value() {
-                return Templater::dynamic::dtags::Text(Str).clone();
+                return std::make_shared<Templater::dynamic::dtags::Text>(Str);
             }
         };
 
         template <typename Child>
-        constexpr void parseChildren(Templater::dynamic::Object& node) {
+        constexpr void parseChildren(std::shared_ptr<Templater::dynamic::Object> node) {
             if constexpr(isAttribute<Child>) {
                 std::shared_ptr<Templater::dynamic::Attribute> attr = Child::attr();
-                node[attr->getName()] = attr->getValue();
+                node->operator[](attr->getName()) = attr->getValue();
             }
             else {
-                node.addChild(*Child::value());
+                node->addChild(Child::value());
             }
         }
     }
@@ -87,7 +87,7 @@ namespace Templater::compile {
                         return "Error. Trying to read attribute as root node";
                     }
                     else {
-                        obj.addChild(*Children::value());
+                        obj.addChild(Children::value());
                     }
                 }()), ...);
             }

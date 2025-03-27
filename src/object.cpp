@@ -32,85 +32,61 @@ bool dynamic::Attribute::shouldEscape() const {
     return m_shouldEscape;
 }
 
-dynamic::Object::Object() { 
-    m_object = std::make_shared<Data>(Data{{}, {}, false});
-}
+dynamic::Object::Object()
+    : m_attributes{}, m_children{}, m_isInTree{false} { }
 
-dynamic::Object::Object(const Object& other): m_object{other.m_object} {}
-
-dynamic::Object::Object(Object&& other): m_object{std::move(other.m_object)} {}
+dynamic::Object::Object(Object&& other)
+    : m_attributes{std::move(other.m_attributes)}, m_children{std::move(other.m_children)}, m_isInTree{other.m_isInTree} {}
 
 dynamic::Object::Object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children) {
     for (auto& child: children) {
-        child->m_object->m_isInTree = true;
+        child->m_isInTree = true;
     }
 
-    m_object = std::make_shared<Data>(Data{std::move(attributes), std::move(children)});
+    m_attributes = std::move(attributes);
+    m_children = std::move(children);
 }
 
 void dynamic::Object::processConstructorAttribute(const Attribute& attribute) {
-    m_object->m_attributes.push_back(attribute);
+    m_attributes.push_back(attribute);
 }
 
-void dynamic::Object::processConstructorObject(Object& child) {
-    if (child.isInTree()) {
+void dynamic::Object::processConstructorObject(std::shared_ptr<Object>& child) {
+    if (child->isInTree()) {
         throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
     }
-    child.m_object->m_isInTree = true;
-    (m_object->m_children).push_back(child.clone());
+    child->m_isInTree = true;
+    m_children.push_back(child);
 }
 
 void dynamic::Object::processConstructorAttribute(Attribute&& attribute) {
     this->operator[](std::move(attribute.getName())) = std::move(attribute.getValue());
 }
 
-void dynamic::Object::processConstructorObject(Object&& child) {
-    if (child.isInTree()) {
-        throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
-    }
-    child.m_object->m_isInTree = true;
-    (m_object->m_children).push_back(std::move(child.clone()));
-}
-
-dynamic::Object::Data::~Data() {
+dynamic::Object::~Object() {
     for (auto& child: m_children) {
-        child->m_object->m_isInTree = false;
+        child->m_isInTree = false;
     }
 }
 
-dynamic::Object::~Object() {}
-
-void dynamic::Object::addChild(Object& newChild)  {
+void dynamic::Object::addChild(std::shared_ptr<Object> newChild)  {
     if (isVoid()) {
         throw std::runtime_error("Void Templater::html::" + getTagName() + " cannot have children.");
     }
-    if (newChild.isInTree()) {
+    if (newChild->isInTree()) {
         throw std::runtime_error("Attempted to add child to Templater::html::" + getTagName() + "  that is already a child of another Templater::html::Object.");
         return;
     }
 
-    newChild.m_object->m_isInTree = true;
-    m_object->m_children.push_back(newChild.clone());
-}
-
-void dynamic::Object::addChild(Object&& newChild)  {
-    if (isVoid()) {
-        throw std::runtime_error("Void Templater::html::" + getTagName() + " cannot have children.");
-    }
-    if (newChild.isInTree()) {
-        throw std::runtime_error("Attempted to add child to Templater::html::" + getTagName() + "  that is already a child of another Templater::html::Object.");
-        return;
-    }
-
-    newChild.m_object->m_isInTree = true;
-    m_object->m_children.push_back(std::move(newChild.clone()));
+    newChild->m_isInTree = true;
+    m_children.push_back(newChild);
 }
 
 const std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildren() const {
     std::vector<std::shared_ptr<dynamic::Object>> copy;
 
-    copy.reserve(m_object->m_children.size());
-    for (const auto& child : m_object->m_children) {
+    copy.reserve(m_children.size());
+    for (const auto& child : m_children) {
         copy.push_back(child);
     }
 
@@ -118,22 +94,22 @@ const std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildren
 }
 
 bool dynamic::Object::isInTree() const {
-    return m_object->m_isInTree;
+    return m_isInTree;
 }
 
-void dynamic::Object::recursiveChildrenParse(std::vector<std::shared_ptr<dynamic::Object>>& children, const std::shared_ptr<Object> obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const {
-    for (auto& child: obj->m_object->m_children) {
+void dynamic::Object::recursiveChildrenParse(std::vector<std::shared_ptr<dynamic::Object>>& children, const Object& obj, const std::function<bool(std::shared_ptr<Object>)>& condition) const {
+    for (auto& child: obj.m_children) {
         if (condition(child)) {
             children.push_back(child);
         }
-        recursiveChildrenParse(children, child, condition);
+        recursiveChildrenParse(children, *child, condition);
     }
 }
 
 std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenByAttribute(const std::string& attribute, const std::string& value) const {
     std::vector<std::shared_ptr<dynamic::Object>> result;
 
-    recursiveChildrenParse(result, this->clone(), 
+    recursiveChildrenParse(result, *this, 
     ([&attribute, &value](std::shared_ptr<dynamic::Object> obj) -> bool 
         { return obj->hasAttributeValue(attribute) && obj->getAttributeValue(attribute) == value; }));
 
@@ -148,7 +124,7 @@ std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenByClas
 std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenByTagName(const std::string& tagName) const {
     std::vector<std::shared_ptr<dynamic::Object>> result;
 
-    recursiveChildrenParse(result, this->clone(), 
+    recursiveChildrenParse(result, *this, 
     ([&tagName](std::shared_ptr<dynamic::Object> obj) -> bool 
         { return obj->getTagName() == tagName; }));
 
@@ -167,15 +143,15 @@ std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildrenById(c
 
 const std::vector<dynamic::Attribute>& dynamic::Object::getAttributes() const {
 
-    return m_object->m_attributes;
+    return m_attributes;
 }
 
 bool dynamic::Object::removeChild(Object& childToRemove, Object& currentRoot) {
-    auto& children = currentRoot.m_object->m_children;
+    auto& children = currentRoot.m_children;
 
     for (int i = 0; i < children.size(); i++) {
         if (*(children[i].get()) == childToRemove) {
-            childToRemove.m_object->m_isInTree = false;
+            childToRemove.m_isInTree = false;
             children.erase(children.begin() + i);
             return true;
         } else {
@@ -200,14 +176,14 @@ bool dynamic::Object::removeChild(const std::shared_ptr<Object>& childToRemove) 
 
 size_t dynamic::Object::size() const {
     size_t size = 1;
-    for (auto& child: m_object->m_children) {
+    for (auto& child: m_children) {
         size += child->size();
     }
     return size;
 }
 
 bool dynamic::Object::hasAttributeValue(const std::string &name) const {
-    for (auto& attr: m_object->m_attributes) {
+    for (auto& attr: m_attributes) {
         if (attr.getName() == name) {
             return true;
         }
@@ -217,7 +193,7 @@ bool dynamic::Object::hasAttributeValue(const std::string &name) const {
 }
 
 const std::string & dynamic::Object::getAttributeValue(const std::string &name) const {
-    for (auto& attr: m_object->m_attributes) {
+    for (auto& attr: m_attributes) {
         if (attr.getName() == name) {
             return attr.getValue();
         }
@@ -227,14 +203,14 @@ const std::string & dynamic::Object::getAttributeValue(const std::string &name) 
 }
 
 void dynamic::Object::setAttributeValue(const std::string &name, const std::string &newValue) {
-    for (auto& attr: m_object->m_attributes) {
+    for (auto& attr: m_attributes) {
         if (attr.getName() == name) {
             attr.setValue(newValue);
             return;
         }
     }
     
-    m_object->m_attributes.emplace_back(name, newValue);
+    m_attributes.emplace_back(name, newValue);
 }
 
 std::string dynamic::Object::serialise(const std::string& indentationSequence, bool sortAttributes) const {
@@ -249,7 +225,7 @@ std::string dynamic::Object::serialise(const std::string& indentationSequence, b
     std::ostringstream result; 
     result.imbue(std::locale::classic());
     
-    std::vector<Attribute*> attributes;
+    std::vector<const Attribute*> attributes;
 
     s.emplace_back(this, false);
 
@@ -280,7 +256,7 @@ std::string dynamic::Object::serialise(const std::string& indentationSequence, b
         
         if (tagName == "") {
             s.pop_back();
-            const std::vector<std::shared_ptr<Object>>& children = obj->m_object->m_children;
+            const std::vector<std::shared_ptr<Object>>& children = obj->m_children;
             for (size_t i = children.size(); i > 0; --i) {
                 s.emplace_back(children[i-1].get(), false);
             }
@@ -290,8 +266,8 @@ std::string dynamic::Object::serialise(const std::string& indentationSequence, b
         result << indentation << "<" << tagName;
 
         attributes.clear();
-        for (int i = 0; i < obj->m_object->m_attributes.size(); i++) {
-            attributes.push_back(&obj->m_object->m_attributes[i]);
+        for (int i = 0; i < obj->m_attributes.size(); i++) {
+            attributes.push_back(&(obj->m_attributes[i]));
         }
         if (sortAttributes) {
             sort(attributes.begin(), attributes.end(), [](const Attribute* lhs, const Attribute* rhs)
@@ -307,7 +283,7 @@ std::string dynamic::Object::serialise(const std::string& indentationSequence, b
 
         if (!(obj->isVoid())) {
             
-            const std::vector<std::shared_ptr<Object>>& children = obj->m_object->m_children;
+            const std::vector<std::shared_ptr<Object>>& children = obj->m_children;
             if (!children.empty()) {
                 result << ">\n";
                 s.emplace_back(nullptr, false);
@@ -341,25 +317,20 @@ std::string& dynamic::Object::operator[](const std::string& name) {
         setAttributeValue(name, "");
     }
     
-    for (auto& attr: m_object->m_attributes) {
+    for (auto& attr: m_attributes) {
         if (attr.getName() == name) {
             return attr.getValueMutable();
         }
     }
 }
 
-dynamic::Object& dynamic::Object::operator+=(dynamic::Object& right) {
-    addChild(right);
-    return (*this);
-}
-
-dynamic::Object& dynamic::Object::operator+=(dynamic::Object&& right) {
+dynamic::Object& dynamic::Object::operator+=(std::shared_ptr<Object>& right) {
     addChild(right);
     return (*this);
 }
 
 bool dynamic::Object::operator==(dynamic::Object& right) {
-    return m_object.get() == right.m_object.get();
+    return this == &right;
 }
 
 std::string dynamic::Object::indentationSequence = "\t";
@@ -396,12 +367,6 @@ bool dynamic::dtags::GenericObject::isVoid() const {
     return m_isVoid;
 }
 
-std::shared_ptr<dynamic::Object> dynamic::dtags::GenericObject::clone() const {
-    return std::make_shared<GenericObject>(*this);
-}
-
-dynamic::dtags::GenericObject::GenericObject(const Object& other): m_tag{other.getTagName()}, m_isVoid{other.isVoid()}, Object{other} {}
-
 dynamic::dtags::GenericObject::GenericObject(Object&& other): m_tag{other.getTagName()}, m_isVoid{other.isVoid()}, Object{std::move(other)} {};
 
 dynamic::dtags::Text::Text(std::string text, bool escapeMultiByte): m_text(text), m_escapeMultiByte(escapeMultiByte), Object{} {}
@@ -422,10 +387,6 @@ bool dynamic::dtags::Text::isVoid() const {
     return true;
 }
 
-std::shared_ptr<dynamic::Object> dynamic::dtags::Text::clone() const {
-    return std::make_shared<Text>(*this);
-}
-
 std::string dynamic::dtags::Text::serialise(const std::string& indentationSequence, bool sortAttributes) const {
     return dynamic::text::escape(m_text, m_escapeMultiByte);
 }
@@ -437,8 +398,4 @@ const std::string& dynamic::dtags::EmptyTag::getTagName() const {
 
 bool dynamic::dtags::EmptyTag::isVoid() const {
     return false;
-}
-
-std::shared_ptr<dynamic::Object> dynamic::dtags::EmptyTag::clone() const {
-    return std::make_shared<EmptyTag>(*this);
 }
