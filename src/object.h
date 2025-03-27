@@ -37,6 +37,9 @@ namespace Templater::dynamic {
 
     template <typename T>
     concept isObject = std::derived_from<T, Object>;
+    
+    template <typename T>
+    concept isAttribute = std::same_as<T, Attribute>;
 
     class Object {
         friend dtags::EmptyTag;
@@ -78,6 +81,7 @@ namespace Templater::dynamic {
             bool isInTree() const;
             // Returns a static list of the direct children
             const std::vector<std::shared_ptr<Object>> getChildren() const;
+            size_t getChildrenCount() const;
             // Returns a static list of all children in the tree that fullfil the condition
             std::vector<std::shared_ptr<Object>> getChildrenByClassName(const std::string& className) const;
             std::vector<std::shared_ptr<Object>> getChildrenByTagName(const std::string& tagName) const;
@@ -114,6 +118,14 @@ namespace Templater::dynamic {
             static bool getSortAttributes();
     };
 
+    class VoidObject: public Object {
+        public:
+            template <typename... Args>
+            explicit VoidObject(Args&&... args) requires (isAttribute<Args>&& ...);
+            explicit VoidObject(std::vector<Attribute> attributes);
+            bool isVoid() const override;
+    };
+
     namespace dtags {
 
         class GenericObject: public Object {
@@ -122,9 +134,9 @@ namespace Templater::dynamic {
                 const bool m_isVoid;
             public: 
                 template <typename... Args>
-                explicit GenericObject(std::string  tagName, bool isVoid, Args&&... args);
-                explicit GenericObject(std::string  tagName, bool isVoid);
-                explicit GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
+                explicit GenericObject(std::string tagName, bool isVoid, Args&&... args);
+                explicit GenericObject(std::string tagName, bool isVoid);
+                explicit GenericObject(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children);
                 explicit GenericObject(Object&& other);
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
@@ -172,10 +184,10 @@ void Templater::dynamic::Object::processConstructorArgs(T&& arg) {
 template <typename T>
 void Templater::dynamic::Object::addChild(T&& newChild) requires (isObject<T>) {
     if (isVoid()) {
-        throw std::runtime_error("Void Templater::html::" + getTagName() + " cannot have children.");
+        throw std::runtime_error("Void " + getTagName() + " cannot have children.");
     }
     if (newChild.isInTree()) {
-        throw std::runtime_error("Attempted to add child to Templater::html::" + getTagName() + "  that is already a child of another Templater::html::Object.");
+        throw std::runtime_error("Attempted to add child to " + getTagName() + "  that is already a child of another Object.");
         return;
     }
     std::shared_ptr<T> obj = std::make_shared<std::decay_t<T>>(std::forward<T>(newChild));
@@ -186,7 +198,7 @@ void Templater::dynamic::Object::addChild(T&& newChild) requires (isObject<T>) {
 template <typename T>
 void Templater::dynamic::Object::processConstructorObjectMove(T&& child) requires (isObject<T>) {
     if (child.isInTree()) {
-        throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
+        throw std::runtime_error("Attempted to construct Object with a child that is already a child of another Object.");
     }
 
     std::shared_ptr<T> obj = std::make_shared<std::decay_t<T>>(std::forward<T>(child));
@@ -212,4 +224,13 @@ void Templater::dynamic::Object::processConstructorArgs(T& arg) {
 
 template <typename... Args>
 Templater::dynamic::dtags::GenericObject::GenericObject(std::string tagName, bool isVoid, Args&&... args)
-    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Templater::dynamic::Object(std::move(args)...) {}
+    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object(std::move(args)...) {
+        
+    if (this->isVoid() && this->getChildrenCount() > 0) {
+        throw std::runtime_error("Void " + getTagName() + " cannot have children.");
+    }
+}
+
+template <typename... Args>
+Templater::dynamic::VoidObject::VoidObject(Args&&... args) requires (isAttribute<Args>&& ...)
+    : Object(std::move(args)...) {}

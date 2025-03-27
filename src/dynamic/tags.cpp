@@ -32,10 +32,6 @@ const std::string& Templater::dynamic::dtags::area::getTagName() const {
     return name;
 }
 
-bool Templater::dynamic::dtags::area::isVoid() const {
-    return 1;
-}
-
 const std::string& Templater::dynamic::dtags::article::getTagName() const {
     static const std::string name = "article";
     return name;
@@ -77,10 +73,6 @@ const std::string& Templater::dynamic::dtags::base::getTagName() const {
     return name;
 }
 
-bool Templater::dynamic::dtags::base::isVoid() const {
-    return 1;
-}
-
 const std::string& Templater::dynamic::dtags::bdi::getTagName() const {
     static const std::string name = "bdi";
     return name;
@@ -120,10 +112,6 @@ bool Templater::dynamic::dtags::body::isVoid() const {
 const std::string& Templater::dynamic::dtags::br::getTagName() const {
     static const std::string name = "br";
     return name;
-}
-
-bool Templater::dynamic::dtags::br::isVoid() const {
-    return 1;
 }
 
 const std::string& Templater::dynamic::dtags::button::getTagName() const {
@@ -174,10 +162,6 @@ bool Templater::dynamic::dtags::code::isVoid() const {
 const std::string& Templater::dynamic::dtags::col::getTagName() const {
     static const std::string name = "col";
     return name;
-}
-
-bool Templater::dynamic::dtags::col::isVoid() const {
-    return 1;
 }
 
 const std::string& Templater::dynamic::dtags::colgroup::getTagName() const {
@@ -291,10 +275,6 @@ bool Templater::dynamic::dtags::em::isVoid() const {
 const std::string& Templater::dynamic::dtags::embed::getTagName() const {
     static const std::string name = "embed";
     return name;
-}
-
-bool Templater::dynamic::dtags::embed::isVoid() const {
-    return 1;
 }
 
 const std::string& Templater::dynamic::dtags::fieldset::getTagName() const {
@@ -428,10 +408,6 @@ const std::string& Templater::dynamic::dtags::hr::getTagName() const {
     return name;
 }
 
-bool Templater::dynamic::dtags::hr::isVoid() const {
-    return 1;
-}
-
 const std::string& Templater::dynamic::dtags::html::getTagName() const {
     static const std::string name = "html";
     return name;
@@ -464,17 +440,9 @@ const std::string& Templater::dynamic::dtags::img::getTagName() const {
     return name;
 }
 
-bool Templater::dynamic::dtags::img::isVoid() const {
-    return 1;
-}
-
 const std::string& Templater::dynamic::dtags::input::getTagName() const {
     static const std::string name = "input";
     return name;
-}
-
-bool Templater::dynamic::dtags::input::isVoid() const {
-    return 1;
 }
 
 const std::string& Templater::dynamic::dtags::ins::getTagName() const {
@@ -527,10 +495,6 @@ const std::string& Templater::dynamic::dtags::link::getTagName() const {
     return name;
 }
 
-bool Templater::dynamic::dtags::link::isVoid() const {
-    return 1;
-}
-
 const std::string& Templater::dynamic::dtags::main::getTagName() const {
     static const std::string name = "main";
     return name;
@@ -581,17 +545,9 @@ const std::string& Templater::dynamic::dtags::menuitem::getTagName() const {
     return name;
 }
 
-bool Templater::dynamic::dtags::menuitem::isVoid() const {
-    return 1;
-}
-
 const std::string& Templater::dynamic::dtags::meta::getTagName() const {
     static const std::string name = "meta";
     return name;
-}
-
-bool Templater::dynamic::dtags::meta::isVoid() const {
-    return 1;
 }
 
 const std::string& Templater::dynamic::dtags::meter::getTagName() const {
@@ -678,10 +634,6 @@ bool Templater::dynamic::dtags::p::isVoid() const {
 const std::string& Templater::dynamic::dtags::param::getTagName() const {
     static const std::string name = "param";
     return name;
-}
-
-bool Templater::dynamic::dtags::param::isVoid() const {
-    return 1;
 }
 
 const std::string& Templater::dynamic::dtags::picture::getTagName() const {
@@ -840,10 +792,6 @@ bool Templater::dynamic::dtags::small::isVoid() const {
 const std::string& Templater::dynamic::dtags::source::getTagName() const {
     static const std::string name = "source";
     return name;
-}
-
-bool Templater::dynamic::dtags::source::isVoid() const {
-    return 1;
 }
 
 const std::string& Templater::dynamic::dtags::span::getTagName() const {
@@ -1013,10 +961,6 @@ const std::string& Templater::dynamic::dtags::track::getTagName() const {
     return name;
 }
 
-bool Templater::dynamic::dtags::track::isVoid() const {
-    return 1;
-}
-
 const std::string& Templater::dynamic::dtags::u::getTagName() const {
     static const std::string name = "u";
     return name;
@@ -1056,9 +1000,5 @@ bool Templater::dynamic::dtags::video::isVoid() const {
 const std::string& Templater::dynamic::dtags::wbr::getTagName() const {
     static const std::string name = "wbr";
     return name;
-}
-
-bool Templater::dynamic::dtags::wbr::isVoid() const {
-    return 1;
 }
 

@@ -59,20 +59,33 @@ void generateDynamic(const std::vector<Tag>& tags) {
     cppDynamic << "#include \"tags.h\"\n\n";
 
     for (auto& tag: tags) {
-        headerDynamic << "    class " << tag.dynamicName << ": public Object {\n"
-                                    "        public:\n"
-                                    "            using Object::Object;\n"
-                                    "            bool isVoid() const override;\n"
-                                    "            const std::string& getTagName() const override;\n"
-                                    "    };\n";
-        
-        cppDynamic << "const std::string& Templater::dynamic::dtags::" << tag.dynamicName << "::getTagName() const {\n"
-                                    "    static const std::string name = \"" << tag.tagName << "\";\n"
-                                    "    return name;\n"
-                                    "}\n\n"
-                                    "bool Templater::dynamic::dtags::" << tag.dynamicName << "::isVoid() const {\n"
-                                    "    return " << (int) (tag.isVoid) << ";\n"
-                                    "}\n\n";
+        if (!tag.isVoid) {
+            headerDynamic << "    class " << tag.dynamicName << ": public Object {\n"
+            "        public:\n"
+            "            using Object::Object;\n"
+            "            bool isVoid() const override;\n"
+            "            const std::string& getTagName() const override;\n"
+            "    };\n";
+
+            cppDynamic << "const std::string& Templater::dynamic::dtags::" << tag.dynamicName << "::getTagName() const {\n"
+            "    static const std::string name = \"" << tag.tagName << "\";\n"
+            "    return name;\n"
+            "}\n\n"
+            "bool Templater::dynamic::dtags::" << tag.dynamicName << "::isVoid() const {\n"
+            "    return " << (int) (tag.isVoid) << ";\n"
+            "}\n\n";
+        } else {
+            headerDynamic << "    class " << tag.dynamicName << ": public VoidObject {\n"
+            "        public:\n"
+            "            using VoidObject::VoidObject;\n"
+            "            const std::string& getTagName() const override;\n"
+            "    };\n";
+
+            cppDynamic << "const std::string& Templater::dynamic::dtags::" << tag.dynamicName << "::getTagName() const {\n"
+            "    static const std::string name = \"" << tag.tagName << "\";\n"
+            "    return name;\n"
+            "}\n\n";
+        }
     }
 
     headerDynamic << "}\n\n";

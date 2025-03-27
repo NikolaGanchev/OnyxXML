@@ -164,6 +164,28 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
     CHECK(expected == obj.serialise());
 }
 
+TEST_CASE("GenericObject can't be given children if void", "[GenericObject]") {
+    using namespace Templater::dynamic::dtags;
+
+    REQUIRE_THROWS(GenericObject{"img", true, GenericObject{"div", false}});
+
+    std::shared_ptr<Object> d = std::make_shared<GenericObject>("div", false);
+    
+    REQUIRE_THROWS(GenericObject{"img", true, {}, { d }});
+}
+
+TEST_CASE("Object::addChild() throws if used on a void object", "[Object::addChild]") {
+    using namespace Templater::dynamic::dtags;
+
+    GenericObject image{"img", true};
+
+    REQUIRE_THROWS(image.addChild(GenericObject{"div", false}));
+
+    std::shared_ptr<Object> d = std::make_shared<GenericObject>("div", false);
+
+    REQUIRE_THROWS(image.addChild(d));
+}
+
 TEST_CASE("Children return by tag name works", "[Object]" ) {
     using namespace Templater::dynamic::dtags;
 

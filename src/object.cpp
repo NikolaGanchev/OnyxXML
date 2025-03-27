@@ -53,7 +53,7 @@ void dynamic::Object::processConstructorAttribute(const Attribute& attribute) {
 
 void dynamic::Object::processConstructorObject(std::shared_ptr<Object>& child) {
     if (child->isInTree()) {
-        throw std::runtime_error("Attempted to construct Templater::html::Object with a child that is already a child of another Templater::html::Object.");
+        throw std::runtime_error("Attempted to construct Object with a child that is already a child of another Object.");
     }
     child->m_isInTree = true;
     m_children.push_back(child);
@@ -68,13 +68,12 @@ dynamic::Object::~Object() {
         child->m_isInTree = false;
     }
 }
-
 void dynamic::Object::addChild(std::shared_ptr<Object> newChild)  {
     if (isVoid()) {
-        throw std::runtime_error("Void Templater::html::" + getTagName() + " cannot have children.");
+        throw std::runtime_error("Void " + getTagName() + " cannot have children.");
     }
     if (newChild->isInTree()) {
-        throw std::runtime_error("Attempted to add child to Templater::html::" + getTagName() + "  that is already a child of another Templater::html::Object.");
+        throw std::runtime_error("Attempted to add child to " + getTagName() + "  that is already a child of another Object.");
         return;
     }
 
@@ -91,6 +90,10 @@ const std::vector<std::shared_ptr<dynamic::Object>> dynamic::Object::getChildren
     }
 
     return copy;
+}
+
+size_t dynamic::Object::getChildrenCount() const {
+    return this->m_children.size();
 }
 
 bool dynamic::Object::isInTree() const {
@@ -353,11 +356,15 @@ bool dynamic::Object::getSortAttributes() {
     return sortAttributes;
 }
         
-dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid)
+dynamic::dtags::GenericObject::GenericObject(std::string tagName, bool isVoid)
         : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object() {}
 
-dynamic::dtags::GenericObject::GenericObject(std::string  tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-        : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object{attributes, std::move(children)} {}
+dynamic::dtags::GenericObject::GenericObject(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
+        : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object{std::move(attributes), std::move(children)} {
+            if (this->isVoid() && this->getChildrenCount() > 0) {
+                throw std::runtime_error("Void " + getTagName() + " cannot have children.");
+            }
+}
 
 const std::string& dynamic::dtags::GenericObject::getTagName() const {
     return m_tag;
@@ -399,3 +406,9 @@ const std::string& dynamic::dtags::EmptyTag::getTagName() const {
 bool dynamic::dtags::EmptyTag::isVoid() const {
     return false;
 }
+
+bool dynamic::VoidObject::isVoid() const {
+    return true;
+}
+
+Templater::dynamic::VoidObject::VoidObject(std::vector<Attribute> attributes): Object(std::move(attributes), {}) {}

@@ -21,10 +21,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class area: public Object {
+    class area: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class article: public Object {
@@ -51,10 +50,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class base: public Object {
+    class base: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class bdi: public Object {
@@ -81,10 +79,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class br: public Object {
+    class br: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class button: public Object {
@@ -117,10 +114,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class col: public Object {
+    class col: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class colgroup: public Object {
@@ -195,10 +191,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class embed: public Object {
+    class embed: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class fieldset: public Object {
@@ -285,10 +280,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class hr: public Object {
+    class hr: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class html: public Object {
@@ -309,16 +303,14 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class img: public Object {
+    class img: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
-    class input: public Object {
+    class input: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class ins: public Object {
@@ -351,10 +343,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class link: public Object {
+    class link: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class main: public Object {
@@ -387,16 +378,14 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class menuitem: public Object {
+    class menuitem: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
-    class meta: public Object {
+    class meta: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class meter: public Object {
@@ -453,10 +442,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class param: public Object {
+    class param: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class picture: public Object {
@@ -561,10 +549,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class source: public Object {
+    class source: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class span: public Object {
@@ -675,10 +662,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class track: public Object {
+    class track: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
     class u: public Object {
@@ -705,10 +691,9 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class wbr: public Object {
+    class wbr: public VoidObject {
         public:
-            using Object::Object;
-            bool isVoid() const override;
+            using VoidObject::VoidObject;
             const std::string& getTagName() const override;
     };
 }
