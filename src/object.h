@@ -65,7 +65,7 @@ namespace Templater::dynamic {
                     ObservableStringRef& operator=(std::string newPtr);
             };
 
-            void iterativeChildrenProcessor(Object& object, std::function<void(std::shared_ptr<Object>)> process);
+            void iterativeProcessor(Object& object, std::function<void(std::shared_ptr<Object>)> process);
             std::vector<std::shared_ptr<Object>> iterativeChildrenParse(const Object& object, std::function<bool(std::shared_ptr<Object>)> condition) const;
             
             std::vector<Attribute> m_attributes;
@@ -86,7 +86,6 @@ namespace Templater::dynamic {
             void addIndex(std::shared_ptr<index::Index> index);
             void removeIndex(std::shared_ptr<index::Index> index);
             void indexParse(std::function<void(std::shared_ptr<index::Index>)>);
-            std::shared_ptr<Object> pointer();
             // Default: "\t"
             static std::string indentationSequence;
             // Default: false
@@ -147,15 +146,18 @@ namespace Templater::dynamic {
     namespace index {
         // Must be created using an std::shared_ptr
         class Index: public std::enable_shared_from_this<Index> {
+            friend Object;
             private:
                 std::weak_ptr<Object> m_root;
-            public:
-                explicit Index(std::shared_ptr<Object> root);
+            protected:
                 virtual bool putIfNeeded(std::shared_ptr<Object> object);
                 virtual bool removeIfNeeded(std::shared_ptr<Object> object) = 0;
                 virtual bool update(std::shared_ptr<Object> object) = 0;
+                void initInternal(std::shared_ptr<Index> thisIndex);
+            public:
+                explicit Index(std::shared_ptr<Object> root);
                 const std::weak_ptr<Object> getRoot() const;
-                std::shared_ptr<Index> pointer();
+                virtual void init() = 0;
         };
     }
     

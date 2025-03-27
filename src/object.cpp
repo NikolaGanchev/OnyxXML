@@ -119,14 +119,14 @@ void dynamic::Object::indexParse(std::function<void(std::shared_ptr<index::Index
 
 // Iteratively adds the index to this node and all its children
 void dynamic::Object::addIndex(std::shared_ptr<index::Index> index) {
-    iterativeChildrenProcessor(*this, [&index](std::shared_ptr<Object> obj) -> void {
+    iterativeProcessor(*this, [&index](std::shared_ptr<Object> obj) -> void {
         obj->m_indices.push_back(index);
         index->putIfNeeded(obj);
     });
 }
 
 void dynamic::Object::removeIndex(std::shared_ptr<index::Index> indexToRemove) {
-    iterativeChildrenProcessor(*this, [&indexToRemove](std::shared_ptr<Object> obj) -> void {
+    iterativeProcessor(*this, [&indexToRemove](std::shared_ptr<Object> obj) -> void {
         for (auto index = obj->m_indices.begin(); index != obj->m_indices.end();) {
             if (std::shared_ptr<index::Index> id = index->lock()) {
                 if (indexToRemove.get() == id.get()) {
@@ -144,8 +144,10 @@ void dynamic::Object::removeIndex(std::shared_ptr<index::Index> indexToRemove) {
 }
 
 
-void dynamic::Object::iterativeChildrenProcessor(Object& object, std::function<void(std::shared_ptr<Object>)> process) {
+void dynamic::Object::iterativeProcessor(Object& object, std::function<void(std::shared_ptr<Object>)> process) {
     std::vector<std::shared_ptr<Object>> s;
+
+    s.push_back(shared_from_this());
 
     while(!s.empty()) {
         std::shared_ptr<Object> obj = s.back();
@@ -262,10 +264,6 @@ bool dynamic::Object::removeChild(const std::shared_ptr<Object>& childToRemove) 
     return removeChild(*(childToRemove));
 }
 
-std::shared_ptr<dynamic::Object> dynamic::Object::pointer() {
-    return shared_from_this();
-}
-
 size_t dynamic::Object::size() const {
     size_t size = 1;
     for (auto& child: m_children) {
@@ -300,7 +298,7 @@ void dynamic::Object::setAttributeValue(const std::string &name, const std::stri
             attr.setValue(newValue);
             
             this->indexParse([this](std::shared_ptr<index::Index> id) -> void {
-                id->update(this->pointer());
+                id->update(shared_from_this());
             });
             return;
         }
@@ -308,7 +306,7 @@ void dynamic::Object::setAttributeValue(const std::string &name, const std::stri
     
     m_attributes.emplace_back(name, newValue);
     this->indexParse([this](std::shared_ptr<index::Index> id) -> void {
-        id->update(this->pointer());
+        id->update(shared_from_this());
     });
 }
 
@@ -447,7 +445,7 @@ Templater::dynamic::Object::ObservableStringRef dynamic::Object::operator[](cons
         if (attr.getName() == name) {
             return ObservableStringRef(&(attr.getValueMutable()), [this]() { 
                 this->indexParse([this](std::shared_ptr<index::Index> id) -> void {
-                    id->update(this->pointer());
+                    id->update(shared_from_this());
                 });
              });
         }
@@ -541,16 +539,17 @@ bool dynamic::VoidObject::isVoid() const {
 Templater::dynamic::VoidObject::VoidObject(std::vector<Attribute> attributes): Object(std::move(attributes), {}) {}
 
 Templater::dynamic::index::Index::Index(std::shared_ptr<Object> root): m_root{root} {
-    putIfNeeded(root);
-    root->addIndex(pointer());
+}
+
+void Templater::dynamic::index::Index::initInternal(std::shared_ptr<Index> thisIndex) {
+    if (std::shared_ptr<Object> root = m_root.lock()) {
+        //putIfNeeded(root);
+        root->addIndex(thisIndex);
+    }
 }
 
 const std::weak_ptr<Templater::dynamic::Object> Templater::dynamic::index::Index::getRoot() const {
     return m_root;
-}
-
-std::shared_ptr<Templater::dynamic::index::Index> Templater::dynamic::index::Index::pointer() {
-    return shared_from_this();
 }
 
 bool Templater::dynamic::index::Index::putIfNeeded(std::shared_ptr<Object> object) {
