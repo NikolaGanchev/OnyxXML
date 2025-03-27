@@ -67,7 +67,7 @@ namespace Templater::dynamic {
             
             std::vector<Attribute> m_attributes;
             std::vector<std::shared_ptr<Object>> m_children;
-            std::vector<std::shared_ptr<Index>> indeces;
+            std::vector<std::shared_ptr<Index>> m_indices;
             bool m_isInTree = false;
             
             template <typename T>
@@ -197,7 +197,7 @@ namespace Templater::dynamic {
 
 template <typename... Args>
 Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic::isValidObjectConstructorType<Args>&& ...)
-    : m_attributes{}, m_children{}, m_isInTree{false}, indeces{} { 
+    : m_attributes{}, m_children{}, m_isInTree{false}, m_indices{} { 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
@@ -221,7 +221,7 @@ void Templater::dynamic::Object::addChild(T&& newChild) requires (isObject<T>) {
     }
     std::shared_ptr<T> obj = std::make_shared<std::decay_t<T>>(std::forward<T>(newChild));
     (dynamic_cast<Object*>(obj.get()))->m_isInTree = true;
-    for (auto& index: indeces) {
+    for (auto& index: m_indices) {
         (dynamic_cast<Object*>(obj.get()))->addIndex(index);
     }
     m_children.push_back(obj);

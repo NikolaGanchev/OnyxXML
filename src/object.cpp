@@ -33,13 +33,13 @@ bool dynamic::Attribute::shouldEscape() const {
 }
 
 dynamic::Object::Object()
-    : m_attributes{}, m_children{}, indeces{}, m_isInTree{false} { }
+    : m_attributes{}, m_children{}, m_indices{}, m_isInTree{false} { }
 
 dynamic::Object::Object(Object&& other)
-    : m_attributes{std::move(other.m_attributes)}, m_children{std::move(other.m_children)}, indeces{other.indeces}, m_isInTree{other.m_isInTree} {}
+    : m_attributes{std::move(other.m_attributes)}, m_children{std::move(other.m_children)}, m_indices{other.m_indices}, m_isInTree{other.m_isInTree} {}
 
 dynamic::Object::Object(std::vector<Attribute> attributes, std::vector<std::shared_ptr<Object>> children)
-    : m_attributes{std::move(attributes)}, m_children{std::move(children)}, indeces{} {
+    : m_attributes{std::move(attributes)}, m_children{std::move(children)}, m_indices{} {
     for (auto& child: m_children) {
         child->m_isInTree = true;
     }
@@ -76,7 +76,7 @@ void dynamic::Object::addChild(std::shared_ptr<Object> newChild)  {
     }
 
     newChild->m_isInTree = true;
-    for (auto& index: indeces) {
+    for (auto& index: m_indices) {
         newChild->addIndex(index);
     }
     m_children.push_back(newChild);
@@ -100,14 +100,14 @@ size_t dynamic::Object::getChildrenCount() const {
 // Iteratively adds the index to this node and all its children
 void dynamic::Object::addIndex(std::shared_ptr<Index> index) {
     iterativeChildrenProcessor(*this, [&index](std::shared_ptr<Object> obj) -> void {
-        obj->indeces.push_back(index);
+        obj->m_indices.push_back(index);
         index->putIfNeeded(*obj);
     });
 }
 
 void dynamic::Object::removeIndex(std::shared_ptr<Index> index) {
     iterativeChildrenProcessor(*this, [&index](std::shared_ptr<Object> obj) -> void {
-        auto& indeces = obj->indeces;
+        auto& indeces = obj->m_indices;
         for (int i = 0; i < indeces.size(); i++) {
             if (index.get() == indeces[i].get()) {
                 indeces.erase(indeces.begin() + i);
@@ -205,8 +205,8 @@ bool dynamic::Object::removeChild(Object& childToRemove, Object& currentRoot) {
     for (int i = 0; i < children.size(); i++) {
         if (*(children[i].get()) == childToRemove) {
 
-            for (int j = 0; j < indeces.size(); j++) {
-                childToRemove.removeIndex(indeces[j]);
+            for (int j = 0; j < m_indices.size(); j++) {
+                childToRemove.removeIndex(m_indices[j]);
             }
 
             childToRemove.m_isInTree = false;
@@ -265,7 +265,7 @@ void dynamic::Object::setAttributeValue(const std::string &name, const std::stri
     for (auto& attr: m_attributes) {
         if (attr.getName() == name) {
             attr.setValue(newValue);
-            for (auto& index: indeces) {
+            for (auto& index: m_indices) {
                 index->update(*this);
             }
             return;
@@ -273,7 +273,7 @@ void dynamic::Object::setAttributeValue(const std::string &name, const std::stri
     }
     
     m_attributes.emplace_back(name, newValue);
-    for (auto& index: indeces) {
+    for (auto& index: m_indices) {
         index->update(*this);
     }
 }
@@ -412,7 +412,7 @@ Templater::dynamic::Object::ObservableStringRef dynamic::Object::operator[](cons
     for (auto& attr: m_attributes) {
         if (attr.getName() == name) {
             return ObservableStringRef(&(attr.getValueMutable()), [this]() { 
-                for (auto& index: this->indeces) {
+                for (auto& index: this->m_indices) {
                     index->update(*this);
                 }
              });
