@@ -52,31 +52,40 @@ void generateDynamic(const std::vector<Tag>& tags) {
     std::ofstream cppDynamic("./dynamic/tags.cpp");
 
     headerDynamic << "#pragma once\n";
-    headerDynamic << "#include \"html_object.h\" \n\n";
+    headerDynamic << "#include \"object.h\" \n\n";
     headerDynamic << "namespace Templater::dynamic::dtags {\n";
     headerDynamic << "    using namespace Templater::dynamic; \n";
 
     cppDynamic << "#include \"tags.h\"\n\n";
 
     for (auto& tag: tags) {
-        headerDynamic << "    class " << tag.dynamicName << ": public Object {\n"
-                                    "        public:\n"
-                                    "            using Object::Object;\n"
-                                    "            bool isVoid() const override;\n"
-                                    "            std::shared_ptr<Object> clone() const override;\n"
-                                    "            const std::string& getTagName() const override;\n"
-                                    "    };\n";
-        
-        cppDynamic << "const std::string& Templater::dynamic::dtags::" << tag.dynamicName << "::getTagName() const {\n"
-                                    "    static const std::string name = \"" << tag.tagName << "\";\n"
-                                    "    return name;\n"
-                                    "}\n\n"
-                                    "bool Templater::dynamic::dtags::" << tag.dynamicName << "::isVoid() const {\n"
-                                    "    return " << (int) (tag.isVoid) << ";\n"
-                                    "}\n\n"
-                                    "std::shared_ptr<Templater::dynamic::Object> Templater::dynamic::dtags::" << tag.dynamicName << "::clone() const {\n"
-                                    "    return std::make_shared<" << tag.dynamicName << ">(*this);\n"
-                                    "}\n";
+        if (!tag.isVoid) {
+            headerDynamic << "    class " << tag.dynamicName << ": public Object {\n"
+            "        public:\n"
+            "            using Object::Object;\n"
+            "            bool isVoid() const override;\n"
+            "            const std::string& getTagName() const override;\n"
+            "    };\n";
+
+            cppDynamic << "const std::string& Templater::dynamic::dtags::" << tag.dynamicName << "::getTagName() const {\n"
+            "    static const std::string name = \"" << tag.tagName << "\";\n"
+            "    return name;\n"
+            "}\n\n"
+            "bool Templater::dynamic::dtags::" << tag.dynamicName << "::isVoid() const {\n"
+            "    return " << (int) (tag.isVoid) << ";\n"
+            "}\n\n";
+        } else {
+            headerDynamic << "    class " << tag.dynamicName << ": public VoidObject {\n"
+            "        public:\n"
+            "            using VoidObject::VoidObject;\n"
+            "            const std::string& getTagName() const override;\n"
+            "    };\n";
+
+            cppDynamic << "const std::string& Templater::dynamic::dtags::" << tag.dynamicName << "::getTagName() const {\n"
+            "    static const std::string name = \"" << tag.tagName << "\";\n"
+            "    return name;\n"
+            "}\n\n";
+        }
     }
 
     headerDynamic << "}\n\n";
@@ -102,9 +111,9 @@ void generateCompile(const std::vector<Tag>& tags) {
         headerCompile << "    template <typename... Children>\n"
                             "    struct " << tag.compileName << " {\n"
                                     "        static constexpr std::shared_ptr<Templater::dynamic::Object> value() {\n"
-                                    "            Templater::dynamic::dtags::" << tag.dynamicName << " node = Templater::dynamic::dtags::" << tag.dynamicName << "();\n"
+                                    "            std::shared_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_shared<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
                                     "            (parseChildren<Children>(node), ...);\n"
-                                    "            return node.clone();\n"
+                                    "            return node;\n"
                                     "        }\n"
                                     "    };\n";
     }

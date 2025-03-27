@@ -9,12 +9,12 @@ TEST_CASE("HTML is generated", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
         GenericObject("head", false)
-    );
+    };
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head></head>\n</html>";
 
@@ -27,12 +27,12 @@ TEST_CASE("serialise() arguments override global indentation rules", "[Object]" 
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
         GenericObject("head", false)
-    );
+    };
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n    <head></head>\n</html>";
 
@@ -50,10 +50,10 @@ TEST_CASE("Vector constructor works", "[Object]" ) {
 
     attributes.emplace_back("id", "list");
     for (int i = 1; i <= 3; i++) {
-        children.push_back(dtags::li(Text(std::to_string(i))).clone());
+        children.push_back(std::make_shared<dtags::li>(Text(std::to_string(i))));
     }
 
-    dtags::ul obj = dtags::ul(attributes, children);
+    dtags::ul obj{attributes, children};
 
     std::string expected = "<ul id=\"list\">\n\t<li>\n\t\t1\n\t</li>\n\t<li>\n\t\t2\n\t</li>\n\t<li>\n\t\t3\n\t</li>\n</ul>";
 
@@ -66,7 +66,7 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -157,11 +157,33 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
                 )
             )
         )
-    );
+    };
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#about\">\n\t\t\t\t\t\t\tAbout Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes various nested elements, attributes, and content.\n\t\t\t\t</p>\n\t\t\t\t<form name=\"contact-form\">\n\t\t\t\t\t<label for=\"name\">\n\t\t\t\t\t\tYour Name:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t\t\t<label for=\"email\">\n\t\t\t\t\t\tYour Email:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t\t\t<button type=\"submit\">\n\t\t\t\t\t\tSubmit\n\t\t\t\t\t</button>\n\t\t\t\t</form>\n\t\t\t</section>\n\t\t\t<section id=\"features\">\n\t\t\t\t<h2>\n\t\t\t\t\tFeatures\n\t\t\t\t</h2>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 1\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 2\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are the key features of the application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test Page\n\t\t\t</p>\n\t\t\t<a href=\"https://www.example.com\">\n\t\t\t\tPrivacy Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
 
     CHECK(expected == obj.serialise());
+}
+
+TEST_CASE("GenericObject can't be given children if void", "[GenericObject]") {
+    using namespace Templater::dynamic::dtags;
+
+    REQUIRE_THROWS(GenericObject{"img", true, GenericObject{"div", false}});
+
+    std::shared_ptr<Object> d = std::make_shared<GenericObject>("div", false);
+    
+    REQUIRE_THROWS(GenericObject{"img", true, {}, { d }});
+}
+
+TEST_CASE("Object::addChild() throws if used on a void object", "[Object::addChild]") {
+    using namespace Templater::dynamic::dtags;
+
+    GenericObject image{"img", true};
+
+    REQUIRE_THROWS(image.addChild(GenericObject{"div", false}));
+
+    std::shared_ptr<Object> d = std::make_shared<GenericObject>("div", false);
+
+    REQUIRE_THROWS(image.addChild(d));
 }
 
 TEST_CASE("Children return by tag name works", "[Object]" ) {
@@ -170,7 +192,7 @@ TEST_CASE("Children return by tag name works", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -181,7 +203,7 @@ TEST_CASE("Children return by tag name works", "[Object]" ) {
                     GenericObject("div", false, Attribute("id", "2"))),
             GenericObject("div", false, Attribute("id", "3")),
             GenericObject("div", false, Attribute("id", "4")))
-    ));
+    )};
 
     auto children = obj.getChildrenByTagName("div");
 
@@ -196,7 +218,7 @@ TEST_CASE("Children return by id works", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -208,7 +230,7 @@ TEST_CASE("Children return by id works", "[Object]" ) {
                         GenericObject("p", false, Attribute("id", "11")))),
             GenericObject("div", false, Attribute("id", "3")),
             GenericObject("div", false, Attribute("id", "4")))
-    ));
+    )};
 
     auto children = obj.getChildrenById("11");
 
@@ -224,7 +246,7 @@ TEST_CASE("Children return by name works", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -236,7 +258,7 @@ TEST_CASE("Children return by name works", "[Object]" ) {
                         GenericObject("p", false, Attribute("name", "p"), Attribute("id", "11")))),
             GenericObject("div", false, Attribute("name", "d"), Attribute("id", "3")),
             GenericObject("div", false, Attribute("name", "d"), Attribute("id", "4")))
-    ));
+    )};
 
     auto children = obj.getChildrenByName("d");
 
@@ -257,7 +279,7 @@ TEST_CASE("Children return by class name works", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -269,7 +291,7 @@ TEST_CASE("Children return by class name works", "[Object]" ) {
                         GenericObject("p", false, Attribute("class", "p"), Attribute("id", "11")))),
             GenericObject("div", false, Attribute("class", "d"), Attribute("id", "3")),
             GenericObject("div", false, Attribute("class", "d"), Attribute("id", "4")))
-    ));
+    )};
 
     auto children = obj.getChildrenByClassName("d");
     
@@ -290,16 +312,16 @@ TEST_CASE("Child add works", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
         GenericObject("head", false),
-        GenericObject("body", false));
+        GenericObject("body", false)};
 
     auto children = obj.getChildrenByTagName("body");
 
-    GenericObject child = GenericObject(
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>(
         "div", false, Attribute("id", "1")
     );
 
@@ -309,7 +331,6 @@ TEST_CASE("Child add works", "[Object]" ) {
 
     REQUIRE(children.size() == 1);
     CHECK(children[0].get()->isInTree());
-    CHECK(*(children[0].get()) == child);
 }
 
 TEST_CASE("Child remove works", "[Object]" ) {
@@ -318,18 +339,18 @@ TEST_CASE("Child remove works", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject child = GenericObject(
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>(
         "div", false, Attribute("id", "1")
     );
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
         GenericObject("head", false),
-        GenericObject("body", false, child));
+        GenericObject("body", false, {}, {child})};
 
-    CHECK(child.isInTree());
+    CHECK(child->isInTree());
 
     auto children = obj.getChildrenById("1");
 
@@ -343,7 +364,7 @@ TEST_CASE("Child remove works", "[Object]" ) {
     children = obj.getChildrenById("1");
 
     REQUIRE(children.size() == 0);
-    CHECK(!child.isInTree());
+    CHECK(!child->isInTree());
 }
 
 TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" ) {
@@ -352,46 +373,22 @@ TEST_CASE("Children get properly disowned upon parent destruction", "[Object]" )
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject child = GenericObject(
+    std::shared_ptr<GenericObject> child = std::make_shared<GenericObject>(
         "div", false, Attribute("id", "1")
     );
 
     {
-        GenericObject obj = GenericObject(
+        GenericObject obj{
             "html", false,
             Attribute("lang", "en"),
             Attribute("theme", "dark"),
             GenericObject("head", false),
-            GenericObject("body", false, child));
+            GenericObject("body", false, {}, {child})};
     
-        CHECK(child.isInTree());    
+        CHECK(child->isInTree());    
     }
     
-    CHECK(!child.isInTree());  
-}
-
-TEST_CASE("Children do not get disowned upon pointer to parent destruction", "[Object]" ) {
-    using namespace Templater::dynamic::dtags;
-
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
-
-    GenericObject child = GenericObject(
-        "div", false, Attribute("id", "1")
-    );
-
-    GenericObject obj = GenericObject(
-        "html", false,
-        Attribute("lang", "en"),
-        Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, child));
-
-    {
-        GenericObject obj2 = obj; 
-    }  
-    
-    CHECK(child.isInTree());  
+    CHECK(!child->isInTree());  
 }
 
 TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
@@ -400,12 +397,12 @@ TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
         GenericObject("head", false),
-        GenericObject("body", false));
+        GenericObject("body", false)};
 
     CHECK(obj["lang"] == "en");
 
@@ -421,16 +418,16 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    GenericObject obj = GenericObject(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
         GenericObject("head", false),
-        GenericObject("body", false));
+        GenericObject("body", false)};
 
     auto children = obj.getChildrenByTagName("body");
 
-    GenericObject child = GenericObject(
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>(
         "div", false, Attribute("id", "1")
     );
 
@@ -441,7 +438,6 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
 
     REQUIRE(children.size() == 1);
     CHECK(children[0].get()->isInTree());
-    CHECK(*(children[0].get()) == child);
 }
 
 
@@ -451,7 +447,7 @@ TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    html obj = html(
+    html obj{
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
         
@@ -537,7 +533,7 @@ TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
                 )
             )
         )
-    );
+    };
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#about\">\n\t\t\t\t\t\t\tAbout Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes various nested elements, attributes, and content.\n\t\t\t\t</p>\n\t\t\t\t<form name=\"contact-form\">\n\t\t\t\t\t<label for=\"name\">\n\t\t\t\t\t\tYour Name:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t\t\t<label for=\"email\">\n\t\t\t\t\t\tYour Email:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t\t\t<button type=\"submit\">\n\t\t\t\t\t\tSubmit\n\t\t\t\t\t</button>\n\t\t\t\t</form>\n\t\t\t</section>\n\t\t\t<section id=\"features\">\n\t\t\t\t<h2>\n\t\t\t\t\tFeatures\n\t\t\t\t</h2>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 1\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 2\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are the key features of the application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test Page\n\t\t\t</p>\n\t\t\t<a href=\"https://www.example.com\">\n\t\t\t\tPrivacy Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
 
@@ -554,20 +550,19 @@ TEST_CASE("Empty html tree has size 1", "[Object::size()]") {
 TEST_CASE("Html tree with one child has size 2", "[Object::size()]") {
     using namespace Templater::dynamic::dtags;
     html root;
-    body child;
-    root.addChild(child);
+    root.addChild(body());
     REQUIRE(root.size() == 2);
 }
 
 TEST_CASE("Html tree with 5 nodes has size 6", "[Object::size()]") {
     using namespace Templater::dynamic::dtags;
-    html root = html(
+    html root{
         p(),
         p(),
         p(),
         p(),
         p()
-    );
+    };
     REQUIRE(root.size() == 6);
 }
 
@@ -575,13 +570,12 @@ TEST_CASE("Html tree with 5001 nodes has size 5001", "[Object::size()]") {
     using namespace Templater::dynamic::dtags;
     html root;
     for (int i = 0; i < 1000; i++) {
-        section child = section(
-            dtags::div(
+        root.addChild(section(
+            dtags::div{
                 p(Text("Text")),
                 p()
-            )
-        );
-        root.addChild(child);
+            }
+        ));
     }
     REQUIRE(root.size() == 5001);
 }
@@ -608,7 +602,7 @@ void addChildren(std::shared_ptr<Templater::dynamic::Object> root, int level) {
         addChildren(s, level-1);
     }
 
-    root->addChild(*s);
+    root->addChild(s);
 }
 
 TEST_CASE("3000 tags serialise in under 50ms", "[Object]") {
@@ -621,12 +615,12 @@ TEST_CASE("3000 tags serialise in under 50ms", "[Object]") {
     section root{};
 
     for (int i = 0; i < 500; i++) {
-        p paragraph{};
+        std::shared_ptr<Object> paragraph = std::make_shared<p>();
         for (int i = 0; i < 10; i++) {
-            paragraph[generateRandomString(10)] = generateRandomString(10);
+            paragraph->operator[](generateRandomString(10)) = generateRandomString(10);
         }
-        paragraph.addChild(Text(generateRandomString(200)));
-        addChildren(paragraph.clone(), 3);
+        paragraph->addChild(Text(generateRandomString(200)));
+        addChildren(paragraph, 3);
         root.addChild(paragraph);
     }
 
@@ -852,7 +846,7 @@ TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
 
     std::string textToEscape = "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
-    dtags::div d = dtags::div(Text(textToEscape));
+    dtags::div d{Text(textToEscape)};
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
@@ -867,7 +861,7 @@ TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
-    dtags::div d = dtags::div(Text(textToEscape, true));
+    dtags::div d{Text(textToEscape, true)};
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;&#x1f600;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
@@ -882,7 +876,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
-    dtags::div d = dtags::div(Text(textToEscape, false));
+    dtags::div d{Text(textToEscape, false)};
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;😀Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
