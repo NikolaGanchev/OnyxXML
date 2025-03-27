@@ -882,3 +882,229 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
 
     CHECK(d.serialise() == expected);
 }
+
+TEST_CASE("Index is added correctly", "[Object]" ) {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<Object> obj = std::make_shared<GenericObject>(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false, 
+            GenericObject("div", false, Attribute("id", "0"), 
+                GenericObject("div", false, Attribute("id", "1"),
+                    GenericObject("div", false, Attribute("id", "2"))),
+            GenericObject("div", false, Attribute("id", "3")),
+            GenericObject("div", false, Attribute("id", "4")))
+    ));
+
+    REQUIRE(obj->getChildrenCount() > 0);
+
+    std::shared_ptr<index::AttributeNameIndex> index = std::make_shared<index::AttributeNameIndex>(obj, "id");
+    index->init();
+
+    auto result = index->getByValue("3");
+
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("id") == "3");
+}
+
+TEST_CASE("Index handles multiple matches correctly", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<Object> obj = std::make_shared<GenericObject>(
+        "html", false,
+        GenericObject("body", false, 
+            GenericObject("div", false, Attribute("class", "container"),
+                GenericObject("div", false, Attribute("class", "item")),
+                GenericObject("div", false, Attribute("class", "item")),
+                GenericObject("div", false, Attribute("class", "item"))
+            )
+        )
+    );
+
+    REQUIRE(obj->getChildrenCount() > 0);
+
+    std::shared_ptr<index::AttributeNameIndex> index = std::make_shared<index::AttributeNameIndex>(obj, "class");
+    index->init();
+
+    auto result = index->getByValue("item");
+
+    REQUIRE(result.size() == 3);
+    for (const auto& elem : result) {
+        CHECK(elem->getAttributeValue("class") == "item");
+    }
+}
+
+TEST_CASE("Index returns empty when no match found", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<Object> obj = std::make_shared<GenericObject>(
+        "html", false,
+        GenericObject("body", false, 
+            GenericObject("div", false, Attribute("class", "container"))
+        )
+    );
+
+    REQUIRE(obj->getChildrenCount() > 0);
+
+    std::shared_ptr<index::AttributeNameIndex> index = std::make_shared<index::AttributeNameIndex>(obj, "class");
+    index->init();
+
+    auto result = index->getByValue("nonexistent");
+    REQUIRE(result.empty());
+}
+
+TEST_CASE("Index works with nested attributes", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<Object> obj = std::make_shared<GenericObject>(
+        "html", false,
+        GenericObject("body", false, 
+            GenericObject("section", false, Attribute("data-type", "main"),
+                GenericObject("div", false, Attribute("data-type", "nested"))
+            )
+        )
+    );
+
+    REQUIRE(obj->getChildrenCount() > 0);
+
+    std::shared_ptr<index::AttributeNameIndex> index = std::make_shared<index::AttributeNameIndex>(obj, "data-type");
+    index->init();
+
+    auto result = index->getByValue("nested");
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("data-type") == "nested");
+}
+
+TEST_CASE("Index updates correctly when attributes change", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+    Object::setIndentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    std::shared_ptr<Object> obj = std::make_shared<GenericObject>("div", false, Attribute("id", "test"));
+    std::shared_ptr<index::AttributeNameIndex> index = std::make_shared<index::AttributeNameIndex>(obj, "id");
+    index->init();
+
+    auto result = index->getByValue("test");
+    REQUIRE(result.size() == 1);
+
+    obj->setAttributeValue("id", "updated");
+    result = index->getByValue("test");
+    REQUIRE(result.empty());
+
+    result = index->getByValue("updated");
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("id") == "updated");
+}
+
+TEST_CASE("Index updates correctly when children are added", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<Object> obj = std::make_shared<GenericObject>("div", false);
+    std::shared_ptr<index::AttributeNameIndex> index = std::make_shared<index::AttributeNameIndex>(obj, "class");
+    index->init();
+
+    auto result = index->getByValue("new-class");
+    REQUIRE(result.empty());
+
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>("span", false, Attribute("class", "new-class"));
+    obj->addChild(child);
+
+    result = index->getByValue("new-class");
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("class") == "new-class");
+}
+
+TEST_CASE("Index updates correctly when children are added using move", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<Object> obj = std::make_shared<GenericObject>("div", false);
+    std::shared_ptr<index::AttributeNameIndex> index = std::make_shared<index::AttributeNameIndex>(obj, "class");
+    index->init();
+
+    auto result = index->getByValue("new-class");
+    REQUIRE(result.empty());
+
+    obj->addChild(GenericObject("span", false, Attribute("class", "new-class")));
+
+    result = index->getByValue("new-class");
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("class") == "new-class");
+}
+
+TEST_CASE("Index updates correctly when attributes are modified using operator []", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+
+    Object::setIndentationSequence("\t");
+    Object::setSortAttributes(true);
+
+    std::shared_ptr<Object> obj = std::make_shared<GenericObject>("div", false);
+    (*obj)["id"] = "original";
+
+    std::shared_ptr<index::AttributeNameIndex> index = std::make_shared<index::AttributeNameIndex>(obj, "id");
+    index->init();
+
+    auto result = index->getByValue("original");
+    REQUIRE(result.size() == 1);
+
+    (*obj)["id"] = "changed";
+    result = index->getByValue("original");
+    REQUIRE(result.empty());
+
+    result = index->getByValue("changed");
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("id") == "changed");
+}
+
+
+TEST_CASE("Children are properly removed from parent indices", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<Object> parent = std::make_shared<GenericObject>("div", false);
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>("span", false, Attribute("class", "removable"));
+    parent->addChild(child);
+
+    std::shared_ptr<index::AttributeNameIndex> index = std::make_shared<index::AttributeNameIndex>(parent, "class");
+    index->init();
+    REQUIRE(index->getByValue("removable").size() == 1);
+
+    parent->removeChild(child);
+    REQUIRE(index->getByValue("removable").empty());
+}
+
+TEST_CASE("Children keep their own indices when removed", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>("span", false, Attribute("id", "child"));
+    std::shared_ptr<index::AttributeNameIndex> childIndex = std::make_shared<index::AttributeNameIndex>(child, "id");
+    childIndex->init();
+    REQUIRE(childIndex->getByValue("child").size() == 1);
+
+    std::shared_ptr<Object> parent = std::make_shared<GenericObject>("div", false);
+    std::shared_ptr<index::AttributeNameIndex> parentIndex = std::make_shared<index::AttributeNameIndex>(parent, "id");
+    parentIndex->init();
+    parent->addChild(child);
+    parent->removeChild(child);
+
+    REQUIRE(childIndex->getByValue("child").size() == 1);
+}
+
+TEST_CASE("Children keep their own indices when removed upon parent destruction", "[Object]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::shared_ptr<Object> child = std::make_shared<GenericObject>("span", false, Attribute("id", "child"));
+    std::shared_ptr<index::AttributeNameIndex> childIndex = std::make_shared<index::AttributeNameIndex>(child, "id");
+    childIndex->init();
+    REQUIRE(childIndex->getByValue("child").size() == 1);
+    {
+        std::shared_ptr<Object> parent = std::make_shared<GenericObject>("div", false);
+        std::shared_ptr<index::AttributeNameIndex> parentIndex = std::make_shared<index::AttributeNameIndex>(parent, "id");
+        parentIndex->init();
+        parent->addChild(child);
+    }
+
+    REQUIRE(childIndex->getByValue("child").size() == 1);
+}
+
