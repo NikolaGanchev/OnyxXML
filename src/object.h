@@ -8,7 +8,9 @@
 
 namespace Templater::dynamic {
     class Object;
-    class Index;
+    namespace index {
+        class Index;
+    }
 
     class Attribute {
         friend Object;
@@ -42,8 +44,9 @@ namespace Templater::dynamic {
     template <typename T>
     concept isAttribute = std::same_as<T, Attribute>;
 
-    class Object {
+    class Object : public std::enable_shared_from_this<Object> {
         friend dtags::EmptyTag;
+        friend index::Index;
         private:
             class ObservableStringRef {
                 private:
@@ -67,7 +70,7 @@ namespace Templater::dynamic {
             
             std::vector<Attribute> m_attributes;
             std::vector<std::shared_ptr<Object>> m_children;
-            std::vector<std::shared_ptr<Index>> m_indices;
+            std::vector<std::weak_ptr<index::Index>> m_indices;
             bool m_isInTree = false;
             
             template <typename T>
@@ -80,6 +83,10 @@ namespace Templater::dynamic {
             void processConstructorObject(std::shared_ptr<Object>& child);
             void processConstructorAttribute(const Attribute& attribute);
             bool removeChild(Object& childToRemove, Object& currentRoot);
+            void addIndex(std::shared_ptr<index::Index> index);
+            void removeIndex(std::shared_ptr<index::Index> index);
+            void indexParse(std::function<void(std::shared_ptr<index::Index>)>);
+            std::shared_ptr<Object> pointer();
             // Default: "\t"
             static std::string indentationSequence;
             // Default: false
@@ -125,9 +132,6 @@ namespace Templater::dynamic {
             // A && version is not needed, as it would be illogical to compare pointers with a temporary object
             bool operator==(Object& right);
 
-            void addIndex(std::shared_ptr<Index> index);
-            void removeIndex(std::shared_ptr<Index> index);
-
             bool removeChild(Object& childToRemove);
             bool removeChild(const std::shared_ptr<Object>& childToRemove);
             size_t size() const;
@@ -140,12 +144,20 @@ namespace Templater::dynamic {
             static bool getSortAttributes();
     };
 
-    class Index {
-        public:
-            virtual bool putIfNeeded(const Object& obj) = 0;
-            virtual bool removeIfNeeded(const Object& obj) = 0;
-            virtual bool update(const Object& obj) = 0;
-    };
+    namespace index {
+        // Must be created using an std::shared_ptr
+        class Index: public std::enable_shared_from_this<Index> {
+            private:
+                std::weak_ptr<Object> m_root;
+            public:
+                explicit Index(std::shared_ptr<Object> root);
+                virtual bool putIfNeeded(std::shared_ptr<Object> object);
+                virtual bool removeIfNeeded(std::shared_ptr<Object> object) = 0;
+                virtual bool update(std::shared_ptr<Object> object) = 0;
+                const std::weak_ptr<Object> getRoot() const;
+                std::shared_ptr<Index> pointer();
+        };
+    }
     
     class VoidObject: public Object {
         public:
@@ -221,9 +233,11 @@ void Templater::dynamic::Object::addChild(T&& newChild) requires (isObject<T>) {
     }
     std::shared_ptr<T> obj = std::make_shared<std::decay_t<T>>(std::forward<T>(newChild));
     (dynamic_cast<Object*>(obj.get()))->m_isInTree = true;
-    for (auto& index: m_indices) {
-        (dynamic_cast<Object*>(obj.get()))->addIndex(index);
-    }
+    
+    this->indexParse([&obj](std::shared_ptr<index::Index> id) -> void {
+        (dynamic_cast<Object*>(obj.get()))->addIndex(id);
+    });
+
     m_children.push_back(obj);
 }
 

@@ -64,6 +64,14 @@ void dynamic::Object::processConstructorAttribute(Attribute&& attribute) {
 dynamic::Object::~Object() {
     for (auto& child: m_children) {
         child->m_isInTree = false;
+
+        this->indexParse([this, &child](std::shared_ptr<index::Index> id) -> void {
+            if (std::shared_ptr<Object> root = id->getRoot().lock()) {
+                if (root.get() == this) {
+                    child->removeIndex(id);
+                }
+            }
+        });
     }
 }
 void dynamic::Object::addChild(std::shared_ptr<Object> newChild)  {
@@ -76,9 +84,10 @@ void dynamic::Object::addChild(std::shared_ptr<Object> newChild)  {
     }
 
     newChild->m_isInTree = true;
-    for (auto& index: m_indices) {
-        newChild->addIndex(index);
-    }
+    this->indexParse([&newChild](std::shared_ptr<index::Index> id) -> void {
+        newChild->addIndex(id);
+    });
+
     m_children.push_back(newChild);
 }
 
@@ -97,22 +106,38 @@ size_t dynamic::Object::getChildrenCount() const {
     return this->m_children.size();
 }
 
+void dynamic::Object::indexParse(std::function<void(std::shared_ptr<index::Index>)> callback) {
+    for (auto index = m_indices.begin(); index != m_indices.end();) {
+        if (std::shared_ptr<index::Index> id = index->lock()) {
+            callback(id);
+            index++;
+        } else {
+            m_indices.erase(index);
+        }
+    }
+}
+
 // Iteratively adds the index to this node and all its children
-void dynamic::Object::addIndex(std::shared_ptr<Index> index) {
+void dynamic::Object::addIndex(std::shared_ptr<index::Index> index) {
     iterativeChildrenProcessor(*this, [&index](std::shared_ptr<Object> obj) -> void {
         obj->m_indices.push_back(index);
-        index->putIfNeeded(*obj);
+        index->putIfNeeded(obj);
     });
 }
 
-void dynamic::Object::removeIndex(std::shared_ptr<Index> index) {
-    iterativeChildrenProcessor(*this, [&index](std::shared_ptr<Object> obj) -> void {
-        auto& indeces = obj->m_indices;
-        for (int i = 0; i < indeces.size(); i++) {
-            if (index.get() == indeces[i].get()) {
-                indeces.erase(indeces.begin() + i);
-                index->removeIfNeeded(*obj);
-                break;
+void dynamic::Object::removeIndex(std::shared_ptr<index::Index> indexToRemove) {
+    iterativeChildrenProcessor(*this, [&indexToRemove](std::shared_ptr<Object> obj) -> void {
+        for (auto index = obj->m_indices.begin(); index != obj->m_indices.end();) {
+            if (std::shared_ptr<index::Index> id = index->lock()) {
+                if (indexToRemove.get() == id.get()) {
+                    obj->m_indices.erase(index);
+                    indexToRemove->removeIfNeeded(obj);
+                    break;
+                } else {
+                    index++;
+                }
+            } else {
+                obj->m_indices.erase(index);
             }
         }
     });
@@ -205,9 +230,13 @@ bool dynamic::Object::removeChild(Object& childToRemove, Object& currentRoot) {
     for (int i = 0; i < children.size(); i++) {
         if (*(children[i].get()) == childToRemove) {
 
-            for (int j = 0; j < m_indices.size(); j++) {
-                childToRemove.removeIndex(m_indices[j]);
-            }
+            this->indexParse([&childToRemove, this](std::shared_ptr<index::Index> id) -> void {
+                if (std::shared_ptr<Object> root = id->getRoot().lock()) {
+                    if (root.get() == this) {
+                        childToRemove.removeIndex(id);
+                    }
+                }
+            });
 
             childToRemove.m_isInTree = false;
             children.erase(children.begin() + i);
@@ -231,6 +260,10 @@ bool dynamic::Object::removeChild(Object& childToRemove) {
 
 bool dynamic::Object::removeChild(const std::shared_ptr<Object>& childToRemove) {
     return removeChild(*(childToRemove));
+}
+
+std::shared_ptr<dynamic::Object> dynamic::Object::pointer() {
+    return shared_from_this();
 }
 
 size_t dynamic::Object::size() const {
@@ -265,17 +298,18 @@ void dynamic::Object::setAttributeValue(const std::string &name, const std::stri
     for (auto& attr: m_attributes) {
         if (attr.getName() == name) {
             attr.setValue(newValue);
-            for (auto& index: m_indices) {
-                index->update(*this);
-            }
+            
+            this->indexParse([this](std::shared_ptr<index::Index> id) -> void {
+                id->update(this->pointer());
+            });
             return;
         }
     }
     
     m_attributes.emplace_back(name, newValue);
-    for (auto& index: m_indices) {
-        index->update(*this);
-    }
+    this->indexParse([this](std::shared_ptr<index::Index> id) -> void {
+        id->update(this->pointer());
+    });
 }
 
 std::string dynamic::Object::serialise(const std::string& indentationSequence, bool sortAttributes) const {
@@ -412,9 +446,9 @@ Templater::dynamic::Object::ObservableStringRef dynamic::Object::operator[](cons
     for (auto& attr: m_attributes) {
         if (attr.getName() == name) {
             return ObservableStringRef(&(attr.getValueMutable()), [this]() { 
-                for (auto& index: this->m_indices) {
-                    index->update(*this);
-                }
+                this->indexParse([this](std::shared_ptr<index::Index> id) -> void {
+                    id->update(this->pointer());
+                });
              });
         }
     }
@@ -505,3 +539,20 @@ bool dynamic::VoidObject::isVoid() const {
 }
 
 Templater::dynamic::VoidObject::VoidObject(std::vector<Attribute> attributes): Object(std::move(attributes), {}) {}
+
+Templater::dynamic::index::Index::Index(std::shared_ptr<Object> root): m_root{root} {
+    putIfNeeded(root);
+    root->addIndex(pointer());
+}
+
+const std::weak_ptr<Templater::dynamic::Object> Templater::dynamic::index::Index::getRoot() const {
+    return m_root;
+}
+
+std::shared_ptr<Templater::dynamic::index::Index> Templater::dynamic::index::Index::pointer() {
+    return shared_from_this();
+}
+
+bool Templater::dynamic::index::Index::putIfNeeded(std::shared_ptr<Object> object) {
+    return false;
+}
