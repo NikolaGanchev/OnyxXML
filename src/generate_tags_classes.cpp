@@ -110,9 +110,9 @@ void generateCompile(const std::vector<Tag>& tags) {
     for (auto& tag: tags) {
         headerCompile << "    template <typename... Children>\n"
                             "    struct " << tag.compileName << " {\n"
-                                    "        static constexpr std::shared_ptr<Templater::dynamic::Object> value() {\n"
-                                    "            std::shared_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_shared<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
-                                    "            (parseChildren<Children>(node), ...);\n"
+                                    "        static constexpr std::unique_ptr<Templater::dynamic::Object> value() {\n"
+                                    "            std::unique_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_unique<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
+                                    "            (parseChildren<Children>(node.get()), ...);\n"
                                     "            return node;\n"
                                     "        }\n"
                                     "    };\n";

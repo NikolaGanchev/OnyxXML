@@ -41,27 +41,27 @@ namespace Templater::compile {
 
         template <CompileString Name, CompileString Value>
         struct Attribute {
-            static constexpr std::shared_ptr<Templater::dynamic::Attribute> attr() {
-                return std::make_shared<Templater::dynamic::Attribute>(Name, Value);
+            static constexpr std::unique_ptr<Templater::dynamic::Attribute> attr() {
+                return std::make_unique<Templater::dynamic::Attribute>(Name, Value);
             }
         };
 
         template <typename T>
         concept isAttribute = requires(T) {
-            { T::attr() } -> std::same_as<std::shared_ptr<Templater::dynamic::Attribute>>;
+            { T::attr() } -> std::same_as<std::unique_ptr<Templater::dynamic::Attribute>>;
         };
 
         template <CompileString Str>
         struct Text {
-            static constexpr std::shared_ptr<Templater::dynamic::Object> value() {
-                return std::make_shared<Templater::dynamic::dtags::Text>(Str);
+            static constexpr std::unique_ptr<Templater::dynamic::Object> value() {
+                return std::make_unique<Templater::dynamic::dtags::Text>(Str);
             }
         };
 
         template <typename Child>
-        constexpr void parseChildren(std::shared_ptr<Templater::dynamic::Object> node) {
+        constexpr void parseChildren(Templater::dynamic::Object* node) {
             if constexpr(isAttribute<Child>) {
-                std::shared_ptr<Templater::dynamic::Attribute> attr = Child::attr();
+                std::unique_ptr<Templater::dynamic::Attribute> attr = Child::attr();
                 node->operator[](attr->getName()) = attr->getValue();
             }
             else {
