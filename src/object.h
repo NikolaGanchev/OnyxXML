@@ -155,6 +155,7 @@ namespace Templater::dynamic {
                 bool isValid() const;
                 void invalidate();
                 void init();
+                virtual ~Index();
         };
     }
     

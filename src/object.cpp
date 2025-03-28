@@ -542,3 +542,18 @@ void Templater::dynamic::index::Index::invalidate() {
 void Templater::dynamic::index::Index::init() {
     m_root->addIndex(this);
 }
+
+Templater::dynamic::index::Index::~Index() {
+    if (m_valid) {
+        m_root->iterativeProcessor(*m_root, [this](Object* obj) -> void {
+            for (auto index = obj->m_indices.begin(); index != obj->m_indices.end();) {
+                if (this == *index) {
+                    obj->m_indices.erase(index);
+                    break;
+                } else {
+                    index++;
+                }
+            }
+        });
+    }
+}
