@@ -3,6 +3,7 @@
 #include "object.h"
 #include <unordered_set>
 #include <unordered_map>
+#include <any>
 
 namespace Templater::dynamic::index {
 
@@ -78,8 +79,37 @@ namespace Templater::dynamic::index {
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };
-}
 
+    // Indexes all tags in a tree
+    class CacheIndex: public Index {
+        private:
+            std::unordered_map<std::size_t, std::any> m_cache;
+
+            template <typename Tuple, std::size_t... I>
+            static std::size_t hashTuple(const Tuple& tuple, std::index_sequence<I...>);
+
+            // Generate a unique hash from a member function pointer and its arguments
+            template <typename Function, typename... Args>
+            static std::size_t generateHash(Function f, Args&&... args);
+
+        protected:
+            bool putIfNeeded(Object* object) override;
+            bool removeIfNeeded(Object* object) override;
+            bool update(Object* object) override;
+            explicit CacheIndex(Object* root);
+        public:
+            template <typename Function, typename... Args>
+            auto cache(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...));
+
+            template <typename Function, typename... Args>
+            auto getCached(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...));
+
+            template <typename Function, typename... Args>
+            bool isCached(Function f, Args&&... args);
+        
+        BEFRIEND_INDEX_CREATOR_FUNCTIONS;
+    };
+}
 
 template <typename T, typename... Args>
 T Templater::dynamic::index::createIndex(Args... args) requires (isIndex<T>) {
@@ -111,4 +141,50 @@ std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args... a
     index->init();
 
     return index;
+}
+
+template <typename Tuple, std::size_t... I>
+std::size_t Templater::dynamic::index::CacheIndex::hashTuple(const Tuple& tuple, std::index_sequence<I...>) {
+    std::size_t seed = 0;
+    ((seed ^= std::hash<std::tuple_element_t<I, Tuple>>{}(std::get<I>(tuple))), ...);
+    return seed;
+}
+
+template <typename Function, typename... Args>
+std::size_t Templater::dynamic::index::CacheIndex::generateHash(Function f, Args&&... args) {
+    std::tuple<std::decay_t<Args>...> argsTuple(std::forward<Args>(args)...);
+    std::size_t funcHash = std::hash<void*>{}(reinterpret_cast<void*>(f));
+    std::size_t argsHash = hashTuple(argsTuple, std::index_sequence_for<Args...>{});
+    return funcHash ^ argsHash;
+}
+
+template <typename Function, typename... Args>
+auto Templater::dynamic::index::CacheIndex::cache(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...)) {
+    std::size_t hashKey = generateHash(f, args...);
+
+    if (m_cache.find(hashKey) != m_cache.end()) {
+        return std::any_cast<decltype((this->getRoot()->*f)(std::forward<Args>(args)...))>(m_cache[hashKey]);
+    }
+
+    auto result = (this->getRoot()->*f)(std::forward<Args>(args)...);
+    m_cache[hashKey] = result;
+    return result;
+}
+
+template <typename Function, typename... Args>
+auto Templater::dynamic::index::CacheIndex::getCached(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...)) {
+    std::size_t hashKey = generateHash(f, args...);
+
+    if (m_cache.find(hashKey) != m_cache.end()) {
+        return std::any_cast<decltype((this->getRoot()->*f)(std::forward<Args>(args)...))>(m_cache[hashKey]);
+    }
+
+    throw std::runtime_error("Trying to get unavailable value from cache");
+}
+
+template <typename Function, typename... Args>
+bool Templater::dynamic::index::CacheIndex::isCached(Function f, Args&&... args) {
+    std::size_t hashKey = generateHash(f, args...);
+
+    return m_cache.find(hashKey) != m_cache.end();
 }

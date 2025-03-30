@@ -1392,3 +1392,39 @@ TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
     auto articleResult = index.getByTagName("article");
     REQUIRE(articleResult.size() == 1);
 }
+
+TEST_CASE("Cache index works", "[CacheIndex]") {
+    using namespace Templater::dynamic::dtags;
+
+    GenericObject obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false)
+    };
+
+    std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head></head>\n</html>";
+
+    index::CacheIndex index = index::createIndex<index::CacheIndex>(&obj);
+
+    std::string serialised = index.cache(&GenericObject::serialise, "\t", true);
+
+    CHECK(expected == serialised);
+
+    CHECK(expected == index.getCached(&GenericObject::serialise, "\t", true));
+
+    std::string serialised2 = index.cache(&GenericObject::serialise, "\t\t", true);
+    
+    CHECK(expected == index.getCached(&GenericObject::serialise, "\t", true));
+    CHECK(expected != index.getCached(&GenericObject::serialise, "\t\t", true));
+
+    auto head = obj.getChildrenByTagName("head");
+
+    REQUIRE(head.size() == 1);
+    obj.removeChild(head[0]);
+
+    CHECK(!(index.isCached(&GenericObject::serialise, "\t", true)));
+    CHECK(!(index.isCached(&GenericObject::serialise, "\t\t", true)));
+    
+    CHECK_THROWS(index.getCached(&GenericObject::serialise, "\t", true));
+}

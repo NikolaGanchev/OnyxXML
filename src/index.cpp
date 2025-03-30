@@ -176,4 +176,24 @@ namespace Templater::dynamic::index {
 
         return m_index[tagName];
     }
+
+    
+    CacheIndex::CacheIndex(Object* root)
+        : Index(root), m_cache{} {}; 
+
+    bool CacheIndex::putIfNeeded(Object* object) {
+        m_cache.clear();
+        return true;
+    }
+
+    bool CacheIndex::removeIfNeeded(Object* object) {
+        m_cache.clear();
+        return true;
+    }
+
+    bool CacheIndex::update(Object* object) {
+        m_cache.clear();
+        return true;
+    }
+
 }
