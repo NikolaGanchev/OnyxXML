@@ -1061,6 +1061,34 @@ TEST_CASE("Children keep their own indices when removed", "[Index]") {
     REQUIRE(childIndex.getByValue("child").size() == 1);
 }
 
+TEST_CASE("Index is created with createIndexPointer ", "[Index]" ) {
+    using namespace Templater::dynamic::dtags;
+
+    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericObject("head", false),
+        GenericObject("body", false, 
+            GenericObject("div", false, Attribute("id", "0"), 
+                GenericObject("div", false, Attribute("id", "1"),
+                    GenericObject("div", false, Attribute("id", "2"))),
+            GenericObject("div", false, Attribute("id", "3")),
+            GenericObject("div", false, Attribute("id", "4")))
+    ));
+
+    REQUIRE(obj->getChildrenCount() > 0);
+
+    index::AttributeNameIndex* index = index::createIndexPointer<index::AttributeNameIndex>(obj.get(), "id");
+
+    auto result = index->getByValue("3");
+
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("id") == "3");
+    
+    delete index;
+}
+
 TEST_CASE("Index is created with createIndexUniquePointer ", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 

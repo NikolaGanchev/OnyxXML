@@ -6,18 +6,23 @@
 
 namespace Templater::dynamic::index {
 
-    #define BEFRIEND_INDEX_CREATOR_FUNCTION template <typename T, typename... Args>\
-                                            friend T createIndex(Args... args) requires (isIndex<T>);\
+    #define BEFRIEND_INDEX_CREATOR_FUNCTIONS template <typename T, typename... Args>\
+                                            friend T Templater::dynamic::index::createIndex(Args... args) requires (isIndex<T>);\
                                             template <typename T, typename... Args>\
-                                            friend std::unique_ptr<T> createIndexUniquePointer(Args... args) requires (isIndex<T>);\
+                                            friend T* Templater::dynamic::index::createIndexPointer(Args... args) requires (isIndex<T>);\
                                             template <typename T, typename... Args>\
-                                            friend std::shared_ptr<T> createIndexSharedPointer(Args... args) requires (isIndex<T>);
+                                            friend std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args... args) requires (isIndex<T>);\
+                                            template <typename T, typename... Args>\
+                                            friend std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args... args) requires (isIndex<T>);
 
     template <typename T>
     concept isIndex = std::derived_from<T, Index>;
     
     template <typename T, typename... Args>
     T createIndex(Args... args) requires (isIndex<T>); 
+
+    template <typename T, typename... Args>
+    T* createIndexPointer(Args... args) requires (isIndex<T>);
 
     template <typename T, typename... Args>
     std::unique_ptr<T> createIndexUniquePointer(Args... args) requires (isIndex<T>);
@@ -38,7 +43,7 @@ namespace Templater::dynamic::index {
         public:
             const std::vector<Object*> getByValue(const std::string& value);
         
-        BEFRIEND_INDEX_CREATOR_FUNCTION;
+        BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };
 
     class TagNameIndex: public Index {
@@ -54,7 +59,7 @@ namespace Templater::dynamic::index {
         public:
             const std::vector<Object*> get();
         
-        BEFRIEND_INDEX_CREATOR_FUNCTION;
+        BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };
 }
 
@@ -63,6 +68,14 @@ template <typename T, typename... Args>
 T Templater::dynamic::index::createIndex(Args... args) requires (isIndex<T>) {
     T index(std::forward<Args>(args)...);
     index.init();
+
+    return index;
+}
+
+template <typename T, typename... Args>
+T* Templater::dynamic::index::createIndexPointer(Args... args) requires (isIndex<T>) {
+    T* index = new T(std::forward<Args>(args)...);
+    index->init();
 
     return index;
 }
