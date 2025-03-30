@@ -146,8 +146,11 @@ namespace Templater::dynamic {
                 Object* m_root;
                 bool m_valid;
             protected:
+                // Returns true if the object was inserted; else returns false
                 virtual bool putIfNeeded(Object* object);
+                // Returns true if the object was removed; else returns false
                 virtual bool removeIfNeeded(Object* object) = 0;
+                // Returns true if the object was updated; else returns false
                 virtual bool update(Object* object) = 0;
                 explicit Index(Object* root);
                 void invalidate();

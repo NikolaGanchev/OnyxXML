@@ -8,11 +8,15 @@ namespace Templater::dynamic::index {
     AttributeNameIndex::AttributeNameIndex(Object* root, std::string&& attributeName)
         : m_attributeName(std::move(attributeName)), Index(root), m_index{} {}; 
 
-    // Returns true if the object was inserted; else returns false
     bool AttributeNameIndex::putIfNeeded(Object* object) {
         if (object->hasAttributeValue(this->m_attributeName)) {
             const std::string& value = object->getAttributeValue(this->m_attributeName);
             if (this->m_index.contains(value)) {
+                // Protect from double insertion
+                for (auto obj: m_index[value]) {
+                    if (obj == object) return false;
+                }
+
                 m_index[value].push_back(object);
             } else {
                 m_index[value] = { object };
@@ -22,7 +26,6 @@ namespace Templater::dynamic::index {
         return false;
     }
 
-    // Returns true if the object was removed; else returns false
     bool AttributeNameIndex::removeIfNeeded(Object* object) {
         for (auto& [value, objects] : m_index) {
             for (auto it = objects.begin(); it != objects.end();) {
@@ -36,7 +39,6 @@ namespace Templater::dynamic::index {
         return false;
     }
 
-    // Returns true if the object was updated; else returns false
     bool AttributeNameIndex::update(Object* object) {
         if (object->hasAttributeValue(this->m_attributeName)) {
             for (auto& obj: getByValue(object->getAttributeValue(this->m_attributeName))) {
@@ -52,7 +54,7 @@ namespace Templater::dynamic::index {
     }
 
 
-    std::vector<Object*> AttributeNameIndex::getByValue(const std::string& value) {
+    const std::vector<Object*> AttributeNameIndex::getByValue(const std::string& value) {
         if (!m_index.contains(value) || !this->isValid()) {
             return {};
         }
@@ -66,5 +68,54 @@ namespace Templater::dynamic::index {
         }
 
         return result;
+    }
+
+    TagNameIndex::TagNameIndex(Object* root, std::string& tagName)
+        : m_tagName(tagName), Index(root), m_index{} {}; 
+
+    TagNameIndex::TagNameIndex(Object* root, std::string&& tagName)
+        : m_tagName(std::move(tagName)), Index(root), m_index{} {}; 
+
+    bool TagNameIndex::putIfNeeded(Object* object) {
+        if (object->getTagName() == this->m_tagName) {
+            for (auto obj: m_index) {
+                if (obj == object) return false;
+            }
+            m_index.push_back(object);
+            return true;
+        }
+        return false;
+    }
+
+    bool TagNameIndex::removeIfNeeded(Object* object) {
+        for (auto obj = m_index.begin(); obj != m_index.end();) {
+            if (*obj == object) {
+                m_index.erase(obj);
+                return true;
+            }
+            obj++;
+        }
+        
+        return false;
+    }
+
+    // For all intents and purposes, tag names should be constant from object creation
+    // If any subclass however allows tag name setting, then the set operation needs to call update()
+    bool TagNameIndex::update(Object* object) {
+        for (auto obj = m_index.begin(); obj != m_index.end();) {
+            if (*obj == object) {
+                if ((*obj)->getTagName() == object->getTagName()) return false;
+                else {
+                    m_index.erase(obj);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    const std::vector<Object*> TagNameIndex::get() {
+        return m_index;
     }
 }
