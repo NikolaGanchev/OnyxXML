@@ -7,13 +7,23 @@
 namespace Templater::dynamic::index {
 
     #define BEFRIEND_INDEX_CREATOR_FUNCTION template <typename T, typename... Args>\
-                                            friend T createIndex(Args... args) requires (isIndex<T>);
+                                            friend T createIndex(Args... args) requires (isIndex<T>);\
+                                            template <typename T, typename... Args>\
+                                            friend std::unique_ptr<T> createIndexUniquePointer(Args... args) requires (isIndex<T>);\
+                                            template <typename T, typename... Args>\
+                                            friend std::shared_ptr<T> createIndexSharedPointer(Args... args) requires (isIndex<T>);
 
     template <typename T>
     concept isIndex = std::derived_from<T, Index>;
     
     template <typename T, typename... Args>
-    T createIndex(Args... args) requires (isIndex<T>);
+    T createIndex(Args... args) requires (isIndex<T>); 
+
+    template <typename T, typename... Args>
+    std::unique_ptr<T> createIndexUniquePointer(Args... args) requires (isIndex<T>);
+
+    template <typename T, typename... Args>
+    std::shared_ptr<T> createIndexSharedPointer(Args... args) requires (isIndex<T>);
 
     class AttributeNameIndex: public Index {
         private:
@@ -53,6 +63,22 @@ template <typename T, typename... Args>
 T Templater::dynamic::index::createIndex(Args... args) requires (isIndex<T>) {
     T index(std::forward<Args>(args)...);
     index.init();
+
+    return index;
+}
+
+template <typename T, typename... Args>
+std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args... args) requires (isIndex<T>) {
+    std::unique_ptr<T> index(new T(std::forward<Args>(args)...));
+    index->init();
+
+    return std::move(index);
+}
+
+template <typename T, typename... Args>
+std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args... args) requires (isIndex<T>) {
+    std::shared_ptr<T> index(new T(std::forward<Args>(args)...));
+    index->init();
 
     return index;
 }
