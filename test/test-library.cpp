@@ -881,8 +881,7 @@ TEST_CASE("Index is added correctly", "[Object]" ) {
 
     REQUIRE(obj->getChildrenCount() > 0);
 
-    index::AttributeNameIndex index(obj.get(), "id");
-    index.init();
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "id");
 
     auto result = index.getByValue("3");
 
@@ -906,8 +905,7 @@ TEST_CASE("Index handles multiple matches correctly", "[Object]") {
 
     REQUIRE(obj->getChildrenCount() > 0);
     
-    index::AttributeNameIndex index(obj.get(), "class");
-    index.init();
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "class");
 
     auto result = index.getByValue("item");
 
@@ -929,8 +927,7 @@ TEST_CASE("Index returns empty when no match found", "[Object]") {
 
     REQUIRE(obj->getChildrenCount() > 0);
 
-    index::AttributeNameIndex index(obj.get(), "class");
-    index.init();
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "class");
 
     auto result = index.getByValue("nonexistent");
     REQUIRE(result.empty());
@@ -950,8 +947,7 @@ TEST_CASE("Index works with nested attributes", "[Object]") {
 
     REQUIRE(obj->getChildrenCount() > 0);
 
-    index::AttributeNameIndex index(obj.get(), "data-type");
-    index.init();
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "data-type");
 
     auto result = index.getByValue("nested");
     REQUIRE(result.size() == 1);
@@ -964,8 +960,7 @@ TEST_CASE("Index updates correctly when attributes change", "[Object]") {
     Object::setSortAttributes(true);
 
     std::unique_ptr<Object> obj = std::make_unique<GenericObject>("div", false, Attribute("id", "test"));
-    index::AttributeNameIndex index(obj.get(), "id");
-    index.init();
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "id");
 
     auto result = index.getByValue("test");
     REQUIRE(result.size() == 1);
@@ -983,8 +978,7 @@ TEST_CASE("Index updates correctly when children are added", "[Object]") {
     using namespace Templater::dynamic::dtags;
 
     std::unique_ptr<Object> obj = std::make_unique<GenericObject>("div", false);
-    index::AttributeNameIndex index(obj.get(), "class");
-    index.init();
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "class");
 
     auto result = index.getByValue("new-class");
     REQUIRE(result.empty());
@@ -1001,9 +995,7 @@ TEST_CASE("Index updates correctly when children are added using move", "[Object
     using namespace Templater::dynamic::dtags;
 
     std::unique_ptr<Object> obj = std::make_unique<GenericObject>("div", false);
-    index::AttributeNameIndex index(obj.get(), "class");
-    index.init();
-
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "class");
     auto result = index.getByValue("new-class");
     REQUIRE(result.empty());
 
@@ -1023,8 +1015,7 @@ TEST_CASE("Index updates correctly when attributes are modified using operator [
     std::unique_ptr<Object> obj = std::make_unique<GenericObject>("div", false);
     (*obj)["id"] = "original";
 
-    index::AttributeNameIndex index(obj.get(), "id");
-    index.init();
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "id");
 
     auto result = index.getByValue("original");
     REQUIRE(result.size() == 1);
@@ -1046,8 +1037,7 @@ TEST_CASE("Children are properly removed from parent indices", "[Object]") {
     std::unique_ptr<Object> child = std::make_unique<GenericObject>("span", false, Attribute("class", "removable"));
     Object* childRef = parent->addChild(std::move(child));
 
-    index::AttributeNameIndex index(parent.get(), "class");
-    index.init();
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(parent.get(), "class");
     REQUIRE(index.getByValue("removable").size() == 1);
 
     parent->removeChild(childRef);
@@ -1058,13 +1048,13 @@ TEST_CASE("Children keep their own indices when removed", "[Object]") {
     using namespace Templater::dynamic::dtags;
 
     std::unique_ptr<Object> child = std::make_unique<GenericObject>("span", false, Attribute("id", "child"));
-    index::AttributeNameIndex childIndex(child.get(), "id");
-    childIndex.init();
+    index::AttributeNameIndex childIndex = index::createIndex<index::AttributeNameIndex>(child.get(), "id");
+
     REQUIRE(childIndex.getByValue("child").size() == 1);
 
     std::unique_ptr<Object> parent = std::make_unique<GenericObject>("div", false);
-    index::AttributeNameIndex parentIndex(parent.get(), "id");
-    parentIndex.init();
+    index::AttributeNameIndex parentIndex = index::createIndex<index::AttributeNameIndex>(parent.get(), "id");
+
     Object* childRef = parent->addChild(std::move(child));
     std::unique_ptr<Object> child2 = parent->removeChild(childRef);
 

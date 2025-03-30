@@ -149,12 +149,12 @@ namespace Templater::dynamic {
                 virtual bool putIfNeeded(Object* object);
                 virtual bool removeIfNeeded(Object* object) = 0;
                 virtual bool update(Object* object) = 0;
-            public:
                 explicit Index(Object* root);
-                const Object* getRoot() const;
-                bool isValid() const;
                 void invalidate();
                 void init();
+            public:
+                const Object* getRoot() const;
+                bool isValid() const;
                 virtual ~Index();
         };
     }
