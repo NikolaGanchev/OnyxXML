@@ -1283,3 +1283,115 @@ TEST_CASE("Removing a child updates the index", "[TagNameIndex]") {
     
     REQUIRE(index.get().size() == 2);
 }
+
+TEST_CASE("Indexing nested elements with multiple occurrences of the same tag", "[TagIndex]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+        "html", false,
+        GenericObject("body", false, 
+            GenericObject("div", false, 
+                GenericObject("div", false, 
+                    GenericObject("div", false, 
+                        GenericObject("div", false))))));
+
+    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    auto result = index.getByTagName("div");
+    REQUIRE(result.size() == 4);
+    result = index.getByTagName("body");
+    REQUIRE(result.size() == 1);
+}
+
+TEST_CASE("Indexing multiple different tag names in a tree", "[TagIndex]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+        "html", false,
+        GenericObject("body", false, 
+            GenericObject("section", false, 
+                GenericObject("article", false),
+                GenericObject("div", false),
+                GenericObject("article", false)),
+            GenericObject("section", false)));
+
+    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    
+    auto sectionResult = index.getByTagName("section");
+    REQUIRE(sectionResult.size() == 2);
+    
+    auto articleResult = index.getByTagName("article");
+    REQUIRE(articleResult.size() == 2);
+    
+    auto divResult = index.getByTagName("div");
+    REQUIRE(divResult.size() == 1);
+}
+
+TEST_CASE("Indexing when no elements match", "[TagIndex]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+        "html", false,
+        GenericObject("body", false, 
+            GenericObject("header", false),
+            GenericObject("footer", false)));
+
+    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    auto result = index.getByTagName("nav");
+    REQUIRE(result.empty());
+}
+
+TEST_CASE("Removing a child element updates the index", "[TagIndex]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+        "html", false,
+        GenericObject("body", false, 
+            GenericObject("div", false, Attribute("id", "1")),
+            GenericObject("div", false, Attribute("id", "2")),
+            GenericObject("div", false, Attribute("id", "3"))));
+
+    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    REQUIRE(index.getByTagName("div").size() == 3);
+    
+    std::vector<Object*> toRemove = obj->getChildrenById("2");
+    REQUIRE(toRemove.size() == 1);
+    obj->removeChild(toRemove[0]);
+    
+    REQUIRE(index.getByTagName("div").size() == 2);
+}
+
+TEST_CASE("Indexing when no elements are present", "[TagIndex]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::unique_ptr<Object> obj = std::make_unique<EmptyTag>();
+
+    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    auto result = index.getByTagName("div");
+    REQUIRE(result.empty());
+}
+
+TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
+    using namespace Templater::dynamic::dtags;
+
+    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+        "html", false,
+        GenericObject("body", false, 
+            GenericObject("header", false),
+            GenericObject("section", false,
+                GenericObject("article", false),
+                GenericObject("footer", false))));
+
+    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+
+    auto headerResult = index.getByTagName("header");
+    REQUIRE(headerResult.size() == 1);
+
+    auto footerResult = index.getByTagName("footer");
+    REQUIRE(footerResult.size() == 1);
+
+    auto sectionResult = index.getByTagName("section");
+    REQUIRE(sectionResult.size() == 1);
+
+    auto articleResult = index.getByTagName("article");
+    REQUIRE(articleResult.size() == 1);
+}

@@ -30,6 +30,7 @@ namespace Templater::dynamic::index {
     template <typename T, typename... Args>
     std::shared_ptr<T> createIndexSharedPointer(Args... args) requires (isIndex<T>);
 
+    // Indexes a single attribute name
     class AttributeNameIndex: public Index {
         private:
             const std::string m_attributeName;
@@ -46,6 +47,7 @@ namespace Templater::dynamic::index {
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };
 
+    // Indexes a single tag name
     class TagNameIndex: public Index {
         private:
             const std::string m_tagName;
@@ -58,6 +60,21 @@ namespace Templater::dynamic::index {
             explicit TagNameIndex(Object* root, std::string&& tagName);
         public:
             const std::vector<Object*> get();
+        
+        BEFRIEND_INDEX_CREATOR_FUNCTIONS;
+    };
+
+    // Indexes all tags in a tree
+    class TagIndex: public Index {
+        private:
+            std::unordered_map<std::string, std::vector<Object*>> m_index;
+        protected:
+            bool putIfNeeded(Object* object) override;
+            bool removeIfNeeded(Object* object) override;
+            bool update(Object* object) override;
+            explicit TagIndex(Object* root);
+        public:
+            const std::vector<Object*> getByTagName(const std::string& tagName);
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };

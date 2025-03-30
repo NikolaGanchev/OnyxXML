@@ -59,15 +59,7 @@ namespace Templater::dynamic::index {
             return {};
         }
 
-        std::vector<Object*> result{};
-
-        auto& objects = m_index[value];
-        for (auto it = objects.begin(); it != objects.end();) {
-            result.push_back(*it);
-            it++;
-        }
-
-        return result;
+        return m_index[value];
     }
 
     TagNameIndex::TagNameIndex(Object* root, std::string& tagName)
@@ -117,5 +109,71 @@ namespace Templater::dynamic::index {
 
     const std::vector<Object*> TagNameIndex::get() {
         return m_index;
+    }
+
+    TagIndex::TagIndex(Object* root)
+        : Index(root), m_index{} {}; 
+
+    bool TagIndex::putIfNeeded(Object* object) {
+        const std::string& name = object->getTagName();
+
+        if (this->m_index.contains(name)) {
+            for (auto obj: m_index[name]) {
+                if (obj == object) return false;
+            }
+
+            m_index[name].push_back(object);
+        } else {
+            m_index[name] = { object };
+        }
+
+        return true;
+    }
+
+    bool TagIndex::removeIfNeeded(Object* object) {
+        const std::string& name = object->getTagName();
+
+        if (this->m_index.contains(name)) {
+            auto& objects = m_index[name];
+
+            for (auto obj = objects.begin(); obj != objects.end();) {
+                if (*obj == object) {
+                    objects.erase(obj);
+                    return true;
+                }
+                obj++;
+            }
+        }
+
+        return false;
+    }
+
+    // For all intents and purposes, tag names should be constant from object creation
+    // If any subclass however allows tag name setting, then the set operation needs to call update()
+    bool TagIndex::update(Object* object) {
+        const std::string& name = object->getTagName();
+
+        if (this->m_index.contains(name)) {
+            auto& objects = m_index[name];
+
+            for (auto obj = objects.begin(); obj != objects.end();) {
+                if (*obj == object) {
+                    return false;
+                }
+            }
+        }
+        
+        removeIfNeeded(object);
+        putIfNeeded(object);
+        return true;
+    }
+
+
+    const std::vector<Object*> TagIndex::getByTagName(const std::string& tagName) {
+        if (!m_index.contains(tagName) || !this->isValid()) {
+            return {};
+        }
+
+        return m_index[tagName];
     }
 }
