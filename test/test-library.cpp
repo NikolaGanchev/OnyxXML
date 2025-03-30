@@ -866,7 +866,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
 TEST_CASE("Index is added correctly", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -877,11 +877,11 @@ TEST_CASE("Index is added correctly", "[Index]" ) {
                     GenericObject("div", false, Attribute("id", "2"))),
             GenericObject("div", false, Attribute("id", "3")),
             GenericObject("div", false, Attribute("id", "4")))
-    ));
+    )};
 
-    REQUIRE(obj->getChildrenCount() > 0);
+    REQUIRE(obj.getChildrenCount() > 0);
 
-    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "id");
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
 
     auto result = index.getByValue("3");
 
@@ -892,7 +892,7 @@ TEST_CASE("Index is added correctly", "[Index]" ) {
 TEST_CASE("Index handles multiple matches correctly", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    std::shared_ptr<Object> obj = std::make_shared<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("div", false, Attribute("class", "container"),
@@ -901,11 +901,11 @@ TEST_CASE("Index handles multiple matches correctly", "[Index]") {
                 GenericObject("div", false, Attribute("class", "item"))
             )
         )
-    );
+    };
 
-    REQUIRE(obj->getChildrenCount() > 0);
+    REQUIRE(obj.getChildrenCount() > 0);
     
-    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "class");
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
 
     auto result = index.getByValue("item");
 
@@ -918,16 +918,16 @@ TEST_CASE("Index handles multiple matches correctly", "[Index]") {
 TEST_CASE("Index returns empty when no match found", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("div", false, Attribute("class", "container"))
         )
-    );
+    };
 
-    REQUIRE(obj->getChildrenCount() > 0);
+    REQUIRE(obj.getChildrenCount() > 0);
 
-    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "class");
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
 
     auto result = index.getByValue("nonexistent");
     REQUIRE(result.empty());
@@ -936,18 +936,18 @@ TEST_CASE("Index returns empty when no match found", "[Index]") {
 TEST_CASE("Index works with nested attributes", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("section", false, Attribute("data-type", "main"),
                 GenericObject("div", false, Attribute("data-type", "nested"))
             )
         )
-    );
+    };
 
-    REQUIRE(obj->getChildrenCount() > 0);
+    REQUIRE(obj.getChildrenCount() > 0);
 
-    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "data-type");
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "data-type");
 
     auto result = index.getByValue("nested");
     REQUIRE(result.size() == 1);
@@ -959,13 +959,13 @@ TEST_CASE("Index updates correctly when attributes change", "[Index]") {
     Object::setIndentationSequence("\t");
     Object::setSortAttributes(true);
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>("div", false, Attribute("id", "test"));
-    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "id");
+    GenericObject obj{"div", false, Attribute("id", "test")};
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
 
     auto result = index.getByValue("test");
     REQUIRE(result.size() == 1);
 
-    obj->setAttributeValue("id", "updated");
+    obj.setAttributeValue("id", "updated");
     result = index.getByValue("test");
     REQUIRE(result.empty());
 
@@ -977,14 +977,14 @@ TEST_CASE("Index updates correctly when attributes change", "[Index]") {
 TEST_CASE("Index updates correctly when children are added", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>("div", false);
-    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "class");
+    GenericObject obj{"div", false};
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
 
     auto result = index.getByValue("new-class");
     REQUIRE(result.empty());
 
     std::unique_ptr<Object> child = std::make_unique<GenericObject>("span", false, Attribute("class", "new-class"));
-    obj->addChild(std::move(child));
+    obj.addChild(std::move(child));
 
     result = index.getByValue("new-class");
     REQUIRE(result.size() == 1);
@@ -994,12 +994,12 @@ TEST_CASE("Index updates correctly when children are added", "[Index]") {
 TEST_CASE("Index updates correctly when children are added using move", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>("div", false);
-    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "class");
+    GenericObject obj{"div", false};
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
     auto result = index.getByValue("new-class");
     REQUIRE(result.empty());
 
-    obj->addChild(GenericObject("span", false, Attribute("class", "new-class")));
+    obj.addChild(GenericObject("span", false, Attribute("class", "new-class")));
 
     result = index.getByValue("new-class");
     REQUIRE(result.size() == 1);
@@ -1009,18 +1009,15 @@ TEST_CASE("Index updates correctly when children are added using move", "[Index]
 TEST_CASE("Index updates correctly when attributes are modified using operator []", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    GenericObject obj{"div", false};
+    obj["id"] = "original";
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>("div", false);
-    (*obj)["id"] = "original";
-
-    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "id");
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
 
     auto result = index.getByValue("original");
     REQUIRE(result.size() == 1);
 
-    (*obj)["id"] = "changed";
+    obj["id"] = "changed";
     result = index.getByValue("original");
     REQUIRE(result.empty());
 
@@ -1032,14 +1029,14 @@ TEST_CASE("Index updates correctly when attributes are modified using operator [
 TEST_CASE("Children are properly removed from parent indices", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> parent = std::make_unique<GenericObject>("div", false);
+    GenericObject parent{"div", false};
     std::unique_ptr<Object> child = std::make_unique<GenericObject>("span", false, Attribute("class", "removable"));
-    Object* childRef = parent->addChild(std::move(child));
+    Object* childRef = parent.addChild(std::move(child));
 
-    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(parent.get(), "class");
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&parent, "class");
     REQUIRE(index.getByValue("removable").size() == 1);
 
-    parent->removeChild(childRef);
+    parent.removeChild(childRef);
     REQUIRE(index.getByValue("removable").empty());
 }
 
@@ -1051,11 +1048,11 @@ TEST_CASE("Children keep their own indices when removed", "[Index]") {
 
     REQUIRE(childIndex.getByValue("child").size() == 1);
 
-    std::unique_ptr<Object> parent = std::make_unique<GenericObject>("div", false);
-    index::AttributeNameIndex parentIndex = index::createIndex<index::AttributeNameIndex>(parent.get(), "id");
+    GenericObject parent{"div", false};
+    index::AttributeNameIndex parentIndex = index::createIndex<index::AttributeNameIndex>(&parent, "id");
 
-    Object* childRef = parent->addChild(std::move(child));
-    std::unique_ptr<Object> child2 = parent->removeChild(childRef);
+    Object* childRef = parent.addChild(std::move(child));
+    std::unique_ptr<Object> child2 = parent.removeChild(childRef);
 
     REQUIRE(child2);
     REQUIRE(childIndex.getByValue("child").size() == 1);
@@ -1064,7 +1061,7 @@ TEST_CASE("Children keep their own indices when removed", "[Index]") {
 TEST_CASE("Index is created with createIndexPointer ", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -1075,11 +1072,11 @@ TEST_CASE("Index is created with createIndexPointer ", "[Index]" ) {
                     GenericObject("div", false, Attribute("id", "2"))),
             GenericObject("div", false, Attribute("id", "3")),
             GenericObject("div", false, Attribute("id", "4")))
-    ));
+    )};
 
-    REQUIRE(obj->getChildrenCount() > 0);
+    REQUIRE(obj.getChildrenCount() > 0);
 
-    index::AttributeNameIndex* index = index::createIndexPointer<index::AttributeNameIndex>(obj.get(), "id");
+    index::AttributeNameIndex* index = index::createIndexPointer<index::AttributeNameIndex>(&obj, "id");
 
     auto result = index->getByValue("3");
 
@@ -1092,7 +1089,7 @@ TEST_CASE("Index is created with createIndexPointer ", "[Index]" ) {
 TEST_CASE("Index is created with createIndexUniquePointer ", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -1103,11 +1100,11 @@ TEST_CASE("Index is created with createIndexUniquePointer ", "[Index]" ) {
                     GenericObject("div", false, Attribute("id", "2"))),
             GenericObject("div", false, Attribute("id", "3")),
             GenericObject("div", false, Attribute("id", "4")))
-    ));
+    )};
 
-    REQUIRE(obj->getChildrenCount() > 0);
+    REQUIRE(obj.getChildrenCount() > 0);
 
-    std::unique_ptr<index::AttributeNameIndex> index = index::createIndexUniquePointer<index::AttributeNameIndex>(obj.get(), "id");
+    std::unique_ptr<index::AttributeNameIndex> index = index::createIndexUniquePointer<index::AttributeNameIndex>(&obj, "id");
 
     auto result = index->getByValue("3");
 
@@ -1118,7 +1115,7 @@ TEST_CASE("Index is created with createIndexUniquePointer ", "[Index]" ) {
 TEST_CASE("Index is created with createIndexSharedPointer ", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -1129,11 +1126,11 @@ TEST_CASE("Index is created with createIndexSharedPointer ", "[Index]" ) {
                     GenericObject("div", false, Attribute("id", "2"))),
             GenericObject("div", false, Attribute("id", "3")),
             GenericObject("div", false, Attribute("id", "4")))
-    ));
+    )};
 
-    REQUIRE(obj->getChildrenCount() > 0);
+    REQUIRE(obj.getChildrenCount() > 0);
 
-    std::shared_ptr<index::AttributeNameIndex> index = index::createIndexSharedPointer<index::AttributeNameIndex>(obj.get(), "id");
+    std::shared_ptr<index::AttributeNameIndex> index = index::createIndexSharedPointer<index::AttributeNameIndex>(&obj, "id");
 
     auto result = index->getByValue("3");
 
@@ -1147,7 +1144,7 @@ TEST_CASE("Index is invalidated correctly", "[Index]" ) {
     std::shared_ptr<index::AttributeNameIndex> ptr;
 
     {
-        std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+        GenericObject obj{
             "html", false,
             Attribute("lang", "en"),
             Attribute("theme", "dark"),
@@ -1158,9 +1155,9 @@ TEST_CASE("Index is invalidated correctly", "[Index]" ) {
                         GenericObject("div", false, Attribute("id", "2"))),
                 GenericObject("div", false, Attribute("id", "3")),
                 GenericObject("div", false, Attribute("id", "4")))
-        ));
+        )};
 
-        ptr = index::createIndexSharedPointer<index::AttributeNameIndex>(obj.get(), "id");;
+        ptr = index::createIndexSharedPointer<index::AttributeNameIndex>(&obj, "id");;
     }
 
     auto result = ptr->getByValue("3");
@@ -1172,7 +1169,7 @@ TEST_CASE("Index is invalidated correctly", "[Index]" ) {
 TEST_CASE("Object operations work after an index is removed", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
@@ -1183,34 +1180,34 @@ TEST_CASE("Object operations work after an index is removed", "[Index]" ) {
                     GenericObject("div", false, Attribute("id", "2"))),
             GenericObject("div", false, Attribute("id", "3")),
             GenericObject("div", false, Attribute("id", "4")))
-    ));
+    )};
 
     {
-        index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(obj.get(), "id");
+        index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
         auto result = index.getByValue("3");
     
         REQUIRE(result.size() == 1);
         CHECK(result[0]->getAttributeValue("id") == "3");
     }
 
-    obj->setAttributeValue("theme", "light");
+    obj.setAttributeValue("theme", "light");
 
-    REQUIRE(obj->operator[]("theme") == "light");
+    REQUIRE(obj.operator[]("theme") == "light");
 }
 
 TEST_CASE("Indexing multiple occurrences of the same tag", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("div", false, 
                 GenericObject("div", false),
                 GenericObject("span", false),
                 GenericObject("div", false)),
-            GenericObject("div", false)));
+            GenericObject("div", false))};
     
-    index::TagNameIndex index = index::createIndex<index::TagNameIndex>(obj.get(), "div");
+    index::TagNameIndex index = index::createIndex<index::TagNameIndex>(&obj, "div");
     auto result = index.get();
     REQUIRE(result.size() == 4);
 }
@@ -1218,15 +1215,15 @@ TEST_CASE("Indexing multiple occurrences of the same tag", "[TagNameIndex]") {
 TEST_CASE("Indexing nested elements with the same tag name", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("div", false, 
                 GenericObject("div", false, 
                     GenericObject("div", false, 
-                        GenericObject("div", false))))));
+                        GenericObject("div", false)))))};
     
-    index::TagNameIndex index = index::createIndex<index::TagNameIndex>(obj.get(), "div");
+    index::TagNameIndex index = index::createIndex<index::TagNameIndex>(&obj, "div");
     auto result = index.get();
     REQUIRE(result.size() == 4);
 }
@@ -1234,32 +1231,32 @@ TEST_CASE("Indexing nested elements with the same tag name", "[TagNameIndex]") {
 TEST_CASE("Indexing multiple different tag names", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("section", false, 
                 GenericObject("article", false),
                 GenericObject("div", false),
                 GenericObject("article", false)),
-            GenericObject("section", false)));
+            GenericObject("section", false))};
     
-    index::TagNameIndex sectionIndex = index::createIndex<index::TagNameIndex>(obj.get(), "section");
+    index::TagNameIndex sectionIndex = index::createIndex<index::TagNameIndex>(&obj, "section");
     REQUIRE(sectionIndex.get().size() == 2);
     
-    index::TagNameIndex articleIndex = index::createIndex<index::TagNameIndex>(obj.get(), "article");
+    index::TagNameIndex articleIndex = index::createIndex<index::TagNameIndex>(&obj, "article");
     REQUIRE(articleIndex.get().size() == 2);
 }
 
 TEST_CASE("Indexing when no elements match", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("header", false),
-            GenericObject("footer", false)));
+            GenericObject("footer", false))};
     
-    index::TagNameIndex index = index::createIndex<index::TagNameIndex>(obj.get(), "nav");
+    index::TagNameIndex index = index::createIndex<index::TagNameIndex>(&obj, "nav");
     auto result = index.get();
     REQUIRE(result.empty());
 }
@@ -1267,19 +1264,19 @@ TEST_CASE("Indexing when no elements match", "[TagNameIndex]") {
 TEST_CASE("Removing a child updates the index", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("div", false, Attribute("id", "1")),
             GenericObject("div", false, Attribute("id", "2")),
-            GenericObject("div", false, Attribute("id", "3"))));
+            GenericObject("div", false, Attribute("id", "3")))};
     
-    index::TagNameIndex index = index::createIndex<index::TagNameIndex>(obj.get(), "div");
+    index::TagNameIndex index = index::createIndex<index::TagNameIndex>(&obj, "div");
     REQUIRE(index.get().size() == 3);
     
-    std::vector<Object*> toRemove = obj->getChildrenById("2");
+    std::vector<Object*> toRemove = obj.getChildrenById("2");
     REQUIRE(toRemove.size() == 1);
-    obj->removeChild(toRemove[0]);
+    obj.removeChild(toRemove[0]);
     
     REQUIRE(index.get().size() == 2);
 }
@@ -1287,15 +1284,15 @@ TEST_CASE("Removing a child updates the index", "[TagNameIndex]") {
 TEST_CASE("Indexing nested elements with multiple occurrences of the same tag", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("div", false, 
                 GenericObject("div", false, 
                     GenericObject("div", false, 
-                        GenericObject("div", false))))));
+                        GenericObject("div", false)))))};
 
-    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     auto result = index.getByTagName("div");
     REQUIRE(result.size() == 4);
     result = index.getByTagName("body");
@@ -1305,16 +1302,16 @@ TEST_CASE("Indexing nested elements with multiple occurrences of the same tag", 
 TEST_CASE("Indexing multiple different tag names in a tree", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("section", false, 
                 GenericObject("article", false),
                 GenericObject("div", false),
                 GenericObject("article", false)),
-            GenericObject("section", false)));
+            GenericObject("section", false))};
 
-    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     
     auto sectionResult = index.getByTagName("section");
     REQUIRE(sectionResult.size() == 2);
@@ -1329,13 +1326,13 @@ TEST_CASE("Indexing multiple different tag names in a tree", "[TagIndex]") {
 TEST_CASE("Indexing when no elements match", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("header", false),
-            GenericObject("footer", false)));
+            GenericObject("footer", false))};
 
-    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     auto result = index.getByTagName("nav");
     REQUIRE(result.empty());
 }
@@ -1343,19 +1340,19 @@ TEST_CASE("Indexing when no elements match", "[TagIndex]") {
 TEST_CASE("Removing a child element updates the index", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("div", false, Attribute("id", "1")),
             GenericObject("div", false, Attribute("id", "2")),
-            GenericObject("div", false, Attribute("id", "3"))));
+            GenericObject("div", false, Attribute("id", "3")))};
 
-    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     REQUIRE(index.getByTagName("div").size() == 3);
     
-    std::vector<Object*> toRemove = obj->getChildrenById("2");
+    std::vector<Object*> toRemove = obj.getChildrenById("2");
     REQUIRE(toRemove.size() == 1);
-    obj->removeChild(toRemove[0]);
+    obj.removeChild(toRemove[0]);
     
     REQUIRE(index.getByTagName("div").size() == 2);
 }
@@ -1363,9 +1360,9 @@ TEST_CASE("Removing a child element updates the index", "[TagIndex]") {
 TEST_CASE("Indexing when no elements are present", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<EmptyTag>();
+    EmptyTag obj{};
 
-    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     auto result = index.getByTagName("div");
     REQUIRE(result.empty());
 }
@@ -1373,15 +1370,15 @@ TEST_CASE("Indexing when no elements are present", "[TagIndex]") {
 TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> obj = std::make_unique<GenericObject>(
+    GenericObject obj{
         "html", false,
         GenericObject("body", false, 
             GenericObject("header", false),
             GenericObject("section", false,
                 GenericObject("article", false),
-                GenericObject("footer", false))));
+                GenericObject("footer", false)))};
 
-    index::TagIndex index = index::createIndex<index::TagIndex>(obj.get());
+    index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
 
     auto headerResult = index.getByTagName("header");
     REQUIRE(headerResult.size() == 1);
