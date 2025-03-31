@@ -4,6 +4,7 @@ project ("Simple CMake Template" VERSION 1.3)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project documentation" ON)
 
 #
 # Tell MSVC to build using multiple processes.
@@ -118,4 +119,10 @@ add_subdirectory(src)
 # Unit testing
 if(BUILD_TESTING)
   add_subdirectory(test)
+endif()
+
+
+if(ENABLE_DOCUMENTATION)
+    message(STATUS "Documentation building is enabled")
+    add_subdirectory("docs")
 endif()
