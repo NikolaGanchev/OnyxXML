@@ -1,699 +1,699 @@
 #pragma once
-#include "object.h" 
+#include "node.h" 
 
 namespace Templater::dynamic::dtags {
     using namespace Templater::dynamic; 
-    class a: public Object {
+    class a: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class abbr: public Object {
+    class abbr: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class address: public Object {
+    class address: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class area: public VoidObject {
+    class area: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class article: public Object {
+    class article: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class aside: public Object {
+    class aside: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class audio: public Object {
+    class audio: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class b: public Object {
+    class b: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class base: public VoidObject {
+    class base: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class bdi: public Object {
+    class bdi: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class bdo: public Object {
+    class bdo: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class blockquote: public Object {
+    class blockquote: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class body: public Object {
+    class body: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class br: public VoidObject {
+    class br: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class button: public Object {
+    class button: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class canvas: public Object {
+    class canvas: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class caption: public Object {
+    class caption: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class cite: public Object {
+    class cite: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class code: public Object {
+    class code: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class col: public VoidObject {
+    class col: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class colgroup: public Object {
+    class colgroup: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class data: public Object {
+    class data: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class datalist: public Object {
+    class datalist: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class dd: public Object {
+    class dd: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class del: public Object {
+    class del: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class details: public Object {
+    class details: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class dfn: public Object {
+    class dfn: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class dialog: public Object {
+    class dialog: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class div: public Object {
+    class div: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class dl: public Object {
+    class dl: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class dt: public Object {
+    class dt: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class em: public Object {
+    class em: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class embed: public VoidObject {
+    class embed: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class fieldset: public Object {
+    class fieldset: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class figcaption: public Object {
+    class figcaption: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class figure: public Object {
+    class figure: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class footer: public Object {
+    class footer: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class form: public Object {
+    class form: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class h1: public Object {
+    class h1: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class h2: public Object {
+    class h2: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class h3: public Object {
+    class h3: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class h4: public Object {
+    class h4: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class h5: public Object {
+    class h5: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class h6: public Object {
+    class h6: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class head: public Object {
+    class head: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class header: public Object {
+    class header: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class hgroup: public Object {
+    class hgroup: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class hr: public VoidObject {
+    class hr: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class html: public Object {
+    class html: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class i: public Object {
+    class i: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class iframe: public Object {
+    class iframe: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class img: public VoidObject {
+    class img: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class input: public VoidObject {
+    class input: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class ins: public Object {
+    class ins: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class kbd: public Object {
+    class kbd: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class label: public Object {
+    class label: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class legend: public Object {
+    class legend: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class li: public Object {
+    class li: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class link: public VoidObject {
+    class link: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class main: public Object {
+    class main: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class map: public Object {
+    class map: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class mark: public Object {
+    class mark: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class math: public Object {
+    class math: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class menu: public Object {
+    class menu: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class menuitem: public VoidObject {
+    class menuitem: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class meta: public VoidObject {
+    class meta: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class meter: public Object {
+    class meter: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class nav: public Object {
+    class nav: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class noscript: public Object {
+    class noscript: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class object: public Object {
+    class object: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class ol: public Object {
+    class ol: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class optgroup: public Object {
+    class optgroup: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class option: public Object {
+    class option: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class output: public Object {
+    class output: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class p: public Object {
+    class p: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class param: public VoidObject {
+    class param: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class picture: public Object {
+    class picture: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class pre: public Object {
+    class pre: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class progress: public Object {
+    class progress: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class q: public Object {
+    class q: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class rb: public Object {
+    class rb: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class rp: public Object {
+    class rp: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class rt: public Object {
+    class rt: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class rtc: public Object {
+    class rtc: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class ruby: public Object {
+    class ruby: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class s: public Object {
+    class s: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class samp: public Object {
+    class samp: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class script: public Object {
+    class script: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class search: public Object {
+    class search: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class section: public Object {
+    class section: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class select: public Object {
+    class select: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class slot: public Object {
+    class slot: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class small: public Object {
+    class small: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class source: public VoidObject {
+    class source: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class span: public Object {
+    class span: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class strong: public Object {
+    class strong: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class style: public Object {
+    class style: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class sub: public Object {
+    class sub: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class summary: public Object {
+    class summary: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class sup: public Object {
+    class sup: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class svg: public Object {
+    class svg: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class table: public Object {
+    class table: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class tbody: public Object {
+    class tbody: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class td: public Object {
+    class td: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class ctemplate: public Object {
+    class ctemplate: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class textarea: public Object {
+    class textarea: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class tfoot: public Object {
+    class tfoot: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class th: public Object {
+    class th: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class thead: public Object {
+    class thead: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class time: public Object {
+    class time: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class title: public Object {
+    class title: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class tr: public Object {
+    class tr: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class track: public VoidObject {
+    class track: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
-    class u: public Object {
+    class u: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class ul: public Object {
+    class ul: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class var: public Object {
+    class var: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class video: public Object {
+    class video: public Node {
         public:
-            using Object::Object;
+            using Node::Node;
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class wbr: public VoidObject {
+    class wbr: public VoidNode {
         public:
-            using VoidObject::VoidObject;
+            using VoidNode::VoidNode;
             const std::string& getTagName() const override;
     };
 }

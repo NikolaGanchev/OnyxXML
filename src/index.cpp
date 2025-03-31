@@ -2,35 +2,35 @@
 
 namespace Templater::dynamic::index {
 
-    AttributeNameIndex::AttributeNameIndex(Object* root, std::string& attributeName)
+    AttributeNameIndex::AttributeNameIndex(Node* root, std::string& attributeName)
         : m_attributeName(attributeName), Index(root), m_index{} {}; 
 
-    AttributeNameIndex::AttributeNameIndex(Object* root, std::string&& attributeName)
+    AttributeNameIndex::AttributeNameIndex(Node* root, std::string&& attributeName)
         : m_attributeName(std::move(attributeName)), Index(root), m_index{} {}; 
 
-    bool AttributeNameIndex::putIfNeeded(Object* object) {
-        if (object->hasAttributeValue(this->m_attributeName)) {
-            const std::string& value = object->getAttributeValue(this->m_attributeName);
+    bool AttributeNameIndex::putIfNeeded(Node* node) {
+        if (node->hasAttributeValue(this->m_attributeName)) {
+            const std::string& value = node->getAttributeValue(this->m_attributeName);
             if (this->m_index.contains(value)) {
                 // Protect from double insertion
                 for (auto obj: m_index[value]) {
-                    if (obj == object) return false;
+                    if (obj == node) return false;
                 }
 
-                m_index[value].push_back(object);
+                m_index[value].push_back(node);
             } else {
-                m_index[value] = { object };
+                m_index[value] = { node };
             }
             return true;
         }
         return false;
     }
 
-    bool AttributeNameIndex::removeIfNeeded(Object* object) {
-        for (auto& [value, objects] : m_index) {
-            for (auto it = objects.begin(); it != objects.end();) {
-                if (object == *it) {
-                    objects.erase(it);
+    bool AttributeNameIndex::removeIfNeeded(Node* node) {
+        for (auto& [value, nodes] : m_index) {
+            for (auto it = nodes.begin(); it != nodes.end();) {
+                if (node == *it) {
+                    nodes.erase(it);
                     return true;
                 }
                 it++;
@@ -39,22 +39,22 @@ namespace Templater::dynamic::index {
         return false;
     }
 
-    bool AttributeNameIndex::update(Object* object) {
-        if (object->hasAttributeValue(this->m_attributeName)) {
-            for (auto& obj: getByValue(object->getAttributeValue(this->m_attributeName))) {
-                if (obj == object) {
+    bool AttributeNameIndex::update(Node* node) {
+        if (node->hasAttributeValue(this->m_attributeName)) {
+            for (auto& obj: getByValue(node->getAttributeValue(this->m_attributeName))) {
+                if (obj == node) {
                     return false;
                 }
             }
         }
         
-        removeIfNeeded(object);
-        putIfNeeded(object);
+        removeIfNeeded(node);
+        putIfNeeded(node);
         return true;
     }
 
 
-    const std::vector<Object*> AttributeNameIndex::getByValue(const std::string& value) {
+    const std::vector<Node*> AttributeNameIndex::getByValue(const std::string& value) {
         if (!m_index.contains(value) || !this->isValid()) {
             return {};
         }
@@ -62,26 +62,26 @@ namespace Templater::dynamic::index {
         return m_index[value];
     }
 
-    TagNameIndex::TagNameIndex(Object* root, std::string& tagName)
+    TagNameIndex::TagNameIndex(Node* root, std::string& tagName)
         : m_tagName(tagName), Index(root), m_index{} {}; 
 
-    TagNameIndex::TagNameIndex(Object* root, std::string&& tagName)
+    TagNameIndex::TagNameIndex(Node* root, std::string&& tagName)
         : m_tagName(std::move(tagName)), Index(root), m_index{} {}; 
 
-    bool TagNameIndex::putIfNeeded(Object* object) {
-        if (object->getTagName() == this->m_tagName) {
+    bool TagNameIndex::putIfNeeded(Node* node) {
+        if (node->getTagName() == this->m_tagName) {
             for (auto obj: m_index) {
-                if (obj == object) return false;
+                if (obj == node) return false;
             }
-            m_index.push_back(object);
+            m_index.push_back(node);
             return true;
         }
         return false;
     }
 
-    bool TagNameIndex::removeIfNeeded(Object* object) {
+    bool TagNameIndex::removeIfNeeded(Node* node) {
         for (auto obj = m_index.begin(); obj != m_index.end();) {
-            if (*obj == object) {
+            if (*obj == node) {
                 m_index.erase(obj);
                 return true;
             }
@@ -91,12 +91,12 @@ namespace Templater::dynamic::index {
         return false;
     }
 
-    // For all intents and purposes, tag names should be constant from object creation
+    // For all intents and purposes, tag names should be constant from node creation
     // If any subclass however allows tag name setting, then the set operation needs to call update()
-    bool TagNameIndex::update(Object* object) {
+    bool TagNameIndex::update(Node* node) {
         for (auto obj = m_index.begin(); obj != m_index.end();) {
-            if (*obj == object) {
-                if ((*obj)->getTagName() == object->getTagName()) return false;
+            if (*obj == node) {
+                if ((*obj)->getTagName() == node->getTagName()) return false;
                 else {
                     m_index.erase(obj);
                     return true;
@@ -107,38 +107,38 @@ namespace Templater::dynamic::index {
         return false;
     }
 
-    const std::vector<Object*> TagNameIndex::get() {
+    const std::vector<Node*> TagNameIndex::get() {
         return m_index;
     }
 
-    TagIndex::TagIndex(Object* root)
+    TagIndex::TagIndex(Node* root)
         : Index(root), m_index{} {}; 
 
-    bool TagIndex::putIfNeeded(Object* object) {
-        const std::string& name = object->getTagName();
+    bool TagIndex::putIfNeeded(Node* node) {
+        const std::string& name = node->getTagName();
 
         if (this->m_index.contains(name)) {
             for (auto obj: m_index[name]) {
-                if (obj == object) return false;
+                if (obj == node) return false;
             }
 
-            m_index[name].push_back(object);
+            m_index[name].push_back(node);
         } else {
-            m_index[name] = { object };
+            m_index[name] = { node };
         }
 
         return true;
     }
 
-    bool TagIndex::removeIfNeeded(Object* object) {
-        const std::string& name = object->getTagName();
+    bool TagIndex::removeIfNeeded(Node* node) {
+        const std::string& name = node->getTagName();
 
         if (this->m_index.contains(name)) {
-            auto& objects = m_index[name];
+            auto& nodes = m_index[name];
 
-            for (auto obj = objects.begin(); obj != objects.end();) {
-                if (*obj == object) {
-                    objects.erase(obj);
+            for (auto obj = nodes.begin(); obj != nodes.end();) {
+                if (*obj == node) {
+                    nodes.erase(obj);
                     return true;
                 }
                 obj++;
@@ -148,28 +148,28 @@ namespace Templater::dynamic::index {
         return false;
     }
 
-    // For all intents and purposes, tag names should be constant from object creation
+    // For all intents and purposes, tag names should be constant from node creation
     // If any subclass however allows tag name setting, then the set operation needs to call update()
-    bool TagIndex::update(Object* object) {
-        const std::string& name = object->getTagName();
+    bool TagIndex::update(Node* node) {
+        const std::string& name = node->getTagName();
 
         if (this->m_index.contains(name)) {
-            auto& objects = m_index[name];
+            auto& nodes = m_index[name];
 
-            for (auto obj = objects.begin(); obj != objects.end();) {
-                if (*obj == object) {
+            for (auto obj = nodes.begin(); obj != nodes.end();) {
+                if (*obj == node) {
                     return false;
                 }
             }
         }
         
-        removeIfNeeded(object);
-        putIfNeeded(object);
+        removeIfNeeded(node);
+        putIfNeeded(node);
         return true;
     }
 
 
-    const std::vector<Object*> TagIndex::getByTagName(const std::string& tagName) {
+    const std::vector<Node*> TagIndex::getByTagName(const std::string& tagName) {
         if (!m_index.contains(tagName) || !this->isValid()) {
             return {};
         }
@@ -178,20 +178,20 @@ namespace Templater::dynamic::index {
     }
 
     
-    CacheIndex::CacheIndex(Object* root)
+    CacheIndex::CacheIndex(Node* root)
         : Index(root), m_cache{} {}; 
 
-    bool CacheIndex::putIfNeeded(Object* object) {
+    bool CacheIndex::putIfNeeded(Node* node) {
         m_cache.clear();
         return true;
     }
 
-    bool CacheIndex::removeIfNeeded(Object* object) {
+    bool CacheIndex::removeIfNeeded(Node* node) {
         m_cache.clear();
         return true;
     }
 
-    bool CacheIndex::update(Object* object) {
+    bool CacheIndex::update(Node* node) {
         m_cache.clear();
         return true;
     }

@@ -6,7 +6,7 @@ set_target_properties(samplelib PROPERTIES OUTPUT_NAME "sample")
 target_sources(
     samplelib
     PRIVATE
-        "object.cpp"
+        "node.cpp"
         "dynamic/tags.cpp"
         "text.cpp"
         "index.cpp"

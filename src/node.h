@@ -7,13 +7,13 @@
 #include <cstring>
 
 namespace Templater::dynamic {
-    class Object;
+    class Node;
     namespace index {
         class Index;
     }
 
     class Attribute {
-        friend Object;
+        friend Node;
         private:
             std::string m_name;
             std::string m_value;
@@ -29,23 +29,23 @@ namespace Templater::dynamic {
     };
 
     namespace dtags {
-        class EmptyTag;
+        class EmptyNode;
     }
 
     template <typename T>
-    concept isValidObjectConstructorType = std::derived_from<T, Object> || std::same_as<T, Attribute>;
+    concept isValidNodeConstructorType = std::derived_from<T, Node> || std::same_as<T, Attribute>;
     
     template <typename T>
-    concept isValidObjectConstructorTypePtr = std::same_as<T, std::unique_ptr<Object>> || std::same_as<T, Attribute>;
+    concept isValidNodeConstructorTypePtr = std::same_as<T, std::unique_ptr<Node>> || std::same_as<T, Attribute>;
 
     template <typename T>
-    concept isObject = std::derived_from<T, Object>;
+    concept isNode = std::derived_from<T, Node>;
     
     template <typename T>
     concept isAttribute = std::same_as<T, Attribute>;
 
-    class Object {
-        friend dtags::EmptyTag;
+    class Node {
+        friend dtags::EmptyNode;
         friend index::Index;
         private:
             class ObservableStringRef {
@@ -65,11 +65,11 @@ namespace Templater::dynamic {
                     ObservableStringRef& operator=(std::string newPtr);
             };
 
-            void iterativeProcessor(Object& object, std::function<void(Object*)> process);
-            std::vector<Object*> iterativeChildrenParse(const Object& object, std::function<bool(Object*)> condition) const;
+            void iterativeProcessor(Node& object, std::function<void(Node*)> process);
+            std::vector<Node*> iterativeChildrenParse(const Node& object, std::function<bool(Node*)> condition) const;
             
             std::vector<Attribute> m_attributes;
-            std::vector<std::unique_ptr<Object>> m_children;
+            std::vector<std::unique_ptr<Node>> m_children;
             std::vector<index::Index*> m_indices;
             bool m_isInTree = false;
             
@@ -77,8 +77,8 @@ namespace Templater::dynamic {
             void processConstructorArgs(T&& arg);
             void processConstructorAttribute(Attribute&& attribute);
             template <typename T>
-            void processConstructorObjectMove(T&& child) requires (isObject<T>);
-            std::unique_ptr<Object> removeChild(Object* childToRemove, Object& currentRoot);
+            void processConstructorObjectMove(T&& child) requires (isNode<T>);
+            std::unique_ptr<Node> removeChild(Node* childToRemove, Node& currentRoot);
             void addIndex(index::Index* index);
             void removeIndex(index::Index* index);
             void indexParse(std::function<void(index::Index*)>);
@@ -88,27 +88,27 @@ namespace Templater::dynamic {
             static bool sortAttributes;
         public:
             template <typename... Args>
-            explicit Object(Args&&... args) requires (isValidObjectConstructorType<Args>&& ...);
-            explicit Object(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Object>>&& children);
-            explicit Object(const Object& other) = delete;
-            Object& operator=(const Object& other) = delete;
-            explicit Object(Object&& other);
-            explicit Object();
-            virtual ~Object();
+            explicit Node(Args&&... args) requires (isValidNodeConstructorType<Args>&& ...);
+            explicit Node(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children);
+            explicit Node(const Node& other) = delete;
+            Node& operator=(const Node& other) = delete;
+            explicit Node(Node&& other);
+            explicit Node();
+            virtual ~Node();
 
             virtual const std::string& getTagName() const = 0;
             virtual bool isVoid() const = 0;
 
             bool isInTree() const;
             // Returns a static list of the direct children
-            std::vector<Object*> getChildren() const;
+            std::vector<Node*> getChildren() const;
             size_t getChildrenCount() const;
             // Returns a static list of all children in the tree that fullfil the condition
-            std::vector<Object*> getChildrenByClassName(const std::string& className) const;
-            std::vector<Object*> getChildrenByTagName(const std::string& tagName) const;
-            std::vector<Object*> getChildrenByName(const std::string& name) const;
-            std::vector<Object*> getChildrenById(const std::string& id) const;
-            std::vector<Object*> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
+            std::vector<Node*> getChildrenByClassName(const std::string& className) const;
+            std::vector<Node*> getChildrenByTagName(const std::string& tagName) const;
+            std::vector<Node*> getChildrenByName(const std::string& name) const;
+            std::vector<Node*> getChildrenById(const std::string& id) const;
+            std::vector<Node*> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
             
             bool hasAttributeValue(const std::string& name) const;
             const std::vector<Attribute>& getAttributes() const;
@@ -116,18 +116,18 @@ namespace Templater::dynamic {
             void setAttributeValue(const std::string& name, const std::string& newValue);
             ObservableStringRef operator[](const std::string& name);
 
-            Object* addChild(std::unique_ptr<Object> child);
+            Node* addChild(std::unique_ptr<Node> child);
             template <typename T>
-            Object* addChild(T&& child) requires (isObject<T>);
+            Node* addChild(T&& child) requires (isNode<T>);
 
-            Object& operator+=(std::unique_ptr<Object> right);
+            Node& operator+=(std::unique_ptr<Node> right);
             template <typename T>
-            Object& operator+=(T&& right) requires (isObject<T>);
+            Node& operator+=(T&& right) requires (isNode<T>);
             // Checks equality by pointer to InternalObject
             // A && version is not needed, as it would be illogical to compare pointers with a temporary object
-            bool operator==(Object& right);
+            bool operator==(Node& right);
 
-            std::unique_ptr<Object> removeChild(Object* childToRemove);
+            std::unique_ptr<Node> removeChild(Node* childToRemove);
             size_t size() const;
             
             virtual std::string serialise(const std::string& indentationSequence = getIndentationSequence(), bool sortAttributes = getSortAttributes()) const;
@@ -141,60 +141,60 @@ namespace Templater::dynamic {
     namespace index {
         // Must be created using an std::shared_ptr
         class Index {
-            friend Object;
+            friend Node;
             private:
-                Object* m_root;
+                Node* m_root;
                 bool m_valid;
             protected:
                 // Returns true if the object was inserted; else returns false
-                virtual bool putIfNeeded(Object* object);
+                virtual bool putIfNeeded(Node* object);
                 // Returns true if the object was removed; else returns false
-                virtual bool removeIfNeeded(Object* object) = 0;
+                virtual bool removeIfNeeded(Node* object) = 0;
                 // Returns true if the object was updated; else returns false
-                virtual bool update(Object* object) = 0;
-                explicit Index(Object* root);
+                virtual bool update(Node* object) = 0;
+                explicit Index(Node* root);
                 void invalidate();
                 void init();
             public:
-                const Object* getRoot() const;
+                const Node* getRoot() const;
                 bool isValid() const;
                 virtual ~Index();
         };
     }
     
-    class VoidObject: public Object {
+    class VoidNode: public Node {
         public:
             template <typename... Args>
-            explicit VoidObject(Args&&... args) requires (isAttribute<Args>&& ...);
-            explicit VoidObject(std::vector<Attribute> attributes);
+            explicit VoidNode(Args&&... args) requires (isAttribute<Args>&& ...);
+            explicit VoidNode(std::vector<Attribute> attributes);
             bool isVoid() const override;
     };
 
     namespace dtags {
 
-        class GenericObject: public Object {
+        class GenericNode: public Node {
             private:
                 const std::string m_tag;
                 const bool m_isVoid;
             public: 
                 template <typename... Args>
-                explicit GenericObject(std::string tagName, bool isVoid, Args&&... args);
-                explicit GenericObject(std::string tagName, bool isVoid);
-                explicit GenericObject(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::unique_ptr<Object>>&& children);
-                explicit GenericObject(Object&& other);
+                explicit GenericNode(std::string tagName, bool isVoid, Args&&... args);
+                explicit GenericNode(std::string tagName, bool isVoid);
+                explicit GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children);
+                explicit GenericNode(Node&& other);
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
         };
 
         // Used to create a tree without a root
-        class EmptyTag: public Object {
+        class EmptyNode: public Node {
             public: 
-                using Object::Object;
+                using Node::Node;
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
         };
 
-        class Text: public Object {
+        class Text: public Node {
             private:
                 const std::string m_text;
                 const bool m_escapeMultiByte;
@@ -211,14 +211,14 @@ namespace Templater::dynamic {
 }
 
 template <typename... Args>
-Templater::dynamic::Object::Object(Args&&... args) requires (Templater::dynamic::isValidObjectConstructorType<Args>&& ...)
+Templater::dynamic::Node::Node(Args&&... args) requires (Templater::dynamic::isValidNodeConstructorType<Args>&& ...)
     : m_attributes{}, m_children{}, m_isInTree{false}, m_indices{} { 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
 template <typename T>
-void Templater::dynamic::Object::processConstructorArgs(T&& arg) {
-    if constexpr (std::is_base_of_v<Object, std::decay_t<T>>) {
+void Templater::dynamic::Node::processConstructorArgs(T&& arg) {
+    if constexpr (std::is_base_of_v<Node, std::decay_t<T>>) {
         processConstructorObjectMove(std::move(arg));
     } else {
         processConstructorAttribute(std::move(arg));
@@ -226,7 +226,7 @@ void Templater::dynamic::Object::processConstructorArgs(T&& arg) {
 }
 
 template <typename T>
-Templater::dynamic::Object* Templater::dynamic::Object::addChild(T&& newChild) requires (isObject<T>) {
+Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild) requires (isNode<T>) {
     if (isVoid()) {
         throw std::runtime_error("Void " + getTagName() + " cannot have children.");
     }
@@ -235,13 +235,13 @@ Templater::dynamic::Object* Templater::dynamic::Object::addChild(T&& newChild) r
         return nullptr;
     }
     std::unique_ptr<T> obj = std::make_unique<std::decay_t<T>>(std::forward<T>(newChild));
-    (dynamic_cast<Object*>(obj.get()))->m_isInTree = true;
+    (dynamic_cast<Node*>(obj.get()))->m_isInTree = true;
     
     this->indexParse([&obj](index::Index* id) -> void {
-        (dynamic_cast<Object*>(obj.get()))->addIndex(id);
+        (dynamic_cast<Node*>(obj.get()))->addIndex(id);
     });
 
-    Object* objRef = obj.get();
+    Node* objRef = obj.get();
 
     m_children.push_back(std::move(obj));
 
@@ -249,26 +249,26 @@ Templater::dynamic::Object* Templater::dynamic::Object::addChild(T&& newChild) r
 }
 
 template <typename T>
-void Templater::dynamic::Object::processConstructorObjectMove(T&& child) requires (isObject<T>) {
+void Templater::dynamic::Node::processConstructorObjectMove(T&& child) requires (isNode<T>) {
     if (child.isInTree()) {
         throw std::runtime_error("Attempted to construct Object with a child that is already a child of another Object.");
     }
 
     std::unique_ptr<T> obj = std::make_unique<std::decay_t<T>>(std::forward<T>(child));
-    (dynamic_cast<Object*>(obj.get()))->m_isInTree = true;
+    (dynamic_cast<Node*>(obj.get()))->m_isInTree = true;
     
     m_children.push_back(std::move(obj));
 }
 
 template <typename T>
-Templater::dynamic::Object& Templater::dynamic::Object::operator+=(T&& right) requires (isObject<T>) {
+Templater::dynamic::Node& Templater::dynamic::Node::operator+=(T&& right) requires (isNode<T>) {
     addChild(std::move(right));
     return (*this);
 }
 
 template <typename... Args>
-Templater::dynamic::dtags::GenericObject::GenericObject(std::string tagName, bool isVoid, Args&&... args)
-    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Object(std::move(args)...) {
+Templater::dynamic::dtags::GenericNode::GenericNode(std::string tagName, bool isVoid, Args&&... args)
+    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Node(std::move(args)...) {
         
     if (this->isVoid() && this->getChildrenCount() > 0) {
         throw std::runtime_error("Void " + getTagName() + " cannot have children.");
@@ -276,5 +276,5 @@ Templater::dynamic::dtags::GenericObject::GenericObject(std::string tagName, boo
 }
 
 template <typename... Args>
-Templater::dynamic::VoidObject::VoidObject(Args&&... args) requires (isAttribute<Args>&& ...)
-    : Object(std::move(args)...) {}
+Templater::dynamic::VoidNode::VoidNode(Args&&... args) requires (isAttribute<Args>&& ...)
+    : Node(std::move(args)...) {}

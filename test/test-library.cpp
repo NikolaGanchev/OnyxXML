@@ -3,17 +3,17 @@
 
 #include <chrono>
 
-TEST_CASE("HTML is generated", "[Object]" ) {
+TEST_CASE("HTML is generated", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false)
+        GenericNode("head", false)
     };
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head></head>\n</html>";
@@ -21,17 +21,17 @@ TEST_CASE("HTML is generated", "[Object]" ) {
     CHECK(expected == obj.serialise());
 }
 
-TEST_CASE("serialise() arguments override global indentation rules", "[Object]" ) {
+TEST_CASE("serialise() arguments override global indentation rules", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false)
+        GenericNode("head", false)
     };
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n    <head></head>\n</html>";
@@ -39,14 +39,14 @@ TEST_CASE("serialise() arguments override global indentation rules", "[Object]" 
     CHECK(expected == obj.serialise("    "));
 }
 
-TEST_CASE("Vector constructor works", "[Object]" ) {
+TEST_CASE("Vector constructor works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
     std::vector<Attribute> attributes;
-    std::vector<std::unique_ptr<Object>> children;
+    std::vector<std::unique_ptr<Node>> children;
 
     attributes.emplace_back("id", "list");
     for (int i = 1; i <= 3; i++) {
@@ -60,42 +60,42 @@ TEST_CASE("Vector constructor works", "[Object]" ) {
     CHECK(expected == obj.serialise());
 }
 
-TEST_CASE("Complex test case generates html", "[Object]" ) {
+TEST_CASE("Complex test case generates html", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
         
-        GenericObject("head", false,
-            GenericObject("meta", true, 
+        GenericNode("head", false,
+            GenericNode("meta", true, 
                 Attribute("charset", "UTF-8")),
-            GenericObject("meta", true, 
+            GenericNode("meta", true, 
                 Attribute("name", "viewport"),
                 Attribute("content", "width=device-width, initial-scale=1.0")),
-            GenericObject("title", false, 
+            GenericNode("title", false, 
                 Text("Complex Test Page")),
-            GenericObject("link", true,
+            GenericNode("link", true,
                 Attribute("rel", "stylesheet"),
                 Attribute("href", "/styles/main.css"))
         ),
         
-        GenericObject("body", false, 
-            GenericObject("header", false, 
-                GenericObject("nav", false, 
-                    GenericObject("ul", false, 
-                        GenericObject("li", false, 
-                            GenericObject("a", false,
+        GenericNode("body", false, 
+            GenericNode("header", false, 
+                GenericNode("nav", false, 
+                    GenericNode("ul", false, 
+                        GenericNode("li", false, 
+                            GenericNode("a", false,
                                 Attribute("href", "#home"),
                                 Text("Home")
                             )
                         ),
-                        GenericObject("li", false, 
-                            GenericObject("a", false,
+                        GenericNode("li", false, 
+                            GenericNode("a", false,
                                 Attribute("href", "#about"),
                                 Text("About Us")
                             )
@@ -104,54 +104,54 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
                 )
             ),
             
-            GenericObject("main", false,
-                GenericObject("section", false, 
+            GenericNode("main", false,
+                GenericNode("section", false, 
                     Attribute("id", "introduction"),
-                    GenericObject("h1", false, Text("Introduction")),
-                    GenericObject("p", false, Text("Welcome to the complex HTML structure test case.")),
-                    GenericObject("p", false, Text("This test includes various nested elements, attributes, and content.")),
-                    GenericObject("form", false, 
+                    GenericNode("h1", false, Text("Introduction")),
+                    GenericNode("p", false, Text("Welcome to the complex HTML structure test case.")),
+                    GenericNode("p", false, Text("This test includes various nested elements, attributes, and content.")),
+                    GenericNode("form", false, 
                         Attribute("name", "contact-form"),
-                        GenericObject("label", false,
+                        GenericNode("label", false,
                             Attribute("for", "name"),
                             Text("Your Name:")
                         ),
-                        GenericObject("input", true, 
+                        GenericNode("input", true, 
                             Attribute("type", "text"),
                             Attribute("id", "name"),
                             Attribute("name", "name")
                         ),
-                        GenericObject("label", false, 
+                        GenericNode("label", false, 
                             Attribute("for", "email"),
                             Text("Your Email:")
                         ),
-                        GenericObject("input", true, 
+                        GenericNode("input", true, 
                             Attribute("type", "email"),
                             Attribute("id", "email"),
                             Attribute("name", "email")
                         ),
-                        GenericObject("button", false, 
+                        GenericNode("button", false, 
                             Attribute("type", "submit"),
                             Text("Submit")
                         )
                     )
                 ),
                 
-                GenericObject("section", false, 
+                GenericNode("section", false, 
                     Attribute("id", "features"),
-                    GenericObject("h2", false, Text("Features")),
-                    GenericObject("ul", false, 
-                        GenericObject("li", false, Text("Feature 1")),
-                        GenericObject("li", false, Text("Feature 2")),
-                        GenericObject("li", false, Text("Feature 3"))
+                    GenericNode("h2", false, Text("Features")),
+                    GenericNode("ul", false, 
+                        GenericNode("li", false, Text("Feature 1")),
+                        GenericNode("li", false, Text("Feature 2")),
+                        GenericNode("li", false, Text("Feature 3"))
                     ),
-                    GenericObject("p", false, Text("These are the key features of the application."))
+                    GenericNode("p", false, Text("These are the key features of the application."))
                 )
             ),
             
-            GenericObject("footer", false,
-                GenericObject("p", false, Text("© 2025 Complex HTML Test Page")),
-                GenericObject("a", false,
+            GenericNode("footer", false,
+                GenericNode("p", false, Text("© 2025 Complex HTML Test Page")),
+                GenericNode("a", false,
                     Attribute("href", "https://www.example.com"),
                     Text("Privacy Policy")
                 )
@@ -164,48 +164,48 @@ TEST_CASE("Complex test case generates html", "[Object]" ) {
     CHECK(expected == obj.serialise());
 }
 
-TEST_CASE("GenericObject can't be given children if void", "[GenericObject]") {
+TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
     using namespace Templater::dynamic::dtags;
 
-    REQUIRE_THROWS(GenericObject{"img", true, GenericObject{"div", false}});
+    REQUIRE_THROWS(GenericNode{"img", true, GenericNode{"div", false}});
 
-    std::unique_ptr<Object> d = std::make_unique<GenericObject>("div", false);
+    std::unique_ptr<Node> d = std::make_unique<GenericNode>("div", false);
     
-    std::vector<std::unique_ptr<Object>> vec;
+    std::vector<std::unique_ptr<Node>> vec;
     vec.push_back(std::move(d));
 
-    REQUIRE_THROWS(GenericObject{"img", true, {}, std::move(vec)});
+    REQUIRE_THROWS(GenericNode{"img", true, {}, std::move(vec)});
 }
 
-TEST_CASE("Object::addChild() throws if used on a void object", "[Object::addChild]") {
+TEST_CASE("Node::addChild() throws if used on a void node", "[Node::addChild]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject image{"img", true};
+    GenericNode image{"img", true};
 
-    REQUIRE_THROWS(image.addChild(GenericObject{"div", false}));
+    REQUIRE_THROWS(image.addChild(GenericNode{"div", false}));
 
-    std::unique_ptr<Object> d = std::make_unique<GenericObject>("div", false);
+    std::unique_ptr<Node> d = std::make_unique<GenericNode>("div", false);
 
     REQUIRE_THROWS(image.addChild(std::move(d)));
 }
 
-TEST_CASE("Children return by tag name works", "[Object]" ) {
+TEST_CASE("Children return by tag name works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("id", "0"), 
-                GenericObject("div", false, Attribute("id", "1"),
-                    GenericObject("div", false, Attribute("id", "2"))),
-            GenericObject("div", false, Attribute("id", "3")),
-            GenericObject("div", false, Attribute("id", "4")))
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("id", "1"),
+                    GenericNode("div", false, Attribute("id", "2"))),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
     )};
 
     auto children = obj.getChildrenByTagName("div");
@@ -215,24 +215,24 @@ TEST_CASE("Children return by tag name works", "[Object]" ) {
     }
 }
 
-TEST_CASE("Children return by id works", "[Object]" ) {
+TEST_CASE("Children return by id works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("id", "0"), 
-                GenericObject("div", false, Attribute("id", "1"),
-                    GenericObject("div", false, Attribute("id", "2"),
-                        GenericObject("p", false, Attribute("id", "11")))),
-            GenericObject("div", false, Attribute("id", "3")),
-            GenericObject("div", false, Attribute("id", "4")))
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("id", "1"),
+                    GenericNode("div", false, Attribute("id", "2"),
+                        GenericNode("p", false, Attribute("id", "11")))),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
     )};
 
     auto children = obj.getChildrenById("11");
@@ -243,24 +243,24 @@ TEST_CASE("Children return by id works", "[Object]" ) {
     CHECK(children[0]->getTagName() == "p");
 }
 
-TEST_CASE("Children return by name works", "[Object]" ) {
+TEST_CASE("Children return by name works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("name", "d"), Attribute("id", "0"), 
-                GenericObject("div", false, Attribute("name", "d"), Attribute("id", "1"), 
-                    GenericObject("div", false, Attribute("name", "d"), Attribute("id", "2"), 
-                        GenericObject("p", false, Attribute("name", "p"), Attribute("id", "11")))),
-            GenericObject("div", false, Attribute("name", "d"), Attribute("id", "3")),
-            GenericObject("div", false, Attribute("name", "d"), Attribute("id", "4")))
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("name", "d"), Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("name", "d"), Attribute("id", "1"), 
+                    GenericNode("div", false, Attribute("name", "d"), Attribute("id", "2"), 
+                        GenericNode("p", false, Attribute("name", "p"), Attribute("id", "11")))),
+            GenericNode("div", false, Attribute("name", "d"), Attribute("id", "3")),
+            GenericNode("div", false, Attribute("name", "d"), Attribute("id", "4")))
     )};
 
     auto children = obj.getChildrenByName("d");
@@ -276,24 +276,24 @@ TEST_CASE("Children return by name works", "[Object]" ) {
     CHECK(children[0]->getAttributeValue("id") == "11");
 }
 
-TEST_CASE("Children return by class name works", "[Object]" ) {
+TEST_CASE("Children return by class name works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("class", "d"), Attribute("id", "0"), 
-                GenericObject("div", false, Attribute("class", "d"), Attribute("id", "1"), 
-                    GenericObject("div", false, Attribute("class", "d"), Attribute("id", "2"), 
-                        GenericObject("p", false, Attribute("class", "p"), Attribute("id", "11")))),
-            GenericObject("div", false, Attribute("class", "d"), Attribute("id", "3")),
-            GenericObject("div", false, Attribute("class", "d"), Attribute("id", "4")))
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("class", "d"), Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("class", "d"), Attribute("id", "1"), 
+                    GenericNode("div", false, Attribute("class", "d"), Attribute("id", "2"), 
+                        GenericNode("p", false, Attribute("class", "p"), Attribute("id", "11")))),
+            GenericNode("div", false, Attribute("class", "d"), Attribute("id", "3")),
+            GenericNode("div", false, Attribute("class", "d"), Attribute("id", "4")))
     )};
 
     auto children = obj.getChildrenByClassName("d");
@@ -309,22 +309,22 @@ TEST_CASE("Children return by class name works", "[Object]" ) {
     CHECK(children[0]->getAttributeValue("id") == "11");
 }
 
-TEST_CASE("Child add works", "[Object]" ) {
+TEST_CASE("Child add works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false)};
+        GenericNode("head", false),
+        GenericNode("body", false)};
 
     auto children = obj.getChildrenByTagName("body");
 
-    std::unique_ptr<Object> child = std::make_unique<GenericObject>(
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>(
         "div", false, Attribute("id", "1")
     );
 
@@ -336,32 +336,32 @@ TEST_CASE("Child add works", "[Object]" ) {
     CHECK(children[0]->isInTree());
 }
 
-TEST_CASE("Child remove works", "[Object]" ) {
+TEST_CASE("Child remove works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    std::unique_ptr<Object> child = std::make_unique<GenericObject>(
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>(
         "div", false, Attribute("id", "1")
     );
 
-    std::vector<std::unique_ptr<Object>> vec;
+    std::vector<std::unique_ptr<Node>> vec;
     vec.push_back(std::move(child));
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, {}, std::move(vec))};
+        GenericNode("head", false),
+        GenericNode("body", false, {}, std::move(vec))};
 
     auto children = obj.getChildrenById("1");
 
     REQUIRE(children.size() == 1);
     CHECK(children[0]->isInTree());
 
-    std::unique_ptr<Object> result = obj.removeChild(children[0]);
+    std::unique_ptr<Node> result = obj.removeChild(children[0]);
 
     REQUIRE(result);
 
@@ -371,18 +371,18 @@ TEST_CASE("Child remove works", "[Object]" ) {
     CHECK(!result->isInTree());
 }
 
-TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
+TEST_CASE("Operator [] works for attribute access", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false)};
+        GenericNode("head", false),
+        GenericNode("body", false)};
 
     CHECK(obj["lang"] == "en");
 
@@ -392,22 +392,22 @@ TEST_CASE("Operator [] works for attribute access", "[Object]" ) {
     CHECK(obj.getAttributeValue("theme") == "light");   
 }
 
-TEST_CASE("Operator += works for child add", "[Object]" ) {
+TEST_CASE("Operator += works for child add", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false)};
+        GenericNode("head", false),
+        GenericNode("body", false)};
 
     auto children = obj.getChildrenByTagName("body");
 
-    std::unique_ptr<Object> child = std::make_unique<GenericObject>(
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>(
         "div", false, Attribute("id", "1")
     );
 
@@ -421,11 +421,11 @@ TEST_CASE("Operator += works for child add", "[Object]" ) {
 }
 
 
-TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
+TEST_CASE("Complex html with dynamic tags", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
     html obj{
         Attribute("lang", "en"),
@@ -521,20 +521,20 @@ TEST_CASE("Complex html with dynamic tags", "[Object]" ) {
 }
 
 
-TEST_CASE("Empty html tree has size 1", "[Object::size()]") {
+TEST_CASE("Empty html tree has size 1", "[Node::size()]") {
     using namespace Templater::dynamic::dtags;
     html root;
     REQUIRE(root.size() == 1);
 }
 
-TEST_CASE("Html tree with one child has size 2", "[Object::size()]") {
+TEST_CASE("Html tree with one child has size 2", "[Node::size()]") {
     using namespace Templater::dynamic::dtags;
     html root;
     root.addChild(body());
     REQUIRE(root.size() == 2);
 }
 
-TEST_CASE("Html tree with 5 nodes has size 6", "[Object::size()]") {
+TEST_CASE("Html tree with 5 nodes has size 6", "[Node::size()]") {
     using namespace Templater::dynamic::dtags;
     html root{
         p(),
@@ -546,7 +546,7 @@ TEST_CASE("Html tree with 5 nodes has size 6", "[Object::size()]") {
     REQUIRE(root.size() == 6);
 }
 
-TEST_CASE("Html tree with 5001 nodes has size 5001", "[Object::size()]") {
+TEST_CASE("Html tree with 5001 nodes has size 5001", "[Node::size()]") {
     using namespace Templater::dynamic::dtags;
     html root;
     for (int i = 0; i < 1000; i++) {
@@ -574,7 +574,7 @@ std::string generateRandomString(size_t length) {
     return result;
 }
 
-void addChildren(Templater::dynamic::Object* root, int level) {
+void addChildren(Templater::dynamic::Node* root, int level) {
     using namespace Templater::dynamic::dtags;
 
     std::unique_ptr<section> s = std::make_unique<section>();
@@ -585,7 +585,7 @@ void addChildren(Templater::dynamic::Object* root, int level) {
     root->addChild(std::move(s));
 }
 
-TEST_CASE("3000 tags serialise in under 50ms", "[Object]") {
+TEST_CASE("3000 tags serialise in under 50ms", "[Node]") {
     using namespace Templater::dynamic::dtags;
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
@@ -595,7 +595,7 @@ TEST_CASE("3000 tags serialise in under 50ms", "[Object]") {
     section root{};
 
     for (int i = 0; i < 500; i++) {
-        std::unique_ptr<Object> paragraph = std::make_unique<p>();
+        std::unique_ptr<Node> paragraph = std::make_unique<p>();
         for (int i = 0; i < 10; i++) {
             paragraph->operator[](generateRandomString(10)) = generateRandomString(10);
         }
@@ -614,7 +614,7 @@ TEST_CASE("3000 tags serialise in under 50ms", "[Object]") {
     REQUIRE(time.count() < 50);
 }
 
-TEST_CASE("Compile-time html serialises correctly", "[Object]" ) {
+TEST_CASE("Compile-time html serialises correctly", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -631,7 +631,7 @@ TEST_CASE("Compile-time html serialises correctly", "[Object]" ) {
     CHECK(doc1 == expected);
 }
 
-TEST_CASE("Compile-time html enforces given indentation rules", "[Object]" ) {
+TEST_CASE("Compile-time html enforces given indentation rules", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -649,7 +649,7 @@ TEST_CASE("Compile-time html enforces given indentation rules", "[Object]" ) {
     CHECK(doc::value("    ", true) == expected);
 }
 
-TEST_CASE("HTML fragment using Document serialises correctly", "[Object]" ) {
+TEST_CASE("HTML fragment using Document serialises correctly", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -665,7 +665,7 @@ TEST_CASE("HTML fragment using Document serialises correctly", "[Object]" ) {
 }
 
 
-TEST_CASE("Complex html with constant tags", "[Object]" ) {
+TEST_CASE("Complex html with constant tags", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -821,8 +821,8 @@ TEST_CASE("Escape 1 million character safe string in under 100ms", "[escape]") {
 TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
     std::string textToEscape = "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
@@ -836,8 +836,8 @@ TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
 TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
@@ -851,8 +851,8 @@ TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "
 TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
@@ -866,17 +866,17 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
 TEST_CASE("Index is added correctly", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("id", "0"), 
-                GenericObject("div", false, Attribute("id", "1"),
-                    GenericObject("div", false, Attribute("id", "2"))),
-            GenericObject("div", false, Attribute("id", "3")),
-            GenericObject("div", false, Attribute("id", "4")))
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("id", "1"),
+                    GenericNode("div", false, Attribute("id", "2"))),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
     )};
 
     REQUIRE(obj.getChildrenCount() > 0);
@@ -892,13 +892,13 @@ TEST_CASE("Index is added correctly", "[Index]" ) {
 TEST_CASE("Index handles multiple matches correctly", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("class", "container"),
-                GenericObject("div", false, Attribute("class", "item")),
-                GenericObject("div", false, Attribute("class", "item")),
-                GenericObject("div", false, Attribute("class", "item"))
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("class", "container"),
+                GenericNode("div", false, Attribute("class", "item")),
+                GenericNode("div", false, Attribute("class", "item")),
+                GenericNode("div", false, Attribute("class", "item"))
             )
         )
     };
@@ -918,10 +918,10 @@ TEST_CASE("Index handles multiple matches correctly", "[Index]") {
 TEST_CASE("Index returns empty when no match found", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("class", "container"))
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("class", "container"))
         )
     };
 
@@ -936,11 +936,11 @@ TEST_CASE("Index returns empty when no match found", "[Index]") {
 TEST_CASE("Index works with nested attributes", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("section", false, Attribute("data-type", "main"),
-                GenericObject("div", false, Attribute("data-type", "nested"))
+        GenericNode("body", false, 
+            GenericNode("section", false, Attribute("data-type", "main"),
+                GenericNode("div", false, Attribute("data-type", "nested"))
             )
         )
     };
@@ -956,10 +956,10 @@ TEST_CASE("Index works with nested attributes", "[Index]") {
 
 TEST_CASE("Index updates correctly when attributes change", "[Index]") {
     using namespace Templater::dynamic::dtags;
-    Object::setIndentationSequence("\t");
-    Object::setSortAttributes(true);
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
 
-    GenericObject obj{"div", false, Attribute("id", "test")};
+    GenericNode obj{"div", false, Attribute("id", "test")};
     index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
 
     auto result = index.getByValue("test");
@@ -977,13 +977,13 @@ TEST_CASE("Index updates correctly when attributes change", "[Index]") {
 TEST_CASE("Index updates correctly when children are added", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{"div", false};
+    GenericNode obj{"div", false};
     index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
 
     auto result = index.getByValue("new-class");
     REQUIRE(result.empty());
 
-    std::unique_ptr<Object> child = std::make_unique<GenericObject>("span", false, Attribute("class", "new-class"));
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>("span", false, Attribute("class", "new-class"));
     obj.addChild(std::move(child));
 
     result = index.getByValue("new-class");
@@ -994,12 +994,12 @@ TEST_CASE("Index updates correctly when children are added", "[Index]") {
 TEST_CASE("Index updates correctly when children are added using move", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{"div", false};
+    GenericNode obj{"div", false};
     index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
     auto result = index.getByValue("new-class");
     REQUIRE(result.empty());
 
-    obj.addChild(GenericObject("span", false, Attribute("class", "new-class")));
+    obj.addChild(GenericNode("span", false, Attribute("class", "new-class")));
 
     result = index.getByValue("new-class");
     REQUIRE(result.size() == 1);
@@ -1009,7 +1009,7 @@ TEST_CASE("Index updates correctly when children are added using move", "[Index]
 TEST_CASE("Index updates correctly when attributes are modified using operator []", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{"div", false};
+    GenericNode obj{"div", false};
     obj["id"] = "original";
 
     index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
@@ -1029,9 +1029,9 @@ TEST_CASE("Index updates correctly when attributes are modified using operator [
 TEST_CASE("Children are properly removed from parent indices", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject parent{"div", false};
-    std::unique_ptr<Object> child = std::make_unique<GenericObject>("span", false, Attribute("class", "removable"));
-    Object* childRef = parent.addChild(std::move(child));
+    GenericNode parent{"div", false};
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>("span", false, Attribute("class", "removable"));
+    Node* childRef = parent.addChild(std::move(child));
 
     index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&parent, "class");
     REQUIRE(index.getByValue("removable").size() == 1);
@@ -1043,16 +1043,16 @@ TEST_CASE("Children are properly removed from parent indices", "[Index]") {
 TEST_CASE("Children keep their own indices when removed", "[Index]") {
     using namespace Templater::dynamic::dtags;
 
-    std::unique_ptr<Object> child = std::make_unique<GenericObject>("span", false, Attribute("id", "child"));
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>("span", false, Attribute("id", "child"));
     index::AttributeNameIndex childIndex = index::createIndex<index::AttributeNameIndex>(child.get(), "id");
 
     REQUIRE(childIndex.getByValue("child").size() == 1);
 
-    GenericObject parent{"div", false};
+    GenericNode parent{"div", false};
     index::AttributeNameIndex parentIndex = index::createIndex<index::AttributeNameIndex>(&parent, "id");
 
-    Object* childRef = parent.addChild(std::move(child));
-    std::unique_ptr<Object> child2 = parent.removeChild(childRef);
+    Node* childRef = parent.addChild(std::move(child));
+    std::unique_ptr<Node> child2 = parent.removeChild(childRef);
 
     REQUIRE(child2);
     REQUIRE(childIndex.getByValue("child").size() == 1);
@@ -1061,17 +1061,17 @@ TEST_CASE("Children keep their own indices when removed", "[Index]") {
 TEST_CASE("Index is created with createIndexPointer ", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("id", "0"), 
-                GenericObject("div", false, Attribute("id", "1"),
-                    GenericObject("div", false, Attribute("id", "2"))),
-            GenericObject("div", false, Attribute("id", "3")),
-            GenericObject("div", false, Attribute("id", "4")))
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("id", "1"),
+                    GenericNode("div", false, Attribute("id", "2"))),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
     )};
 
     REQUIRE(obj.getChildrenCount() > 0);
@@ -1089,17 +1089,17 @@ TEST_CASE("Index is created with createIndexPointer ", "[Index]" ) {
 TEST_CASE("Index is created with createIndexUniquePointer ", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("id", "0"), 
-                GenericObject("div", false, Attribute("id", "1"),
-                    GenericObject("div", false, Attribute("id", "2"))),
-            GenericObject("div", false, Attribute("id", "3")),
-            GenericObject("div", false, Attribute("id", "4")))
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("id", "1"),
+                    GenericNode("div", false, Attribute("id", "2"))),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
     )};
 
     REQUIRE(obj.getChildrenCount() > 0);
@@ -1115,17 +1115,17 @@ TEST_CASE("Index is created with createIndexUniquePointer ", "[Index]" ) {
 TEST_CASE("Index is created with createIndexSharedPointer ", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("id", "0"), 
-                GenericObject("div", false, Attribute("id", "1"),
-                    GenericObject("div", false, Attribute("id", "2"))),
-            GenericObject("div", false, Attribute("id", "3")),
-            GenericObject("div", false, Attribute("id", "4")))
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("id", "1"),
+                    GenericNode("div", false, Attribute("id", "2"))),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
     )};
 
     REQUIRE(obj.getChildrenCount() > 0);
@@ -1144,17 +1144,17 @@ TEST_CASE("Index is invalidated correctly", "[Index]" ) {
     std::shared_ptr<index::AttributeNameIndex> ptr;
 
     {
-        GenericObject obj{
+        GenericNode obj{
             "html", false,
             Attribute("lang", "en"),
             Attribute("theme", "dark"),
-            GenericObject("head", false),
-            GenericObject("body", false, 
-                GenericObject("div", false, Attribute("id", "0"), 
-                    GenericObject("div", false, Attribute("id", "1"),
-                        GenericObject("div", false, Attribute("id", "2"))),
-                GenericObject("div", false, Attribute("id", "3")),
-                GenericObject("div", false, Attribute("id", "4")))
+            GenericNode("head", false),
+            GenericNode("body", false, 
+                GenericNode("div", false, Attribute("id", "0"), 
+                    GenericNode("div", false, Attribute("id", "1"),
+                        GenericNode("div", false, Attribute("id", "2"))),
+                GenericNode("div", false, Attribute("id", "3")),
+                GenericNode("div", false, Attribute("id", "4")))
         )};
 
         ptr = index::createIndexSharedPointer<index::AttributeNameIndex>(&obj, "id");;
@@ -1166,20 +1166,20 @@ TEST_CASE("Index is invalidated correctly", "[Index]" ) {
     CHECK(!ptr->isValid());
 }
 
-TEST_CASE("Object operations work after an index is removed", "[Index]" ) {
+TEST_CASE("Node operations work after an index is removed", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false),
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("id", "0"), 
-                GenericObject("div", false, Attribute("id", "1"),
-                    GenericObject("div", false, Attribute("id", "2"))),
-            GenericObject("div", false, Attribute("id", "3")),
-            GenericObject("div", false, Attribute("id", "4")))
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("id", "1"),
+                    GenericNode("div", false, Attribute("id", "2"))),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
     )};
 
     {
@@ -1198,14 +1198,14 @@ TEST_CASE("Object operations work after an index is removed", "[Index]" ) {
 TEST_CASE("Indexing multiple occurrences of the same tag", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("div", false, 
-                GenericObject("div", false),
-                GenericObject("span", false),
-                GenericObject("div", false)),
-            GenericObject("div", false))};
+        GenericNode("body", false, 
+            GenericNode("div", false, 
+                GenericNode("div", false),
+                GenericNode("span", false),
+                GenericNode("div", false)),
+            GenericNode("div", false))};
     
     index::TagNameIndex index = index::createIndex<index::TagNameIndex>(&obj, "div");
     auto result = index.get();
@@ -1215,13 +1215,13 @@ TEST_CASE("Indexing multiple occurrences of the same tag", "[TagNameIndex]") {
 TEST_CASE("Indexing nested elements with the same tag name", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("div", false, 
-                GenericObject("div", false, 
-                    GenericObject("div", false, 
-                        GenericObject("div", false)))))};
+        GenericNode("body", false, 
+            GenericNode("div", false, 
+                GenericNode("div", false, 
+                    GenericNode("div", false, 
+                        GenericNode("div", false)))))};
     
     index::TagNameIndex index = index::createIndex<index::TagNameIndex>(&obj, "div");
     auto result = index.get();
@@ -1231,14 +1231,14 @@ TEST_CASE("Indexing nested elements with the same tag name", "[TagNameIndex]") {
 TEST_CASE("Indexing multiple different tag names", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("section", false, 
-                GenericObject("article", false),
-                GenericObject("div", false),
-                GenericObject("article", false)),
-            GenericObject("section", false))};
+        GenericNode("body", false, 
+            GenericNode("section", false, 
+                GenericNode("article", false),
+                GenericNode("div", false),
+                GenericNode("article", false)),
+            GenericNode("section", false))};
     
     index::TagNameIndex sectionIndex = index::createIndex<index::TagNameIndex>(&obj, "section");
     REQUIRE(sectionIndex.get().size() == 2);
@@ -1250,11 +1250,11 @@ TEST_CASE("Indexing multiple different tag names", "[TagNameIndex]") {
 TEST_CASE("Indexing when no elements match", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("header", false),
-            GenericObject("footer", false))};
+        GenericNode("body", false, 
+            GenericNode("header", false),
+            GenericNode("footer", false))};
     
     index::TagNameIndex index = index::createIndex<index::TagNameIndex>(&obj, "nav");
     auto result = index.get();
@@ -1264,17 +1264,17 @@ TEST_CASE("Indexing when no elements match", "[TagNameIndex]") {
 TEST_CASE("Removing a child updates the index", "[TagNameIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("id", "1")),
-            GenericObject("div", false, Attribute("id", "2")),
-            GenericObject("div", false, Attribute("id", "3")))};
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "1")),
+            GenericNode("div", false, Attribute("id", "2")),
+            GenericNode("div", false, Attribute("id", "3")))};
     
     index::TagNameIndex index = index::createIndex<index::TagNameIndex>(&obj, "div");
     REQUIRE(index.get().size() == 3);
     
-    std::vector<Object*> toRemove = obj.getChildrenById("2");
+    std::vector<Node*> toRemove = obj.getChildrenById("2");
     REQUIRE(toRemove.size() == 1);
     obj.removeChild(toRemove[0]);
     
@@ -1284,13 +1284,13 @@ TEST_CASE("Removing a child updates the index", "[TagNameIndex]") {
 TEST_CASE("Indexing nested elements with multiple occurrences of the same tag", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("div", false, 
-                GenericObject("div", false, 
-                    GenericObject("div", false, 
-                        GenericObject("div", false)))))};
+        GenericNode("body", false, 
+            GenericNode("div", false, 
+                GenericNode("div", false, 
+                    GenericNode("div", false, 
+                        GenericNode("div", false)))))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     auto result = index.getByTagName("div");
@@ -1302,14 +1302,14 @@ TEST_CASE("Indexing nested elements with multiple occurrences of the same tag", 
 TEST_CASE("Indexing multiple different tag names in a tree", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("section", false, 
-                GenericObject("article", false),
-                GenericObject("div", false),
-                GenericObject("article", false)),
-            GenericObject("section", false))};
+        GenericNode("body", false, 
+            GenericNode("section", false, 
+                GenericNode("article", false),
+                GenericNode("div", false),
+                GenericNode("article", false)),
+            GenericNode("section", false))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     
@@ -1326,11 +1326,11 @@ TEST_CASE("Indexing multiple different tag names in a tree", "[TagIndex]") {
 TEST_CASE("Indexing when no elements match", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("header", false),
-            GenericObject("footer", false))};
+        GenericNode("body", false, 
+            GenericNode("header", false),
+            GenericNode("footer", false))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     auto result = index.getByTagName("nav");
@@ -1340,17 +1340,17 @@ TEST_CASE("Indexing when no elements match", "[TagIndex]") {
 TEST_CASE("Removing a child element updates the index", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("div", false, Attribute("id", "1")),
-            GenericObject("div", false, Attribute("id", "2")),
-            GenericObject("div", false, Attribute("id", "3")))};
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "1")),
+            GenericNode("div", false, Attribute("id", "2")),
+            GenericNode("div", false, Attribute("id", "3")))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     REQUIRE(index.getByTagName("div").size() == 3);
     
-    std::vector<Object*> toRemove = obj.getChildrenById("2");
+    std::vector<Node*> toRemove = obj.getChildrenById("2");
     REQUIRE(toRemove.size() == 1);
     obj.removeChild(toRemove[0]);
     
@@ -1360,7 +1360,7 @@ TEST_CASE("Removing a child element updates the index", "[TagIndex]") {
 TEST_CASE("Indexing when no elements are present", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    EmptyTag obj{};
+    EmptyNode obj{};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     auto result = index.getByTagName("div");
@@ -1370,13 +1370,13 @@ TEST_CASE("Indexing when no elements are present", "[TagIndex]") {
 TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
-        GenericObject("body", false, 
-            GenericObject("header", false),
-            GenericObject("section", false,
-                GenericObject("article", false),
-                GenericObject("footer", false)))};
+        GenericNode("body", false, 
+            GenericNode("header", false),
+            GenericNode("section", false,
+                GenericNode("article", false),
+                GenericNode("footer", false)))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
 
@@ -1396,35 +1396,35 @@ TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
 TEST_CASE("Cache index works", "[CacheIndex]") {
     using namespace Templater::dynamic::dtags;
 
-    GenericObject obj{
+    GenericNode obj{
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericObject("head", false)
+        GenericNode("head", false)
     };
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head></head>\n</html>";
 
     index::CacheIndex index = index::createIndex<index::CacheIndex>(&obj);
 
-    std::string serialised = index.cache(&GenericObject::serialise, "\t", true);
+    std::string serialised = index.cache(&GenericNode::serialise, "\t", true);
 
     CHECK(expected == serialised);
 
-    CHECK(expected == index.getCached(&GenericObject::serialise, "\t", true));
+    CHECK(expected == index.getCached(&GenericNode::serialise, "\t", true));
 
-    std::string serialised2 = index.cache(&GenericObject::serialise, "\t\t", true);
+    std::string serialised2 = index.cache(&GenericNode::serialise, "\t\t", true);
     
-    CHECK(expected == index.getCached(&GenericObject::serialise, "\t", true));
-    CHECK(expected != index.getCached(&GenericObject::serialise, "\t\t", true));
+    CHECK(expected == index.getCached(&GenericNode::serialise, "\t", true));
+    CHECK(expected != index.getCached(&GenericNode::serialise, "\t\t", true));
 
     auto head = obj.getChildrenByTagName("head");
 
     REQUIRE(head.size() == 1);
     obj.removeChild(head[0]);
 
-    CHECK(!(index.isCached(&GenericObject::serialise, "\t", true)));
-    CHECK(!(index.isCached(&GenericObject::serialise, "\t\t", true)));
+    CHECK(!(index.isCached(&GenericNode::serialise, "\t", true)));
+    CHECK(!(index.isCached(&GenericNode::serialise, "\t\t", true)));
     
-    CHECK_THROWS(index.getCached(&GenericObject::serialise, "\t", true));
+    CHECK_THROWS(index.getCached(&GenericNode::serialise, "\t", true));
 }

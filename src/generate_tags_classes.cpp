@@ -52,7 +52,7 @@ void generateDynamic(const std::vector<Tag>& tags) {
     std::ofstream cppDynamic("./dynamic/tags.cpp");
 
     headerDynamic << "#pragma once\n";
-    headerDynamic << "#include \"object.h\" \n\n";
+    headerDynamic << "#include \"node.h\" \n\n";
     headerDynamic << "namespace Templater::dynamic::dtags {\n";
     headerDynamic << "    using namespace Templater::dynamic; \n";
 
@@ -61,9 +61,9 @@ void generateDynamic(const std::vector<Tag>& tags) {
 
     for (auto& tag: tags) {
         if (!tag.isVoid) {
-            headerDynamic << "    class " << tag.dynamicName << ": public Object {\n"
+            headerDynamic << "    class " << tag.dynamicName << ": public Node {\n"
             "        public:\n"
-            "            using Object::Object;\n"
+            "            using Node::Node;\n"
             "            bool isVoid() const override;\n"
             "            const std::string& getTagName() const override;\n"
             "    };\n";
@@ -76,9 +76,9 @@ void generateDynamic(const std::vector<Tag>& tags) {
             "        return " << (int) (tag.isVoid) << ";\n"
             "    }\n";
         } else {
-            headerDynamic << "    class " << tag.dynamicName << ": public VoidObject {\n"
+            headerDynamic << "    class " << tag.dynamicName << ": public VoidNode {\n"
             "        public:\n"
-            "            using VoidObject::VoidObject;\n"
+            "            using VoidNode::VoidNode;\n"
             "            const std::string& getTagName() const override;\n"
             "    };\n";
 
@@ -112,7 +112,7 @@ void generateCompile(const std::vector<Tag>& tags) {
     for (auto& tag: tags) {
         headerCompile << "    template <typename... Children>\n"
                             "    struct " << tag.compileName << " {\n"
-                                    "        static constexpr std::unique_ptr<Templater::dynamic::Object> value() {\n"
+                                    "        static constexpr std::unique_ptr<Templater::dynamic::Node> value() {\n"
                                     "            std::unique_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_unique<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
                                     "            (parseChildren<Children>(node.get()), ...);\n"
                                     "            return node;\n"

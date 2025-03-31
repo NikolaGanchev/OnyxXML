@@ -1,6 +1,6 @@
 #pragma once
 
-#include "object.h"
+#include "node.h"
 #include <string>
 #include <algorithm>
 #include <string_view>
@@ -53,13 +53,13 @@ namespace Templater::compile {
 
         template <CompileString Str>
         struct Text {
-            static constexpr std::unique_ptr<Templater::dynamic::Object> value() {
+            static constexpr std::unique_ptr<Templater::dynamic::Node> value() {
                 return std::make_unique<Templater::dynamic::dtags::Text>(Str);
             }
         };
 
         template <typename Child>
-        constexpr void parseChildren(Templater::dynamic::Object* node) {
+        constexpr void parseChildren(Templater::dynamic::Node* node) {
             if constexpr(isAttribute<Child>) {
                 std::unique_ptr<Templater::dynamic::Attribute> attr = Child::attr();
                 node->operator[](attr->getName()) = attr->getValue();
@@ -73,9 +73,9 @@ namespace Templater::compile {
     template <typename... Children>
     struct Document {
         static constexpr std::string value(
-            const std::string& indentationSequence = Templater::dynamic::Object::getIndentationSequence(), 
-            bool sortAttributes = Templater::dynamic::Object::getSortAttributes()) {
-            Templater::dynamic::dtags::EmptyTag obj;
+            const std::string& indentationSequence = Templater::dynamic::Node::getIndentationSequence(), 
+            bool sortAttributes = Templater::dynamic::Node::getSortAttributes()) {
+            Templater::dynamic::dtags::EmptyNode obj;
             if constexpr (sizeof...(Children) == 0)
             {
                 return std::string("");

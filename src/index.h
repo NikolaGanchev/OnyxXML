@@ -1,6 +1,6 @@
 #pragma once
 
-#include "object.h"
+#include "node.h"
 #include <unordered_set>
 #include <unordered_map>
 #include <any>
@@ -35,15 +35,15 @@ namespace Templater::dynamic::index {
     class AttributeNameIndex: public Index {
         private:
             const std::string m_attributeName;
-            std::unordered_map<std::string, std::vector<Object*>> m_index;
+            std::unordered_map<std::string, std::vector<Node*>> m_index;
         protected:
-            bool putIfNeeded(Object* object) override;
-            bool removeIfNeeded(Object* object) override;
-            bool update(Object* object) override;
-            explicit AttributeNameIndex(Object* root, std::string& attributeName);
-            explicit AttributeNameIndex(Object* root, std::string&& attributeName);
+            bool putIfNeeded(Node* node) override;
+            bool removeIfNeeded(Node* node) override;
+            bool update(Node* node) override;
+            explicit AttributeNameIndex(Node* root, std::string& attributeName);
+            explicit AttributeNameIndex(Node* root, std::string&& attributeName);
         public:
-            const std::vector<Object*> getByValue(const std::string& value);
+            const std::vector<Node*> getByValue(const std::string& value);
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };
@@ -52,15 +52,15 @@ namespace Templater::dynamic::index {
     class TagNameIndex: public Index {
         private:
             const std::string m_tagName;
-            std::vector<Object*> m_index;
+            std::vector<Node*> m_index;
         protected:
-            bool putIfNeeded(Object* object) override;
-            bool removeIfNeeded(Object* object) override;
-            bool update(Object* object) override;
-            explicit TagNameIndex(Object* root, std::string& tagName);
-            explicit TagNameIndex(Object* root, std::string&& tagName);
+            bool putIfNeeded(Node* node) override;
+            bool removeIfNeeded(Node* node) override;
+            bool update(Node* node) override;
+            explicit TagNameIndex(Node* root, std::string& tagName);
+            explicit TagNameIndex(Node* root, std::string&& tagName);
         public:
-            const std::vector<Object*> get();
+            const std::vector<Node*> get();
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };
@@ -68,14 +68,14 @@ namespace Templater::dynamic::index {
     // Indexes all tags in a tree
     class TagIndex: public Index {
         private:
-            std::unordered_map<std::string, std::vector<Object*>> m_index;
+            std::unordered_map<std::string, std::vector<Node*>> m_index;
         protected:
-            bool putIfNeeded(Object* object) override;
-            bool removeIfNeeded(Object* object) override;
-            bool update(Object* object) override;
-            explicit TagIndex(Object* root);
+            bool putIfNeeded(Node* node) override;
+            bool removeIfNeeded(Node* node) override;
+            bool update(Node* node) override;
+            explicit TagIndex(Node* root);
         public:
-            const std::vector<Object*> getByTagName(const std::string& tagName);
+            const std::vector<Node*> getByTagName(const std::string& tagName);
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };
@@ -93,10 +93,10 @@ namespace Templater::dynamic::index {
             static std::size_t generateHash(Function f, Args&&... args);
 
         protected:
-            bool putIfNeeded(Object* object) override;
-            bool removeIfNeeded(Object* object) override;
-            bool update(Object* object) override;
-            explicit CacheIndex(Object* root);
+            bool putIfNeeded(Node* node) override;
+            bool removeIfNeeded(Node* node) override;
+            bool update(Node* node) override;
+            explicit CacheIndex(Node* root);
         public:
             template <typename Function, typename... Args>
             auto cache(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...));
