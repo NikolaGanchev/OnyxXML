@@ -57,6 +57,7 @@ void generateDynamic(const std::vector<Tag>& tags) {
     headerDynamic << "    using namespace Templater::dynamic; \n";
 
     cppDynamic << "#include \"tags.h\"\n\n";
+    cppDynamic << "namespace Templater::dynamic::dtags {\n";
 
     for (auto& tag: tags) {
         if (!tag.isVoid) {
@@ -67,13 +68,13 @@ void generateDynamic(const std::vector<Tag>& tags) {
             "            const std::string& getTagName() const override;\n"
             "    };\n";
 
-            cppDynamic << "const std::string& Templater::dynamic::dtags::" << tag.dynamicName << "::getTagName() const {\n"
-            "    static const std::string name = \"" << tag.tagName << "\";\n"
-            "    return name;\n"
-            "}\n\n"
-            "bool Templater::dynamic::dtags::" << tag.dynamicName << "::isVoid() const {\n"
-            "    return " << (int) (tag.isVoid) << ";\n"
-            "}\n\n";
+            cppDynamic << "    const std::string& " << tag.dynamicName << "::getTagName() const {\n"
+            "        static const std::string name = \"" << tag.tagName << "\";\n"
+            "        return name;\n"
+            "    }\n"
+            "    bool " << tag.dynamicName << "::isVoid() const {\n"
+            "        return " << (int) (tag.isVoid) << ";\n"
+            "    }\n";
         } else {
             headerDynamic << "    class " << tag.dynamicName << ": public VoidObject {\n"
             "        public:\n"
@@ -81,14 +82,15 @@ void generateDynamic(const std::vector<Tag>& tags) {
             "            const std::string& getTagName() const override;\n"
             "    };\n";
 
-            cppDynamic << "const std::string& Templater::dynamic::dtags::" << tag.dynamicName << "::getTagName() const {\n"
-            "    static const std::string name = \"" << tag.tagName << "\";\n"
-            "    return name;\n"
-            "}\n\n";
+            cppDynamic << "    const std::string& " << tag.dynamicName << "::getTagName() const {\n"
+            "        static const std::string name = \"" << tag.tagName << "\";\n"
+            "        return name;\n"
+            "    }\n";
         }
     }
 
     headerDynamic << "}\n\n";
+    cppDynamic << "}\n\n";
 
     headerDynamic.close();
     cppDynamic.close();
