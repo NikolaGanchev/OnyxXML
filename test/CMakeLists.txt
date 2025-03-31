@@ -11,7 +11,9 @@ target_link_libraries(
 target_sources(
     unit-tests
     PRIVATE
-        "test-library.cpp"
+        "node_tests.cpp"
+        "text_tests.cpp"
+        "index_tests.cpp"
 )
 
 # Automatically register all tests
