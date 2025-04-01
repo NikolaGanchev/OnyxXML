@@ -28,7 +28,7 @@ namespace Templater::dynamic::index {
 
 
     /**
-     * @brief Creates a raw pointer to an Index of type T using the provided args. It is the caller's responsiblity to delete the pointer.
+     * @brief Creates a raw pointer to an Index of type T using the provided args. It is the caller's responsibility to delete the pointer.
      * 
      * @tparam T 
      * @tparam Args 
@@ -39,7 +39,7 @@ namespace Templater::dynamic::index {
 
 
     /**
-     * @brief Creates a unique pointer to an Index of type T using the provided args and trasnfer ownership to the caller.
+     * @brief Creates a unique pointer to an Index of type T using the provided args and transfer ownership to the caller.
      * 
      * @tparam T 
      * @tparam Args 
@@ -141,7 +141,7 @@ namespace Templater::dynamic::index {
 
             /**
              * @brief In the general case, Nodes shouldn't change their tag name after creation.
-             * However, in case of peculiar Node implementations, this method is fully impemented.
+             * However, in case of peculiar Node implementations, this method is fully implemented.
              * 
              * @param node 
              * @return true 
@@ -198,7 +198,7 @@ namespace Templater::dynamic::index {
 
             /**
              * @brief In the general case, Nodes shouldn't change their tag name after creation.
-             * However, in case of peculiar Node implementations, this method is fully impemented.
+             * However, in case of peculiar Node implementations, this method is fully implemented.
              * 
              * @param node 
              * @return true 
@@ -229,7 +229,7 @@ namespace Templater::dynamic::index {
     
     /**
      * @brief An index which tracks whether the tree it has been given has been changed.
-     * A function of the root and its arguments can be passed to the cache() method and the result will be cached or returned from the cahce.
+     * A function of the root and its arguments can be passed to the cache() method and the result will be cached or returned from the cache.
      * If the tree changes in any way, this Index will invalidate its inner cache and delete all entries inside it.
      * The underlying data structure is an std::unordered_map.
      */
