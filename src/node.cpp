@@ -6,32 +6,7 @@
 #include <stack>
 
 namespace Templater::dynamic {
-
-    Attribute::Attribute(std::string name, std::string value, bool shouldEscape) 
-        : m_name(std::move(name)), m_value(std::move(value)), m_shouldEscape(shouldEscape) {}
-
-    Attribute::Attribute(std::string name): m_name(std::move(name)), m_value(""), m_shouldEscape(true) {}
-
-    void Attribute::setValue(const std::string& value) {
-        m_value = value;
-    }
-
-    const std::string& Attribute::getName() const {
-        return m_name;
-    }
-
-    const std::string& Attribute::getValue() const {
-        return m_value;
-    }
-
-    std::string& Attribute::getValueMutable() {
-        return m_value;
-    }
-
-    bool Attribute::shouldEscape() const {
-        return m_shouldEscape;
-    }
-
+    
     Node::Node()
         : m_attributes{}, m_children{}, m_indices{}, m_isInTree{false} { }
 
@@ -392,29 +367,29 @@ namespace Templater::dynamic {
         return strResult;
     }
 
-    Node::ObservableStringRef::ObservableStringRef(std::string* ref, std::function<void()> callback) 
-                            : m_ptr(ref), m_callback(std::move(callback)) {}
+    Node::ObservableStringRef::ObservableStringRef(std::string str, std::function<void(std::string newPtr)> callback) 
+                            : m_str(std::move(str)), m_callback(std::move(callback)) {}
 
     Node::ObservableStringRef::operator const std::string*() const { 
-        return m_ptr; 
+        return &m_str; 
     }
 
     const std::string* Node::ObservableStringRef::operator->() const { 
-        return m_ptr; 
+        return &m_str; 
     }
 
     const std::string& Node::ObservableStringRef::operator*() const { 
-        return *m_ptr; 
+        return m_str; 
     }
 
     bool Node::ObservableStringRef::operator==(const std::string& str) const { 
-        return *m_ptr == str; 
+        return m_str == str; 
     }
 
     Node::ObservableStringRef& Node::ObservableStringRef::operator=(std::string newPtr) {
-        if (*m_ptr != newPtr) {
-            *m_ptr = newPtr;
-            m_callback();
+        if (m_str != newPtr) {
+            m_str = newPtr;
+            m_callback(newPtr);
         }
         return *this;
     }
@@ -426,7 +401,9 @@ namespace Templater::dynamic {
 
         for (auto& attr: m_attributes) {
             if (attr.getName() == name) {
-                return ObservableStringRef(&(attr.getValueMutable()), [this]() { 
+
+                return ObservableStringRef(attr.getValue(), [this, &attr](std::string newPtr) { 
+                    attr.setValue(newPtr);
                     this->indexParse([this](index::Index* id) -> void {
                         id->update(this);
                     });

@@ -14,6 +14,7 @@ target_sources(
         "node_tests.cpp"
         "text_tests.cpp"
         "index_tests.cpp"
+        "attribute_tests.cpp"
 )
 
 # Automatically register all tests

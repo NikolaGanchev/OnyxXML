@@ -15,17 +15,46 @@ namespace Templater::dynamic {
     class Attribute {
         friend Node;
         private:
-            std::string m_name;
-            std::string m_value;
+            struct InternPool {
+                private:
+                    struct InternPoolKeyHash {
+                        std::size_t operator()(const std::string* p) const;
+                    };
+
+                    struct InternPoolKeyEquals {
+                        bool operator()(const std::string* p1, const std::string* p2) const;
+                    };
+
+                    // The std::string is the stored value; the int is the number of refs on it
+                    std::unordered_map<const std::string*, int, InternPoolKeyHash, InternPoolKeyEquals> m_pool;
+                public:
+                    const std::string* intern(std::string&& str);
+                    const std::string* intern(const std::string* str);
+                    size_t size() const;
+                    void drop(const std::string* str);
+            };
+            
+            static InternPool internPool;
+            const std::string* m_name;
+            const std::string* m_value;
             bool m_shouldEscape;
             void setValue(const std::string&);
-            std::string& getValueMutable();
         public:
             explicit Attribute(std::string name, std::string value, bool shouldEscape = true);
             explicit Attribute(std::string name);
+
+            explicit Attribute(const Attribute& other);
+            explicit Attribute(Attribute&& other);
+            Attribute& operator=(Attribute& other);
+            Attribute& operator=(Attribute&& other);
+
             const std::string& getName() const;
             const std::string& getValue() const;
             bool shouldEscape() const;
+
+            static size_t getInternPoolSize();
+
+            ~Attribute();
     };
 
     namespace dtags {
@@ -50,11 +79,11 @@ namespace Templater::dynamic {
         private:
             class ObservableStringRef {
                 private:
-                    std::string* m_ptr;
-                    std::function<void()> m_callback;
+                    std::string m_str;
+                    std::function<void(std::string newPtr)> m_callback;
                 
                 public:
-                    ObservableStringRef(std::string* ref, std::function<void()> callback);
+                    ObservableStringRef(std::string str, std::function<void(std::string newPtr)> callback);
                 
                     operator const std::string*() const;
                 
