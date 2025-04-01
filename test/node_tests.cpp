@@ -21,6 +21,21 @@ TEST_CASE("HTML is generated", "[Node]" ) {
     CHECK(expected == obj.serialise());
 }
 
+TEST_CASE("Attribute remove works", "[Node]" ) {
+    using namespace Templater::dynamic::dtags;
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false)
+    };
+
+    obj.removeAttribute("lang");
+
+    CHECK(!obj.hasAttribute("lang"));
+}
+
 TEST_CASE("serialise() arguments override global indentation rules", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
 
