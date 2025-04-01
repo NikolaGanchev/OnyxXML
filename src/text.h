@@ -8,7 +8,7 @@ namespace Templater::dynamic {
          * @brief Escape a string from XML injection causing elements.
          * By default only escapes the crucial XML injection characters: <, >, ", ', &.
          * It can also escape unicode sequences if the escapeMultiByte argument is set to true.
-         * Unicode sequences can be unsafe in envirionments that do not support UTF-8 and can be used to create injections. 
+         * Unicode sequences can be unsafe in environments that do not support UTF-8 and can be used to create injections. 
          * Unicode escaping escapes any unicode sequence to an XML/HTML entity. 
          * Due to the runtime cost and overall low risk this is false by default.
          * 

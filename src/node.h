@@ -40,7 +40,7 @@ namespace Templater::dynamic {
              */
             void setValue(const std::string&);
             /**
-             * @brief Get a mutable refernce to the inner value string
+             * @brief Get a mutable reference to the inner value string
              * 
              * @return std::string& 
              */
@@ -53,7 +53,7 @@ namespace Templater::dynamic {
              * 
              * @param name The name of the attribute
              * @param value The value of the attribute
-             * @param shouldEscape Signfies if the value is xml safe; if the value is unsafe, this argument should be true, which is the default value. 
+             * @param shouldEscape Signifies if the value is xml safe; if the value is unsafe, this argument should be true, which is the default value. 
              * shouldEscape is used by consumers of the class to decide whether the value should be escaped and Has no effect on the constructed object's behaviour. 
              */
             explicit Attribute(std::string name, std::string value, bool shouldEscape = true);
@@ -119,7 +119,7 @@ namespace Templater::dynamic {
 
 
     /**
-     * @brief Checks if the templete parameter is a subclass of Node.
+     * @brief Checks if the template parameter is a subclass of Node.
      * 
      * @tparam T The type
      */
@@ -128,7 +128,7 @@ namespace Templater::dynamic {
 
 
     /**
-     * @brief Checks if the templete parameter is an Attribute.
+     * @brief Checks if the template parameter is an Attribute.
      * 
      * @tparam T The type
      */
@@ -148,7 +148,7 @@ namespace Templater::dynamic {
             /**
              * @brief An observable constant std::string reference. 
              * Behaves as a pointer, but the assignment operator is overriden to invoke a callback on assignment.
-             * The string inside cannott be otherwise modified and is always returned as a constant value.
+             * The string inside cannot be otherwise modified and is always returned as a constant value.
              */
             class ObservableStringRef {
                 private:
@@ -329,7 +329,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief The static global indentation string to be used for indendting during serialisation. Can be overriden by arguments to Node::serialise(const std::string&, bool). 
+             * @brief The static global indentation string to be used for indenting during serialisation. Can be overriden by arguments to Node::serialise(const std::string&, bool). 
              * The default value is "\t".
              */
             static std::string indentationSequence;
@@ -712,7 +712,7 @@ namespace Templater::dynamic {
                  * @param tagName The tag name of this node
                  * @param isVoid Whether this Node is void
                  * @param attributes Attributes to be forwarded to the Node constructor
-                 * @param children Children to be forwared to the Node constructor
+                 * @param children Children to be forwarded to the Node constructor
                  */
                 explicit GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children);
 
@@ -762,7 +762,7 @@ namespace Templater::dynamic {
             public:
                 /**
                  * @brief Construct a new Text object by given text and whether unicode sequences should be escaped. 
-                 * Unicode sequences can be unsafe in envirionments that do not support UTF-8 and can be used to create injections. 
+                 * Unicode sequences can be unsafe in environments that do not support UTF-8 and can be used to create injections. 
                  * Unicode escaping escapes any unicode sequence to an XML/HTML entity. 
                  * Due to the runtime cost and overall low risk this is false by default.
                  * The escaping is not done by this class; it is a suggestion to consumers.

@@ -84,8 +84,8 @@ namespace Templater::compile {
 
         /**
          * @brief Checks if the given template param is a compile time Attribute.
-         * Since compile time Attributes are specialised with undpredictable inputs,
-         * the check can only be done by checking for the existance of the attr() static function.
+         * Since compile time Attributes are specialised with unpredictable inputs,
+         * the check can only be done by checking for the existence of the attr() static function.
          * 
          * @tparam T 
          */
