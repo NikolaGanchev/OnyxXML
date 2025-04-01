@@ -12,6 +12,12 @@ if (DOXYGEN_FOUND)
     # and replace all such occurrances with the corresponding variable values.
     set(DOXYFILE_PATH "${DOCUMENTATION_OUTPUT_PATH}/Doxyfile")
 
+    get_filename_component(TAGS_CLASSES_GENERATOR_PATH
+                           "../src/generate_tags_classes.cpp"
+                           ABSOLUTE)
+    
+    
+
     message(DEBUG "Documentation output path is \"${DOCUMENTATION_OUTPUT_PATH}\"")
     message(DEBUG "Doxyfile will be copied to \"${DOXYFILE_PATH}\"")
     
