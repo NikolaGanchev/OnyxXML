@@ -547,10 +547,6 @@ namespace Templater::dynamic {
             return m_root;
         }
     
-        bool Index::putIfNeeded(Node* object) {
-            return false;
-        }
-    
         bool Index::isValid() const {
             return m_valid;
         }

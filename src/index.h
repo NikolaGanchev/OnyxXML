@@ -7,15 +7,6 @@
 
 namespace Templater::dynamic::index {
 
-    #define BEFRIEND_INDEX_CREATOR_FUNCTIONS template <typename T, typename... Args>\
-                                            friend T Templater::dynamic::index::createIndex(Args... args) requires (isIndex<T>);\
-                                            template <typename T, typename... Args>\
-                                            friend T* Templater::dynamic::index::createIndexPointer(Args... args) requires (isIndex<T>);\
-                                            template <typename T, typename... Args>\
-                                            friend std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args... args) requires (isIndex<T>);\
-                                            template <typename T, typename... Args>\
-                                            friend std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args... args) requires (isIndex<T>);
-
     template <typename T>
     concept isIndex = std::derived_from<T, Index>;
     
