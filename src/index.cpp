@@ -108,6 +108,10 @@ namespace Templater::dynamic::index {
     }
 
     const std::vector<Node*> TagNameIndex::get() {
+        if (!this->isValid()) {
+            return {};
+        }
+        
         return m_index;
     }
 

@@ -54,8 +54,7 @@ namespace Templater::dynamic {
              * @param name The name of the attribute
              * @param value The value of the attribute
              * @param shouldEscape Signfies if the value is xml safe; if the value is unsafe, this argument should be true, which is the default value. 
-             * Has no effect on the constructed object. 
-             * To be used by consumers of the class to decide whether the value should be escaped.
+             * shouldEscape is used by consumers of the class to decide whether the value should be escaped and Has no effect on the constructed object's behaviour. 
              */
             explicit Attribute(std::string name, std::string value, bool shouldEscape = true);
 
@@ -102,7 +101,7 @@ namespace Templater::dynamic {
     }
 
     /**
-     * @brief Checks if the template parameter is as subclass of Node or an Attribute.
+     * @brief Checks if the template parameter is s subclass of Node or an Attribute.
      * 
      * @tparam T The type
      */
@@ -138,7 +137,7 @@ namespace Templater::dynamic {
 
 
     /**
-     * @brief A virtual class representing an XML Node. Any Node is a tree by itself. Node objects are not aware who its parent is, only if they have one.
+     * @brief An abstract class representing an XML Node. Any Node is a tree by itself. Node objects are not aware who its parent is, only if they have one.
      * The Node owns and manages its children. It cannot be copied or copy assigned. Moves are allowed.
      * 
      */
