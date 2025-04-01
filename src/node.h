@@ -762,7 +762,7 @@ namespace Templater::dynamic {
             public:
                 /**
                  * @brief Construct a new Text object by given text and whether unicode sequences should be escaped. 
-                 * Unicode sequences can be unsafe on envirionments that do not support UTF-8 and can be used to create injections. 
+                 * Unicode sequences can be unsafe in envirionments that do not support UTF-8 and can be used to create injections. 
                  * Unicode escaping escapes any unicode sequence to an XML/HTML entity. 
                  * Due to the runtime cost and overall low risk this is false by default.
                  * The escaping is not done by this class; it is a suggestion to consumers.
