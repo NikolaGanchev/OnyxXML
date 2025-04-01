@@ -9,7 +9,7 @@ namespace Templater::dynamic::index {
         : m_attributeName(std::move(attributeName)), Index(root), m_index{} {}; 
 
     bool AttributeNameIndex::putIfNeeded(Node* node) {
-        if (node->hasAttributeValue(this->m_attributeName)) {
+        if (node->hasAttribute(this->m_attributeName)) {
             const std::string& value = node->getAttributeValue(this->m_attributeName);
             if (this->m_index.contains(value)) {
                 // Protect from double insertion
@@ -40,7 +40,7 @@ namespace Templater::dynamic::index {
     }
 
     bool AttributeNameIndex::update(Node* node) {
-        if (node->hasAttributeValue(this->m_attributeName)) {
+        if (node->hasAttribute(this->m_attributeName)) {
             for (auto& obj: getByValue(node->getAttributeValue(this->m_attributeName))) {
                 if (obj == node) {
                     return false;

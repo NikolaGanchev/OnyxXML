@@ -110,6 +110,11 @@ TEST_CASE("Index updates correctly when attributes change", "[Index]") {
     result = index.getByValue("updated");
     REQUIRE(result.size() == 1);
     CHECK(result[0]->getAttributeValue("id") == "updated");
+
+    obj.removeAttribute("id");
+
+    result = index.getByValue("updated");
+    CHECK(result.size() == 0);
 }
 
 TEST_CASE("Index updates correctly when children are added", "[Index]") {

@@ -110,10 +110,11 @@ namespace Templater::dynamic {
             std::vector<Node*> getChildrenById(const std::string& id) const;
             std::vector<Node*> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
             
-            bool hasAttributeValue(const std::string& name) const;
+            bool hasAttribute(const std::string& name) const;
             const std::vector<Attribute>& getAttributes() const;
             const std::string& getAttributeValue(const std::string& name) const;
             void setAttributeValue(const std::string& name, const std::string& newValue);
+            void removeAttribute(const std::string& name);
             ObservableStringRef operator[](const std::string& name);
 
             Node* addChild(std::unique_ptr<Node> child);

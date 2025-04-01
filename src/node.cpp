@@ -186,7 +186,7 @@ namespace Templater::dynamic {
 
     std::vector<Node*> Node::getChildrenByAttribute(const std::string& attribute, const std::string& value) const {
         return iterativeChildrenParse(*this, ([&attribute, &value](Node* obj) -> bool 
-        {  return obj->hasAttributeValue(attribute) && obj->getAttributeValue(attribute) == value; }));
+        {  return obj->hasAttribute(attribute) && obj->getAttributeValue(attribute) == value; }));
     }
 
     std::vector<Node*> Node::getChildrenByClassName(const std::string& className) const {
@@ -255,7 +255,7 @@ namespace Templater::dynamic {
         return size;
     }
 
-    bool Node::hasAttributeValue(const std::string &name) const {
+    bool Node::hasAttribute(const std::string &name) const {
         for (auto& attr: m_attributes) {
             if (attr.getName() == name) {
                 return true;
@@ -291,6 +291,20 @@ namespace Templater::dynamic {
         this->indexParse([this](index::Index* id) -> void {
             id->update(this);
         });
+    }
+
+    void Node::removeAttribute(const std::string &name) {
+        for (auto index = m_attributes.begin(); index != m_attributes.end();) {
+            if (index->getName() == name) {
+                m_attributes.erase(index);
+
+                this->indexParse([this](index::Index* id) -> void {
+                    id->update(this);
+                });
+                
+                return;
+            }
+        }
     }
 
     std::string Node::serialise(const std::string& indentationSequence, bool sortAttributes) const {
@@ -420,7 +434,7 @@ namespace Templater::dynamic {
     }
 
     Node::ObservableStringRef Node::operator[](const std::string& name) {
-        if (!hasAttributeValue(name)) {
+        if (!hasAttribute(name)) {
             setAttributeValue(name, "");
         }
 
