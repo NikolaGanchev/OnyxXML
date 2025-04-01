@@ -293,6 +293,20 @@ namespace Templater::dynamic {
         });
     }
 
+    void Node::removeAttribute(const std::string &name) {
+        for (auto index = m_attributes.begin(); index != m_attributes.end();) {
+            if (index->getName() == name) {
+                m_attributes.erase(index);
+
+                this->indexParse([this](index::Index* id) -> void {
+                    id->update(this);
+                });
+                
+                return;
+            }
+        }
+    }
+
     std::string Node::serialise(const std::string& indentationSequence, bool sortAttributes) const {
         struct ParseNode {
             const Node* obj;
