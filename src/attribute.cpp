@@ -130,6 +130,15 @@ namespace Templater::dynamic {
         pair->second--;
     }
     
+
+    bool Attribute::equalsName(const Attribute& other) const {
+        return m_name == other.m_name;
+    }
+
+    bool Attribute::equalsValue(const Attribute& other) const {
+        return m_value == other.m_value;
+    }
+
     size_t Attribute::InternPool::size() const {
         return m_pool.size();
     }

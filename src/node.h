@@ -50,6 +50,8 @@ namespace Templater::dynamic {
 
             const std::string& getName() const;
             const std::string& getValue() const;
+            bool equalsName(const Attribute& other) const;
+            bool equalsValue(const Attribute& other) const;
             bool shouldEscape() const;
 
             static size_t getInternPoolSize();

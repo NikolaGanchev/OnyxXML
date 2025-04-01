@@ -6,7 +6,7 @@
 #include <stack>
 
 namespace Templater::dynamic {
-    
+
     Node::Node()
         : m_attributes{}, m_children{}, m_indices{}, m_isInTree{false} { }
 
@@ -129,8 +129,6 @@ namespace Templater::dynamic {
     bool Node::isInTree() const {
         return m_isInTree;
     }
-
-
 
     std::vector<Node*> Node::iterativeChildrenParse(const Node& object, std::function<bool(Node*)> condition) const {
         std::vector<Node*> s;
