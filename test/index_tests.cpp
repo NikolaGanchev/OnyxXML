@@ -1,5 +1,6 @@
 #include "catch2/catch_all.hpp"
 #include "templater.h"
+#include <chrono>
 
 TEST_CASE("Index is added correctly", "[Index]" ) {
     using namespace Templater::dynamic::dtags;
@@ -536,7 +537,7 @@ TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
     REQUIRE(articleResult.size() == 1);
 }
 
-TEST_CASE("Cache index works", "[CacheIndex]") {
+TEST_CASE("CacheIndex works", "[CacheIndex]") {
     using namespace Templater::dynamic::dtags;
 
     GenericNode obj{
@@ -570,4 +571,231 @@ TEST_CASE("Cache index works", "[CacheIndex]") {
     CHECK(!(index.isCached(&GenericNode::serialise, "\t\t", true)));
     
     CHECK_THROWS(index.getCached(&GenericNode::serialise, "\t", true));
+}
+
+Templater::dynamic::dtags::GenericNode getComplexTree() {
+    using namespace Templater::dynamic::dtags;
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        
+        GenericNode("head", false,
+            GenericNode("meta", true, 
+                Attribute("charset", "UTF-8")),
+            GenericNode("meta", true, 
+                Attribute("name", "viewport"),
+                Attribute("content", "width=device-width, initial-scale=1.0")),
+            GenericNode("title", false, 
+                Text("Complex Test Page")),
+            GenericNode("link", true,
+                Attribute("rel", "stylesheet"),
+                Attribute("href", "/styles/main.css"))
+        ),
+        
+        GenericNode("body", false, 
+            GenericNode("header", false, 
+                GenericNode("nav", false, 
+                    GenericNode("ul", false, 
+                        GenericNode("li", false, 
+                            Attribute("class", "item"),
+                            GenericNode("a", false,
+                                Attribute("href", "#home"),
+                                Text("Home")
+                            )
+                        ),
+                        GenericNode("li", false, 
+                            Attribute("class", "item"),
+                            GenericNode("a", false,
+                                Attribute("href", "#about"),
+                                Text("About Us")
+                            )
+                        )
+                    )
+                )
+            ),
+            
+            GenericNode("main", false,
+                GenericNode("section", false, 
+                    Attribute("id", "introduction"),
+                    GenericNode("h1", false, Text("Introduction")),
+                    GenericNode("p", false, Text("Welcome to the complex HTML structure test case.")),
+                    GenericNode("p", false, Text("This test includes various nested elements, attributes, and content.")),
+                    GenericNode("form", false, 
+                        Attribute("name", "contact-form"),
+                        GenericNode("label", false,
+                            Attribute("for", "name"),
+                            Text("Your Name:")
+                        ),
+                        GenericNode("input", true, 
+                            Attribute("type", "text"),
+                            Attribute("id", "name"),
+                            Attribute("name", "name")
+                        ),
+                        GenericNode("label", false, 
+                            Attribute("for", "email"),
+                            Text("Your Email:")
+                        ),
+                        GenericNode("input", true, 
+                            Attribute("type", "email"),
+                            Attribute("id", "email"),
+                            Attribute("name", "email")
+                        ),
+                        GenericNode("button", false, 
+                            Attribute("type", "submit"),
+                            Text("Submit")
+                        )
+                    )
+                ),
+                
+                GenericNode("section", false, 
+                    Attribute("id", "features"),
+                    GenericNode("h2", false, Text("Features")),
+                    GenericNode("ul", false, 
+                        GenericNode("li", false, Attribute("class", "item"), Text("Feature 1")),
+                        GenericNode("li", false, Attribute("class", "item"), Text("Feature 2")),
+                        GenericNode("li", false, Attribute("class", "item"), Text("Feature 3"))
+                    ),
+                    GenericNode("p", false, Text("These are the key features of the application."))
+                )
+            ),
+            
+            GenericNode("footer", false,
+                GenericNode("p", false, Text("© 2025 Complex HTML Test Page")),
+                GenericNode("a", false,
+                    Attribute("href", "https://www.example.com"),
+                    Text("Privacy Policy")
+                )
+            )
+        )
+    };
+
+    return obj;
+}
+
+TEST_CASE("AttributeNameIndex is faster than querying the tree", "[AttributeNameIndex]") {
+    using namespace Templater::dynamic::dtags;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+
+    GenericNode obj = getComplexTree();
+
+    REQUIRE(obj.getChildrenCount() > 0);
+    
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
+
+    auto t1 = high_resolution_clock::now();
+    auto result = index.getByValue("item");
+    auto t2 = high_resolution_clock::now();
+
+    duration<double, std::milli> timeIndex = t2 - t1;
+
+    auto t21 = high_resolution_clock::now();
+    auto result2 = obj.getChildrenByClassName("item");
+    auto t22 = high_resolution_clock::now();
+
+    REQUIRE(result2.size() == result.size());
+
+    duration<double, std::milli> timeParse = t22 - t21;
+
+    REQUIRE(timeIndex.count() < timeParse.count());
+}
+
+
+TEST_CASE("TagNameIndex is faster than querying the tree", "[TagNameIndex]") {
+    using namespace Templater::dynamic::dtags;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    GenericNode obj = getComplexTree();
+
+    REQUIRE(obj.getChildrenCount() > 0);
+    
+    index::TagNameIndex index = index::createIndex<index::TagNameIndex>(&obj, "p");
+
+    auto t1 = high_resolution_clock::now();
+    auto result = index.get();
+    auto t2 = high_resolution_clock::now();
+
+    duration<double, std::milli> timeIndex = t2 - t1;
+
+    auto t21 = high_resolution_clock::now();
+    auto result2 = obj.getChildrenByTagName("p");
+    auto t22 = high_resolution_clock::now();
+
+    REQUIRE(result2.size() == result.size());
+
+    duration<double, std::milli> timeParse = t22 - t21;
+
+    REQUIRE(timeIndex.count() < timeParse.count());
+}
+
+
+TEST_CASE("TagIndex is faster than querying the tree", "[TagIndex]") {
+    using namespace Templater::dynamic::dtags;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    GenericNode obj = getComplexTree();
+
+    REQUIRE(obj.getChildrenCount() > 0);
+    
+    index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
+
+    auto t1 = high_resolution_clock::now();
+    auto result = index.getByTagName("p");
+    auto t2 = high_resolution_clock::now();
+
+    duration<double, std::milli> timeIndex = t2 - t1;
+
+    auto t21 = high_resolution_clock::now();
+    auto result2 = obj.getChildrenByTagName("p");
+    auto t22 = high_resolution_clock::now();
+
+    REQUIRE(result2.size() == result.size());
+
+    duration<double, std::milli> timeParse = t22 - t21;
+
+    REQUIRE(timeIndex.count() < timeParse.count());
+}
+
+
+TEST_CASE("CacheIndex is faster than querying the tree", "[TagIndex]") {
+    using namespace Templater::dynamic::dtags;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    GenericNode obj = getComplexTree();
+
+    REQUIRE(obj.getChildrenCount() > 0);
+    
+    index::CacheIndex index = index::createIndex<index::CacheIndex>(&obj);
+
+    std::string result = index.cache(&Node::serialise, "\t", true);
+
+    auto t1 = high_resolution_clock::now();
+    result = index.cache(&Node::serialise, "\t", true);
+    auto t2 = high_resolution_clock::now();
+
+    duration<double, std::milli> timeIndex = t2 - t1;
+
+    auto t21 = high_resolution_clock::now();
+    std::string result2 = obj.serialise("\t", true);
+    auto t22 = high_resolution_clock::now();
+
+    REQUIRE(result2 == result);
+
+    duration<double, std::milli> timeQuery = t22 - t21;
+
+    REQUIRE(timeIndex.count() < timeQuery.count());
 }
