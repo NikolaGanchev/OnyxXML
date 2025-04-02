@@ -342,13 +342,13 @@ namespace Templater::dynamic {
             }
             node.visited = true;
 
-            if (tagName == "text") {
+            if (tagName == ".text") {
                 result << indentation << obj->serialise(indentationSequence, sortAttributes) << "\n";
                 s.pop_back();
                 continue;
             }
 
-            if (tagName == "") {
+            if (tagName == ".empty") {
                 s.pop_back();
                 const std::vector<std::unique_ptr<Node>>& children = obj->m_children;
                 for (size_t i = children.size(); i > 0; --i) {
@@ -516,7 +516,7 @@ namespace Templater::dynamic {
         }
 
         const std::string& Text::getTagName() const {
-            static const std::string name = "text";
+            static const std::string name = ".text";
             return name;
         }
 
@@ -529,7 +529,7 @@ namespace Templater::dynamic {
         }
 
         const std::string& EmptyNode::getTagName() const {
-            static const std::string name = "";
+            static const std::string name = ".empty";
             return name;
         }
 
