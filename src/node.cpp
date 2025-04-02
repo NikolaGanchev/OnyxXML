@@ -342,7 +342,7 @@ namespace Templater::dynamic {
             }
             node.visited = true;
 
-            if (tagName == ".text") {
+            if (tagName == ".text" || tagName == ".rawText") {
                 result << indentation << obj->serialise(indentationSequence, sortAttributes) << "\n";
                 s.pop_back();
                 continue;
@@ -537,6 +537,30 @@ namespace Templater::dynamic {
         const std::string& Comment::getTagName() const {
             static const std::string name = ".comment";
             return name;
+        }
+
+        
+
+        __DangerousRawText::__DangerousRawText(std::string text): m_text(text), Node{} {}
+
+        __DangerousRawText::__DangerousRawText(const __DangerousRawText& other): m_text(other.m_text), Node{} {}
+        __DangerousRawText::__DangerousRawText(__DangerousRawText&& other): m_text(std::move(other.m_text)), Node{} {}
+
+        const std::string& __DangerousRawText::getTagName() const {
+            static const std::string name = ".rawText";
+            return name;
+        }
+
+        const std::string& __DangerousRawText::getText() const {
+            return m_text;
+        }
+
+        bool __DangerousRawText::isVoid() const {
+            return true;
+        }
+
+        std::string __DangerousRawText::serialise(const std::string& indentationSequence, bool sortAttributes) const {
+            return m_text;
         }
 
         const std::string& EmptyNode::getTagName() const {

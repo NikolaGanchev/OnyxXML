@@ -803,7 +803,7 @@ namespace Templater::dynamic {
                  * 
                  * @return const std::string& 
                  */
-                const std::string& getText() const;
+                virtual const std::string& getText() const;
 
 
                 /**
@@ -823,15 +823,71 @@ namespace Templater::dynamic {
          */
         class Comment: public Text {
             using Text::Text;
+            public:
+                /**
+                 * @brief The tag name of a comment node is the invalid xml tag name ".comment". 
+                 * This signals it shouldn't be used as a tag and is a marker of the class.
+                 * 
+                 * @return const std::string& 
+                 */
+                const std::string& getTagName() const override;
+        };
 
 
-            /**
-             * @brief The tag name of a comment node is the invalid xml tag name ".comment". 
-             * This signals it shouldn't be used as a tag and is a marker of the class.
-             * 
-             * @return const std::string& 
-             */
-            const std::string& getTagName() const override;
+        /**
+         * @brief A raw text Node. Susceptible to XML injections. Only use if needed explicitly.
+         * 
+         */
+        class __DangerousRawText: public Node {
+            private:
+                /**
+                 * @brief The text
+                 * 
+                 */
+                const std::string m_text;
+            public:
+                /**
+                 * @brief Construct a new __DangerousRawText object by given text. Escaping is not done.
+                 * 
+                 * @param text 
+                 */
+                explicit __DangerousRawText(std::string text); 
+
+
+                /**
+                 * @brief Construct a new __DangerousRawTex object by copy
+                 * 
+                 * @param other 
+                 */
+                explicit __DangerousRawText(const __DangerousRawText& other); 
+
+
+                /**
+                 * @brief Construct a new __DangerousRawTex object by move
+                 * 
+                 * @param other 
+                 */
+                explicit __DangerousRawText(__DangerousRawText&& other); 
+
+
+                bool isVoid() const override;
+
+                /**
+                 * @brief The tag name of a comment node is the invalid xml tag name ".rawText". 
+                 * This signals it shouldn't be used as a tag and is a marker of the class.
+                 * 
+                 * @return const std::string& 
+                 */
+                const std::string& getTagName() const override;
+
+
+                /**
+                 * @brief Get a dangerous text string. The text string is NOT escaped. It can lead to security vulnerabilities.
+                 * 
+                 * @return const std::string& 
+                 */
+                const std::string& getText() const;
+                std::string serialise(const std::string& indentationSequence = getIndentationSequence(), bool sortAttributes = getSortAttributes()) const override;
         };
     }
 

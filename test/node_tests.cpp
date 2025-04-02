@@ -767,7 +767,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
     CHECK(d.serialise() == expected);
 }
 
-TEST_CASE("HTML comments are generated", "[Node]" ) {
+TEST_CASE("HTML comments are generated", "[Comment]" ) {
     using namespace Templater::dynamic::dtags;
 
     Node::setIndentationSequence("\t");
@@ -785,7 +785,7 @@ TEST_CASE("HTML comments are generated", "[Node]" ) {
     CHECK(expected == obj.serialise());
 }
 
-TEST_CASE("HTML comments are escaped", "[Node]" ) {
+TEST_CASE("HTML comments are escaped", "[Comment]" ) {
     using namespace Templater::dynamic::dtags;
 
     Node::setIndentationSequence("\t");
@@ -799,6 +799,25 @@ TEST_CASE("HTML comments are escaped", "[Node]" ) {
     };
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<!--A comment. --&gt;&lt;dangerous&gt;sequence.-->\n\t</head>\n</html>";
+
+    CHECK(expected == obj.serialise());
+}
+
+
+TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
+    using namespace Templater::dynamic::dtags;
+
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false, __DangerousRawText("<h1> Injected title! </h1>"))
+    };
+
+    std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<h1> Injected title! </h1>\n\t</head>\n</html>";
 
     CHECK(expected == obj.serialise());
 }
