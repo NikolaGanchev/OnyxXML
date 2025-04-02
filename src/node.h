@@ -209,7 +209,7 @@ namespace Templater::dynamic {
 
 
                     /**
-                     * @brief Custom reassingment. Swaps the internal m_ptr for the new one and invokes m_callback
+                     * @brief Custom reassignment. Swaps the internal m_ptr for the new one and invokes m_callback
                       * 
                      * @param newPtr The new std::string that m_ptr should point to
                      * @return ObservableStringRef& this
@@ -614,7 +614,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Get the static indendtation sequence
+             * @brief Get the static indentation sequence
              * 
              * @return const std::string& 
              */
