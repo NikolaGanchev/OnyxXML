@@ -348,6 +348,12 @@ namespace Templater::dynamic {
                 continue;
             }
 
+            if (tagName == ".comment") {
+                result << indentation << "<!--" << obj->serialise(indentationSequence, sortAttributes) << "-->\n";
+                s.pop_back();
+                continue;
+            }
+
             if (tagName == ".empty") {
                 s.pop_back();
                 const std::vector<std::unique_ptr<Node>>& children = obj->m_children;
@@ -526,6 +532,11 @@ namespace Templater::dynamic {
 
         std::string Text::serialise(const std::string& indentationSequence, bool sortAttributes) const {
             return text::escape(m_text, m_escapeMultiByte);
+        }
+        
+        const std::string& Comment::getTagName() const {
+            static const std::string name = ".comment";
+            return name;
         }
 
         const std::string& EmptyNode::getTagName() const {

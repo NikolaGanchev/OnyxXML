@@ -736,6 +736,14 @@ namespace Templater::dynamic {
         class EmptyNode: public Node {
             public: 
                 using Node::Node;
+
+
+                /**
+                 * @brief The tag name of an empty node is the invalid xml tag name ".empty". 
+                 * This signals it shouldn't be used as a tag and is a marker of the class.
+                 * 
+                 * @return const std::string& 
+                 */
                 const std::string& getTagName() const override;
                 bool isVoid() const override;
         };
@@ -755,7 +763,7 @@ namespace Templater::dynamic {
 
 
                 /**
-                 * @brief Whether unicode sequences should be escaped. Set at construction. Doesn't influence the behaviour of instances of this class.
+                 * @brief Whether unicode sequences should be escaped. Set at construction.
                  * 
                  */
                 const bool m_escapeMultiByte;
@@ -791,14 +799,39 @@ namespace Templater::dynamic {
 
 
                 /**
-                 * @brief Get the text string. The string is returned without any transformations done to it.
+                 * @brief Get the text string. The text string is automatically escaped.
                  * 
                  * @return const std::string& 
                  */
                 const std::string& getText() const;
 
+
+                /**
+                 * @brief The tag name of a text node is the invalid xml tag name ".text". 
+                 * This signals it shouldn't be used as a tag and is a marker of the class.
+                 * 
+                 * @return const std::string& 
+                 */
                 const std::string& getTagName() const override;
                 std::string serialise(const std::string& indentationSequence = getIndentationSequence(), bool sortAttributes = getSortAttributes()) const override;
+        };
+
+
+        /**
+         * @brief A comment Node
+         * 
+         */
+        class Comment: public Text {
+            using Text::Text;
+
+
+            /**
+             * @brief The tag name of a comment node is the invalid xml tag name ".comment". 
+             * This signals it shouldn't be used as a tag and is a marker of the class.
+             * 
+             * @return const std::string& 
+             */
+            const std::string& getTagName() const override;
         };
     }
 
