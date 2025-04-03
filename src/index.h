@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <any>
+#include <stdexcept>
 
 namespace Templater::dynamic::index {
 
@@ -387,7 +388,8 @@ std::size_t Templater::dynamic::index::CacheIndex::hashTuple(const Tuple& tuple,
 template <typename Function, typename... Args>
 std::size_t Templater::dynamic::index::CacheIndex::generateHash(Function f, Args&&... args) {
     std::tuple<std::decay_t<Args>...> argsTuple(std::forward<Args>(args)...);
-    std::size_t funcHash = std::hash<void*>{}(reinterpret_cast<void*>(f));
+    // *(void**)(void*)&f is equivalent to reinterpret_cast<void*>(f)
+    std::size_t funcHash = std::hash<void*>{}(*(void**)(void*)&f);
     std::size_t argsHash = hashTuple(argsTuple, std::index_sequence_for<Args...>{});
     return funcHash ^ argsHash;
 }

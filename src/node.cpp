@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <sstream>
 #include <stack>
+#include <algorithm>
 
 namespace Templater::dynamic {
 
@@ -370,7 +371,7 @@ namespace Templater::dynamic {
                 attributes.push_back(&(obj->m_attributes[i]));
             }
             if (sortAttributes) {
-                sort(attributes.begin(), attributes.end(), [](const Attribute* lhs, const Attribute* rhs)
+                std::sort(attributes.begin(), attributes.end(), [](const Attribute* lhs, const Attribute* rhs)
                 {
                     return lhs->getName() < rhs->getName();
                 });
