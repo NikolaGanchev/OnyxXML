@@ -75,9 +75,9 @@ namespace Templater::compile {
             /**
              * @brief Construct a dynamic Attribute from a compile time Attribute.
              * 
-             * @return constexpr std::unique_ptr<Templater::dynamic::Attribute> 
+             * @return std::unique_ptr<Templater::dynamic::Attribute> 
              */
-            static constexpr std::unique_ptr<Templater::dynamic::Attribute> attr() {
+            static std::unique_ptr<Templater::dynamic::Attribute> attr() {
                 return std::make_unique<Templater::dynamic::Attribute>(Name, Value);
             }
         };
@@ -106,9 +106,9 @@ namespace Templater::compile {
             /**
              * @brief Construct a dynamic Text Node from a compile time Text struct.
              * 
-             * @return constexpr std::unique_ptr<Templater::dynamic::Node> 
+             * @return std::unique_ptr<Templater::dynamic::Node> 
              */
-            static constexpr std::unique_ptr<Templater::dynamic::Node> value() {
+            static std::unique_ptr<Templater::dynamic::Node> value() {
                 return std::make_unique<Templater::dynamic::dtags::Text>(Str);
             }
         };
@@ -123,7 +123,7 @@ namespace Templater::compile {
          * @param node 
          */
         template <typename Child>
-        constexpr void parseChildren(Templater::dynamic::Node* node) {
+        void parseChildren(Templater::dynamic::Node* node) {
             if constexpr(isAttribute<Child>) {
                 std::unique_ptr<Templater::dynamic::Attribute> attr = Child::attr();
                 node->operator[](attr->getName()) = attr->getValue();
@@ -159,9 +159,9 @@ namespace Templater::compile {
          * 
          * @param indentationSequence 
          * @param sortAttributes 
-         * @return constexpr std::string 
+         * @return std::string 
          */
-        static constexpr std::string value(
+        static std::string value(
             const std::string& indentationSequence = Templater::dynamic::Node::getIndentationSequence(), 
             bool sortAttributes = Templater::dynamic::Node::getSortAttributes()) {
             Templater::dynamic::dtags::EmptyNode obj;

@@ -36,7 +36,7 @@ void readTags(std::vector<Tag>& tags) {
             compileName = line;
         }
 
-        tags.emplace_back(tagName, isVoidChar != '0', dynamicName, compileName);
+        tags.emplace_back(Tag{tagName, isVoidChar != '0', dynamicName, compileName});
     }
 
     input_file.close();
@@ -112,7 +112,7 @@ void generateCompile(const std::vector<Tag>& tags) {
     for (auto& tag: tags) {
         headerCompile << "    template <typename... Children>\n"
                             "    struct " << tag.compileName << " {\n"
-                                    "        static constexpr std::unique_ptr<Templater::dynamic::Node> value() {\n"
+                                    "        static std::unique_ptr<Templater::dynamic::Node> value() {\n"
                                     "            std::unique_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_unique<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
                                     "            (parseChildren<Children>(node.get()), ...);\n"
                                     "            return node;\n"

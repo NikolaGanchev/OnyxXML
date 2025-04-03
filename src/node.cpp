@@ -322,7 +322,7 @@ namespace Templater::dynamic {
 
         std::vector<const Attribute*> attributes;
 
-        s.emplace_back(this, false);
+        s.emplace_back(ParseNode{this, false});
 
         while(!s.empty()) {
             ParseNode& node = s.back();
@@ -359,7 +359,7 @@ namespace Templater::dynamic {
                 s.pop_back();
                 const std::vector<std::unique_ptr<Node>>& children = obj->m_children;
                 for (size_t i = children.size(); i > 0; --i) {
-                    s.emplace_back(children[i-1].get(), false);
+                    s.emplace_back(ParseNode{children[i-1].get(), false});
                 }
                 continue;
             }
@@ -387,10 +387,10 @@ namespace Templater::dynamic {
                 const std::vector<std::unique_ptr<Node>>& children = obj->m_children;
                 if (!children.empty()) {
                     result << ">\n";
-                    s.emplace_back(nullptr, false);
+                    s.emplace_back(ParseNode{nullptr, false});
                     indentation += indentationSequence;
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(children[i-1].get(), false);
+                        s.emplace_back(ParseNode{children[i-1].get(), false});
                     }
                 } else {
                     result << "></" << tagName << ">\n";
