@@ -343,7 +343,7 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             const std::string& getTagName() const override;
     };
-    class link: public VoidNode {
+    class clink: public VoidNode {
         public:
             using VoidNode::VoidNode;
             const std::string& getTagName() const override;

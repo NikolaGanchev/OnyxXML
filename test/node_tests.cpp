@@ -450,7 +450,7 @@ TEST_CASE("Complex html with dynamic tags", "[Node]" ) {
             meta(Attribute("name", "viewport"), 
                 Attribute("content", "width=device-width, initial-scale=1.0")),
             title(Text("Complex Test Page")),
-            link(Attribute("rel", "stylesheet"),
+            clink(Attribute("rel", "stylesheet"),
                 Attribute("href", "/styles/main.css"))
         ),
         
@@ -688,7 +688,7 @@ TEST_CASE("Complex html with constant tags", "[Node]" ) {
                 title<Text<"Test Page">>,
                 meta<Attribute<"charset", "UTF-8">>,
                 meta<Attribute<"name", "viewport">, Attribute<"content", "width=device-width, initial-scale=1.0">>,
-                link<Attribute<"rel", "stylesheet">, Attribute<"href", "styles.css">>
+                clink<Attribute<"rel", "stylesheet">, Attribute<"href", "styles.css">>
             >,
             body<
                 h1<Text<"Welcome to the Test Page">>,

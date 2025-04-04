@@ -57,7 +57,7 @@ kbd,0
 label,0
 legend,0
 li,0
-link,1
+link,1,clink,clink
 main,0
 map,0
 mark,0

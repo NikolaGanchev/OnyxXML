@@ -383,7 +383,7 @@ namespace Templater::dynamic::dtags {
     bool li::isVoid() const {
         return 0;
     }
-    const std::string& link::getTagName() const {
+    const std::string& clink::getTagName() const {
         static const std::string name = "link";
         return name;
     }

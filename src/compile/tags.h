@@ -468,9 +468,9 @@ namespace Templater::compile::ctags {
         }
     };
     template <typename... Children>
-    struct link {
+    struct clink {
         static std::unique_ptr<Templater::dynamic::Node> value() {
-            std::unique_ptr<Templater::dynamic::dtags::link> node = std::make_unique<Templater::dynamic::dtags::link>();
+            std::unique_ptr<Templater::dynamic::dtags::clink> node = std::make_unique<Templater::dynamic::dtags::clink>();
             (parseChildren<Children>(node.get()), ...);
             return node;
         }
