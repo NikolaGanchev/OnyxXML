@@ -1,6 +1,5 @@
 #pragma once
 #include "node.h" 
-
 #include "void_node.h" 
 
 namespace Templater::dynamic::dtags {
