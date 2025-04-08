@@ -10,6 +10,10 @@ target_sources(
         "dynamic/tags.cpp"
         "text.cpp"
         "index.cpp"
+        "attribute_name_index.cpp"
+        "tag_name_index.cpp"
+        "tag_index.cpp"
+        "cache_index.cpp"
 )
 
 set(GENERATED_TAGS_H "${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.h")

@@ -48,7 +48,6 @@ namespace Templater::dynamic::index {
     template <typename T, typename... Args>
     std::unique_ptr<T> createIndexUniquePointer(Args... args) requires (isIndex<T>);
 
-
     /**
      * @brief Creates a shared pointer to an Index of type T using the provided args and returns it to the user.
      * 
@@ -58,291 +57,123 @@ namespace Templater::dynamic::index {
     template <typename T, typename... Args>
     std::shared_ptr<T> createIndexSharedPointer(Args... args) requires (isIndex<T>);
 
+    #define BEFRIEND_INDEX_CREATOR_FUNCTIONS template <typename T, typename... Args>\
+                                        friend T Templater::dynamic::index::createIndex(Args... args) requires (isIndex<T>);\
+                                        template <typename T, typename... Args>\
+                                        friend T* Templater::dynamic::index::createIndexPointer(Args... args) requires (isIndex<T>);\
+                                        template <typename T, typename... Args>\
+                                        friend std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args... args) requires (isIndex<T>);\
+                                        template <typename T, typename... Args>\
+                                        friend std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args... args) requires (isIndex<T>);
 
-
-    /**
-     * @brief An Index which keeps track of all nodes which have specific attribute name and is queried by values of that attribute.
-     * The underlying index data structure is an std::unordered_map.
+        /**
+     * @brief Indexes are non-owning indexings over a Node. 
+     * A node with an Index also holds a non owning pointer to it. 
+     * The index, with other words, is solely owned by the creator.
+     * Upon destruction of a Node, it invalidates its own indices. 
+     * Invalidate indices are to not return any values if queried.
+     * At destruction, the index, if valid, removes itself from the root note it is applied to.
+     * As a rule, nodes do not query indices. An Index should have methods to return any required info it indexes.
+     * The index class is responsible for root keeping, invalidation and destruction. 
+     * The index class constructor is protected. Indices are to be created using "creator" functions, which are templated functions for instantiation of indices.
+     * To use them, any subclass of Index should in its definition write the macro BEFRIEND_INDEX_CREATOR_FUNCTIONS; to add creators.
+     * Subclasses are responsible for providing their own implementations of storage and getters, as well as decide when the Index should be updated.
+     * Any index queries are, unless specified otherwise, only valid from the viewpoint of the root Node.
      * 
      */
-    class AttributeNameIndex: public Index {
+    class Index {
+        friend Node;
         private:
             /**
-             * @brief The attribute name to index. Constant from creation.
+             * @brief The Node the Index was initialised with
              * 
              */
-            const std::string attributeName;
-
-
+            Node* root;
             /**
-             * @brief The index storage. 
-             * The key is the attribute value, while the value is the std::vector of all indexed Nodes which have that attribute value.
+             * @brief Whether the Index is valid or not
              * 
              */
-            std::unordered_map<std::string, std::vector<Node*>> index;
+            bool valid;
         protected:
-            bool putIfNeeded(Node* node) override;
-            bool removeIfNeeded(Node* node) override;
-            bool update(Node* node) override;
+            /**
+             * @brief Indexes the given Node if it satisfies the conditions for indexing and is not already in the index.
+             * Always called when a child is being added to a Node. 
+             * 
+             * @param object 
+             * @return true The Node was indexed on this call
+             * @return false The Node doesn't need to be indexed or is already in the index.
+             */
+            virtual bool putIfNeeded(Node* object) = 0;
 
 
             /**
-             * @brief Construct a new AttributeNameIndex object by a given root and attribute name which is copied.
+             * @brief Removes the given Node if it is in the index.
+             * Always called when a child is being removed from a Node, or a Node is being deconstructed. 
+             * 
+             * @param object 
+             * @return true The Node was removed
+             * @return false The Node wasn't removed
+             */
+            virtual bool removeIfNeeded(Node* object) = 0;
+
+
+            /**
+             * @brief Updates the given Node. The Node may be added or removed from the index, or its indexing changed.
+             * Nodes have to call this anytime the node's properties are mutated. The update() function should satisfy the following:
+             * 1. If the given Node is already in the expected position in the index, nothing is done.
+             * 2. Else, update() is equivalent to calling removeIfNeeded() and putIfNeeded(). 
+             * This may or may not change the index, but the update() function can choose to return true in both cases.
+             * 
+             * @param object 
+             * @return true The Node's indexing could have been updated but is not guaranteed to have been
+             * @return false The Node wasn't updated
+             */
+            virtual bool update(Node* object) = 0;
+
+
+            /**
+             * @brief Construct a new Index object. Indices are empty on construction and to index the given root, init() needs to be called.
              * 
              * @param root 
-             * @param attributeName 
              */
-            explicit AttributeNameIndex(Node* root, std::string& attributeName);
-
-
-            /**
-             * @brief Construct a new AttributeNameIndex object by a given root and attribute name which is moved.
-             * 
-             * @param root 
-             * @param attributeName 
-             */
-            explicit AttributeNameIndex(Node* root, std::string&& attributeName);
-        public:
-            /**
-             * @brief Get a const copy of the vector of all indexed Nodes which have the given attribute value.
-             * Returns an empty vector if the Index is invalidated.
-             * 
-             * @param value 
-             * @return const std::vector<Node*> 
-             */
-            const std::vector<Node*> getByValue(const std::string& value);
-        
-        BEFRIEND_INDEX_CREATOR_FUNCTIONS;
-    };
-
-
-
-    /**
-     * @brief An Index which keeps track of all nodes with a specific tag name. The underlying index structure is an std::vector.
-     * 
-     */
-    class TagNameIndex: public Index {
-        private:
-            /**
-             * @brief The tag name to index. Constant from creation.
-             * 
-             */
-            const std::string tagName;
-
-
-            /**
-             * @brief The data structure that holds all indexed Nodes with the given tag name.
-             * 
-             */
-            std::vector<Node*> index;
-        protected:
-            bool putIfNeeded(Node* node) override;
-            bool removeIfNeeded(Node* node) override;
-            
-
-            /**
-             * @brief In the general case, Nodes shouldn't change their tag name after creation.
-             * However, in case of peculiar Node implementations, this method is fully implemented.
-             * 
-             * @param node 
-             * @return true 
-             * @return false 
-             */
-            bool update(Node* node) override;
-
-
-            /**
-             * @brief Construct a new TagNameIndex object by a given root and tag name which is copied.
-             * 
-             * @param root 
-             * @param tagName 
-             */
-            explicit TagNameIndex(Node* root, std::string& tagName);
+            explicit Index(Node* root);
 
             
             /**
-             * @brief Construct a new TagNameIndex object by a given root and tag name which is moved.
+             * @brief Invalidates the Index. Invalidated indices do not return anything to queries. What empty value is returned is determined by subclasses.
+             * Querying an invalid index should not cause any runtime errors/exceptions.
              * 
-             * @param root 
-             * @param tagName 
              */
-            explicit TagNameIndex(Node* root, std::string&& tagName);
+            void invalidate();
+
+
+            /**
+             * @brief Initialises the index. Adds the index to the root Node and its children and fills the internal index with data.
+             * 
+             */
+            void init();
         public:
             /**
-             * @brief Get a const copy of the vector of all indexed Nodes which have the given tag name.
-             * Returns an empty vector if the Index is invalidated.
+             * @brief Get the Root Node.
              * 
-             * @return const std::vector<Node*> 
+             * @return const Node* 
              */
-            const std::vector<Node*> get();
-        
-        BEFRIEND_INDEX_CREATOR_FUNCTIONS;
-    };
-
-
-    /**
-     * @brief An Index which indexes all Nodes in a tree by their tag name and provides constant access to a vector of Nodes with any given tag name.
-     * The underlying index data structure is an std::unordered_map.
-     * 
-     */
-    class TagIndex: public Index {
-        private:
-            /**
-             * @brief The index storage. 
-             * The key is the tag name, while the value is the std::vector of all indexed Nodes which have that tag name.
-             */
-            std::unordered_map<std::string, std::vector<Node*>> index;
-        protected:
-            bool putIfNeeded(Node* node) override;
-            bool removeIfNeeded(Node* node) override;
-
+            const Node* getRoot() const;
 
             /**
-             * @brief In the general case, Nodes shouldn't change their tag name after creation.
-             * However, in case of peculiar Node implementations, this method is fully implemented.
+             * @brief Whether the Index is valid. Queries on invalid indices should return empty values, but not cause exceptions.
              * 
-             * @param node 
              * @return true 
              * @return false 
              */
-            bool update(Node* node) override;
+            bool isValid() const;
 
 
             /**
-             * @brief Construct a new TagIndex object by a given root.
-             * 
-             * @param root 
-             */
-            explicit TagIndex(Node* root);
-        public:
-            /**
-             * @brief Get a const copy of the vector of all indexed Nodes which have the passed to the method tag name.
-             * Returns an empty vector if the Index is invalidated.
-             * 
-             * @param tagName 
-             * @return const std::vector<Node*> 
-             */
-            const std::vector<Node*> getByTagName(const std::string& tagName);
-        
-        BEFRIEND_INDEX_CREATOR_FUNCTIONS;
-    };
-
-    
-    /**
-     * @brief An index which tracks whether the tree it has been given has been changed.
-     * A function of the root and its arguments can be passed to the cache() method and the result will be cached or returned from the cache.
-     * If the tree changes in any way, this Index will invalidate its inner cache and delete all entries inside it.
-     * The underlying data structure is an std::unordered_map.
-     */
-    class CacheIndex: public Index {
-        private:
-            /**
-             * @brief The std::unordered_map holding the cache. 
-             * The key is a hash derived from the function pointer and the specific arguments. 
-             * The value is the value that the function returned on its initial call.
+             * @brief Destroy the Index object. Removes the index from the root Node and all its children
              * 
              */
-            std::unordered_map<std::size_t, std::any> _cache;
-
-            /**
-             * @brief Generates a hash based on a tuple using templates.
-             * Given a variadic list of arguments, this function will build a tuple from them and a hash from it.
-             * 
-             * @tparam Tuple 
-             * @tparam I 
-             * @param tuple 
-             * @return std::size_t 
-             */
-            template <typename Tuple, std::size_t... I>
-            static std::size_t hashTuple(const Tuple& tuple, std::index_sequence<I...>);
-
-
-            /**
-             * @brief This function takes a function pointer and a variadic list of arguments and generates a unique hash based on the function pointer value and the arguments.
-             * It uses hashTuple(const Tuple&, std::index_sequence<I...>) in the process
-             * 
-             * @param f 
-             * @param args 
-             * @return template <typename Function, typename... Args> 
-             */
-            template <typename Function, typename... Args>
-            static std::size_t generateHash(Function f, Args&&... args);
-
-        protected:
-            bool putIfNeeded(Node* node) override;
-            bool removeIfNeeded(Node* node) override;
-            bool update(Node* node) override;
-
-            /**
-             * @brief Construct a new CacheIndex object by a given root.
-             * 
-             * @param root 
-             */
-            explicit CacheIndex(Node* root);
-        public:
-            /**
-             * @brief Given a function and arguments, this function generates a hash for the function and the specific arguments.
-             * Using this hash, it checks its internal cache for a result of a previous call with the same hash.
-             * If no such call is found, the function calls the passed function onto the root (generating a compile-time error if that is impossible),
-             * caching the result and returning it to the user. Does not handle hash collisions.
-             * 
-             * For example: 
-             * @code{.cpp}
-             *  using namespace Templater::dynamic::dtags;
-             *
-             *  GenericNode obj{
-             *      "html", false,
-             *      Attribute("lang", "en"),
-             *      Attribute("theme", "dark"),
-             *      GenericNode("head", false)
-             *  };
-             *
-             *  index::CacheIndex index = index::createIndex<index::CacheIndex>(&obj);
-             * 
-             *  std::string serialised = index.cache(&GenericNode::serialise, "\t", true); // The serialisation is cached until the GenericObject is changed
-             * @endcode 
-             * 
-             * @tparam Function 
-             * @tparam Args 
-             * @param f The function reference-
-             * @param args 
-             * @return decltype((this->getRoot()->*f)(std::forward<Args>(args)...)) 
-             */
-            template <typename Function, typename... Args>
-            auto cache(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...));
-
-
-            /**
-             * @brief Like cache(), but throws a runtime error if the call is not in the cache.
-             * Given a function and arguments, this function generates a hash for the function and the specific arguments.
-             * Using this hash, it checks its internal cache for a result of a previous call with the same hash.
-             * If no such call is found, the function throws a runtime error.
-             * 
-             * @tparam Function 
-             * @tparam Args 
-             * @param f 
-             * @param args 
-             * @return decltype((this->getRoot()->*f)(std::forward<Args>(args)...)) 
-             */
-            template <typename Function, typename... Args>
-            auto getCached(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...));
-
-
-            /**
-             * @brief Given a function and arguments, this function generates a hash for the function and the specific arguments.
-             * Using this hash, it checks its internal cache for a result of a previous call with the same hash and returns whether there is one.
-             * 
-             * @tparam Function 
-             * @tparam Args 
-             * @param f 
-             * @param args 
-             * @return true The call is in the cache
-             * @return false The call is not in the cache
-             */
-            template <typename Function, typename... Args>
-            bool isCached(Function f, Args&&... args);
-        
-        BEFRIEND_INDEX_CREATOR_FUNCTIONS;
+            virtual ~Index();
     };
 }
 
@@ -376,51 +207,4 @@ std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args... a
     index->init();
 
     return index;
-}
-
-template <typename Tuple, std::size_t... I>
-std::size_t Templater::dynamic::index::CacheIndex::hashTuple(const Tuple& tuple, std::index_sequence<I...>) {
-    std::size_t seed = 0;
-    ((seed ^= std::hash<std::tuple_element_t<I, Tuple>>{}(std::get<I>(tuple))), ...);
-    return seed;
-}
-
-template <typename Function, typename... Args>
-std::size_t Templater::dynamic::index::CacheIndex::generateHash(Function f, Args&&... args) {
-    std::tuple<std::decay_t<Args>...> argsTuple(std::forward<Args>(args)...);
-    // *(void**)(void*)&f is equivalent to reinterpret_cast<void*>(f)
-    std::size_t funcHash = std::hash<void*>{}(*(void**)(void*)&f);
-    std::size_t argsHash = hashTuple(argsTuple, std::index_sequence_for<Args...>{});
-    return funcHash ^ argsHash;
-}
-
-template <typename Function, typename... Args>
-auto Templater::dynamic::index::CacheIndex::cache(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...)) {
-    std::size_t hashKey = generateHash(f, args...);
-
-    if (this->_cache.find(hashKey) != this->_cache.end()) {
-        return std::any_cast<decltype((this->getRoot()->*f)(std::forward<Args>(args)...))>(this->_cache[hashKey]);
-    }
-
-    auto result = (this->getRoot()->*f)(std::forward<Args>(args)...);
-    this->_cache[hashKey] = result;
-    return result;
-}
-
-template <typename Function, typename... Args>
-auto Templater::dynamic::index::CacheIndex::getCached(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...)) {
-    std::size_t hashKey = generateHash(f, args...);
-
-    if (this->_cache.find(hashKey) != this->_cache.end()) {
-        return std::any_cast<decltype((this->getRoot()->*f)(std::forward<Args>(args)...))>(this->_cache[hashKey]);
-    }
-
-    throw std::runtime_error("Trying to get unavailable value from cache");
-}
-
-template <typename Function, typename... Args>
-bool Templater::dynamic::index::CacheIndex::isCached(Function f, Args&&... args) {
-    std::size_t hashKey = generateHash(f, args...);
-
-    return this->_cache.find(hashKey) != this->_cache.end();
 }
