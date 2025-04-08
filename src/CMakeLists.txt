@@ -14,6 +14,12 @@ target_sources(
         "tag_name_index.cpp"
         "tag_index.cpp"
         "cache_index.cpp"
+        "void_node.cpp"
+        "text_node.cpp"
+        "empty_node.cpp"
+        "generic_node.cpp"
+        "comment_node.cpp"
+        "_dangerous_raw_text_node.cpp"
 )
 
 set(GENERATED_TAGS_H "${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.h")

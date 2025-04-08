@@ -53,6 +53,7 @@ void generateDynamic(const std::vector<Tag>& tags) {
 
     headerDynamic << "#pragma once\n";
     headerDynamic << "#include \"node.h\" \n\n";
+    headerDynamic << "#include \"void_node.h\" \n\n";
     headerDynamic << "namespace Templater::dynamic::dtags {\n";
     headerDynamic << "    using namespace Templater::dynamic; \n";
 

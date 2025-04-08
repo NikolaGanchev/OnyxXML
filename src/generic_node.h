@@ -1,0 +1,76 @@
+#pragma once
+
+#include "node.h"
+
+namespace Templater::dynamic::dtags {
+    
+    /**
+     * @brief A Node which can is given its tag name and whether it is void or not at construction. Used when concrete classes aren't available/convenient.
+     * Incurs a memory size penalty compared to concrete classes.
+     * 
+     */
+    class GenericNode: public Node {
+        private:
+            /**
+             * @brief The tag name of the Node.
+             * 
+             */
+            const std::string tag;
+
+            
+            /**
+             * @brief Whether the Node is void or not.
+             * 
+             */
+            const bool _isVoid;
+        public: 
+            /**
+             * @brief Construct a new GenericNode object.
+             * 
+             * @tparam Args 
+             * @param tagName The tag name of this node
+             * @param isVoid Whether this Node is void
+             * @param args Forwarded to the Node constructor
+             */
+            template <typename... Args>
+            explicit GenericNode(std::string tagName, bool isVoid, Args&&... args);
+            /**
+             * @brief Construct an empty GenericNode object
+             * 
+             * @param tagName The tag name of this node
+             * @param isVoid Whether this Node is void
+             */
+            explicit GenericNode(std::string tagName, bool isVoid);
+
+
+            /**
+             * @brief Construct a fully runtime GenericNode object
+             * 
+             * @param tagName The tag name of this node
+             * @param isVoid Whether this Node is void
+             * @param attributes Attributes to be forwarded to the Node constructor
+             * @param children Children to be forwarded to the Node constructor
+             */
+            explicit GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children);
+
+
+            /**
+             * @brief Construct a new GenericNode object from another GenericNode being moved.
+             * 
+             * @param other 
+             */
+            explicit GenericNode(Node&& other);
+            const std::string& getTagName() const override;
+            bool isVoid() const override;
+    };
+
+    
+    template <typename... Args>
+    GenericNode::GenericNode(std::string tagName, bool isVoid, Args&&... args)
+        : tag{std::move(tagName)}, _isVoid{isVoid}, Node(std::move(args)...) {
+
+        if (this->isVoid() && this->getChildrenCount() > 0) {
+            throw std::runtime_error("Void " + getTagName() + " cannot have children.");
+        }
+    }
+}

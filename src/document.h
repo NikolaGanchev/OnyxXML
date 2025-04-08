@@ -1,6 +1,8 @@
 #pragma once
 
 #include "node.h"
+#include "text_node.h"
+#include "empty_node.h"
 #include <string>
 #include <algorithm>
 #include <string_view>
