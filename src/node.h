@@ -24,17 +24,17 @@ namespace Templater::dynamic {
              * @brief The name of the attribute.
              * 
              */
-            std::string m_name;
+            std::string name;
             /**
              * @brief The value of the attribute.
              * 
              */
-            std::string m_value;
+            std::string value;
             /**
              * @brief whether the value should be escaped.
              * 
              */
-            bool m_shouldEscape;
+            bool _shouldEscape;
             /**
              * @brief Set the Value string
              * 
@@ -67,7 +67,7 @@ namespace Templater::dynamic {
              * If an Attribute object is needed which has an empty value and which is marked as safe, 
              * @ref Attribute(std::string, std::string, bool shouldEscape) "Attribute(std::string name, \"\", bool shouldEscape = true)" should be used instead.
              * 
-             * @param name  The name of the attribute
+             * @param name The name of the attribute
              */
             explicit Attribute(std::string name);
 
@@ -157,12 +157,12 @@ namespace Templater::dynamic {
                      * @brief The pointer to the string
                      * 
                      */
-                    std::string* m_ptr;
+                    std::string* ptr;
                     /**
                      * @brief A callback which is invoked on reassignment
                      * 
                      */
-                    std::function<void()> m_callback;
+                    std::function<void()> callback;
                 public:
                     /**
                      * @brief Construct a new Observable String Ref object
@@ -210,9 +210,9 @@ namespace Templater::dynamic {
 
 
                     /**
-                     * @brief Custom reassignment. Swaps the internal m_ptr for the new one and invokes m_callback
+                     * @brief Custom reassignment. Swaps the internal ptr for the new one and invokes callback
                       * 
-                     * @param newPtr The new std::string that m_ptr should point to
+                     * @param newPtr The new std::string that ptr should point to
                      * @return ObservableStringRef& this
                      */
                     ObservableStringRef& operator=(std::string newPtr);
@@ -243,27 +243,27 @@ namespace Templater::dynamic {
              * @brief A vector holding the Attributes of this node
              * 
              */
-            std::vector<Attribute> m_attributes;
+            std::vector<Attribute> attributes;
 
             /**
              * @brief A vector holding unique pointers to the children of this node
              * 
              */
-            std::vector<std::unique_ptr<Node>> m_children;
+            std::vector<std::unique_ptr<Node>> children;
 
 
             /**
              * @brief A vector holding raw pointers to the indices of this node
              * 
              */
-            std::vector<index::Index*> m_indices;
+            std::vector<index::Index*> indices;
 
             
             /**
              * @brief Signifies whether this node is in a tree
              * 
              */
-            bool m_isInTree = false;
+            bool _isInTree = false;
 
             
             /**
@@ -277,7 +277,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Moves an Attribute to the m_attributes vector.
+             * @brief Moves an Attribute to the attributes vector.
              * 
              * @param attribute
              */
@@ -285,7 +285,7 @@ namespace Templater::dynamic {
 
             
             /**
-             * @brief Moves a Node to the m_children vector.
+             * @brief Moves a Node to the children vector.
              * 
              * @tparam T 
              */
@@ -295,7 +295,7 @@ namespace Templater::dynamic {
 
             /**
              * @brief Removes a child from the given root recursively. 
-             * The child is removed from m_children, m_isInTree is set to false and ownership is transferred back to the caller via the return value.
+             * The child is removed from children, isInTree is set to false and ownership is transferred back to the caller via the return value.
              * 
              * @param childToRemove 
              * @param currentRoot 
@@ -306,7 +306,7 @@ namespace Templater::dynamic {
 
             /**
              * @brief Adds an index.
-             * Works by adding the index to the current object's m_indices and then adding it to all children. Calls Index::putIfNeeded() for every Node in the tree.
+             * Works by adding the index to the current object's indices and then adding it to all children. Calls Index::putIfNeeded() for every Node in the tree.
              * 
              * @param index 
              */
@@ -314,7 +314,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Removes an index from the current object's m_indices and from all its children. Calls Index::removeIfNeeded() for every Node in the tree.
+             * @brief Removes an index from the current object's indices and from all its children. Calls Index::removeIfNeeded() for every Node in the tree.
              * 
              * @param index 
              */
@@ -322,7 +322,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Safely iterates over m_indices
+             * @brief Safely iterates over indices
              * 
              * @param callback Runs for every index of the current object
              */
@@ -378,7 +378,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Destroy the Node object. Calls Index::invalidate() on all indices whose root is this object. Sets m_isInTree to false for all children.
+             * @brief Destroy the Node object. Calls Index::invalidate() on all indices whose root is this object. Sets isInTree to false for all children.
              * 
              */
             virtual ~Node();
@@ -393,7 +393,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Returns whether the XML tag is void. Void tags are self closing nodes which may have no children.
+             * @brief Returns whether the XML tag is void. Void tags are self closing nodes which may not have children.
              * 
              * @return true The tag is void
              * @return false The tag is not void
@@ -411,7 +411,7 @@ namespace Templater::dynamic {
             
 
             /**
-             * @brief Get a copy of the m_children vector for the current node
+             * @brief Get a copy of the children vector for the current node
              * 
              * @return std::vector<Node*> 
              */
@@ -527,7 +527,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Takes ownership of a Node and adds it as a child of the current node. Sets the node's m_isInTree to true. Returns a reference to the node.
+             * @brief Takes ownership of a Node and adds it as a child of the current node. Sets the node's isInTree to true. Returns a reference to the node.
              * Throws a runtime error if the current node is void.
              * 
              * @param child 
@@ -537,7 +537,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Constructs a unique pointer from the given Node and adds it to m_children.
+             * @brief Constructs a unique pointer from the given Node and adds it to children.
              * Throws a runtime error if the current node is void.
              * 
              * @tparam T 
@@ -575,7 +575,7 @@ namespace Templater::dynamic {
 
             /**
              * @brief Removes a child from the current node recursively. Any child in the tree with the current node as root is searched. 
-             * The child is removed from m_children, m_isInTree is set to false and ownership is transferred back to the caller via the return value.
+             * The child is removed from children, isInTree is set to false and ownership is transferred back to the caller via the return value.
              * 
              * @param childToRemove 
              * @return std::unique_ptr<Node>  The ownership carrying unique pointer to the removed Node.
@@ -679,14 +679,14 @@ namespace Templater::dynamic {
                  * @brief The tag name of the Node.
                  * 
                  */
-                const std::string m_tag;
+                const std::string tag;
 
                 
                 /**
                  * @brief Whether the Node is void or not.
                  * 
                  */
-                const bool m_isVoid;
+                const bool _isVoid;
             public: 
                 /**
                  * @brief Construct a new GenericNode object.
@@ -760,14 +760,14 @@ namespace Templater::dynamic {
                  * @brief The text
                  * 
                  */
-                const std::string m_text;
+                const std::string text;
 
 
                 /**
                  * @brief Whether unicode sequences should be escaped. Set at construction.
                  * 
                  */
-                const bool m_escapeMultiByte;
+                const bool escapeMultiByte;
             public:
                 /**
                  * @brief Construct a new Text object by given text and whether unicode sequences should be escaped. 
@@ -845,7 +845,7 @@ namespace Templater::dynamic {
                  * @brief The text
                  * 
                  */
-                const std::string m_text;
+                const std::string text;
             public:
                 /**
                  * @brief Construct a new __DangerousRawText object by given text. Escaping is not done.
@@ -915,12 +915,12 @@ namespace Templater::dynamic {
                  * @brief The Node the Index was initialised with
                  * 
                  */
-                Node* m_root;
+                Node* root;
                 /**
                  * @brief Whether the Index is valid or not
                  * 
                  */
-                bool m_valid;
+                bool valid;
             protected:
                 /**
                  * @brief Indexes the given Node if it satisfies the conditions for indexing and is not already in the index.
@@ -1016,7 +1016,7 @@ namespace Templater::dynamic {
 
 template <typename... Args>
 Templater::dynamic::Node::Node(Args&&... args) requires (Templater::dynamic::isValidNodeConstructorType<Args>&& ...)
-    : m_attributes{}, m_children{}, m_isInTree{false}, m_indices{} { 
+    : attributes{}, children{}, _isInTree{false}, indices{} { 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
@@ -1039,7 +1039,7 @@ Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild) requi
         return nullptr;
     }
     std::unique_ptr<T> obj = std::make_unique<std::decay_t<T>>(std::forward<T>(newChild));
-    (dynamic_cast<Node*>(obj.get()))->m_isInTree = true;
+    (dynamic_cast<Node*>(obj.get()))->_isInTree = true;
     
     this->indexParse([&obj](index::Index* id) -> void {
         (dynamic_cast<Node*>(obj.get()))->addIndex(id);
@@ -1047,7 +1047,7 @@ Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild) requi
 
     Node* objRef = obj.get();
 
-    m_children.push_back(std::move(obj));
+    children.push_back(std::move(obj));
 
     return objRef;
 }
@@ -1059,9 +1059,9 @@ void Templater::dynamic::Node::processConstructorObjectMove(T&& child) requires 
     }
 
     std::unique_ptr<T> obj = std::make_unique<std::decay_t<T>>(std::forward<T>(child));
-    (dynamic_cast<Node*>(obj.get()))->m_isInTree = true;
+    (dynamic_cast<Node*>(obj.get()))->_isInTree = true;
     
-    m_children.push_back(std::move(obj));
+    children.push_back(std::move(obj));
 }
 
 template <typename T>
@@ -1072,7 +1072,7 @@ Templater::dynamic::Node& Templater::dynamic::Node::operator+=(T&& right) requir
 
 template <typename... Args>
 Templater::dynamic::dtags::GenericNode::GenericNode(std::string tagName, bool isVoid, Args&&... args)
-    : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Node(std::move(args)...) {
+    : tag{std::move(tagName)}, _isVoid{isVoid}, Node(std::move(args)...) {
         
     if (this->isVoid() && this->getChildrenCount() > 0) {
         throw std::runtime_error("Void " + getTagName() + " cannot have children.");

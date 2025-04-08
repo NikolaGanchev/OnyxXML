@@ -71,7 +71,7 @@ namespace Templater::dynamic::index {
              * @brief The attribute name to index. Constant from creation.
              * 
              */
-            const std::string m_attributeName;
+            const std::string attributeName;
 
 
             /**
@@ -79,7 +79,7 @@ namespace Templater::dynamic::index {
              * The key is the attribute value, while the value is the std::vector of all indexed Nodes which have that attribute value.
              * 
              */
-            std::unordered_map<std::string, std::vector<Node*>> m_index;
+            std::unordered_map<std::string, std::vector<Node*>> index;
         protected:
             bool putIfNeeded(Node* node) override;
             bool removeIfNeeded(Node* node) override;
@@ -127,14 +127,14 @@ namespace Templater::dynamic::index {
              * @brief The tag name to index. Constant from creation.
              * 
              */
-            const std::string m_tagName;
+            const std::string tagName;
 
 
             /**
              * @brief The data structure that holds all indexed Nodes with the given tag name.
              * 
              */
-            std::vector<Node*> m_index;
+            std::vector<Node*> index;
         protected:
             bool putIfNeeded(Node* node) override;
             bool removeIfNeeded(Node* node) override;
@@ -191,7 +191,7 @@ namespace Templater::dynamic::index {
              * @brief The index storage. 
              * The key is the tag name, while the value is the std::vector of all indexed Nodes which have that tag name.
              */
-            std::unordered_map<std::string, std::vector<Node*>> m_index;
+            std::unordered_map<std::string, std::vector<Node*>> index;
         protected:
             bool putIfNeeded(Node* node) override;
             bool removeIfNeeded(Node* node) override;
@@ -242,7 +242,7 @@ namespace Templater::dynamic::index {
              * The value is the value that the function returned on its initial call.
              * 
              */
-            std::unordered_map<std::size_t, std::any> m_cache;
+            std::unordered_map<std::size_t, std::any> _cache;
 
             /**
              * @brief Generates a hash based on a tuple using templates.
@@ -398,12 +398,12 @@ template <typename Function, typename... Args>
 auto Templater::dynamic::index::CacheIndex::cache(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...)) {
     std::size_t hashKey = generateHash(f, args...);
 
-    if (m_cache.find(hashKey) != m_cache.end()) {
-        return std::any_cast<decltype((this->getRoot()->*f)(std::forward<Args>(args)...))>(m_cache[hashKey]);
+    if (this->_cache.find(hashKey) != this->_cache.end()) {
+        return std::any_cast<decltype((this->getRoot()->*f)(std::forward<Args>(args)...))>(this->_cache[hashKey]);
     }
 
     auto result = (this->getRoot()->*f)(std::forward<Args>(args)...);
-    m_cache[hashKey] = result;
+    this->_cache[hashKey] = result;
     return result;
 }
 
@@ -411,8 +411,8 @@ template <typename Function, typename... Args>
 auto Templater::dynamic::index::CacheIndex::getCached(Function f, Args&&... args) -> decltype((this->getRoot()->*f)(std::forward<Args>(args)...)) {
     std::size_t hashKey = generateHash(f, args...);
 
-    if (m_cache.find(hashKey) != m_cache.end()) {
-        return std::any_cast<decltype((this->getRoot()->*f)(std::forward<Args>(args)...))>(m_cache[hashKey]);
+    if (this->_cache.find(hashKey) != this->_cache.end()) {
+        return std::any_cast<decltype((this->getRoot()->*f)(std::forward<Args>(args)...))>(this->_cache[hashKey]);
     }
 
     throw std::runtime_error("Trying to get unavailable value from cache");
@@ -422,5 +422,5 @@ template <typename Function, typename... Args>
 bool Templater::dynamic::index::CacheIndex::isCached(Function f, Args&&... args) {
     std::size_t hashKey = generateHash(f, args...);
 
-    return m_cache.find(hashKey) != m_cache.end();
+    return this->_cache.find(hashKey) != this->_cache.end();
 }

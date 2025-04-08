@@ -9,40 +9,40 @@
 namespace Templater::dynamic {
 
     Attribute::Attribute(std::string name, std::string value, bool shouldEscape) 
-        : m_name(std::move(name)), m_value(std::move(value)), m_shouldEscape(shouldEscape) {}
+        : name(std::move(name)), value(std::move(value)), _shouldEscape(shouldEscape) {}
 
-    Attribute::Attribute(std::string name): m_name(std::move(name)), m_value(""), m_shouldEscape(true) {}
+    Attribute::Attribute(std::string name): name(std::move(name)), value(""), _shouldEscape(true) {}
 
     void Attribute::setValue(const std::string& value) {
-        m_value = value;
+        this->value = value;
     }
 
     const std::string& Attribute::getName() const {
-        return m_name;
+        return this->name;
     }
 
     const std::string& Attribute::getValue() const {
-        return m_value;
+        return this->value;
     }
 
     std::string& Attribute::getValueMutable() {
-        return m_value;
+        return this->value;
     }
 
     bool Attribute::shouldEscape() const {
-        return m_shouldEscape;
+        return this->_shouldEscape;
     }
 
     Node::Node()
-        : m_attributes{}, m_children{}, m_indices{}, m_isInTree{false} { }
+        : attributes{}, children{}, indices{}, _isInTree{false} { }
 
     Node::Node(Node&& other)
-        : m_attributes{std::move(other.m_attributes)}, m_children{std::move(other.m_children)}, m_indices{other.m_indices}, m_isInTree{other.m_isInTree} {}
+        : attributes{std::move(other.attributes)}, children{std::move(other.children)}, indices{other.indices}, _isInTree{other._isInTree} {}
 
     Node::Node(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
-        : m_attributes{std::move(attributes)}, m_children{std::move(children)}, m_indices{} {
-        for (auto& child: m_children) {
-            child->m_isInTree = true;
+        : attributes{std::move(attributes)}, children{std::move(children)}, indices{} {
+        for (auto& child: this->children) {
+            child->_isInTree = true;
         }
     }
 
@@ -51,8 +51,8 @@ namespace Templater::dynamic {
     }
 
     Node::~Node() {
-        for (auto& child: m_children) {
-            child->m_isInTree = false;
+        for (auto& child: this->children) {
+            child->_isInTree = false;
 
             this->indexParse([this, &child](index::Index* id) -> void {
                 if (id->getRoot() == this) {
@@ -76,14 +76,14 @@ namespace Templater::dynamic {
             return nullptr;
         }
 
-        newChild->m_isInTree = true;
+        newChild->_isInTree = true;
         this->indexParse([&newChild](index::Index* id) -> void {
             newChild->addIndex(id);
         });
 
         Node* newChildRef = newChild.get();
 
-        m_children.push_back(std::move(newChild));
+         this->children.push_back(std::move(newChild));
 
         return newChildRef;
     }
@@ -91,8 +91,8 @@ namespace Templater::dynamic {
     std::vector<Node*> Node::getChildren() const {
         std::vector<Node*> copy;
 
-        copy.reserve(m_children.size());
-        for (const auto& child : m_children) {
+        copy.reserve( this->children.size());
+        for (const auto& child : this->children) {
             copy.push_back(child.get());
         }
 
@@ -100,11 +100,11 @@ namespace Templater::dynamic {
     }
 
     size_t Node::getChildrenCount() const {
-        return this->m_children.size();
+        return this->children.size();
     }
 
     void Node::indexParse(std::function<void(index::Index*)> callback) {
-        for (auto index: m_indices) {
+        for (auto index: this->indices) {
             callback(index);
             index++;
         }
@@ -113,16 +113,16 @@ namespace Templater::dynamic {
     // Iteratively adds the index to this node and all its children
     void Node::addIndex(index::Index* index) {
         iterativeProcessor(*this, [&index](Node* obj) -> void {
-            obj->m_indices.push_back(index);
+            obj->indices.push_back(index);
             index->putIfNeeded(obj);
         });
     }
 
     void Node::removeIndex(index::Index* indexToRemove) {
         iterativeProcessor(*this, [&indexToRemove](Node* obj) -> void {
-            for (auto index = obj->m_indices.begin(); index != obj->m_indices.end();) {
+            for (auto index = obj->indices.begin(); index != obj->indices.end();) {
                 if (indexToRemove == *index) {
-                    obj->m_indices.erase(index);
+                    obj->indices.erase(index);
                     indexToRemove->removeIfNeeded(obj);
                     break;
                 } else {
@@ -145,7 +145,7 @@ namespace Templater::dynamic {
 
             s.pop_back();
 
-            const std::vector<std::unique_ptr<Node>>& children = obj->m_children;
+            const std::vector<std::unique_ptr<Node>>& children = obj->children;
             for (int i = 0; i < children.size(); i++) {
                 s.push_back(children[i].get());
             }
@@ -153,7 +153,7 @@ namespace Templater::dynamic {
     }
 
     bool Node::isInTree() const {
-        return m_isInTree;
+        return this->_isInTree;
     }
 
 
@@ -162,7 +162,7 @@ namespace Templater::dynamic {
         std::vector<Node*> s;
         std::vector<Node*> result;
 
-        auto& objectChildren = object.m_children;
+        auto& objectChildren = object.children;
         for (int i = 0; i < objectChildren.size(); i++) {
             s.push_back(objectChildren[i].get());
         }
@@ -176,7 +176,7 @@ namespace Templater::dynamic {
 
             s.pop_back();
 
-            auto& children = obj->m_children;
+            auto& children = obj->children;
             for (int i = children.size()-1; i >= 0; i--) {
                 s.push_back(children[i].get());
             }
@@ -212,11 +212,11 @@ namespace Templater::dynamic {
 
     const std::vector<Attribute>& Node::getAttributes() const {
 
-        return m_attributes;
+        return this->attributes;
     }
 
     std::unique_ptr<Node> Node::removeChild(Node* childToRemove, Node& currentRoot) {
-        auto& children = currentRoot.m_children;
+        auto& children = currentRoot.children;
 
         for (int i = 0; i < children.size(); i++) {
             if (children[i].get() == childToRemove) {
@@ -227,7 +227,7 @@ namespace Templater::dynamic {
                     }
                 });
 
-                childToRemove->m_isInTree = false;
+                childToRemove->_isInTree = false;
                 std::unique_ptr<Node> ref = std::move(children[i]);
                 children.erase(children.begin() + i);
 
@@ -250,14 +250,14 @@ namespace Templater::dynamic {
 
     size_t Node::size() const {
         size_t size = 1;
-        for (auto& child: m_children) {
+        for (auto& child: this->children) {
             size += child->size();
         }
         return size;
     }
 
     bool Node::hasAttribute(const std::string &name) const {
-        for (auto& attr: m_attributes) {
+        for (auto& attr: this->attributes) {
             if (attr.getName() == name) {
                 return true;
             }
@@ -267,7 +267,7 @@ namespace Templater::dynamic {
     }
 
     const std::string & Node::getAttributeValue(const std::string &name) const {
-        for (auto& attr: m_attributes) {
+        for (auto& attr: this->attributes) {
             if (attr.getName() == name) {
                 return attr.getValue();
             }
@@ -277,7 +277,7 @@ namespace Templater::dynamic {
     }
 
     void Node::setAttributeValue(const std::string &name, const std::string &newValue) {
-        for (auto& attr: m_attributes) {
+        for (auto& attr: this->attributes) {
             if (attr.getName() == name) {
                 attr.setValue(newValue);
 
@@ -288,16 +288,16 @@ namespace Templater::dynamic {
             }
         }
 
-        m_attributes.emplace_back(name, newValue);
+        this->attributes.emplace_back(name, newValue);
         this->indexParse([this](index::Index* id) -> void {
             id->update(this);
         });
     }
 
     void Node::removeAttribute(const std::string &name) {
-        for (auto index = m_attributes.begin(); index != m_attributes.end();) {
+        for (auto index = this->attributes.begin(); index != this->attributes.end();) {
             if (index->getName() == name) {
-                m_attributes.erase(index);
+                this->attributes.erase(index);
 
                 this->indexParse([this](index::Index* id) -> void {
                     id->update(this);
@@ -357,7 +357,7 @@ namespace Templater::dynamic {
 
             if (tagName == ".empty") {
                 s.pop_back();
-                const std::vector<std::unique_ptr<Node>>& children = obj->m_children;
+                const std::vector<std::unique_ptr<Node>>& children = obj->children;
                 for (size_t i = children.size(); i > 0; --i) {
                     s.emplace_back(ParseNode{children[i-1].get(), false});
                 }
@@ -367,8 +367,8 @@ namespace Templater::dynamic {
             result << indentation << "<" << tagName;
 
             attributes.clear();
-            for (int i = 0; i < obj->m_attributes.size(); i++) {
-                attributes.push_back(&(obj->m_attributes[i]));
+            for (int i = 0; i < obj->attributes.size(); i++) {
+                attributes.push_back(&(obj->attributes[i]));
             }
             if (sortAttributes) {
                 std::sort(attributes.begin(), attributes.end(), [](const Attribute* lhs, const Attribute* rhs)
@@ -384,7 +384,7 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->m_children;
+                const std::vector<std::unique_ptr<Node>>& children = obj->children;
                 if (!children.empty()) {
                     result << ">\n";
                     s.emplace_back(ParseNode{nullptr, false});
@@ -414,28 +414,28 @@ namespace Templater::dynamic {
     }
 
     Node::ObservableStringRef::ObservableStringRef(std::string* ref, std::function<void()> callback) 
-                            : m_ptr(ref), m_callback(std::move(callback)) {}
+                            : ptr(ref), callback(std::move(callback)) {}
 
     Node::ObservableStringRef::operator const std::string*() const { 
-        return m_ptr; 
+        return this->ptr; 
     }
 
     const std::string* Node::ObservableStringRef::operator->() const { 
-        return m_ptr; 
+        return this->ptr; 
     }
 
     const std::string& Node::ObservableStringRef::operator*() const { 
-        return *m_ptr; 
+        return *this->ptr; 
     }
 
     bool Node::ObservableStringRef::operator==(const std::string& str) const { 
-        return *m_ptr == str; 
+        return *this->ptr == str; 
     }
 
     Node::ObservableStringRef& Node::ObservableStringRef::operator=(std::string newPtr) {
-        if (*m_ptr != newPtr) {
-            *m_ptr = newPtr;
-            m_callback();
+        if (*this->ptr != newPtr) {
+            *this->ptr = newPtr;
+            this->callback();
         }
         return *this;
     }
@@ -445,7 +445,7 @@ namespace Templater::dynamic {
             setAttributeValue(name, "");
         }
 
-        for (auto& attr: m_attributes) {
+        for (auto& attr: this->attributes) {
             if (attr.getName() == name) {
                 return ObservableStringRef(&(attr.getValueMutable()), [this]() { 
                     this->indexParse([this](index::Index* id) -> void {
@@ -494,32 +494,32 @@ namespace Templater::dynamic {
     namespace dtags {
         
         GenericNode::GenericNode(std::string tagName, bool isVoid)
-                : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Node() {}
+                : tag{std::move(tagName)}, _isVoid{isVoid}, Node() {}
 
         GenericNode::GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
-                : m_tag{std::move(tagName)}, m_isVoid{isVoid}, Node{std::move(attributes), std::move(children)} {
+                : tag{std::move(tagName)}, _isVoid{isVoid}, Node{std::move(attributes), std::move(children)} {
                     if (this->isVoid() && this->getChildrenCount() > 0) {
                         throw std::runtime_error("Void " + getTagName() + " cannot have children.");
                     }
         }
 
         const std::string& GenericNode::getTagName() const {
-            return m_tag;
+            return this->tag;
         }
 
         bool GenericNode::isVoid() const {
-            return m_isVoid;
+            return this->_isVoid;
         }
 
-        GenericNode::GenericNode(Node&& other): m_tag{other.getTagName()}, m_isVoid{other.isVoid()}, Node{std::move(other)} {};
+        GenericNode::GenericNode(Node&& other): tag{other.getTagName()}, _isVoid{other.isVoid()}, Node{std::move(other)} {};
 
-        Text::Text(std::string text, bool escapeMultiByte): m_text(text), m_escapeMultiByte(escapeMultiByte), Node{} {}
+        Text::Text(std::string text, bool escapeMultiByte): text(text), escapeMultiByte(escapeMultiByte), Node{} {}
 
-        Text::Text(const Text& other): m_text(other.m_text), m_escapeMultiByte(other.m_escapeMultiByte), Node{} {}
-        Text::Text(Text&& other): m_text(std::move(other.m_text)), m_escapeMultiByte(other.m_escapeMultiByte), Node{} {}
+        Text::Text(const Text& other): text(other.text), escapeMultiByte(other.escapeMultiByte), Node{} {}
+        Text::Text(Text&& other): text(std::move(other.text)), escapeMultiByte(other.escapeMultiByte), Node{} {}
 
         const std::string& Text::getText() const {
-            return m_text;
+            return this->text;
         }
 
         const std::string& Text::getTagName() const {
@@ -532,7 +532,7 @@ namespace Templater::dynamic {
         }
 
         std::string Text::serialise(const std::string& indentationSequence, bool sortAttributes) const {
-            return text::escape(m_text, m_escapeMultiByte);
+            return text::escape(this->text, this->escapeMultiByte);
         }
         
         const std::string& Comment::getTagName() const {
@@ -542,10 +542,10 @@ namespace Templater::dynamic {
 
         
 
-        __DangerousRawText::__DangerousRawText(std::string text): m_text(text), Node{} {}
+        __DangerousRawText::__DangerousRawText(std::string text): text(text), Node{} {}
 
-        __DangerousRawText::__DangerousRawText(const __DangerousRawText& other): m_text(other.m_text), Node{} {}
-        __DangerousRawText::__DangerousRawText(__DangerousRawText&& other): m_text(std::move(other.m_text)), Node{} {}
+        __DangerousRawText::__DangerousRawText(const __DangerousRawText& other): text(other.text), Node{} {}
+        __DangerousRawText::__DangerousRawText(__DangerousRawText&& other): text(std::move(other.text)), Node{} {}
 
         const std::string& __DangerousRawText::getTagName() const {
             static const std::string name = ".rawText";
@@ -553,7 +553,7 @@ namespace Templater::dynamic {
         }
 
         const std::string& __DangerousRawText::getText() const {
-            return m_text;
+            return this->text;
         }
 
         bool __DangerousRawText::isVoid() const {
@@ -561,7 +561,7 @@ namespace Templater::dynamic {
         }
 
         std::string __DangerousRawText::serialise(const std::string& indentationSequence, bool sortAttributes) const {
-            return m_text;
+            return this->text;
         }
 
         const std::string& EmptyNode::getTagName() const {
@@ -577,30 +577,30 @@ namespace Templater::dynamic {
 
     namespace index {
 
-        Index::Index(Node* root): m_root{root}, m_valid{true} {}
+        Index::Index(Node* root): root{root}, valid{true} {}
 
         const Node* Index::getRoot() const {
-            return m_root;
+            return this->root;
         }
     
         bool Index::isValid() const {
-            return m_valid;
+            return this->valid;
         }
     
         void Index::invalidate() {
-            m_valid = false;
+            this->valid = false;
         }
     
         void Index::init() {
-            m_root->addIndex(this);
+            this->root->addIndex(this);
         }
     
         Index::~Index() {
-            if (m_valid) {
-                m_root->iterativeProcessor(*m_root, [this](Node* obj) -> void {
-                    for (auto index = obj->m_indices.begin(); index != obj->m_indices.end();) {
+            if (this->valid) {
+                this->root->iterativeProcessor(*this->root, [this](Node* obj) -> void {
+                    for (auto index = obj->indices.begin(); index != obj->indices.end();) {
                         if (this == *index) {
-                            obj->m_indices.erase(index);
+                            obj->indices.erase(index);
                             break;
                         } else {
                             index++;
