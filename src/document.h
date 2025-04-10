@@ -31,7 +31,6 @@ namespace Templater::compile {
          */
         char value[N];
 
-
         /**
          * @brief Constructs a CompileString via a given const char array.
          * 
@@ -63,6 +62,26 @@ namespace Templater::compile {
         }
     };
 
+    
+    // Helper to concatenate two CompileStrings
+    template <CompileString Lhs, CompileString Rhs>
+    struct Concat {
+        static constexpr size_t lhs_size = sizeof(Lhs.value);
+        static constexpr size_t rhs_size = sizeof(Rhs.value);
+        static constexpr size_t new_size = lhs_size + rhs_size - 1;
+
+        static consteval std::array<char, new_size> concat() {
+            std::array<char, new_size> result = {};
+            for (size_t i = 0; i < lhs_size - 1; ++i)
+                result[i] = Lhs.value[i];
+            for (size_t i = 0; i < rhs_size; ++i)
+                result[i + lhs_size - 1] = Rhs.value[i];
+            return result;
+        }
+
+        static constexpr auto value = concat();
+    };
+
     namespace ctags {
 
 
@@ -74,6 +93,43 @@ namespace Templater::compile {
          */
         template <CompileString Name, CompileString Value>
         struct Attribute {
+            /**
+            * @brief The compile-time size of the attribute string. Does not account for '\0';
+            * The attribute string is formed as follows: ` name="value"`.
+            * 
+            * @return size_t 
+            */
+            static consteval size_t size() {
+                return strlen(Name.value) + strlen(Value.value) + 4; // +4 for the space, =, and ""
+            }
+
+
+            /**
+            * @brief The compile-time evaluation of the attribute string. Does not account for '\0';
+            * The attribute string is formed as follows: ` name="value"`.
+            * 
+            * @return size_t 
+            */
+            static consteval std::array<char, size() + 1> serialise() {
+                std::array<char, size() + 1> result = {};
+                result[0] = ' ';
+                int index = 1;
+                for (int i = 0; i < strlen(Name.value); i++) {
+                    result[index + i] = Name.value[i];
+                }
+                index += strlen(Name.value);
+                result[index] = '=';
+                result[index+1] = '\"';
+                index += 2;
+                for (int i = 0; i < strlen(Value.value); i++) {
+                    result[index + i] = Value.value[i];
+                }
+                index += strlen(Value.value);
+                result[index] = '\"';
+                result[index+1] = '\0';
+                return result;
+            } 
+
             /**
              * @brief Construct a dynamic Attribute from a compile time Attribute.
              * 
@@ -106,6 +162,30 @@ namespace Templater::compile {
         template <CompileString Str>
         struct Text {
             /**
+            * @brief The compile-time size of the Text string. Does not account for '\0';
+            * 
+            * @return size_t 
+            */
+            static consteval size_t size() {
+                return strlen(Str.value);
+            }
+
+
+            /**
+             * @brief The Text string; evaluated at compile-time. Does not do any escaping.
+             * 
+             * @return std::array<char, size() + 1>
+             */
+            static consteval std::array<char, size() + 1> serialise() {
+                std::array<char, size() + 1> result = {};
+                for (int i = 0; i < strlen(Str.value); i++) {
+                    result[i] = Str.value[i];
+                }
+                result[size()] = '\0';
+                return result;
+            } 
+
+            /**
              * @brief Construct a dynamic Text Node from a compile time Text struct.
              * 
              * @return std::unique_ptr<Templater::dynamic::Node> 
@@ -136,6 +216,89 @@ namespace Templater::compile {
         }
     }
 
+    template <size_t N, typename... Children>
+    static consteval std::array<char, N + 1> serialiseNode(const char* tagName) {
+        std::array<char, N + 1> result = {};
+        bool passedAttr = false;
+        result[0] = '<';
+        int index = 1;
+        for (int i = 0; i < strlen(tagName); i++) {
+            result[index + i] = tagName[i];
+        }
+        index += strlen(tagName);
+        if constexpr (sizeof...(Children) == 0)
+        {
+            result[index] = '>';
+            index++;
+        } else {
+
+            (([&] {
+                if constexpr(Templater::compile::ctags::isAttribute<Children>) {
+                    if (passedAttr) {
+                        throw "Cannot add attribute after first child of node.";
+                    }
+                }
+                else {
+
+                    if (!passedAttr) {
+                        passedAttr = true;
+                        result[index] = '>';
+                        index++;
+                    }
+
+                }
+                
+                std::array<char, Children::size() + 1> in = Children::serialise();
+                for (int i = 0; i < Children::size(); i++) {
+                    result[index + i] = in[i];
+                }
+                index += Children::size();
+            }()), ...);
+        }
+        result[index] = '<';
+        result[index+1] = '/';
+        index += 2;
+        for (int i = 0; i < strlen(tagName); i++) {
+            result[index + i] = tagName[i];
+        }
+        index += strlen(tagName);
+        result[index] = '>';
+        result[index+1] = '\0';
+        return result;
+    } 
+
+    template <size_t N, typename... Children>
+    static consteval std::array<char, N + 1> serialiseVoidNode(const char* tagName) {
+        std::array<char, N + 1> result = {};
+        bool passedAttr = false;
+        result[0] = '<';
+        int index = 1;
+        for (int i = 0; i < strlen(tagName); i++) {
+            result[index + i] = tagName[i];
+        }
+        index += strlen(tagName);
+        if constexpr (sizeof...(Children) != 0)
+        {
+            (([&] {
+                if constexpr(!Templater::compile::ctags::isAttribute<Children>) {
+                    throw "Cannot add non-attribute child for void node.";
+
+                }
+                
+                std::array<char, Children::size() + 1> in = Children::serialise();
+                for (int i = 0; i < Children::size(); i++) {
+                    result[index + i] = in[i];
+                }
+                index += Children::size();
+            }()), ...);
+        }
+        result[index] = ' ';
+        result[index+1] = '/';
+        result[index+2] = '>';
+        result[index+3] = '\0';
+
+        return result;
+    } 
 
     /**
      * @brief A struct for creating XML/HTML documents with an alternative syntax, using templates:
@@ -146,18 +309,54 @@ namespace Templater::compile {
      *          Attribute<"lang", "en">,
      *          head<>,
      *          body<Text<"Hello world!">>
-     *      >>::value("\t", true);
+     *      >>;
      * @endcode
      * 
-     * These Documents are currently evaluated at runtime on call to Document::value(const std::string& indentationSequence, bool sortAttributes) via 
-     * constructing a dynamic tree and serialising it. Compilation will fail if the Document is misformed.
+     * A Document can be either fully compile-time evaluated by calling serialise() or runtime-evaluated using value(const std::string& indentationSequence, bool sortAttributes)
      * 
      * @tparam Children 
      */
     template <typename... Children>
     struct Document {
+
         /**
-         * @brief Returns the serialised std::string from the templated arguments. Returns an empty string if there are no children.
+         * @brief The compile-time size of the Document's string. Does not account for '\0';
+         * 
+         * @return size_t 
+         */
+        static consteval size_t size() {
+            size_t size = 0;
+            ((size += Children::size()), ...);
+            return size;
+        }
+
+
+        /**
+         * @brief The compile-time generated non-formatted string built for this Document. Does not do escaping.
+         * 
+         * @return std::array<char, size() + 1> The std::array containing the string
+         */
+        static consteval std::array<char, size() + 1> serialise() {
+            std::array<char, size() + 1> result = {};
+            int index = 0;
+            (([&] {
+                if constexpr(Templater::compile::ctags::isAttribute<Children>) {
+                    throw "Cannot add attribute as root node of Document.";
+                }
+                else {
+                    std::array<char, Children::size() + 1> in = Children::serialise();
+                    for (int i = 0; i < Children::size(); i++) {
+                        result[index + i] = in[i];
+                    }
+                    index += Children::size();
+                }
+            }()), ...);
+            result[index] = '\0';
+            return result;
+        } 
+
+        /**
+         * @brief Returns the serialised std::string from the templated arguments. Returns an empty string if there are no children. Calculated at runtime.
          * 
          * @param indentationSequence 
          * @param sortAttributes 

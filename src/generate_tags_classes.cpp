@@ -111,8 +111,17 @@ void generateCompile(const std::vector<Tag>& tags) {
     headerCompile << "namespace Templater::compile::ctags {\n";
 
     for (auto& tag: tags) {
+        int serialisationSize = tag.isVoid ? (tag.tagName.size() + 4): (tag.tagName.size() * 2 + 5); // if void, expect <tagName />. Else, expect <tagName></tagName>
         headerCompile << "    template <typename... Children>\n"
                             "    struct " << tag.compileName << " {\n"
+                                    "        static consteval size_t size() {\n"
+                                    "            size_t size = " << serialisationSize << ";\n"
+                                    "            ((size += Children::size()), ...);\n"
+                                    "            return size;\n"
+                                    "        }\n"
+                                    "        static consteval std::array<char, size() + 1> serialise() {\n"
+                                    "            return " << ((tag.isVoid) ? "serialiseVoidNode": "serialiseNode") << "<size(), Children...>(\"" << tag.tagName << "\");\n"
+                                    "        }\n"
                                     "        static std::unique_ptr<Templater::dynamic::Node> value() {\n"
                                     "            std::unique_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_unique<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
                                     "            (parseChildren<Children>(node.get()), ...);\n"

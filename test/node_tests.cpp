@@ -627,7 +627,7 @@ TEST_CASE("3000 tags serialise in under 50ms", "[Node]") {
     REQUIRE(time.count() < 50);
 }
 
-TEST_CASE("Compile-time html serialises correctly", "[Node]" ) {
+TEST_CASE("Template html runtime api serialises correctly", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -644,7 +644,7 @@ TEST_CASE("Compile-time html serialises correctly", "[Node]" ) {
     CHECK(doc1 == expected);
 }
 
-TEST_CASE("Compile-time html enforces given indentation rules", "[Node]" ) {
+TEST_CASE("Template html runtime api enforces given indentation rules", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -662,7 +662,7 @@ TEST_CASE("Compile-time html enforces given indentation rules", "[Node]" ) {
     CHECK(doc::value("    ", true) == expected);
 }
 
-TEST_CASE("HTML fragment using Document serialises correctly", "[Node]" ) {
+TEST_CASE("HTML fragment using template runtime api serialises correctly", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -677,7 +677,7 @@ TEST_CASE("HTML fragment using Document serialises correctly", "[Node]" ) {
     CHECK(doc3 == expected);
 }
 
-TEST_CASE("Complex html with constant tags", "[Node]" ) {
+TEST_CASE("Complex templated runtime api html with constant tags", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -720,6 +720,130 @@ TEST_CASE("Complex html with constant tags", "[Node]" ) {
     std::string expected = "<html lang=\"en\">\n\t<head>\n\t\t<title>\n\t\t\tTest Page\n\t\t</title>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<link href=\"styles.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<h1>\n\t\t\tWelcome to the Test Page\n\t\t</h1>\n\t\t<p>\n\t\t\tThis is a paragraph demonstrating compile-time HTML generation.\n\t\t</p>\n\t\t<div class=\"container\">\n\t\t\t<p>\n\t\t\t\tInside a div element.\n\t\t\t</p>\n\t\t\t<ul>\n\t\t\t\t<li>\n\t\t\t\t\tItem 1\n\t\t\t\t</li>\n\t\t\t\t<li>\n\t\t\t\t\tItem 2\n\t\t\t\t</li>\n\t\t\t\t<li>\n\t\t\t\t\tItem 3\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t</div>\n\t\t<form action=\"/submit\" method=\"post\">\n\t\t\t<label for=\"name\">\n\t\t\t\tName: \n\t\t\t</label>\n\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t<br/>\n\t\t\t<label for=\"email\">\n\t\t\t\tEmail: \n\t\t\t</label>\n\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t<br/>\n\t\t\t<button type=\"submit\">\n\t\t\t\tSubmit\n\t\t\t</button>\n\t\t</form>\n\t</body>\n</html>";
 
     CHECK(expected == doc4);
+}
+
+
+TEST_CASE("HTML is correctly serialised") {
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
+
+    using doc = Document<
+        html<
+            Attribute<"lang", "en">,
+            head<>,
+            body<Text<"Hello world!">>
+        >
+    >;
+
+    CHECK(std::string(doc::serialise().data()) == "<html lang=\"en\"><head></head><body>Hello world!</body></html>");
+}
+
+TEST_CASE("Attributes are serialised correctly") {
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
+
+    using doc = Document<
+        html<
+            Attribute<"theme", "dark">,
+            Attribute<"lang", "en">,
+            head<>,
+            body<>
+        >
+    >;
+
+    CHECK(std::string(doc::serialise().data()) == "<html theme=\"dark\" lang=\"en\"><head></head><body></body></html>");
+}
+
+TEST_CASE("Text nodes are serialised correctly") {
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
+
+    using doc = Document<
+        html<
+            head<>,
+            body<Text<"This is a test!">>
+        >
+    >;
+
+    CHECK(std::string(doc::serialise().data()) == "<html><head></head><body>This is a test!</body></html>");
+}
+
+TEST_CASE("Void tags are serialised correctly") {
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
+
+    using doc = Document<
+        html<
+            head<>,
+            body<
+                img<Attribute<"src", "img.jpg">>
+            >
+        >
+    >;
+
+    CHECK(std::string(doc::serialise().data()) == "<html><head></head><body><img src=\"img.jpg\" /></body></html>");
+}
+
+TEST_CASE("UTF-8 text strings are cut off properly") {
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
+
+    using doc = Document<
+        html<
+            head<>,
+            body<Text<"Grüße">> // Contains UTF-8 ü
+        >
+    >;
+
+    auto serialized = std::string(doc::serialise().data());
+    CHECK(serialized == "<html><head></head><body>Grüße</body></html>");
+}
+
+TEST_CASE("Empty document serialises correctly") {
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
+
+    using doc = Document<>;
+    CHECK(std::string(doc::serialise().data()) == "");
+}
+
+TEST_CASE("Deeply nested elements serialize correctly") {
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
+
+    using doc = Document<
+        html<
+            head<>,
+            body<
+                cdiv<
+                    Attribute<"class", "container">,
+                    cdiv<
+                        Text<"Nested content">
+                    >
+                >
+            >
+        >
+    >;
+
+    CHECK(std::string(doc::serialise().data()) ==
+          "<html><head></head><body><div class=\"container\"><div>Nested content</div></div></body></html>");
+}
+
+TEST_CASE("Multiple text nodes are serialised in sequence") {
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
+
+    using doc = Document<
+        html<
+            head<>,
+            body<
+                Text<"Hello ">,
+                Text<"world!">
+            >
+        >
+    >;
+
+    CHECK(std::string(doc::serialise().data()) == "<html><head></head><body>Hello world!</body></html>");
 }
 
 TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
