@@ -23,7 +23,7 @@ namespace Templater::dynamic::text {
         }();
 
         // A Queue to hold numeric HTML entities for multi-byte (non-ASCII) Unicode characters.
-        std::vector<uint32_t> codepointSequence;
+        std::queue<uint32_t> codepointSequence;
         std::unordered_map<uint32_t, std::string> dictionary{};
 
         // Calculate the total size required for the escaped string.
@@ -54,7 +54,7 @@ namespace Templater::dynamic::text {
                         dictionary[codepoint] = numericEntity(codepoint);
                     }
                     escapedSize += dictionary[codepoint].size();
-                    codepointSequence.emplace_back(codepoint);
+                    codepointSequence.emplace(codepoint);
                     safe = false;
                 }
             }
@@ -113,7 +113,7 @@ namespace Templater::dynamic::text {
 
                     // Retrieve the pre-computed HTML entity for this Unicode character.
                     const std::string& entity = dictionary[codepointSequence.front()];
-                    codepointSequence.pop_back();
+                    codepointSequence.pop();
                     // Write the entity into the output.
                     for (int i = 0; i < entity.size(); i++) {
                         *write = entity[i];
