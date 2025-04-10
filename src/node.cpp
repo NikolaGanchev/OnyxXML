@@ -131,8 +131,6 @@ namespace Templater::dynamic {
         return this->_isInTree;
     }
 
-
-
     std::vector<Node*> Node::iterativeChildrenParse(const Node& object, std::function<bool(Node*)> condition) const {
         std::vector<Node*> s;
         std::vector<Node*> result;
@@ -190,37 +188,41 @@ namespace Templater::dynamic {
         return this->attributes;
     }
 
-    std::unique_ptr<Node> Node::removeChild(Node* childToRemove, Node& currentRoot) {
-        auto& children = currentRoot.children;
+    std::unique_ptr<Node> Node::removeChild(Node* childToRemove) {
+        if (!childToRemove->isInTree()) return nullptr;
 
-        for (int i = 0; i < children.size(); i++) {
-            if (children[i].get() == childToRemove) {
+        std::vector<std::vector<std::unique_ptr<Node>>*> s;
 
-                this->indexParse([&childToRemove, this](index::Index* id) -> void {
-                    if (id->getRoot() == this) {
-                        childToRemove->removeIndex(id);
-                    }
-                });
+        s.push_back(&(this->children));
 
-                childToRemove->_isInTree = false;
-                std::unique_ptr<Node> ref = std::move(children[i]);
-                children.erase(children.begin() + i);
+        while(!s.empty()) {
+            std::vector<std::unique_ptr<Node>>* children = s.back();
 
-                return std::move(ref);
-            } else {
-                if(std::unique_ptr<Node> ptr = removeChild(childToRemove, *(children[i].get()))) {
-                    return std::move(ptr);
+            for (int i = 0; i < children->size(); i++) {
+                if (children->at(i).get() == childToRemove) {
+    
+                    this->indexParse([&childToRemove, this](index::Index* id) -> void {
+                        if (id->getRoot() == this) {
+                            childToRemove->removeIndex(id);
+                        }
+                    });
+    
+                    childToRemove->_isInTree = false;
+                    std::unique_ptr<Node> ref = std::move(children->operator[](i));
+                    children->erase(children->begin() + i);
+    
+                    return std::move(ref);
                 }
+            }
+
+            s.pop_back();
+
+            for (int i = 0; i < children->size(); i++) {
+                s.push_back(&(children->at(i)->children));
             }
         }
 
         return nullptr;
-    }
-
-    std::unique_ptr<Node> Node::removeChild(Node* childToRemove) {
-        if (!childToRemove->isInTree()) return nullptr;
-
-        return std::move(removeChild(childToRemove, *this));
     }
 
     size_t Node::size() const {

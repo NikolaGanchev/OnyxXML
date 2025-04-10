@@ -211,17 +211,6 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Removes a child from the given root recursively. 
-             * The child is removed from children, isInTree is set to false and ownership is transferred back to the caller via the return value.
-             * 
-             * @param childToRemove 
-             * @param currentRoot 
-             * @return std::unique_ptr<Node> The ownership carrying unique pointer to the removed Node.
-             */
-            std::unique_ptr<Node> removeChild(Node* childToRemove, Node& currentRoot);
-
-
-            /**
              * @brief Adds an index.
              * Works by adding the index to the current object's indices and then adding it to all children. Calls Index::putIfNeeded() for every Node in the tree.
              * 
@@ -491,11 +480,12 @@ namespace Templater::dynamic {
             bool operator==(Node& right);
 
             /**
-             * @brief Removes a child from the current node recursively. Any child in the tree with the current node as root is searched. 
-             * The child is removed from children, isInTree is set to false and ownership is transferred back to the caller via the return value.
+             * @brief Removes a child from the current node iteratively. Any child in the tree with the current node as root is searched. 
+             * If the child is found, is is removed from uts parent, isInTree is set to false and ownership is transferred back to the caller via the return value.
+             * Returns nullptr if the child is not found.
              * 
              * @param childToRemove 
-             * @return std::unique_ptr<Node>  The ownership carrying unique pointer to the removed Node.
+             * @return std::unique_ptr<Node> The ownership carrying unique pointer to the removed Node. May be nullptr if the child isn't found.
              */
             std::unique_ptr<Node> removeChild(Node* childToRemove);
 
