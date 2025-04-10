@@ -11,17 +11,19 @@ namespace Templater::dynamic::text {
     // Note: non-ASCII character escaping is disabled by default
     std::string escape(const std::string& str, bool escapeMultiByte) {
 
-        // Map of characters that must be escaped in HTML to their corresponding entity strings to keep HTML integrity
-        static const std::unordered_map<char, const std::string> charsToEscape = {
-            {'&', "&amp;"},
-            {'<', "&lt;"},
-            {'>', "&gt;"},
-            {'\"', "&quot;"},
-            {'\'', "&#39;"}
-        };
+        // Table of characters that must be escaped in HTML to their corresponding entity strings to keep HTML integrity
+        static constexpr std::array<const char*, 128> escapeTable = []() {
+            std::array<const char*, 128> table{};
+            table['&'] = "&amp;";
+            table['<'] = "&lt;";
+            table['>'] = "&gt;";
+            table['\"'] = "&quot;";
+            table['\''] = "&#39;";
+            return table;
+        }();
 
         // A Queue to hold numeric HTML entities for multi-byte (non-ASCII) Unicode characters.
-        std::queue<uint32_t> codepointSequence;
+        std::vector<uint32_t> codepointSequence;
         std::unordered_map<uint32_t, std::string> dictionary{};
 
         // Calculate the total size required for the escaped string.
@@ -31,9 +33,9 @@ namespace Templater::dynamic::text {
 
         for (int i = 0; i < str.size(); i++) {
             // If the current character can cause injections
-            if (charsToEscape.contains(str[i])) {
+            if ((unsigned char)str[i] < 128 && escapeTable[(unsigned char)str[i]]) {
                 // Add the length of its escape sequence to the total size.
-                escapedSize += (charsToEscape.find(str[i])->second).size();
+                escapedSize += strlen(escapeTable[(unsigned char)str[i]]);
                 safe = false;
             } else {
                 // If multi-byte escaping is disabled, just increment
@@ -52,7 +54,7 @@ namespace Templater::dynamic::text {
                         dictionary[codepoint] = numericEntity(codepoint);
                     }
                     escapedSize += dictionary[codepoint].size();
-                    codepointSequence.emplace(codepoint);
+                    codepointSequence.emplace_back(codepoint);
                     safe = false;
                 }
             }
@@ -72,9 +74,9 @@ namespace Templater::dynamic::text {
         // Process the input string until we reach its null terminator.
         while (*read != '\0') {
             // If the current character can cause injections
-            if (charsToEscape.contains(*read)) {
+            if ((unsigned char)*read < 128 && escapeTable[(unsigned char)*read]) {
                 // Get the escape sequence for the character.
-                escapeSequence = &((charsToEscape.find(*read)->second)[0]);
+                escapeSequence = escapeTable[*read];
                 // Write the escape sequence into the output.
                 while (*escapeSequence != '\0') {
                     *write = *escapeSequence;
@@ -111,11 +113,11 @@ namespace Templater::dynamic::text {
 
                     // Retrieve the pre-computed HTML entity for this Unicode character.
                     const std::string& entity = dictionary[codepointSequence.front()];
-                    codepointSequence.pop();
+                    codepointSequence.pop_back();
                     // Write the entity into the output.
                     for (int i = 0; i < entity.size(); i++) {
                         *write = entity[i];
-                        *write++;
+                        write++;
                     }
                 }
             }
