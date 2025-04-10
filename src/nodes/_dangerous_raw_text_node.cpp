@@ -32,4 +32,12 @@ namespace Templater::dynamic::dtags {
     std::unique_ptr<Node> __DangerousRawText::shallowCopy() const {
         return std::make_unique<__DangerousRawText>(this->getText());
     }
+
+
+    bool __DangerousRawText::shallowEquals(const Node& _other) const {
+        if (!Node::shallowEquals(_other)) return false;
+        const __DangerousRawText* other = dynamic_cast<const __DangerousRawText*>(&_other);
+
+        return this->text == other->text;
+    }
 }

@@ -38,4 +38,13 @@ namespace Templater::dynamic::dtags {
     std::unique_ptr<Node> Text::shallowCopy() const {
         return std::make_unique<Text>(this->getText(), this->escapeMultiByte);
     }
+
+    
+    bool Text::shallowEquals(const Node& _other) const {
+        if (!Node::shallowEquals(_other)) return false;
+        const Text* other = dynamic_cast<const Text*>(&_other);
+        if (this->escapeMultiByte != other->escapeMultiByte) return false;
+
+        return this->text == other->text;
+    }
 }

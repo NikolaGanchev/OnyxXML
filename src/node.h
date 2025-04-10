@@ -524,19 +524,39 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Creates a shallow copy. A shallow copy copies this node's attributes. However, tree status, children and indices aren't copied
+             * @brief Creates a shallow copy. A shallow copy copies this node's attributes and other data members. However, tree status, children and indices aren't copied.
              * 
              * @return std::unique_ptr<Node> 
              */
             virtual std::unique_ptr<Node> shallowCopy() const = 0;
 
             /**
-             * @brief Creates a deep copy. A deep copy copies this node's attributes and children, but not indices. 
-             * Caution: expensive operation
+             * @brief Creates a deep copy. A deep copy copies this node's attributes, children and other data members, but not indices. 
+             * Caution: expensive operation.
              * 
              * @return std::unique_ptr<Node> 
              */
             virtual std::unique_ptr<Node> deepCopy() const;
+
+
+            /**
+             * @brief Checks if the attributes and other data members of the two nodes are equal. Does not compare children (except for count), nor indices.
+             * 
+             * @param other 
+             * @return true 
+             * @return false 
+             */
+            virtual bool shallowEquals(const Node& other) const;
+
+
+            /**
+             * @brief Checks if the attributes, children and data members of the two nodes are equal. Does not compare indices.
+             * 
+             * @param other 
+             * @return true 
+             * @return false 
+             */
+            bool deepEquals(const Node& other) const;
 
 
             /**

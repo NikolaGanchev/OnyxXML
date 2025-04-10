@@ -97,5 +97,15 @@ namespace Templater::dynamic {
              * @return false The Attributes are not equal
              */
             bool operator==(const Attribute& other) const;
+
+
+            /**
+             * @brief Compares two Attributes by their name and value
+             * 
+             * @param other 
+             * @return true The Attributes are not equal
+             * @return false The Attributes are equal
+             */
+            bool operator!=(const Attribute& other) const;
     };
 }

@@ -274,6 +274,96 @@ namespace Templater::dynamic {
         }
         return std::move(root);
     }
+           
+    bool Node::shallowEquals(const Node& other) const {
+        if (this == &other) return true;
+        if (this->_isInTree != other._isInTree) return false;
+        if (this->isVoid() != other.isVoid()) return false;
+        if (this->getTagName() != other.getTagName()) return false;
+        if (this->attributes.size() != other.attributes.size()) return false;
+        if (this->children.size() != other.children.size()) return false;
+        
+        std::vector<const Attribute*> attributes1;
+        std::vector<const Attribute*> attributes2;
+
+        for (int i = 0; i < this->attributes.size(); i++) {
+            attributes1.push_back(&(this->attributes[i]));
+            attributes2.push_back(&(other.attributes[i]));
+        }
+
+        std::sort(attributes1.begin(), attributes1.end(), [](const Attribute* lhs, const Attribute* rhs)
+        {
+            return lhs->getName() < rhs->getName();
+        });
+
+        std::sort(attributes2.begin(), attributes2.end(), [](const Attribute* lhs, const Attribute* rhs)
+        {
+            return lhs->getName() < rhs->getName();
+        });
+
+        for (int i = 0; i < attributes1.size(); i++) {
+            if ((*attributes1[i]) != (*attributes2[i])) {
+                return false;
+            } 
+        }
+
+        return true;
+    }
+
+  
+    bool Node::deepEquals(const Node& other) const {
+        
+        struct ParseNode {
+            const Node* obj;
+            const Node* other;
+            bool visited;
+        };
+
+        std::vector<ParseNode> s;
+
+        s.emplace_back(ParseNode{this, &other, false});
+
+        while(!s.empty()) {
+            ParseNode& node = s.back();
+            const Node* obj = node.obj;
+            const Node* other = node.other;
+
+            if (obj == nullptr) {
+                s.pop_back();
+                continue;
+            }
+
+            if (node.visited) {
+                s.pop_back();
+                continue;
+            }
+            node.visited = true;
+
+            if (!obj->shallowEquals(*other)) return false;
+
+            if (!(obj->isVoid())) {
+
+                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<std::unique_ptr<Node>>& childrenOther = other->children;
+                if (!children.empty()) {
+                    s.emplace_back(ParseNode{nullptr, nullptr, false});
+                    for (size_t i = 0; i < children.size(); i++) {
+                        // Because of obj->shallowEquals(*other) succeeding, it is known
+                        // that at this point the two nodes have the same amount of children
+                        s.emplace_back(ParseNode{children[i].get(), childrenOther[i].get(), false});
+                    }
+                } else {
+                    s.pop_back();
+                    continue;
+                }
+            } else {
+                s.pop_back();
+                continue;
+            }
+        }
+        return true;
+    }
+
 
     size_t Node::size() const {
         size_t size = 1;

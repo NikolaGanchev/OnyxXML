@@ -1097,3 +1097,106 @@ TEST_CASE("Node deepCopy does not share internal state", "[Node]") {
     REQUIRE(obj.getAttributeValue("class") == "modifiedClass");
     REQUIRE(copy->getAttributeValue("class") == "testNode");
 }
+
+TEST_CASE("Node deepEquals() works", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
+
+    html obj{
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        
+        head(
+            meta(Attribute("charset", "UTF-8")),
+            meta(Attribute("name", "viewport"), 
+                Attribute("content", "width=device-width, initial-scale=1.0")),
+            title(Text("Complex Test Page")),
+            clink(Attribute("rel", "stylesheet"),
+                Attribute("href", "/styles/main.css"))
+        ),
+        
+        body(
+            header(
+                nav(
+                    ul(
+                        li(
+                            a(
+                                Attribute("href", "#home"),
+                                Text("Home")
+                            )
+                        ),
+                        li(
+                            a(
+                                Attribute("href", "#about"),
+                                Text("About Us")
+                            )
+                        )
+                    )
+                )
+            ),
+            
+            dtags::main(
+                section(
+                    Attribute("id", "introduction"),
+                    h1(Text("Introduction")),
+                    p(Text("Welcome to the complex HTML structure test case.")),
+                    p(Text("This test includes various nested elements, attributes, and content.")),
+                    form(
+                        Attribute("name", "contact-form"),
+                        label(
+                            Attribute("for", "name"),
+                            Text("Your Name:")
+                        ),
+                        input(
+                            Attribute("type", "text"),
+                            Attribute("id", "name"),
+                            Attribute("name", "name")
+                        ),
+                        label(
+                            Attribute("for", "email"),
+                            Text("Your Email:")
+                        ),
+                        input(
+                            Attribute("type", "email"),
+                            Attribute("id", "email"),
+                            Attribute("name", "email")
+                        ),
+                        button(
+                            Attribute("type", "submit"),
+                            Text("Submit")
+                        )
+                    )
+                ),
+                
+                section(
+                    Attribute("id", "features"),
+                    h2(Text("Features")),
+                    ul(
+                        li(Text("Feature 1")),
+                        li(Text("Feature 2")),
+                        li(Text("Feature 3"))
+                    ),
+                    p(Text("These are the key features of the application."))
+                )
+            ),
+            
+            footer(
+                p(Text("© 2025 Complex HTML Test Page")),
+                a(
+                    Attribute("href", "https://www.example.com"),
+                    Text("Privacy Policy")
+                )
+            )
+        )
+    };
+
+    std::unique_ptr<Node> root = obj.deepCopy();
+    REQUIRE(root);
+    CHECK(root->deepEquals(obj));
+    auto childrenWithHrefHome = root->getChildrenByAttribute("href", "#home");
+    REQUIRE(childrenWithHrefHome.size() == 1);
+    root->removeChild(childrenWithHrefHome[0]);
+    CHECK(!root->deepEquals(obj));
+}

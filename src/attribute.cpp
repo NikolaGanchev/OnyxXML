@@ -30,6 +30,11 @@ namespace Templater::dynamic {
     bool Attribute::operator==(const Attribute& other) const {
         if (this == &other) return true;
 
-        return this->name == other.name && this->value == other.value;
+        return (this->name == other.name) && (this->value == other.value);
+    }
+
+
+    bool Attribute::operator!=(const Attribute& other) const {
+        return !(*this == other);
     }
 }
