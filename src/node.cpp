@@ -547,6 +547,11 @@ namespace Templater::dynamic {
         return *this->ptr == str; 
     }
 
+    
+    bool Node::ObservableStringRef::operator!=(const std::string& str) const {
+        return !(*this == str); 
+    }
+
     Node::ObservableStringRef& Node::ObservableStringRef::operator=(std::string newPtr) {
         if (*this->ptr != newPtr) {
             *this->ptr = newPtr;

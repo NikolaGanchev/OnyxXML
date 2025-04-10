@@ -127,6 +127,16 @@ namespace Templater::dynamic {
 
 
                     /**
+                     * @brief Compares for non-equality against the underlying std::string to the argument
+                     * 
+                     * @param str The std::string to compare for non-equality against
+                     * @return true The strings are not equal
+                     * @return false The strings are equal
+                     */
+                    bool operator!=(const std::string& str) const;
+
+
+                    /**
                      * @brief Custom reassignment. Swaps the internal ptr for the new one and invokes callback
                       * 
                      * @param newPtr The new std::string that ptr should point to
