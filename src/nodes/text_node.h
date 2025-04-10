@@ -63,6 +63,15 @@ namespace Templater::dynamic::dtags {
 
 
             /**
+             * @brief Whether UTF-8 escaping should be done
+             * 
+             * @return true 
+             * @return false 
+             */
+            bool shouldEscapeMultiByte() const;
+
+
+            /**
              * @brief The tag name of a text node is the invalid xml tag name ".text". 
              * This signals it shouldn't be used as a tag and is a marker of the class.
              * 
@@ -71,5 +80,6 @@ namespace Templater::dynamic::dtags {
             const std::string& getTagName() const override;
             std::string serialise(const std::string& indentationSequence = getIndentationSequence(), bool sortAttributes = getSortAttributes()) const override;
             bool hasSpecialSerialisation() const override;
+            std::unique_ptr<Node> shallowCopy() const override;
     };
 }

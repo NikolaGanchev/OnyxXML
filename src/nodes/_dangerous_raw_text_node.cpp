@@ -28,4 +28,8 @@ namespace Templater::dynamic::dtags {
     bool __DangerousRawText::hasSpecialSerialisation() const {
         return true;
     }
+    
+    std::unique_ptr<Node> __DangerousRawText::shallowCopy() const {
+        return std::make_unique<__DangerousRawText>(this->getText());
+    }
 }

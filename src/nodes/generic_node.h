@@ -62,6 +62,7 @@ namespace Templater::dynamic::dtags {
             explicit GenericNode(Node&& other);
             const std::string& getTagName() const override;
             bool isVoid() const override;
+            std::unique_ptr<Node> shallowCopy() const override;
     };
 
     

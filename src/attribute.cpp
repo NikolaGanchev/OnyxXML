@@ -25,4 +25,11 @@ namespace Templater::dynamic {
     bool Attribute::shouldEscape() const {
         return this->_shouldEscape;
     }
+
+    
+    bool Attribute::operator==(const Attribute& other) const {
+        if (this == &other) return true;
+
+        return this->name == other.name && this->value == other.value;
+    }
 }

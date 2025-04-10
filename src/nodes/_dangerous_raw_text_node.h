@@ -58,5 +58,6 @@ namespace Templater::dynamic::dtags {
             const std::string& getText() const;
             std::string serialise(const std::string& indentationSequence = getIndentationSequence(), bool sortAttributes = getSortAttributes()) const override;            
             bool hasSpecialSerialisation() const override;
+            std::unique_ptr<Node> shallowCopy() const override;
     };
 }

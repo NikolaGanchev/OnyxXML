@@ -592,8 +592,8 @@ void addChildren(Templater::dynamic::Node* root, int level) {
 
     std::unique_ptr<section> s = std::make_unique<section>();
     if (level > 0) {
-        addChildren(s.get(), level-1);
-    }
+            addChildren(s.get(), level-1);
+        }
 
     root->addChild(std::move(s));
 }
@@ -944,4 +944,156 @@ TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<h1> Injected title! </h1>\n\t</head>\n</html>";
 
     CHECK(expected == obj.serialise());
+}
+
+TEST_CASE("Node deepCopy() works", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
+
+    html obj{
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        
+        head(
+            meta(Attribute("charset", "UTF-8")),
+            meta(Attribute("name", "viewport"), 
+                Attribute("content", "width=device-width, initial-scale=1.0")),
+            title(Text("Complex Test Page")),
+            clink(Attribute("rel", "stylesheet"),
+                Attribute("href", "/styles/main.css"))
+        ),
+        
+        body(
+            header(
+                nav(
+                    ul(
+                        li(
+                            a(
+                                Attribute("href", "#home"),
+                                Text("Home")
+                            )
+                        ),
+                        li(
+                            a(
+                                Attribute("href", "#about"),
+                                Text("About Us")
+                            )
+                        )
+                    )
+                )
+            ),
+            
+            dtags::main(
+                section(
+                    Attribute("id", "introduction"),
+                    h1(Text("Introduction")),
+                    p(Text("Welcome to the complex HTML structure test case.")),
+                    p(Text("This test includes various nested elements, attributes, and content.")),
+                    form(
+                        Attribute("name", "contact-form"),
+                        label(
+                            Attribute("for", "name"),
+                            Text("Your Name:")
+                        ),
+                        input(
+                            Attribute("type", "text"),
+                            Attribute("id", "name"),
+                            Attribute("name", "name")
+                        ),
+                        label(
+                            Attribute("for", "email"),
+                            Text("Your Email:")
+                        ),
+                        input(
+                            Attribute("type", "email"),
+                            Attribute("id", "email"),
+                            Attribute("name", "email")
+                        ),
+                        button(
+                            Attribute("type", "submit"),
+                            Text("Submit")
+                        )
+                    )
+                ),
+                
+                section(
+                    Attribute("id", "features"),
+                    h2(Text("Features")),
+                    ul(
+                        li(Text("Feature 1")),
+                        li(Text("Feature 2")),
+                        li(Text("Feature 3"))
+                    ),
+                    p(Text("These are the key features of the application."))
+                )
+            ),
+            
+            footer(
+                p(Text("© 2025 Complex HTML Test Page")),
+                a(
+                    Attribute("href", "https://www.example.com"),
+                    Text("Privacy Policy")
+                )
+            )
+        )
+    };
+
+    std::unique_ptr<Node> root = obj.deepCopy();
+    REQUIRE(root);
+    CHECK(root->serialise() == obj.serialise());
+    CHECK(root.get() != &obj);
+}
+
+TEST_CASE("Node deepCopy creates a new instance with identical attributes", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+    
+    GenericNode obj{"html", false, 
+        Attribute("class", "test"), 
+        Attribute("id", "1"), 
+        html(
+            Attribute("class", "test"))
+    };
+    
+    // Create a deep copy of the original node
+    auto copy = obj.deepCopy();
+
+    // Verify the copied node has the same attributes but is not the same instance
+    REQUIRE(copy != nullptr);
+    REQUIRE(copy->getAttributes().size() == obj.getAttributes().size());
+    REQUIRE(copy->getAttributes()[0] == obj.getAttributes()[0]);
+    REQUIRE(copy->getAttributes()[1] == obj.getAttributes()[1]);
+
+    // Verify the children are deeply copied (not just the pointer)
+    REQUIRE(copy->getChildren().size() == obj.getChildren().size());
+    REQUIRE(copy->getChildren()[0] != obj.getChildren()[0]);
+    REQUIRE(copy->getChildren()[0]->getAttributes()[0] == obj.getChildren()[0]->getAttributes()[0]);
+}
+
+TEST_CASE("Node deepCopy with empty node", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+
+    p obj{};
+
+    auto copy = obj.deepCopy();
+
+    REQUIRE(copy != nullptr);
+    REQUIRE(copy->getChildren().empty());
+    REQUIRE(copy->getAttributes().empty());
+}
+
+TEST_CASE("Node deepCopy does not share internal state", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+    
+    html obj{
+        Attribute("class", "testNode"), 
+        p(Attribute("id", "child1"))
+    };
+
+    auto copy = obj.deepCopy();
+
+    obj.setAttributeValue("class", "modifiedClass");
+    REQUIRE(obj.getAttributeValue("class") == "modifiedClass");
+    REQUIRE(copy->getAttributeValue("class") == "testNode");
 }

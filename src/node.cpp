@@ -225,6 +225,56 @@ namespace Templater::dynamic {
         return nullptr;
     }
 
+    std::unique_ptr<Node> Node::deepCopy() const {
+        std::unique_ptr<Node> root = this->shallowCopy();
+        
+        struct ParseNode {
+            const Node* obj;
+            Node* copy;
+            bool visited;
+        };
+
+        std::vector<ParseNode> s;
+
+        s.emplace_back(ParseNode{this, root.get(), false});
+
+        while(!s.empty()) {
+            ParseNode& node = s.back();
+            const Node* obj = node.obj;
+
+            if (obj == nullptr) {
+                s.pop_back();
+                continue;
+            }
+
+            if (node.visited) {
+                s.pop_back();
+                continue;
+            }
+            node.visited = true;
+
+            if (!(obj->isVoid())) {
+
+                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                if (!children.empty()) {
+                    s.emplace_back(ParseNode{nullptr, nullptr, false});
+                    for (size_t i = 0; i < children.size(); i++) {
+                        std::unique_ptr<Node> child = children[i]->shallowCopy();
+                        s.emplace_back(ParseNode{children[i].get(), child.get(), false});
+                        node.copy->addChild(std::move(child));
+                    }
+                } else {
+                    s.pop_back();
+                    continue;
+                }
+            } else {
+                s.pop_back();
+                continue;
+            }
+        }
+        return std::move(root);
+    }
+
     size_t Node::size() const {
         size_t size = 1;
         for (auto& child: this->children) {

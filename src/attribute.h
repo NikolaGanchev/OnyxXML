@@ -87,5 +87,15 @@ namespace Templater::dynamic {
              * @return false The value is safe and should not be escaped
              */
             bool shouldEscape() const;
+        
+
+            /**
+             * @brief Compares two Attributes by their name and value
+             * 
+             * @param other 
+             * @return true The Attributes are equal
+             * @return false The Attributes are not equal
+             */
+            bool operator==(const Attribute& other) const;
     };
 }

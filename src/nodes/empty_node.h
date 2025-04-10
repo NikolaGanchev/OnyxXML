@@ -22,5 +22,6 @@ namespace Templater::dynamic::dtags {
              */
             const std::string& getTagName() const override;
             bool isVoid() const override;
+            std::unique_ptr<Node> shallowCopy() const override;
     };
 }

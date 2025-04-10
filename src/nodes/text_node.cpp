@@ -28,4 +28,14 @@ namespace Templater::dynamic::dtags {
     bool Text::hasSpecialSerialisation() const {
         return true;
     }
+
+
+    bool Text::shouldEscapeMultiByte() const {
+        return this->escapeMultiByte;
+    }
+
+
+    std::unique_ptr<Node> Text::shallowCopy() const {
+        return std::make_unique<Text>(this->getText(), this->escapeMultiByte);
+    }
 }

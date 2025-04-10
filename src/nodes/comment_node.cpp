@@ -9,10 +9,14 @@ namespace Templater::dynamic::dtags {
 
     
     std::string Comment::serialise(const std::string& indentationSequence, bool sortAttributes) const {
-        return "<!--" + text::escape(this->getText()) + "-->";
+        return "<!--" + text::escape(this->getText(), this->shouldEscapeMultiByte()) + "-->";
     }
     
     bool Comment::hasSpecialSerialisation() const {
         return true;
+    }
+    
+    std::unique_ptr<Node> Comment::shallowCopy() const {
+        return std::make_unique<Comment>(this->getText(), this->shouldEscapeMultiByte());
     }
 }

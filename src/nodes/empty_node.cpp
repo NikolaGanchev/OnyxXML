@@ -10,4 +10,8 @@ namespace Templater::dynamic::dtags {
     bool EmptyNode::isVoid() const {
         return false;
     }
+    
+    std::unique_ptr<Node> EmptyNode::shallowCopy() const {
+        return std::make_unique<EmptyNode>(std::vector<Attribute>{}, std::vector<std::unique_ptr<Node>>{});
+    }
 }

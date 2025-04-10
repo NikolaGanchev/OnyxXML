@@ -67,11 +67,15 @@ void generateDynamic(const std::vector<Tag>& tags) {
             "            using Node::Node;\n"
             "            bool isVoid() const override;\n"
             "            const std::string& getTagName() const override;\n"
+            "            std::unique_ptr<Node> shallowCopy() const override;\n"
             "    };\n";
 
             cppDynamic << "    const std::string& " << tag.dynamicName << "::getTagName() const {\n"
             "        static const std::string name = \"" << tag.tagName << "\";\n"
             "        return name;\n"
+            "    }\n"
+            "    std::unique_ptr<Node> " << tag.dynamicName << "::shallowCopy() const {\n"
+            "        return std::make_unique<" << tag.dynamicName << ">(this->getAttributes(), std::vector<std::unique_ptr<Node>>{});\n"
             "    }\n"
             "    bool " << tag.dynamicName << "::isVoid() const {\n"
             "        return " << (int) (tag.isVoid) << ";\n"
@@ -81,11 +85,15 @@ void generateDynamic(const std::vector<Tag>& tags) {
             "        public:\n"
             "            using VoidNode::VoidNode;\n"
             "            const std::string& getTagName() const override;\n"
+            "            std::unique_ptr<Node> shallowCopy() const override;\n"
             "    };\n";
 
             cppDynamic << "    const std::string& " << tag.dynamicName << "::getTagName() const {\n"
             "        static const std::string name = \"" << tag.tagName << "\";\n"
             "        return name;\n"
+            "    }\n"
+            "    std::unique_ptr<Node> " << tag.dynamicName << "::shallowCopy() const {\n"
+            "        return std::make_unique<" << tag.dynamicName << ">(this->getAttributes());\n"
             "    }\n";
         }
     }

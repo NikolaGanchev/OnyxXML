@@ -524,6 +524,22 @@ namespace Templater::dynamic {
 
 
             /**
+             * @brief Creates a shallow copy. A shallow copy copies this node's attributes. However, tree status, children and indices aren't copied
+             * 
+             * @return std::unique_ptr<Node> 
+             */
+            virtual std::unique_ptr<Node> shallowCopy() const = 0;
+
+            /**
+             * @brief Creates a deep copy. A deep copy copies this node's attributes and children, but not indices. 
+             * Caution: expensive operation
+             * 
+             * @return std::unique_ptr<Node> 
+             */
+            virtual std::unique_ptr<Node> deepCopy() const;
+
+
+            /**
              * @brief Set the static indentation sequence
              * 
              * @param newSequence 
