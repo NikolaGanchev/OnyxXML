@@ -24,4 +24,8 @@ namespace Templater::dynamic::dtags {
         return this->text;
     }
 
+    
+    bool __DangerousRawText::hasSpecialSerialisation() const {
+        return true;
+    }
 }

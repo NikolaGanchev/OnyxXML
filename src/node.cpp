@@ -283,6 +283,10 @@ namespace Templater::dynamic {
         }
     }
 
+    bool Node::hasSpecialSerialisation() const {
+        return false;
+    }
+
     std::string Node::serialise(const std::string& indentationSequence, bool sortAttributes) const {
         struct ParseNode {
             const Node* obj;
@@ -318,14 +322,8 @@ namespace Templater::dynamic {
             }
             node.visited = true;
 
-            if (tagName == ".text" || tagName == ".rawText") {
+            if (obj->hasSpecialSerialisation()) {
                 result << indentation << obj->serialise(indentationSequence, sortAttributes) << "\n";
-                s.pop_back();
-                continue;
-            }
-
-            if (tagName == ".comment") {
-                result << indentation << "<!--" << obj->serialise(indentationSequence, sortAttributes) << "-->\n";
                 s.pop_back();
                 continue;
             }

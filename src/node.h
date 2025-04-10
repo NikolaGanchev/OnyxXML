@@ -524,6 +524,16 @@ namespace Templater::dynamic {
 
 
             /**
+             * @brief Denotes whether a node has special serialisation or not. If a node has special serialisation, its serialise() method will be called 
+             * during serialisation instead of the default behaviour.
+             * 
+             * @return true The node has special serialisation 
+             * @return false The node does not have special serialisation 
+             */
+            virtual bool hasSpecialSerialisation() const;
+
+
+            /**
              * @brief Set the static indentation sequence
              * 
              * @param newSequence 
