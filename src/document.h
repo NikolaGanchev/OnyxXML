@@ -63,25 +63,6 @@ namespace Templater::compile {
     };
 
     
-    // Helper to concatenate two CompileStrings
-    template <CompileString Lhs, CompileString Rhs>
-    struct Concat {
-        static constexpr size_t lhs_size = sizeof(Lhs.value);
-        static constexpr size_t rhs_size = sizeof(Rhs.value);
-        static constexpr size_t new_size = lhs_size + rhs_size - 1;
-
-        static consteval std::array<char, new_size> concat() {
-            std::array<char, new_size> result = {};
-            for (size_t i = 0; i < lhs_size - 1; ++i)
-                result[i] = Lhs.value[i];
-            for (size_t i = 0; i < rhs_size; ++i)
-                result[i + lhs_size - 1] = Rhs.value[i];
-            return result;
-        }
-
-        static constexpr auto value = concat();
-    };
-
     namespace ctags {
 
 
