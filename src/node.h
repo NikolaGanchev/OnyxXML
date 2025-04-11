@@ -509,6 +509,14 @@ namespace Templater::dynamic {
 
 
             /**
+             * @brief Returns the max depth of the tree, calculated iteratively.
+             * 
+             * @return size_t 
+             */
+            size_t depth() const;
+
+
+            /**
              * @brief Serialises the tree defined by the current node to an XML string.
              * 
              * @param indentationSequence The sequence of characters which is used for indentation

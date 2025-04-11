@@ -328,13 +328,53 @@ namespace Templater::dynamic {
         return true;
     }
 
-
     size_t Node::size() const {
         size_t size = 1;
         for (auto& child: this->children) {
             size += child->size();
         }
         return size;
+    }
+
+    size_t Node::depth() const {
+        struct ParseNode {
+            const Node* obj;
+            bool visited;
+        };
+
+        std::vector<ParseNode> s;
+        size_t maxDepth = 0;
+        size_t depth = 0;
+
+        s.emplace_back(ParseNode{this, false});
+
+        while(!s.empty()) {
+            ParseNode node = s.back();
+            s.pop_back();
+            const Node* obj = node.obj;
+
+            if (obj == nullptr) {
+                depth--;
+                continue;
+            }
+
+            if (!(obj->isVoid())) {
+
+                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                if (!children.empty()) {
+                    depth++;
+                    if (depth > maxDepth) {
+                        maxDepth = depth;
+                    }
+                    s.emplace_back(ParseNode{nullptr, false});
+                    for (size_t i = children.size(); i > 0; --i) {
+                        s.emplace_back(ParseNode{children[i-1].get(), false});
+                    }
+                }
+            }
+        }
+
+        return maxDepth;
     }
 
     bool Node::hasAttribute(const std::string &name) const {
