@@ -231,45 +231,27 @@ namespace Templater::dynamic {
         struct ParseNode {
             const Node* obj;
             Node* copy;
-            bool visited;
         };
 
         std::vector<ParseNode> s;
 
-        s.emplace_back(ParseNode{this, root.get(), false});
+        s.emplace_back(ParseNode{this, root.get()});
 
         while(!s.empty()) {
-            ParseNode& node = s.back();
+            ParseNode node = s.back();
+            s.pop_back();
             const Node* obj = node.obj;
-
-            if (obj == nullptr) {
-                s.pop_back();
-                continue;
-            }
-
-            if (node.visited) {
-                s.pop_back();
-                continue;
-            }
-            node.visited = true;
 
             if (!(obj->isVoid())) {
 
                 const std::vector<std::unique_ptr<Node>>& children = obj->children;
                 if (!children.empty()) {
-                    s.emplace_back(ParseNode{nullptr, nullptr, false});
                     for (size_t i = 0; i < children.size(); i++) {
                         std::unique_ptr<Node> child = children[i]->shallowCopy();
-                        s.emplace_back(ParseNode{children[i].get(), child.get(), false});
+                        s.emplace_back(ParseNode{children[i].get(), child.get()});
                         node.copy->addChild(std::move(child));
                     }
-                } else {
-                    s.pop_back();
-                    continue;
                 }
-            } else {
-                s.pop_back();
-                continue;
             }
         }
         return std::move(root);
