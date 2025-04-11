@@ -298,28 +298,17 @@ namespace Templater::dynamic {
         struct ParseNode {
             const Node* obj;
             const Node* other;
-            bool visited;
         };
 
         std::vector<ParseNode> s;
 
-        s.emplace_back(ParseNode{this, &other, false});
+        s.emplace_back(ParseNode{this, &other});
 
         while(!s.empty()) {
-            ParseNode& node = s.back();
+            ParseNode node = s.back();
+            s.pop_back();
             const Node* obj = node.obj;
             const Node* other = node.other;
-
-            if (obj == nullptr) {
-                s.pop_back();
-                continue;
-            }
-
-            if (node.visited) {
-                s.pop_back();
-                continue;
-            }
-            node.visited = true;
 
             if (!obj->shallowEquals(*other)) return false;
 
@@ -328,19 +317,12 @@ namespace Templater::dynamic {
                 const std::vector<std::unique_ptr<Node>>& children = obj->children;
                 const std::vector<std::unique_ptr<Node>>& childrenOther = other->children;
                 if (!children.empty()) {
-                    s.emplace_back(ParseNode{nullptr, nullptr, false});
                     for (size_t i = 0; i < children.size(); i++) {
                         // Because of obj->shallowEquals(*other) succeeding, it is known
                         // that at this point the two nodes have the same amount of children
-                        s.emplace_back(ParseNode{children[i].get(), childrenOther[i].get(), false});
+                        s.emplace_back(ParseNode{children[i].get(), childrenOther[i].get()});
                     }
-                } else {
-                    s.pop_back();
-                    continue;
                 }
-            } else {
-                s.pop_back();
-                continue;
             }
         }
         return true;
