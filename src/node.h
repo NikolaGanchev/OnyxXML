@@ -386,6 +386,15 @@ namespace Templater::dynamic {
              * @return std::vector<Node*> 
              */
             std::vector<Node*> getChildrenByAttribute(const std::string& attribute, const std::string& value) const;
+
+
+            /**
+             * @brief Get all children that have the given attribute name. Searches all children in the tree.
+             * 
+             * @param attribute The attribute name
+             * @return std::vector<Node*> 
+             */
+            std::vector<Node*> getChildrenByAttributeName(const std::string& attribute) const;
             
 
             /**

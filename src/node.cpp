@@ -163,6 +163,11 @@ namespace Templater::dynamic {
         {  return obj->hasAttribute(attribute) && obj->getAttributeValue(attribute) == value; }));
     }
 
+    std::vector<Node*> Node::getChildrenByAttributeName(const std::string& attribute) const {
+        return iterativeChildrenParse(*this, ([&attribute](Node* obj) -> bool 
+        {  return obj->hasAttribute(attribute); }));
+    }
+
     std::vector<Node*> Node::getChildrenByClassName(const std::string& className) const {
 
         return getChildrenByAttribute("class", className);

@@ -313,6 +313,8 @@ TEST_CASE("Children return by class name works", "[Node]" ) {
 
     auto children = obj.getChildrenByClassName("d");
     
+    REQUIRE(children.size() == 5);
+
     for (int i = 0; i < 5; i++) {
         CHECK(children[i]->getAttributeValue("id") == std::to_string(i));
     }
@@ -322,6 +324,64 @@ TEST_CASE("Children return by class name works", "[Node]" ) {
     REQUIRE(children.size() == 1);
 
     CHECK(children[0]->getAttributeValue("id") == "11");
+}
+
+TEST_CASE("Children return by attribute works", "[Node]" ) {
+    using namespace Templater::dynamic::dtags;
+
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("class", "d"), Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("class", "d"), Attribute("id", "1"), 
+                    GenericNode("div", false, Attribute("class", "d"), Attribute("id", "2"), 
+                        GenericNode("p", false, Attribute("class", "p"), Attribute("id", "11")))),
+            GenericNode("div", false, Attribute("class", "d"), Attribute("id", "3")),
+            GenericNode("div", false, Attribute("class", "d"), Attribute("id", "4")))
+    )};
+
+    auto children = obj.getChildrenByAttribute("class", "d");
+    
+    REQUIRE(children.size() == 5);
+
+    for (int i = 0; i < 5; i++) {
+        CHECK(children[i]->getAttributeValue("id") == std::to_string(i));
+    }
+}
+
+TEST_CASE("Children return by attribute name works", "[Node]" ) {
+    using namespace Templater::dynamic::dtags;
+
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("class", "a"), Attribute("id", "0"), 
+                GenericNode("div", false, Attribute("class", "b"), Attribute("id", "1"), 
+                    GenericNode("div", false, Attribute("class", "c"), Attribute("id", "2"), 
+                        GenericNode("p", false, Attribute("class", "d"), Attribute("id", "3")))),
+            GenericNode("div", false, Attribute("class", "e"), Attribute("id", "4")),
+            GenericNode("div", false, Attribute("class", "f"), Attribute("id", "5")))
+    )};
+
+    auto children = obj.getChildrenByAttributeName("class");
+    
+    REQUIRE(children.size() == 6);
+
+    for (int i = 0; i < 6; i++) {
+        CHECK(children[i]->getAttributeValue("id") == std::to_string(i));
+    }
 }
 
 TEST_CASE("Child add works", "[Node]" ) {
