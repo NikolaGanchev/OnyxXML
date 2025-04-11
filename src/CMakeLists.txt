@@ -3,7 +3,8 @@ add_library(samplelib STATIC)
 
 set_target_properties(samplelib PROPERTIES OUTPUT_NAME "sample")
 
-set(GENERATED_TAGS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated_tags")
+set(GENERATED_TAGS_DIRECTORY_ROOT "${CMAKE_CURRENT_BINARY_DIR}/generated_tags")
+set(GENERATED_TAGS_DIRECTORY "${GENERATED_TAGS_DIRECTORY_ROOT}/output")
 set(DYNAMIC_TAGS_DIRECTORY "${GENERATED_TAGS_DIRECTORY}/dynamic")
 set(COMPILE_TAGS_DIRECTORY "${GENERATED_TAGS_DIRECTORY}/compile")
 
@@ -35,7 +36,9 @@ target_sources(
         "${GENERATED_TAGS_CPP}"
 )
 
-add_executable(generate "${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp" "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.cpp" COPYONLY)
+
+add_executable(generate "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.cpp")
 
 add_custom_command(
     OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
