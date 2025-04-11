@@ -517,6 +517,14 @@ namespace Templater::dynamic {
 
 
             /**
+             * @brief Returns the leaf count of the tree. Leaves are nodes which have no children.
+             * 
+             * @return size_t 
+             */
+            size_t leafCount() const;
+            
+
+            /**
              * @brief Serialises the tree defined by the current node to an XML string.
              * 
              * @param indentationSequence The sequence of characters which is used for indentation

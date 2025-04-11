@@ -337,21 +337,15 @@ namespace Templater::dynamic {
     }
 
     size_t Node::depth() const {
-        struct ParseNode {
-            const Node* obj;
-            bool visited;
-        };
-
-        std::vector<ParseNode> s;
+        std::vector<const Node*> s;
         size_t maxDepth = 0;
         size_t depth = 0;
 
-        s.emplace_back(ParseNode{this, false});
+        s.emplace_back(this);
 
         while(!s.empty()) {
-            ParseNode node = s.back();
+            const Node* obj = s.back();
             s.pop_back();
-            const Node* obj = node.obj;
 
             if (obj == nullptr) {
                 depth--;
@@ -366,9 +360,9 @@ namespace Templater::dynamic {
                     if (depth > maxDepth) {
                         maxDepth = depth;
                     }
-                    s.emplace_back(ParseNode{nullptr, false});
+                    s.emplace_back(nullptr);
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(ParseNode{children[i-1].get(), false});
+                        s.emplace_back(children[i-1].get());
                     }
                 }
             }
@@ -376,6 +370,36 @@ namespace Templater::dynamic {
 
         return maxDepth;
     }
+    
+    
+    size_t Node::leafCount() const {
+        std::vector<const Node*> s;
+        size_t leaves = 0;
+
+        s.emplace_back(this);
+
+        while(!s.empty()) {
+            const Node* obj = s.back();
+            s.pop_back();
+
+            if (!(obj->isVoid())) {
+
+                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                if (!children.empty()) {
+                    for (size_t i = children.size(); i > 0; --i) {
+                        s.emplace_back(children[i-1].get());
+                    }
+                } else {
+                    leaves++;
+                }
+            } else {
+                leaves++;
+            }
+        }
+
+        return leaves;
+    }
+
 
     bool Node::hasAttribute(const std::string &name) const {
         for (auto& attr: this->attributes) {

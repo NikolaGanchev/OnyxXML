@@ -1244,3 +1244,32 @@ TEST_CASE("Deepest of multiple branches determines the depth of a tree", "[Node]
 
     REQUIRE(root.depth() == 3);
 }
+
+TEST_CASE("leafCount() works", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+
+    main root{
+        nav(),
+        cdiv(),
+        section(
+            article(
+                p(),
+                p(),
+                span(),
+                p(),
+                span(),
+                img()
+            )
+        )
+    };
+
+    REQUIRE(root.leafCount() == 8);
+}
+
+TEST_CASE("leafCount() returns 1 on empty tree", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+
+    main root{};
+
+    REQUIRE(root.leafCount() == 1);
+}
