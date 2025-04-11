@@ -196,7 +196,7 @@ namespace Templater::dynamic::dtags {
             const std::string& getTagName() const override;
             std::unique_ptr<Node> shallowCopy() const override;
     };
-    class div: public Node {
+    class cdiv: public Node {
         public:
             using Node::Node;
             bool isVoid() const override;

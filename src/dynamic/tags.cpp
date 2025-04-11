@@ -269,14 +269,14 @@ namespace Templater::dynamic::dtags {
     bool dialog::isVoid() const {
         return 0;
     }
-    const std::string& div::getTagName() const {
+    const std::string& cdiv::getTagName() const {
         static const std::string name = "div";
         return name;
     }
-    std::unique_ptr<Node> div::shallowCopy() const {
-        return std::make_unique<div>(this->getAttributes(), std::vector<std::unique_ptr<Node>>{});
+    std::unique_ptr<Node> cdiv::shallowCopy() const {
+        return std::make_unique<cdiv>(this->getAttributes(), std::vector<std::unique_ptr<Node>>{});
     }
-    bool div::isVoid() const {
+    bool cdiv::isVoid() const {
         return 0;
     }
     const std::string& dl::getTagName() const {

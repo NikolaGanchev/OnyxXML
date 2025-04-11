@@ -27,7 +27,7 @@ del,0
 details,0
 dfn,0
 dialog,0
-div,0,div,cdiv
+div,0,cdiv,cdiv
 dl,0
 dt,0
 em,0

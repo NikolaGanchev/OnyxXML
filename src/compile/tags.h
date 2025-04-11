@@ -462,7 +462,7 @@ namespace Templater::compile::ctags {
             return serialiseNode<size(), Children...>("div");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
-            std::unique_ptr<Templater::dynamic::dtags::div> node = std::make_unique<Templater::dynamic::dtags::div>();
+            std::unique_ptr<Templater::dynamic::dtags::cdiv> node = std::make_unique<Templater::dynamic::dtags::cdiv>();
             (parseChildren<Children>(node.get()), ...);
             return node;
         }

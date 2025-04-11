@@ -564,7 +564,7 @@ TEST_CASE("Html tree with 5001 nodes has size 5001", "[Node::size()]") {
     html root;
     for (int i = 0; i < 1000; i++) {
         root.addChild(section(
-            dtags::div{
+            cdiv{
                 p(Text("Text")),
                 p()
             }
@@ -854,7 +854,7 @@ TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
 
     std::string textToEscape = "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
-    dtags::div d{Text(textToEscape)};
+    cdiv d{Text(textToEscape)};
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
@@ -869,7 +869,7 @@ TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
-    dtags::div d{Text(textToEscape, true)};
+    cdiv d{Text(textToEscape, true)};
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;&#x1f600;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
@@ -884,7 +884,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
-    dtags::div d{Text(textToEscape, false)};
+    cdiv d{Text(textToEscape, false)};
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;😀Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
@@ -1199,4 +1199,48 @@ TEST_CASE("Node deepEquals() works", "[Node]") {
     REQUIRE(childrenWithHrefHome.size() == 1);
     root->removeChild(childrenWithHrefHome[0]);
     CHECK(!root->deepEquals(obj));
+}
+
+
+TEST_CASE("Single Node has depth 0", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+
+    cdiv root;
+    REQUIRE(root.depth() == 0);
+}
+
+TEST_CASE("One level of children increases depth", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+
+    cdiv root{p()};
+    REQUIRE(root.depth() == 1);
+}
+
+TEST_CASE("Nested children increase depth", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+    
+    body root{
+        cdiv(
+            section(
+                article()
+            )
+        )
+    };
+
+    REQUIRE(root.depth() == 3);
+}
+
+TEST_CASE("Deepest of multiple branches determines the depth of a tree", "[Node]") {
+    using namespace Templater::dynamic::dtags;
+
+    main root{
+        nav(),
+        section(
+            article(
+                p()
+            )
+        )
+    };
+
+    REQUIRE(root.depth() == 3);
 }
