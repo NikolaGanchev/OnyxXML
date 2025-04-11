@@ -26,13 +26,12 @@ target_sources(
 set(GENERATED_TAGS_H "${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.h")
 set(GENERATED_TAGS_CPP "${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.cpp")
 set(GENERATED_TAGS_COMPILE_H "${CMAKE_CURRENT_SOURCE_DIR}/compile/tags.h")
-set(GENERATED_COMPILE_H "${CMAKE_CURRENT_SOURCE_DIR}/compile/documents.h")
 
 add_executable(generate "${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp")
 
 add_custom_command(
     OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
-    COMMAND generate
+    COMMAND generate "${CMAKE_CURRENT_SOURCE_DIR}/tags.txt" "${CMAKE_CURRENT_SOURCE_DIR}/dynamic" "${CMAKE_CURRENT_SOURCE_DIR}/compile"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     DEPENDS generate "${CMAKE_CURRENT_SOURCE_DIR}/tags.txt" "${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp"
     COMMENT "Running the generate executable to generate the html tags files"

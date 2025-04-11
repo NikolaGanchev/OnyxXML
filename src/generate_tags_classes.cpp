@@ -11,8 +11,8 @@ struct Tag {
     std::string compileName;
 };
 
-void readTags(std::vector<Tag>& tags) {
-    std::ifstream input_file("tags.txt");
+void readTags(std::vector<Tag>& tags, const char* tagsFilePath) {
+    std::ifstream input_file(tagsFilePath);
 
     std::string line;
 
@@ -42,14 +42,16 @@ void readTags(std::vector<Tag>& tags) {
     input_file.close();
 }
 
-void generateDynamic(const std::vector<Tag>& tags) {
+void generateDynamic(const std::vector<Tag>& tags, const char* path) {
 
-    if (!std::filesystem::exists("./dynamic")) {
-        std::filesystem::create_directory("./dynamic");
+    if (!std::filesystem::exists(path)) {
+        std::filesystem::create_directory(path);
     }
 
-    std::ofstream headerDynamic("./dynamic/tags.h");
-    std::ofstream cppDynamic("./dynamic/tags.cpp");
+    std::filesystem::path fullPath = path;
+
+    std::ofstream headerDynamic(fullPath / "tags.h");
+    std::ofstream cppDynamic(fullPath / "tags.cpp");
 
     headerDynamic << "#pragma once\n";
     headerDynamic << "#include \"node.h\" \n";
@@ -105,13 +107,15 @@ void generateDynamic(const std::vector<Tag>& tags) {
     cppDynamic.close();
 }
 
-void generateCompile(const std::vector<Tag>& tags) {
+void generateCompile(const std::vector<Tag>& tags, const char* path) {
 
-    if (!std::filesystem::exists("./compile")) {
-        std::filesystem::create_directory("./compile");
+    if (!std::filesystem::exists(path)) {
+        std::filesystem::create_directory(path);
     }
 
-    std::ofstream headerCompile("./compile/tags.h");
+    std::filesystem::path fullPath = path;
+
+    std::ofstream headerCompile(fullPath / "tags.h");
 
     headerCompile << "#pragma once\n";
     headerCompile << "#include \"document.h\" \n";
@@ -143,12 +147,17 @@ void generateCompile(const std::vector<Tag>& tags) {
     headerCompile.close();
 }
 
-int main() {
+int main(int argc, const char *argv[]) {
+    if (argc != 4) return 1;
+    const char* tagsFilePath = argv[1];
+    const char* dynamicGeneratePath = argv[2];
+    const char* compileGeneratePath = argv[3];
+
     std::vector<Tag> tags{};
-    readTags(tags);
+    readTags(tags, tagsFilePath);
     
-    generateDynamic(tags);
-    generateCompile(tags);
+    generateDynamic(tags, dynamicGeneratePath);
+    generateCompile(tags, compileGeneratePath);
 
     return 0;
 }
