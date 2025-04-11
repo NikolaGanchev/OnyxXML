@@ -1,7 +1,5 @@
 #pragma once
 
-#include "dynamic/tags.h"
-#include "compile/tags.h"
 #include "text.h"
 #include "index.h"
 #include "indices/attribute_name_index.h"
@@ -14,3 +12,11 @@
 #include "nodes/empty_node.h"
 #include "nodes/comment_node.h"
 #include "nodes/_dangerous_raw_text_node.h"
+
+#if __has_include("dynamic/tags.h")
+    #include "dynamic/tags.h"
+#endif
+
+#if __has_include("compile/tags.h")
+    #include "compile/tags.h"
+#endif
