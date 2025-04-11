@@ -246,14 +246,14 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief The static global indentation string to be used for indenting during serialisation. 
+             * @brief The static global indentation string to be used for indenting during serialization. 
              * The default value is "\t".
              */
             static std::string indentationSequence;
 
 
             /**
-             * @brief Static global state on whether attributes should be sorted during serialisation. 
+             * @brief Static global state on whether attributes should be sorted during serialization. 
              * The default value is false.
              */
             static bool sortAttributes;
@@ -534,16 +534,16 @@ namespace Templater::dynamic {
             
 
             /**
-             * @brief Serialises the tree defined by the current node to an XML string
+             * @brief Serializes the tree defined by the current node to an XML string
              * 
              * @return std::string 
              */
-            virtual std::string serialise() const;
+            virtual std::string serialize() const;
 
 
             /**
-             * @brief Serialises the tree defined by the current node to an XML string with pretty printing.
-             * Caution: is slower than serialise(). Performance loss for deep trees and trees with heavily varying depth has been observed to be about 30%.
+             * @brief Serializes the tree defined by the current node to an XML string with pretty printing.
+             * Caution: is slower than serialize(). Performance loss for deep trees and trees with heavily varying depth has been observed to be about 30%.
              * 
              * @param indentationSequence The sequence of characters which is used for indentation
              * @param sortAttributes Whether to sort attributes in tags. 
@@ -553,17 +553,17 @@ namespace Templater::dynamic {
              * 
              * @return std::string 
              */
-            virtual std::string serialisePretty(const std::string& indentationSequence, bool sortAttributes) const;
+            virtual std::string serializePretty(const std::string& indentationSequence, bool sortAttributes) const;
 
 
             /**
-             * @brief Denotes whether a node has special serialisation or not. If a node has special serialisation, its serialise() method will be called 
-             * during serialisation instead of the default behaviour.
+             * @brief Denotes whether a node has special serialization or not. If a node has special serialization, its serialize() method will be called 
+             * during serialization instead of the default behaviour.
              * 
-             * @return true The node has special serialisation 
-             * @return false The node does not have special serialisation 
+             * @return true The node has special serialization 
+             * @return false The node does not have special serialization 
              */
-            virtual bool hasSpecialSerialisation() const;
+            virtual bool hasSpecialSerialization() const;
 
 
             /**

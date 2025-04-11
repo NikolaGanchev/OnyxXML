@@ -5,7 +5,7 @@
 namespace Templater::dynamic::dtags {
     
     /**
-     * @brief A node which provides no serialisation structure. Used as a root to partial trees with adjacent children. 
+     * @brief A node which provides no serialization structure. Used as a root to partial trees with adjacent children. 
      * Useful for generating partial XML fragments.
      * 
      */

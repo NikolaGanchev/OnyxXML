@@ -7,15 +7,15 @@ namespace Templater::dynamic::dtags {
         return name;
     }
 
-    std::string Comment::serialise() const {
+    std::string Comment::serialize() const {
         return "<!--" + text::escape(this->getText(), this->shouldEscapeMultiByte()) + "-->";
     }
 
-    std::string Comment::serialisePretty(const std::string& indentationSequence, bool sortAttributes) const {
+    std::string Comment::serializePretty(const std::string& indentationSequence, bool sortAttributes) const {
         return "<!--" + text::escape(this->getText(), this->shouldEscapeMultiByte()) + "-->";
     }
     
-    bool Comment::hasSpecialSerialisation() const {
+    bool Comment::hasSpecialSerialization() const {
         return true;
     }
     

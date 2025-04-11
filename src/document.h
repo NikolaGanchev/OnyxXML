@@ -91,7 +91,7 @@ namespace Templater::compile {
             * 
             * @return size_t 
             */
-            static consteval std::array<char, size() + 1> serialise() {
+            static consteval std::array<char, size() + 1> serialize() {
                 std::array<char, size() + 1> result = {};
                 result[0] = ' ';
                 int index = 1;
@@ -157,7 +157,7 @@ namespace Templater::compile {
              * 
              * @return std::array<char, size() + 1>
              */
-            static consteval std::array<char, size() + 1> serialise() {
+            static consteval std::array<char, size() + 1> serialize() {
                 std::array<char, size() + 1> result = {};
                 for (int i = 0; i < strlen(Str.value); i++) {
                     result[i] = Str.value[i];
@@ -198,7 +198,7 @@ namespace Templater::compile {
     }
 
     template <size_t N, typename... Children>
-    static consteval std::array<char, N + 1> serialiseNode(const char* tagName) {
+    static consteval std::array<char, N + 1> serializeNode(const char* tagName) {
         std::array<char, N + 1> result = {};
         bool passedAttr = false;
         result[0] = '<';
@@ -229,7 +229,7 @@ namespace Templater::compile {
 
                 }
                 
-                std::array<char, Children::size() + 1> in = Children::serialise();
+                std::array<char, Children::size() + 1> in = Children::serialize();
                 for (int i = 0; i < Children::size(); i++) {
                     result[index + i] = in[i];
                 }
@@ -249,7 +249,7 @@ namespace Templater::compile {
     } 
 
     template <size_t N, typename... Children>
-    static consteval std::array<char, N + 1> serialiseVoidNode(const char* tagName) {
+    static consteval std::array<char, N + 1> serializeVoidNode(const char* tagName) {
         std::array<char, N + 1> result = {};
         bool passedAttr = false;
         result[0] = '<';
@@ -266,7 +266,7 @@ namespace Templater::compile {
 
                 }
                 
-                std::array<char, Children::size() + 1> in = Children::serialise();
+                std::array<char, Children::size() + 1> in = Children::serialize();
                 for (int i = 0; i < Children::size(); i++) {
                     result[index + i] = in[i];
                 }
@@ -293,7 +293,7 @@ namespace Templater::compile {
      *      >>;
      * @endcode
      * 
-     * A Document can be either fully compile-time evaluated by calling serialise() or runtime-evaluated using value(const std::string& indentationSequence, bool sortAttributes)
+     * A Document can be either fully compile-time evaluated by calling serialize() or runtime-evaluated using value(const std::string& indentationSequence, bool sortAttributes)
      * 
      * @tparam Children 
      */
@@ -317,7 +317,7 @@ namespace Templater::compile {
          * 
          * @return std::array<char, size() + 1> The std::array containing the string
          */
-        static consteval std::array<char, size() + 1> serialise() {
+        static consteval std::array<char, size() + 1> serialize() {
             std::array<char, size() + 1> result = {};
             int index = 0;
             (([&] {
@@ -325,7 +325,7 @@ namespace Templater::compile {
                     throw "Cannot add attribute as root node of Document.";
                 }
                 else {
-                    std::array<char, Children::size() + 1> in = Children::serialise();
+                    std::array<char, Children::size() + 1> in = Children::serialize();
                     for (int i = 0; i < Children::size(); i++) {
                         result[index + i] = in[i];
                     }
@@ -337,7 +337,7 @@ namespace Templater::compile {
         } 
 
         /**
-         * @brief Returns the serialised std::string from the templated arguments. Returns an empty string if there are no children. Calculated at runtime.
+         * @brief Returns the serialized std::string from the templated arguments. Returns an empty string if there are no children. Calculated at runtime.
          * 
          * @param indentationSequence 
          * @param sortAttributes 
@@ -362,7 +362,7 @@ namespace Templater::compile {
                     }
                 }()), ...);
             }
-            return obj.serialisePretty(indentationSequence, sortAttributes);
+            return obj.serializePretty(indentationSequence, sortAttributes);
         }
     };
 

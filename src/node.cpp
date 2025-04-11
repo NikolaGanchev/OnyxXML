@@ -458,11 +458,11 @@ namespace Templater::dynamic {
         }
     }
 
-    bool Node::hasSpecialSerialisation() const {
+    bool Node::hasSpecialSerialization() const {
         return false;
     }
 
-    std::string Node::serialise() const {
+    std::string Node::serialize() const {
         struct ParseNode {
             const Node* obj;
             bool visited;
@@ -490,8 +490,8 @@ namespace Templater::dynamic {
             }
             node.visited = true;
 
-            if (obj->hasSpecialSerialisation()) {
-                result << obj->serialise();
+            if (obj->hasSpecialSerialization()) {
+                result << obj->serialize();
                 s.pop_back();
                 continue;
             }
@@ -530,7 +530,7 @@ namespace Templater::dynamic {
         return result.str();
     }
 
-    std::string Node::serialisePretty(const std::string& indentationSequence, bool sortAttributes) const {
+    std::string Node::serializePretty(const std::string& indentationSequence, bool sortAttributes) const {
         struct ParseNode {
             const Node* obj;
             bool visited;
@@ -565,8 +565,8 @@ namespace Templater::dynamic {
             }
             node.visited = true;
 
-            if (obj->hasSpecialSerialisation()) {
-                result << indentation << obj->serialisePretty(indentationSequence, sortAttributes) << "\n";
+            if (obj->hasSpecialSerialization()) {
+                result << indentation << obj->serializePretty(indentationSequence, sortAttributes) << "\n";
                 s.pop_back();
                 continue;
             }

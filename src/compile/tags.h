@@ -10,8 +10,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("a");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("a");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::a> node = std::make_unique<Templater::dynamic::dtags::a>();
@@ -26,8 +26,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("abbr");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("abbr");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::abbr> node = std::make_unique<Templater::dynamic::dtags::abbr>();
@@ -42,8 +42,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("address");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("address");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::address> node = std::make_unique<Templater::dynamic::dtags::address>();
@@ -58,8 +58,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("area");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("area");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::area> node = std::make_unique<Templater::dynamic::dtags::area>();
@@ -74,8 +74,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("article");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("article");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::article> node = std::make_unique<Templater::dynamic::dtags::article>();
@@ -90,8 +90,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("aside");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("aside");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::aside> node = std::make_unique<Templater::dynamic::dtags::aside>();
@@ -106,8 +106,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("audio");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("audio");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::audio> node = std::make_unique<Templater::dynamic::dtags::audio>();
@@ -122,8 +122,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("b");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("b");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::b> node = std::make_unique<Templater::dynamic::dtags::b>();
@@ -138,8 +138,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("base");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("base");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::base> node = std::make_unique<Templater::dynamic::dtags::base>();
@@ -154,8 +154,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("bdi");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("bdi");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::bdi> node = std::make_unique<Templater::dynamic::dtags::bdi>();
@@ -170,8 +170,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("bdo");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("bdo");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::bdo> node = std::make_unique<Templater::dynamic::dtags::bdo>();
@@ -186,8 +186,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("blockquote");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("blockquote");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::blockquote> node = std::make_unique<Templater::dynamic::dtags::blockquote>();
@@ -202,8 +202,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("body");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("body");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::body> node = std::make_unique<Templater::dynamic::dtags::body>();
@@ -218,8 +218,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("br");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("br");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::br> node = std::make_unique<Templater::dynamic::dtags::br>();
@@ -234,8 +234,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("button");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("button");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::button> node = std::make_unique<Templater::dynamic::dtags::button>();
@@ -250,8 +250,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("canvas");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("canvas");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::canvas> node = std::make_unique<Templater::dynamic::dtags::canvas>();
@@ -266,8 +266,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("caption");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("caption");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::caption> node = std::make_unique<Templater::dynamic::dtags::caption>();
@@ -282,8 +282,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("cite");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("cite");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::cite> node = std::make_unique<Templater::dynamic::dtags::cite>();
@@ -298,8 +298,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("code");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("code");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::code> node = std::make_unique<Templater::dynamic::dtags::code>();
@@ -314,8 +314,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("col");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("col");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::col> node = std::make_unique<Templater::dynamic::dtags::col>();
@@ -330,8 +330,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("colgroup");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("colgroup");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::colgroup> node = std::make_unique<Templater::dynamic::dtags::colgroup>();
@@ -346,8 +346,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("data");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("data");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::data> node = std::make_unique<Templater::dynamic::dtags::data>();
@@ -362,8 +362,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("datalist");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("datalist");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::datalist> node = std::make_unique<Templater::dynamic::dtags::datalist>();
@@ -378,8 +378,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("dd");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("dd");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::dd> node = std::make_unique<Templater::dynamic::dtags::dd>();
@@ -394,8 +394,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("del");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("del");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::del> node = std::make_unique<Templater::dynamic::dtags::del>();
@@ -410,8 +410,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("details");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("details");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::details> node = std::make_unique<Templater::dynamic::dtags::details>();
@@ -426,8 +426,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("dfn");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("dfn");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::dfn> node = std::make_unique<Templater::dynamic::dtags::dfn>();
@@ -442,8 +442,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("dialog");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("dialog");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::dialog> node = std::make_unique<Templater::dynamic::dtags::dialog>();
@@ -458,8 +458,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("div");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("div");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::cdiv> node = std::make_unique<Templater::dynamic::dtags::cdiv>();
@@ -474,8 +474,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("dl");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("dl");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::dl> node = std::make_unique<Templater::dynamic::dtags::dl>();
@@ -490,8 +490,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("dt");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("dt");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::dt> node = std::make_unique<Templater::dynamic::dtags::dt>();
@@ -506,8 +506,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("em");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("em");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::em> node = std::make_unique<Templater::dynamic::dtags::em>();
@@ -522,8 +522,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("embed");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("embed");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::embed> node = std::make_unique<Templater::dynamic::dtags::embed>();
@@ -538,8 +538,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("fieldset");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("fieldset");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::fieldset> node = std::make_unique<Templater::dynamic::dtags::fieldset>();
@@ -554,8 +554,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("figcaption");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("figcaption");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::figcaption> node = std::make_unique<Templater::dynamic::dtags::figcaption>();
@@ -570,8 +570,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("figure");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("figure");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::figure> node = std::make_unique<Templater::dynamic::dtags::figure>();
@@ -586,8 +586,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("footer");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("footer");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::footer> node = std::make_unique<Templater::dynamic::dtags::footer>();
@@ -602,8 +602,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("form");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("form");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::form> node = std::make_unique<Templater::dynamic::dtags::form>();
@@ -618,8 +618,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("h1");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("h1");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::h1> node = std::make_unique<Templater::dynamic::dtags::h1>();
@@ -634,8 +634,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("h2");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("h2");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::h2> node = std::make_unique<Templater::dynamic::dtags::h2>();
@@ -650,8 +650,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("h3");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("h3");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::h3> node = std::make_unique<Templater::dynamic::dtags::h3>();
@@ -666,8 +666,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("h4");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("h4");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::h4> node = std::make_unique<Templater::dynamic::dtags::h4>();
@@ -682,8 +682,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("h5");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("h5");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::h5> node = std::make_unique<Templater::dynamic::dtags::h5>();
@@ -698,8 +698,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("h6");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("h6");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::h6> node = std::make_unique<Templater::dynamic::dtags::h6>();
@@ -714,8 +714,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("head");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("head");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::head> node = std::make_unique<Templater::dynamic::dtags::head>();
@@ -730,8 +730,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("header");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("header");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::header> node = std::make_unique<Templater::dynamic::dtags::header>();
@@ -746,8 +746,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("hgroup");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("hgroup");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::hgroup> node = std::make_unique<Templater::dynamic::dtags::hgroup>();
@@ -762,8 +762,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("hr");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("hr");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::hr> node = std::make_unique<Templater::dynamic::dtags::hr>();
@@ -778,8 +778,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("html");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("html");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::html> node = std::make_unique<Templater::dynamic::dtags::html>();
@@ -794,8 +794,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("i");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("i");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::i> node = std::make_unique<Templater::dynamic::dtags::i>();
@@ -810,8 +810,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("iframe");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("iframe");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::iframe> node = std::make_unique<Templater::dynamic::dtags::iframe>();
@@ -826,8 +826,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("img");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("img");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::img> node = std::make_unique<Templater::dynamic::dtags::img>();
@@ -842,8 +842,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("input");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("input");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::input> node = std::make_unique<Templater::dynamic::dtags::input>();
@@ -858,8 +858,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("ins");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("ins");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::ins> node = std::make_unique<Templater::dynamic::dtags::ins>();
@@ -874,8 +874,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("kbd");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("kbd");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::kbd> node = std::make_unique<Templater::dynamic::dtags::kbd>();
@@ -890,8 +890,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("label");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("label");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::label> node = std::make_unique<Templater::dynamic::dtags::label>();
@@ -906,8 +906,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("legend");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("legend");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::legend> node = std::make_unique<Templater::dynamic::dtags::legend>();
@@ -922,8 +922,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("li");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("li");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::li> node = std::make_unique<Templater::dynamic::dtags::li>();
@@ -938,8 +938,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("link");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("link");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::clink> node = std::make_unique<Templater::dynamic::dtags::clink>();
@@ -954,8 +954,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("main");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("main");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::main> node = std::make_unique<Templater::dynamic::dtags::main>();
@@ -970,8 +970,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("map");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("map");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::map> node = std::make_unique<Templater::dynamic::dtags::map>();
@@ -986,8 +986,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("mark");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("mark");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::mark> node = std::make_unique<Templater::dynamic::dtags::mark>();
@@ -1002,8 +1002,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("math");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("math");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::math> node = std::make_unique<Templater::dynamic::dtags::math>();
@@ -1018,8 +1018,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("menu");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("menu");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::menu> node = std::make_unique<Templater::dynamic::dtags::menu>();
@@ -1034,8 +1034,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("menuitem");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("menuitem");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::menuitem> node = std::make_unique<Templater::dynamic::dtags::menuitem>();
@@ -1050,8 +1050,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("meta");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("meta");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::meta> node = std::make_unique<Templater::dynamic::dtags::meta>();
@@ -1066,8 +1066,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("meter");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("meter");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::meter> node = std::make_unique<Templater::dynamic::dtags::meter>();
@@ -1082,8 +1082,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("nav");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("nav");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::nav> node = std::make_unique<Templater::dynamic::dtags::nav>();
@@ -1098,8 +1098,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("noscript");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("noscript");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::noscript> node = std::make_unique<Templater::dynamic::dtags::noscript>();
@@ -1114,8 +1114,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("object");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("object");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::object> node = std::make_unique<Templater::dynamic::dtags::object>();
@@ -1130,8 +1130,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("ol");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("ol");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::ol> node = std::make_unique<Templater::dynamic::dtags::ol>();
@@ -1146,8 +1146,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("optgroup");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("optgroup");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::optgroup> node = std::make_unique<Templater::dynamic::dtags::optgroup>();
@@ -1162,8 +1162,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("option");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("option");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::option> node = std::make_unique<Templater::dynamic::dtags::option>();
@@ -1178,8 +1178,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("output");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("output");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::output> node = std::make_unique<Templater::dynamic::dtags::output>();
@@ -1194,8 +1194,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("p");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("p");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::p> node = std::make_unique<Templater::dynamic::dtags::p>();
@@ -1210,8 +1210,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("param");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("param");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::param> node = std::make_unique<Templater::dynamic::dtags::param>();
@@ -1226,8 +1226,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("picture");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("picture");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::picture> node = std::make_unique<Templater::dynamic::dtags::picture>();
@@ -1242,8 +1242,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("pre");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("pre");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::pre> node = std::make_unique<Templater::dynamic::dtags::pre>();
@@ -1258,8 +1258,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("progress");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("progress");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::progress> node = std::make_unique<Templater::dynamic::dtags::progress>();
@@ -1274,8 +1274,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("q");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("q");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::q> node = std::make_unique<Templater::dynamic::dtags::q>();
@@ -1290,8 +1290,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("rb");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("rb");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::rb> node = std::make_unique<Templater::dynamic::dtags::rb>();
@@ -1306,8 +1306,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("rp");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("rp");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::rp> node = std::make_unique<Templater::dynamic::dtags::rp>();
@@ -1322,8 +1322,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("rt");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("rt");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::rt> node = std::make_unique<Templater::dynamic::dtags::rt>();
@@ -1338,8 +1338,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("rtc");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("rtc");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::rtc> node = std::make_unique<Templater::dynamic::dtags::rtc>();
@@ -1354,8 +1354,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("ruby");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("ruby");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::ruby> node = std::make_unique<Templater::dynamic::dtags::ruby>();
@@ -1370,8 +1370,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("s");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("s");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::s> node = std::make_unique<Templater::dynamic::dtags::s>();
@@ -1386,8 +1386,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("samp");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("samp");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::samp> node = std::make_unique<Templater::dynamic::dtags::samp>();
@@ -1402,8 +1402,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("script");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("script");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::script> node = std::make_unique<Templater::dynamic::dtags::script>();
@@ -1418,8 +1418,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("search");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("search");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::search> node = std::make_unique<Templater::dynamic::dtags::search>();
@@ -1434,8 +1434,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("section");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("section");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::section> node = std::make_unique<Templater::dynamic::dtags::section>();
@@ -1450,8 +1450,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("select");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("select");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::select> node = std::make_unique<Templater::dynamic::dtags::select>();
@@ -1466,8 +1466,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("slot");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("slot");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::slot> node = std::make_unique<Templater::dynamic::dtags::slot>();
@@ -1482,8 +1482,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("small");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("small");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::small> node = std::make_unique<Templater::dynamic::dtags::small>();
@@ -1498,8 +1498,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("source");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("source");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::source> node = std::make_unique<Templater::dynamic::dtags::source>();
@@ -1514,8 +1514,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("span");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("span");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::span> node = std::make_unique<Templater::dynamic::dtags::span>();
@@ -1530,8 +1530,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("strong");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("strong");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::strong> node = std::make_unique<Templater::dynamic::dtags::strong>();
@@ -1546,8 +1546,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("style");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("style");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::style> node = std::make_unique<Templater::dynamic::dtags::style>();
@@ -1562,8 +1562,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("sub");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("sub");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::sub> node = std::make_unique<Templater::dynamic::dtags::sub>();
@@ -1578,8 +1578,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("summary");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("summary");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::summary> node = std::make_unique<Templater::dynamic::dtags::summary>();
@@ -1594,8 +1594,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("sup");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("sup");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::sup> node = std::make_unique<Templater::dynamic::dtags::sup>();
@@ -1610,8 +1610,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("svg");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("svg");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::svg> node = std::make_unique<Templater::dynamic::dtags::svg>();
@@ -1626,8 +1626,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("table");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("table");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::table> node = std::make_unique<Templater::dynamic::dtags::table>();
@@ -1642,8 +1642,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("tbody");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("tbody");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::tbody> node = std::make_unique<Templater::dynamic::dtags::tbody>();
@@ -1658,8 +1658,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("td");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("td");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::td> node = std::make_unique<Templater::dynamic::dtags::td>();
@@ -1674,8 +1674,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("template");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("template");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::ctemplate> node = std::make_unique<Templater::dynamic::dtags::ctemplate>();
@@ -1690,8 +1690,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("textarea");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("textarea");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::textarea> node = std::make_unique<Templater::dynamic::dtags::textarea>();
@@ -1706,8 +1706,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("tfoot");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("tfoot");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::tfoot> node = std::make_unique<Templater::dynamic::dtags::tfoot>();
@@ -1722,8 +1722,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("th");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("th");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::th> node = std::make_unique<Templater::dynamic::dtags::th>();
@@ -1738,8 +1738,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("thead");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("thead");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::thead> node = std::make_unique<Templater::dynamic::dtags::thead>();
@@ -1754,8 +1754,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("time");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("time");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::time> node = std::make_unique<Templater::dynamic::dtags::time>();
@@ -1770,8 +1770,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("title");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("title");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::title> node = std::make_unique<Templater::dynamic::dtags::title>();
@@ -1786,8 +1786,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("tr");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("tr");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::tr> node = std::make_unique<Templater::dynamic::dtags::tr>();
@@ -1802,8 +1802,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("track");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("track");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::track> node = std::make_unique<Templater::dynamic::dtags::track>();
@@ -1818,8 +1818,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("u");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("u");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::u> node = std::make_unique<Templater::dynamic::dtags::u>();
@@ -1834,8 +1834,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("ul");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("ul");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::ul> node = std::make_unique<Templater::dynamic::dtags::ul>();
@@ -1850,8 +1850,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("var");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("var");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::var> node = std::make_unique<Templater::dynamic::dtags::var>();
@@ -1866,8 +1866,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseNode<size(), Children...>("video");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeNode<size(), Children...>("video");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::video> node = std::make_unique<Templater::dynamic::dtags::video>();
@@ -1882,8 +1882,8 @@ namespace Templater::compile::ctags {
             ((size += Children::size()), ...);
             return size;
         }
-        static consteval std::array<char, size() + 1> serialise() {
-            return serialiseVoidNode<size(), Children...>("wbr");
+        static consteval std::array<char, size() + 1> serialize() {
+            return serializeVoidNode<size(), Children...>("wbr");
         }
         static std::unique_ptr<Templater::dynamic::Node> value() {
             std::unique_ptr<Templater::dynamic::dtags::wbr> node = std::make_unique<Templater::dynamic::dtags::wbr>();

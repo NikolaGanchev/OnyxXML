@@ -19,9 +19,9 @@ namespace Templater::dynamic::dtags {
              * @return const std::string& 
              */
             const std::string& getTagName() const override;
-            std::string serialise() const override;
-            std::string serialisePretty(const std::string& indentationSequence, bool sortAttributes) const override;
-            bool hasSpecialSerialisation() const override;
+            std::string serialize() const override;
+            std::string serializePretty(const std::string& indentationSequence, bool sortAttributes) const override;
+            bool hasSpecialSerialization() const override;
             std::unique_ptr<Node> shallowCopy() const override;
     };
 }

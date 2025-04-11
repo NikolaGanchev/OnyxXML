@@ -18,7 +18,7 @@ TEST_CASE("HTML is generated", "[Node]" ) {
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head></head>\n</html>";
 
-    CHECK(expected == obj.serialisePretty("\t", true));
+    CHECK(expected == obj.serializePretty("\t", true));
 }
 
 TEST_CASE("Attribute remove works", "[Node]" ) {
@@ -54,7 +54,7 @@ TEST_CASE("Vector constructor works", "[Node]" ) {
 
     std::string expected = "<ul id=\"list\">\n\t<li>\n\t\t1\n\t</li>\n\t<li>\n\t\t2\n\t</li>\n\t<li>\n\t\t3\n\t</li>\n</ul>";
 
-    CHECK(expected == obj.serialisePretty("\t", true));
+    CHECK(expected == obj.serializePretty("\t", true));
 }
 
 TEST_CASE("Complex test case generates html", "[Node]" ) {
@@ -158,7 +158,7 @@ TEST_CASE("Complex test case generates html", "[Node]" ) {
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#about\">\n\t\t\t\t\t\t\tAbout Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes various nested elements, attributes, and content.\n\t\t\t\t</p>\n\t\t\t\t<form name=\"contact-form\">\n\t\t\t\t\t<label for=\"name\">\n\t\t\t\t\t\tYour Name:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t\t\t<label for=\"email\">\n\t\t\t\t\t\tYour Email:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t\t\t<button type=\"submit\">\n\t\t\t\t\t\tSubmit\n\t\t\t\t\t</button>\n\t\t\t\t</form>\n\t\t\t</section>\n\t\t\t<section id=\"features\">\n\t\t\t\t<h2>\n\t\t\t\t\tFeatures\n\t\t\t\t</h2>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 1\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 2\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are the key features of the application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test Page\n\t\t\t</p>\n\t\t\t<a href=\"https://www.example.com\">\n\t\t\t\tPrivacy Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
 
-    CHECK(expected == obj.serialisePretty("\t", true));
+    CHECK(expected == obj.serializePretty("\t", true));
 }
 
 TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
@@ -573,7 +573,7 @@ TEST_CASE("Complex html with dynamic tags", "[Node]" ) {
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#about\">\n\t\t\t\t\t\t\tAbout Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes various nested elements, attributes, and content.\n\t\t\t\t</p>\n\t\t\t\t<form name=\"contact-form\">\n\t\t\t\t\t<label for=\"name\">\n\t\t\t\t\t\tYour Name:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t\t\t<label for=\"email\">\n\t\t\t\t\t\tYour Email:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t\t\t<button type=\"submit\">\n\t\t\t\t\t\tSubmit\n\t\t\t\t\t</button>\n\t\t\t\t</form>\n\t\t\t</section>\n\t\t\t<section id=\"features\">\n\t\t\t\t<h2>\n\t\t\t\t\tFeatures\n\t\t\t\t</h2>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 1\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 2\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are the key features of the application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test Page\n\t\t\t</p>\n\t\t\t<a href=\"https://www.example.com\">\n\t\t\t\tPrivacy Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
 
-    CHECK(expected == obj.serialisePretty("\t", true));
+    CHECK(expected == obj.serializePretty("\t", true));
 }
 
 TEST_CASE("Empty html tree has size 1", "[Node::size()]") {
@@ -640,7 +640,7 @@ void addChildren(Templater::dynamic::Node* root, int level) {
     root->addChild(std::move(s));
 }
 
-TEST_CASE("3000 tags serialise in under 50ms", "[Node]") {
+TEST_CASE("3000 tags serialize in under 50ms", "[Node]") {
     using namespace Templater::dynamic::dtags;
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
@@ -660,7 +660,7 @@ TEST_CASE("3000 tags serialise in under 50ms", "[Node]") {
     }
 
     auto t1 = high_resolution_clock::now();
-    root.serialise();
+    root.serialize();
     auto t2 = high_resolution_clock::now();
     
     duration<double, std::milli> time = t2 - t1;
@@ -669,7 +669,7 @@ TEST_CASE("3000 tags serialise in under 50ms", "[Node]") {
     REQUIRE(time.count() < 50);
 }
 
-TEST_CASE("Template html runtime api serialises correctly", "[Node]" ) {
+TEST_CASE("Template html runtime api serializes correctly", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -704,7 +704,7 @@ TEST_CASE("Template html runtime api enforces given indentation rules", "[Node]"
     CHECK(doc::value("    ", true) == expected);
 }
 
-TEST_CASE("HTML fragment using template runtime api serialises correctly", "[Node]" ) {
+TEST_CASE("HTML fragment using template runtime api serializes correctly", "[Node]" ) {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -765,7 +765,7 @@ TEST_CASE("Complex templated runtime api html with constant tags", "[Node]" ) {
 }
 
 
-TEST_CASE("HTML is correctly serialised") {
+TEST_CASE("HTML is correctly serialized") {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -777,10 +777,10 @@ TEST_CASE("HTML is correctly serialised") {
         >
     >;
 
-    CHECK(std::string(doc::serialise().data()) == "<html lang=\"en\"><head></head><body>Hello world!</body></html>");
+    CHECK(std::string(doc::serialize().data()) == "<html lang=\"en\"><head></head><body>Hello world!</body></html>");
 }
 
-TEST_CASE("Attributes are serialised correctly") {
+TEST_CASE("Attributes are serialized correctly") {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -793,10 +793,10 @@ TEST_CASE("Attributes are serialised correctly") {
         >
     >;
 
-    CHECK(std::string(doc::serialise().data()) == "<html theme=\"dark\" lang=\"en\"><head></head><body></body></html>");
+    CHECK(std::string(doc::serialize().data()) == "<html theme=\"dark\" lang=\"en\"><head></head><body></body></html>");
 }
 
-TEST_CASE("Text nodes are serialised correctly") {
+TEST_CASE("Text nodes are serialized correctly") {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -807,10 +807,10 @@ TEST_CASE("Text nodes are serialised correctly") {
         >
     >;
 
-    CHECK(std::string(doc::serialise().data()) == "<html><head></head><body>This is a test!</body></html>");
+    CHECK(std::string(doc::serialize().data()) == "<html><head></head><body>This is a test!</body></html>");
 }
 
-TEST_CASE("Void tags are serialised correctly") {
+TEST_CASE("Void tags are serialized correctly") {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -823,7 +823,7 @@ TEST_CASE("Void tags are serialised correctly") {
         >
     >;
 
-    CHECK(std::string(doc::serialise().data()) == "<html><head></head><body><img src=\"img.jpg\" /></body></html>");
+    CHECK(std::string(doc::serialize().data()) == "<html><head></head><body><img src=\"img.jpg\" /></body></html>");
 }
 
 TEST_CASE("UTF-8 text strings are cut off properly") {
@@ -837,16 +837,16 @@ TEST_CASE("UTF-8 text strings are cut off properly") {
         >
     >;
 
-    auto serialized = std::string(doc::serialise().data());
+    auto serialized = std::string(doc::serialize().data());
     CHECK(serialized == "<html><head></head><body>Grüße</body></html>");
 }
 
-TEST_CASE("Empty document serialises correctly") {
+TEST_CASE("Empty document serializes correctly") {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
     using doc = Document<>;
-    CHECK(std::string(doc::serialise().data()) == "");
+    CHECK(std::string(doc::serialize().data()) == "");
 }
 
 TEST_CASE("Deeply nested elements serialize correctly") {
@@ -867,11 +867,11 @@ TEST_CASE("Deeply nested elements serialize correctly") {
         >
     >;
 
-    CHECK(std::string(doc::serialise().data()) ==
+    CHECK(std::string(doc::serialize().data()) ==
           "<html><head></head><body><div class=\"container\"><div>Nested content</div></div></body></html>");
 }
 
-TEST_CASE("Multiple text nodes are serialised in sequence") {
+TEST_CASE("Multiple text nodes are serialized in sequence") {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
 
@@ -885,7 +885,7 @@ TEST_CASE("Multiple text nodes are serialised in sequence") {
         >
     >;
 
-    CHECK(std::string(doc::serialise().data()) == "<html><head></head><body>Hello world!</body></html>");
+    CHECK(std::string(doc::serialize().data()) == "<html><head></head><body>Hello world!</body></html>");
 }
 
 TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
@@ -900,7 +900,7 @@ TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
-    CHECK(d.serialisePretty("\t", true) == expected);
+    CHECK(d.serializePretty("\t", true) == expected);
 }
 
 TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "[dynamic::dtags::Text]" ) {
@@ -915,7 +915,7 @@ TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;&#x1f600;Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
-    CHECK(d.serialisePretty("\t", true) == expected);
+    CHECK(d.serializePretty("\t", true) == expected);
 }
 
 TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "[dynamic::dtags::Text]" ) {
@@ -930,7 +930,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
 
     std::string expected = "<div>\n\t&lt;div class=&quot;content&quot;&gt;&lt;h1&gt;😀Welcome to &lt;span style=&quot;color: red;&quot;&gt;My Awesome Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: &lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
-    CHECK(d.serialisePretty("\t", true) == expected);
+    CHECK(d.serializePretty("\t", true) == expected);
 }
 
 TEST_CASE("HTML comments are generated", "[Comment]" ) {
@@ -948,7 +948,7 @@ TEST_CASE("HTML comments are generated", "[Comment]" ) {
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<!--A comment.-->\n\t</head>\n</html>";
 
-    CHECK(expected == obj.serialisePretty("\t", true));
+    CHECK(expected == obj.serializePretty("\t", true));
 }
 
 TEST_CASE("HTML comments are escaped", "[Comment]" ) {
@@ -966,7 +966,7 @@ TEST_CASE("HTML comments are escaped", "[Comment]" ) {
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<!--A comment. --&gt;&lt;dangerous&gt;sequence.-->\n\t</head>\n</html>";
 
-    CHECK(expected == obj.serialisePretty("\t", true));
+    CHECK(expected == obj.serializePretty("\t", true));
 }
 
 
@@ -985,7 +985,7 @@ TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<h1> Injected title! </h1>\n\t</head>\n</html>";
 
-    CHECK(expected == obj.serialisePretty("\t", true));
+    CHECK(expected == obj.serializePretty("\t", true));
 }
 
 TEST_CASE("Node deepCopy() works", "[Node]") {
@@ -1084,7 +1084,7 @@ TEST_CASE("Node deepCopy() works", "[Node]") {
 
     std::unique_ptr<Node> root = obj.deepCopy();
     REQUIRE(root);
-    CHECK(root->serialisePretty("\t", true) == obj.serialisePretty("\t", true));
+    CHECK(root->serializePretty("\t", true) == obj.serializePretty("\t", true));
     CHECK(root.get() != &obj);
 }
 
