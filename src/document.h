@@ -362,7 +362,7 @@ namespace Templater::compile {
                     }
                 }()), ...);
             }
-            return obj.serialise(indentationSequence, sortAttributes);
+            return obj.serialisePretty(indentationSequence, sortAttributes);
         }
     };
 

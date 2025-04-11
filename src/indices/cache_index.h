@@ -73,7 +73,7 @@ namespace Templater::dynamic::index {
              *
              *  index::CacheIndex index = index::createIndex<index::CacheIndex>(&obj);
              * 
-             *  std::string serialised = index.cache(&GenericNode::serialise, "\t", true); // The serialisation is cached until the GenericObject is changed
+             *  std::string serialised = index.cache(&GenericNode::serialisePretty, "\t", true); // The serialisation is cached until the GenericObject is changed
              * @endcode 
              * 
              * @tparam Function 

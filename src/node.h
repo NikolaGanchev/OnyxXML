@@ -246,14 +246,14 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief The static global indentation string to be used for indenting during serialisation. Can be overriden by arguments to Node::serialise(const std::string&, bool). 
+             * @brief The static global indentation string to be used for indenting during serialisation. 
              * The default value is "\t".
              */
             static std::string indentationSequence;
 
 
             /**
-             * @brief Static global state on whether attributes should be sorted during serialisation. Can be overriden by arguments to Node::serialise(const std::string&, bool). 
+             * @brief Static global state on whether attributes should be sorted during serialisation. 
              * The default value is false.
              */
             static bool sortAttributes;
@@ -534,18 +534,26 @@ namespace Templater::dynamic {
             
 
             /**
-             * @brief Serialises the tree defined by the current node to an XML string.
+             * @brief Serialises the tree defined by the current node to an XML string
+             * 
+             * @return std::string 
+             */
+            virtual std::string serialise() const;
+
+
+            /**
+             * @brief Serialises the tree defined by the current node to an XML string with pretty printing.
+             * Caution: is slower than serialise(). Performance loss for deep trees and trees with heavily varying depth has been observed to be about 30%.
              * 
              * @param indentationSequence The sequence of characters which is used for indentation
              * @param sortAttributes Whether to sort attributes in tags. 
              * Attribute order doesn't matter for XML validity or rendering and sorting incurs a runtime cost. 
              * In the general case attribute insertion order will be kept by the Node.
              * Attribute sorting is mainly to be used for getting deterministic output for testing.
-             * Default value: false.
              * 
              * @return std::string 
              */
-            virtual std::string serialise(const std::string& indentationSequence = getIndentationSequence(), bool sortAttributes = getSortAttributes()) const;
+            virtual std::string serialisePretty(const std::string& indentationSequence, bool sortAttributes) const;
 
 
             /**

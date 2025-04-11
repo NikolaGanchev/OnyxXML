@@ -462,7 +462,75 @@ namespace Templater::dynamic {
         return false;
     }
 
-    std::string Node::serialise(const std::string& indentationSequence, bool sortAttributes) const {
+    std::string Node::serialise() const {
+        struct ParseNode {
+            const Node* obj;
+            bool visited;
+        };
+
+        std::vector<ParseNode> s;
+
+        std::ostringstream result; 
+        result.imbue(std::locale::classic());
+
+        std::vector<const Attribute*> attributes;
+
+        s.emplace_back(ParseNode{this, false});
+
+        while(!s.empty()) {
+            ParseNode& node = s.back();
+            const Node* obj = node.obj;
+
+            const std::string& tagName = obj->getTagName();
+
+            if (node.visited) {
+                result << "</" << tagName << ">";
+                s.pop_back();
+                continue;
+            }
+            node.visited = true;
+
+            if (obj->hasSpecialSerialisation()) {
+                result << obj->serialise();
+                s.pop_back();
+                continue;
+            }
+
+            if (tagName == ".empty") {
+                s.pop_back();
+                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                for (size_t i = children.size(); i > 0; --i) {
+                    s.emplace_back(ParseNode{children[i-1].get(), false});
+                }
+                continue;
+            }
+
+            result << "<" << tagName;
+
+            if (!(obj->isVoid())) {
+
+                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                if (!children.empty()) {
+                    result << ">";
+                    for (size_t i = children.size(); i > 0; --i) {
+                        s.emplace_back(ParseNode{children[i-1].get(), false});
+                    }
+                } else {
+                    result << "></" << tagName << ">";
+                    s.pop_back();
+                    continue;
+                }
+            } else {
+                result << "/>";
+                s.pop_back();
+                continue;
+            }
+        }
+
+        return result.str();
+    }
+
+    std::string Node::serialisePretty(const std::string& indentationSequence, bool sortAttributes) const {
         struct ParseNode {
             const Node* obj;
             bool visited;
@@ -498,7 +566,7 @@ namespace Templater::dynamic {
             node.visited = true;
 
             if (obj->hasSpecialSerialisation()) {
-                result << indentation << obj->serialise(indentationSequence, sortAttributes) << "\n";
+                result << indentation << obj->serialisePretty(indentationSequence, sortAttributes) << "\n";
                 s.pop_back();
                 continue;
             }

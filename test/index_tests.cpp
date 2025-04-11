@@ -551,26 +551,26 @@ TEST_CASE("CacheIndex works", "[CacheIndex]") {
 
     index::CacheIndex index = index::createIndex<index::CacheIndex>(&obj);
 
-    std::string serialised = index.cache(&GenericNode::serialise, "\t", true);
+    std::string serialised = index.cache(&GenericNode::serialisePretty, "\t", true);
 
     CHECK(expected == serialised);
 
-    CHECK(expected == index.getCached(&GenericNode::serialise, "\t", true));
+    CHECK(expected == index.getCached(&GenericNode::serialisePretty, "\t", true));
 
-    std::string serialised2 = index.cache(&GenericNode::serialise, "\t\t", true);
+    std::string serialised2 = index.cache(&GenericNode::serialisePretty, "\t\t", true);
     
-    CHECK(expected == index.getCached(&GenericNode::serialise, "\t", true));
-    CHECK(expected != index.getCached(&GenericNode::serialise, "\t\t", true));
+    CHECK(expected == index.getCached(&GenericNode::serialisePretty, "\t", true));
+    CHECK(expected != index.getCached(&GenericNode::serialisePretty, "\t\t", true));
 
     auto head = obj.getChildrenByTagName("head");
 
     REQUIRE(head.size() == 1);
     obj.removeChild(head[0]);
 
-    CHECK(!(index.isCached(&GenericNode::serialise, "\t", true)));
-    CHECK(!(index.isCached(&GenericNode::serialise, "\t\t", true)));
+    CHECK(!(index.isCached(&GenericNode::serialisePretty, "\t", true)));
+    CHECK(!(index.isCached(&GenericNode::serialisePretty, "\t\t", true)));
     
-    CHECK_THROWS(index.getCached(&GenericNode::serialise, "\t", true));
+    CHECK_THROWS(index.getCached(&GenericNode::serialisePretty, "\t", true));
 }
 
 Templater::dynamic::dtags::GenericNode getComplexTree() {
@@ -781,16 +781,16 @@ TEST_CASE("CacheIndex is faster than querying the tree", "[TagIndex]") {
     
     index::CacheIndex index = index::createIndex<index::CacheIndex>(&obj);
 
-    std::string result = index.cache(&Node::serialise, "\t", true);
+    std::string result = index.cache(&Node::serialisePretty, "\t", true);
 
     auto t1 = high_resolution_clock::now();
-    result = index.cache(&Node::serialise, "\t", true);
+    result = index.cache(&Node::serialisePretty, "\t", true);
     auto t2 = high_resolution_clock::now();
 
     duration<double, std::milli> timeIndex = t2 - t1;
 
     auto t21 = high_resolution_clock::now();
-    std::string result2 = obj.serialise("\t", true);
+    std::string result2 = obj.serialisePretty("\t", true);
     auto t22 = high_resolution_clock::now();
 
     REQUIRE(result2 == result);

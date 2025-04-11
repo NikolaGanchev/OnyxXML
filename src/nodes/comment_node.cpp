@@ -7,8 +7,11 @@ namespace Templater::dynamic::dtags {
         return name;
     }
 
-    
-    std::string Comment::serialise(const std::string& indentationSequence, bool sortAttributes) const {
+    std::string Comment::serialise() const {
+        return "<!--" + text::escape(this->getText(), this->shouldEscapeMultiByte()) + "-->";
+    }
+
+    std::string Comment::serialisePretty(const std::string& indentationSequence, bool sortAttributes) const {
         return "<!--" + text::escape(this->getText(), this->shouldEscapeMultiByte()) + "-->";
     }
     

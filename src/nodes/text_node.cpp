@@ -20,10 +20,13 @@ namespace Templater::dynamic::dtags {
         return true;
     }
 
-    std::string Text::serialise(const std::string& indentationSequence, bool sortAttributes) const {
+    std::string Text::serialise() const {
         return text::escape(this->text, this->escapeMultiByte);
     }
-    
+
+    std::string Text::serialisePretty(const std::string& indentationSequence, bool sortAttributes) const {
+        return text::escape(this->text, this->escapeMultiByte);
+    }
     
     bool Text::hasSpecialSerialisation() const {
         return true;
