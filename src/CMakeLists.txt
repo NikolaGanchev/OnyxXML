@@ -3,12 +3,23 @@ add_library(samplelib STATIC)
 
 set_target_properties(samplelib PROPERTIES OUTPUT_NAME "sample")
 
+set(GENERATED_TAGS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated_tags")
+set(DYNAMIC_TAGS_DIRECTORY "${GENERATED_TAGS_DIRECTORY}/dynamic")
+set(COMPILE_TAGS_DIRECTORY "${GENERATED_TAGS_DIRECTORY}/compile")
+
+set(GENERATED_TAGS_H "${DYNAMIC_TAGS_DIRECTORY}/tags.h")
+set(GENERATED_TAGS_CPP "${DYNAMIC_TAGS_DIRECTORY}/tags.cpp")
+set(GENERATED_TAGS_COMPILE_H "${COMPILE_TAGS_DIRECTORY}/tags.h")
+
+target_include_directories(samplelib 
+    PUBLIC
+     "${GENERATED_TAGS_DIRECTORY}")
+
 target_sources(
     samplelib
     PRIVATE
         "attribute.cpp"
         "node.cpp"
-        "dynamic/tags.cpp"
         "text.cpp"
         "index.cpp"
         "indices/attribute_name_index.cpp"
@@ -21,17 +32,14 @@ target_sources(
         "nodes/generic_node.cpp"
         "nodes/comment_node.cpp"
         "nodes/_dangerous_raw_text_node.cpp"
+        "${GENERATED_TAGS_CPP}"
 )
-
-set(GENERATED_TAGS_H "${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.h")
-set(GENERATED_TAGS_CPP "${CMAKE_CURRENT_SOURCE_DIR}/dynamic/tags.cpp")
-set(GENERATED_TAGS_COMPILE_H "${CMAKE_CURRENT_SOURCE_DIR}/compile/tags.h")
 
 add_executable(generate "${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp")
 
 add_custom_command(
     OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
-    COMMAND generate "${CMAKE_CURRENT_SOURCE_DIR}/tags.txt" "${CMAKE_CURRENT_SOURCE_DIR}/dynamic" "${CMAKE_CURRENT_SOURCE_DIR}/compile"
+    COMMAND generate "${CMAKE_CURRENT_SOURCE_DIR}/tags.txt" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     DEPENDS generate "${CMAKE_CURRENT_SOURCE_DIR}/tags.txt" "${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp"
     COMMENT "Running the generate executable to generate the html tags files"

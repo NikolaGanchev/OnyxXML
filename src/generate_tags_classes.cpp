@@ -45,7 +45,7 @@ void readTags(std::vector<Tag>& tags, const char* tagsFilePath) {
 void generateDynamic(const std::vector<Tag>& tags, const char* path) {
 
     if (!std::filesystem::exists(path)) {
-        std::filesystem::create_directory(path);
+        std::filesystem::create_directories(path);
     }
 
     std::filesystem::path fullPath = path;
@@ -110,7 +110,7 @@ void generateDynamic(const std::vector<Tag>& tags, const char* path) {
 void generateCompile(const std::vector<Tag>& tags, const char* path) {
 
     if (!std::filesystem::exists(path)) {
-        std::filesystem::create_directory(path);
+        std::filesystem::create_directories(path);
     }
 
     std::filesystem::path fullPath = path;
