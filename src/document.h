@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <string_view>
 #include <fstream>
+#include <string_view>
 
 #define COMPILE_DOCUMENT(...) [](){ \
     using namespace Templater::compile::ctags;\
@@ -81,7 +82,7 @@ namespace Templater::compile {
             * @return size_t 
             */
             static consteval size_t size() {
-                return strlen(Name.value) + strlen(Value.value) + 4; // +4 for the space, =, and ""
+                return std::string_view(Name.value).size() + std::string_view(Value.value).size() + 4; // +4 for the space, =, and ""
             }
 
 
@@ -95,17 +96,17 @@ namespace Templater::compile {
                 std::array<char, size() + 1> result = {};
                 result[0] = ' ';
                 int index = 1;
-                for (int i = 0; i < strlen(Name.value); i++) {
+                for (int i = 0; i < std::string_view(Name.value).size(); i++) {
                     result[index + i] = Name.value[i];
                 }
-                index += strlen(Name.value);
+                index += std::string_view(Name.value).size();
                 result[index] = '=';
                 result[index+1] = '\"';
                 index += 2;
-                for (int i = 0; i < strlen(Value.value); i++) {
+                for (int i = 0; i < std::string_view(Value.value).size(); i++) {
                     result[index + i] = Value.value[i];
                 }
-                index += strlen(Value.value);
+                index += std::string_view(Value.value).size();
                 result[index] = '\"';
                 result[index+1] = '\0';
                 return result;
@@ -148,7 +149,7 @@ namespace Templater::compile {
             * @return size_t 
             */
             static consteval size_t size() {
-                return strlen(Str.value);
+                return std::string_view(Str.value).size();
             }
 
 
@@ -159,7 +160,7 @@ namespace Templater::compile {
              */
             static consteval std::array<char, size() + 1> serialize() {
                 std::array<char, size() + 1> result = {};
-                for (int i = 0; i < strlen(Str.value); i++) {
+                for (int i = 0; i < std::string_view(Str.value).size(); i++) {
                     result[i] = Str.value[i];
                 }
                 result[size()] = '\0';
@@ -203,10 +204,10 @@ namespace Templater::compile {
         bool passedAttr = false;
         result[0] = '<';
         int index = 1;
-        for (int i = 0; i < strlen(tagName); i++) {
+        for (int i = 0; i < std::string_view(tagName).size(); i++) {
             result[index + i] = tagName[i];
         }
-        index += strlen(tagName);
+        index += std::string_view(tagName).size();
         if constexpr (sizeof...(Children) == 0)
         {
             result[index] = '>';
@@ -239,10 +240,10 @@ namespace Templater::compile {
         result[index] = '<';
         result[index+1] = '/';
         index += 2;
-        for (int i = 0; i < strlen(tagName); i++) {
+        for (int i = 0; i < std::string_view(tagName).size(); i++) {
             result[index + i] = tagName[i];
         }
-        index += strlen(tagName);
+        index += std::string_view(tagName).size();
         result[index] = '>';
         result[index+1] = '\0';
         return result;
@@ -254,10 +255,10 @@ namespace Templater::compile {
         bool passedAttr = false;
         result[0] = '<';
         int index = 1;
-        for (int i = 0; i < strlen(tagName); i++) {
+        for (int i = 0; i < std::string_view(tagName).size(); i++) {
             result[index + i] = tagName[i];
         }
-        index += strlen(tagName);
+        index += std::string_view(tagName).size();
         if constexpr (sizeof...(Children) != 0)
         {
             (([&] {
