@@ -9,7 +9,7 @@ namespace Templater::dynamic::dtags {
      * Useful for generating partial XML fragments.
      * 
      */
-    class EmptyNode: public Node {
+    class EmptyNode: public Node, public Node::SpecialSerializable {
         public: 
             using Node::Node;
 
@@ -22,6 +22,9 @@ namespace Templater::dynamic::dtags {
              */
             const std::string& getTagName() const override;
             bool isVoid() const override;
+            bool hasSpecialSerialization() const override;
             std::unique_ptr<Node> shallowCopy() const override;
+            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
+            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
     };
 }

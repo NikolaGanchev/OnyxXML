@@ -9,7 +9,7 @@ namespace Templater::dynamic::dtags {
      * @brief A text Node
      * 
      */
-    class Text: public Node {
+    class Text: public Node, public Node::SpecialSerializable {
         private:
             /**
              * @brief The text
@@ -83,5 +83,7 @@ namespace Templater::dynamic::dtags {
             bool hasSpecialSerialization() const override;
             std::unique_ptr<Node> shallowCopy() const override;
             virtual bool shallowEquals(const Node& other) const override;
+            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
+            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
     };
 }

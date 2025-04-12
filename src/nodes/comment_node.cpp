@@ -12,7 +12,7 @@ namespace Templater::dynamic::dtags {
     }
 
     std::string Comment::serializePretty(const std::string& indentationSequence, bool sortAttributes) const {
-        return "<!--" + text::escape(this->getText(), this->shouldEscapeMultiByte()) + "-->";
+        return serialize();
     }
     
     bool Comment::hasSpecialSerialization() const {
@@ -21,5 +21,15 @@ namespace Templater::dynamic::dtags {
     
     std::unique_ptr<Node> Comment::shallowCopy() const {
         return std::make_unique<Comment>(this->getText(), this->shouldEscapeMultiByte());
+    }
+
+    void Comment::specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const {
+        result << "<!--" << text::escape(this->getText(), this->shouldEscapeMultiByte()) << "-->";
+        stack.pop_back();
+    }
+
+    void Comment::specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const {
+        result << indentation << "<!--" << text::escape(this->getText(), this->shouldEscapeMultiByte()) << "-->\n";
+        stack.pop_back();
     }
 }

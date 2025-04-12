@@ -7,6 +7,7 @@
 #include <cstring>
 #include <stdexcept>
 #include "attribute.h"
+#include <sstream>
 
 namespace Templater::dynamic {
     class Node;
@@ -257,7 +258,59 @@ namespace Templater::dynamic {
              * The default value is false.
              */
             static bool sortAttributes;
-        public:
+        public:  
+            /**
+             * @brief Used during serialization for keeping track of nodes.
+             * 
+             */
+            struct SerializationNode {
+                /**
+                 * @brief The pointer to the node.
+                 * 
+                 */
+                const Node* obj;
+
+
+                /**
+                 * @brief Whether the node has already been passed once by serialization.
+                 * 
+                 */
+                bool visited;
+            };
+
+            /**
+             * @brief Methods for special serialization on a Node. Any node subclass returning true on hasSpecialSerialization() must also derive this class.
+             * 
+             */
+            class SpecialSerializable {
+                public:
+                    /**
+                     * @brief Called during serialization of a tree for nodes which return true to hasSpecialSerialization(). 
+                     * Temporarily takes over control of the serialization. Must do all serialization actions. Has no obligation towards indentation or formatting, 
+                     * as long as only valid XML is sent to the result stream. Called after SerializationNode::visited is set to true and and if not 
+                     * popped from the stack, when it is encountered again.
+                     * 
+                     * @param stack The current serialization stack. The top node is the node upon which the method is called. It may choose when and if to pop itself from the stack.
+                     * @param result The current result stream. 
+                     */
+                    virtual void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const = 0;
+
+
+                    /**
+                     * @brief Called during serialization of a tree for nodes which return true to hasSpecialSerialization(). 
+                     * Temporarily takes over control of the serialization. Must do all serialization actions. Must pretty format any XML sent
+                     * to the output stream. Called after SerializationNode::visited is set to true and and if not 
+                     * popped from the stack, when it is encountered again.
+                     * 
+                     * @param stack The current serialization stack. The top node is the node upon which the method is called. It may choose when and if to pop itself from the stack.
+                     * @param result The current result stream. It is guaranteed the result stream will be on the beginning of a newline when received and must be at the beginning of a newline when execution ends. 
+                     * @param indentation The current indentation string. The initial state of this variable will be the correct depth-based indentation string of the current node.
+                     * @param indentationSequence The indentation string.
+                     * @param sortAttributes Whether attributes should be sorted.
+                     */
+                    virtual void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const = 0;
+            };
+
             /**
              * @brief Construct a new Node object via moved arguments. Allows supplying rvalue references to other Node objects of any subclass and Attributes in any order.
              * Validated at compile time. Internally, for Nodes constructs a unique pointer from the rvalue reference.
@@ -557,8 +610,8 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Denotes whether a node has special serialization or not. If a node has special serialization, its serialize() method will be called 
-             * during serialization instead of the default behaviour.
+             * @brief Denotes whether a node has special serialization or not. If a node has special serialization, it must also derive from SpecialSerializable.
+             * The corresponding SpecialSerializable methods will be called during serialization.
              * 
              * @return true The node has special serialization 
              * @return false The node does not have special serialization 

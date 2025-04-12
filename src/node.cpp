@@ -463,27 +463,27 @@ namespace Templater::dynamic {
     }
 
     std::string Node::serialize() const {
-        struct ParseNode {
-            const Node* obj;
-            bool visited;
-        };
-
-        std::vector<ParseNode> s;
+        std::vector<SerializationNode> s;
 
         std::ostringstream result; 
         result.imbue(std::locale::classic());
 
         std::vector<const Attribute*> attributes;
 
-        s.emplace_back(ParseNode{this, false});
+        s.emplace_back(SerializationNode{this, false});
 
         while(!s.empty()) {
-            ParseNode& node = s.back();
+            SerializationNode& node = s.back();
             const Node* obj = node.obj;
 
             const std::string& tagName = obj->getTagName();
 
             if (node.visited) {
+                if (obj->hasSpecialSerialization()) {
+                    const Node::SpecialSerializable* objSpecialSerializable = dynamic_cast<const Node::SpecialSerializable*>(obj);
+                    objSpecialSerializable->specialSerialize(s, result);
+                    continue;
+                }
                 result << "</" << tagName << ">";
                 s.pop_back();
                 continue;
@@ -491,17 +491,8 @@ namespace Templater::dynamic {
             node.visited = true;
 
             if (obj->hasSpecialSerialization()) {
-                result << obj->serialize();
-                s.pop_back();
-                continue;
-            }
-
-            if (tagName == ".empty") {
-                s.pop_back();
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
-                for (size_t i = children.size(); i > 0; --i) {
-                    s.emplace_back(ParseNode{children[i-1].get(), false});
-                }
+                const Node::SpecialSerializable* objSpecialSerializable = dynamic_cast<const Node::SpecialSerializable*>(obj);
+                objSpecialSerializable->specialSerialize(s, result);
                 continue;
             }
 
@@ -513,7 +504,7 @@ namespace Templater::dynamic {
                 if (!children.empty()) {
                     result << ">";
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(ParseNode{children[i-1].get(), false});
+                        s.emplace_back(SerializationNode{children[i-1].get(), false});
                     }
                 } else {
                     result << "></" << tagName << ">";
@@ -531,12 +522,7 @@ namespace Templater::dynamic {
     }
 
     std::string Node::serializePretty(const std::string& indentationSequence, bool sortAttributes) const {
-        struct ParseNode {
-            const Node* obj;
-            bool visited;
-        };
-
-        std::vector<ParseNode> s;
+        std::vector<SerializationNode> s;
 
         std::string indentation;
         std::ostringstream result; 
@@ -544,10 +530,10 @@ namespace Templater::dynamic {
 
         std::vector<const Attribute*> attributes;
 
-        s.emplace_back(ParseNode{this, false});
+        s.emplace_back(SerializationNode{this, false});
 
         while(!s.empty()) {
-            ParseNode& node = s.back();
+            SerializationNode& node = s.back();
             const Node* obj = node.obj;
 
             if (obj == nullptr) {
@@ -559,6 +545,11 @@ namespace Templater::dynamic {
             const std::string& tagName = obj->getTagName();
 
             if (node.visited) {
+                if (obj->hasSpecialSerialization()) {
+                    const Node::SpecialSerializable* objSpecialSerializable = dynamic_cast<const Node::SpecialSerializable*>(obj);
+                    objSpecialSerializable->specialSerializePretty(s, result, indentation, indentationSequence, sortAttributes);
+                    continue;
+                }
                 result << indentation << "</" << tagName << ">\n";
                 s.pop_back();
                 continue;
@@ -566,17 +557,8 @@ namespace Templater::dynamic {
             node.visited = true;
 
             if (obj->hasSpecialSerialization()) {
-                result << indentation << obj->serializePretty(indentationSequence, sortAttributes) << "\n";
-                s.pop_back();
-                continue;
-            }
-
-            if (tagName == ".empty") {
-                s.pop_back();
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
-                for (size_t i = children.size(); i > 0; --i) {
-                    s.emplace_back(ParseNode{children[i-1].get(), false});
-                }
+                const Node::SpecialSerializable* objSpecialSerializable = dynamic_cast<const Node::SpecialSerializable*>(obj);
+                objSpecialSerializable->specialSerializePretty(s, result, indentation, indentationSequence, sortAttributes);
                 continue;
             }
 
@@ -603,10 +585,10 @@ namespace Templater::dynamic {
                 const std::vector<std::unique_ptr<Node>>& children = obj->children;
                 if (!children.empty()) {
                     result << ">\n";
-                    s.emplace_back(ParseNode{nullptr, false});
+                    s.emplace_back(SerializationNode{nullptr, false});
                     indentation += indentationSequence;
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(ParseNode{children[i-1].get(), false});
+                        s.emplace_back(SerializationNode{children[i-1].get(), false});
                     }
                 } else {
                     result << "></" << tagName << ">\n";

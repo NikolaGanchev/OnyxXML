@@ -23,5 +23,8 @@ namespace Templater::dynamic::dtags {
             std::string serializePretty(const std::string& indentationSequence, bool sortAttributes) const override;
             bool hasSpecialSerialization() const override;
             std::unique_ptr<Node> shallowCopy() const override;
+            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
+            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
+
     };
 }

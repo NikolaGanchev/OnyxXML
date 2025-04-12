@@ -7,7 +7,7 @@ namespace Templater::dynamic::dtags {
      * @brief A raw text Node. Susceptible to XML injections. Only use if needed explicitly.
      * 
      */
-    class __DangerousRawText: public Node {
+    class __DangerousRawText: public Node, public Node::SpecialSerializable {
         private:
             /**
              * @brief The text
@@ -55,11 +55,13 @@ namespace Templater::dynamic::dtags {
              * 
              * @return const std::string& 
              */
-            const std::string& getText() const;
+            const std::string& getText() const; 
             std::string serialize() const override;
             std::string serializePretty(const std::string& indentationSequence, bool sortAttributes) const override;            
             bool hasSpecialSerialization() const override;
             std::unique_ptr<Node> shallowCopy() const override;
             virtual bool shallowEquals(const Node& other) const override;
+            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
+            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
     };
 }

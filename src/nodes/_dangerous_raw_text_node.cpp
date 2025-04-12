@@ -43,4 +43,14 @@ namespace Templater::dynamic::dtags {
 
         return this->text == other->text;
     }
+
+    void __DangerousRawText::specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const {
+        result << this->text;
+        stack.pop_back();
+    }
+
+    void __DangerousRawText::specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const {
+        result << indentation << this->text << "\n";
+        stack.pop_back();
+    }
 }

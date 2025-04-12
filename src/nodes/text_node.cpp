@@ -25,7 +25,17 @@ namespace Templater::dynamic::dtags {
     }
 
     std::string Text::serializePretty(const std::string& indentationSequence, bool sortAttributes) const {
-        return text::escape(this->text, this->escapeMultiByte);
+        return serialize();
+    }
+
+    void Text::specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const {
+        result << text::escape(this->text, this->escapeMultiByte);
+        stack.pop_back();
+    }
+
+    void Text::specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const {
+        result << indentation << text::escape(this->text, this->escapeMultiByte) << "\n";
+        stack.pop_back();
     }
     
     bool Text::hasSpecialSerialization() const {
