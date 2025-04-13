@@ -5,6 +5,7 @@
 
 TEST_CASE("HTML is generated", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -23,6 +24,7 @@ TEST_CASE("HTML is generated", "[Node]" ) {
 
 TEST_CASE("Attribute remove works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     GenericNode obj{
         "html", false,
@@ -38,6 +40,7 @@ TEST_CASE("Attribute remove works", "[Node]" ) {
 
 TEST_CASE("Vector constructor works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -59,6 +62,7 @@ TEST_CASE("Vector constructor works", "[Node]" ) {
 
 TEST_CASE("Complex test case generates html", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -163,6 +167,7 @@ TEST_CASE("Complex test case generates html", "[Node]" ) {
 
 TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     REQUIRE_THROWS(GenericNode{"img", true, GenericNode{"div", false}});
 
@@ -176,6 +181,7 @@ TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
 
 TEST_CASE("Node::addChild() throws if used on a void node", "[Node::addChild]") {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     GenericNode image{"img", true};
 
@@ -188,6 +194,7 @@ TEST_CASE("Node::addChild() throws if used on a void node", "[Node::addChild]") 
 
 TEST_CASE("Children return by tag name works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -214,6 +221,7 @@ TEST_CASE("Children return by tag name works", "[Node]" ) {
 
 TEST_CASE("Children return by id works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -242,6 +250,7 @@ TEST_CASE("Children return by id works", "[Node]" ) {
 
 TEST_CASE("Children return by name works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -275,6 +284,7 @@ TEST_CASE("Children return by name works", "[Node]" ) {
 
 TEST_CASE("Children return by class name works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -310,6 +320,7 @@ TEST_CASE("Children return by class name works", "[Node]" ) {
 
 TEST_CASE("Children return by attribute works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -339,6 +350,7 @@ TEST_CASE("Children return by attribute works", "[Node]" ) {
 
 TEST_CASE("Children return by attribute name works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -368,6 +380,7 @@ TEST_CASE("Children return by attribute name works", "[Node]" ) {
 
 TEST_CASE("Child add works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -395,6 +408,7 @@ TEST_CASE("Child add works", "[Node]" ) {
 
 TEST_CASE("Child remove works", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -430,6 +444,7 @@ TEST_CASE("Child remove works", "[Node]" ) {
 
 TEST_CASE("Operator [] works for attribute access", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -451,6 +466,7 @@ TEST_CASE("Operator [] works for attribute access", "[Node]" ) {
 
 TEST_CASE("Operator += works for child add", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -479,6 +495,7 @@ TEST_CASE("Operator += works for child add", "[Node]" ) {
 
 TEST_CASE("Complex html with dynamic tags", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -642,6 +659,7 @@ void addChildren(Templater::dynamic::Node* root, int level) {
 
 TEST_CASE("3000 tags serialize in under 50ms", "[Node]") {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::duration;
@@ -890,9 +908,7 @@ TEST_CASE("Multiple text nodes are serialized in sequence") {
 
 TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
-
-    Node::setIndentationSequence("\t");
-    Node::setSortAttributes(true);
+    using namespace Templater::dynamic;
 
     std::string textToEscape = "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
@@ -906,9 +922,6 @@ TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
 TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Node::setIndentationSequence("\t");
-    Node::setSortAttributes(true);
-
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
     cdiv d{Text(textToEscape, true)};
@@ -921,9 +934,6 @@ TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "
 TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "[dynamic::dtags::Text]" ) {
     using namespace Templater::dynamic::dtags;
 
-    Node::setIndentationSequence("\t");
-    Node::setSortAttributes(true);
-
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
     cdiv d{Text(textToEscape, false)};
@@ -935,9 +945,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
 
 TEST_CASE("HTML comments are generated", "[Comment]" ) {
     using namespace Templater::dynamic::dtags;
-
-    Node::setIndentationSequence("\t");
-    Node::setSortAttributes(true);
+    using namespace Templater::dynamic;
 
     GenericNode obj{
         "html", false,
@@ -953,9 +961,7 @@ TEST_CASE("HTML comments are generated", "[Comment]" ) {
 
 TEST_CASE("HTML comments are escaped", "[Comment]" ) {
     using namespace Templater::dynamic::dtags;
-
-    Node::setIndentationSequence("\t");
-    Node::setSortAttributes(true);
+    using namespace Templater::dynamic;
 
     GenericNode obj{
         "html", false,
@@ -972,9 +978,7 @@ TEST_CASE("HTML comments are escaped", "[Comment]" ) {
 
 TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
     using namespace Templater::dynamic::dtags;
-
-    Node::setIndentationSequence("\t");
-    Node::setSortAttributes(true);
+    using namespace Templater::dynamic;
 
     GenericNode obj{
         "html", false,
@@ -990,9 +994,7 @@ TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
 
 TEST_CASE("Node deepCopy() works", "[Node]") {
     using namespace Templater::dynamic::dtags;
-
-    Node::setIndentationSequence("\t");
-    Node::setSortAttributes(true);
+    using namespace Templater::dynamic;
 
     html obj{
         Attribute("lang", "en"),
@@ -1090,6 +1092,7 @@ TEST_CASE("Node deepCopy() works", "[Node]") {
 
 TEST_CASE("Node deepCopy creates a new instance with identical attributes", "[Node]") {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
     
     GenericNode obj{"html", false, 
         Attribute("class", "test"), 
@@ -1127,6 +1130,7 @@ TEST_CASE("Node deepCopy with empty node", "[Node]") {
 
 TEST_CASE("Node deepCopy does not share internal state", "[Node]") {
     using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
     
     html obj{
         Attribute("class", "testNode"), 
@@ -1142,9 +1146,7 @@ TEST_CASE("Node deepCopy does not share internal state", "[Node]") {
 
 TEST_CASE("Node deepEquals() works", "[Node]") {
     using namespace Templater::dynamic::dtags;
-
-    Node::setIndentationSequence("\t");
-    Node::setSortAttributes(true);
+    using namespace Templater::dynamic;
 
     html obj{
         Attribute("lang", "en"),
