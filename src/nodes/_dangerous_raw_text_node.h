@@ -14,6 +14,9 @@ namespace Templater::dynamic::dtags {
              * 
              */
             const std::string text;
+        protected:
+            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
+            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
         public:
             /**
              * @brief Construct a new __DangerousRawText object by given text. Escaping is not done.
@@ -61,7 +64,5 @@ namespace Templater::dynamic::dtags {
             bool hasSpecialSerialization() const override;
             std::unique_ptr<Node> shallowCopy() const override;
             virtual bool shallowEquals(const Node& other) const override;
-            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
-            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
     };
 }

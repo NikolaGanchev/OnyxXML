@@ -11,6 +11,9 @@ namespace Templater::dynamic::dtags {
      */
     class Comment: public Text {
         using Text::Text;
+        protected:
+            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
+            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
         public:
             /**
              * @brief The tag name of a comment node is the invalid xml tag name ".comment". 
@@ -23,8 +26,5 @@ namespace Templater::dynamic::dtags {
             std::string serializePretty(const std::string& indentationSequence, bool sortAttributes) const override;
             bool hasSpecialSerialization() const override;
             std::unique_ptr<Node> shallowCopy() const override;
-            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
-            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
-
     };
 }

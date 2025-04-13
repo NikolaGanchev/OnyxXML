@@ -283,7 +283,8 @@ namespace Templater::dynamic {
              * 
              */
             class SpecialSerializable {
-                public:
+                friend Node;
+                protected:
                     /**
                      * @brief Called during serialization of a tree for nodes which return true to hasSpecialSerialization(). 
                      * Temporarily takes over control of the serialization. Must do all serialization actions. Has no obligation towards indentation or formatting, 

@@ -10,6 +10,9 @@ namespace Templater::dynamic::dtags {
      * 
      */
     class EmptyNode: public Node, public Node::SpecialSerializable {
+        protected:
+            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
+            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
         public: 
             using Node::Node;
 
@@ -24,7 +27,5 @@ namespace Templater::dynamic::dtags {
             bool isVoid() const override;
             bool hasSpecialSerialization() const override;
             std::unique_ptr<Node> shallowCopy() const override;
-            void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
-            void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
     };
 }
