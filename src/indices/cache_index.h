@@ -63,6 +63,7 @@ namespace Templater::dynamic::index {
              * For example: 
              * @code{.cpp}
              *  using namespace Templater::dynamic::dtags;
+             *  using namespace Templater::dynamic;
              *
              *  GenericNode obj{
              *      "html", false,
