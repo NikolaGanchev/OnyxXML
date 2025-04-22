@@ -657,6 +657,8 @@ namespace Templater::dynamic {
                  });
             }
         }
+
+        throw std::logic_error("Unreachable: attribute not found even after being inserted. Check for memory or multithreading issues.");
     }
 
     Node& Node::operator+=(std::unique_ptr<Node> right) {
