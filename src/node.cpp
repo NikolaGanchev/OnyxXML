@@ -78,7 +78,7 @@ namespace Templater::dynamic {
         return this->children.size();
     }
 
-    void Node::indexParse(std::function<void(index::Index*)> callback) {
+    void Node::indexParse(const std::function<void(index::Index*)>& callback) {
         for (auto index: this->indices) {
             callback(index);
             index++;
@@ -108,7 +108,7 @@ namespace Templater::dynamic {
     }
 
 
-    void Node::iterativeProcessor(Node& object, std::function<void(Node*)> process) {
+    void Node::iterativeProcessor(Node& object, const std::function<void(Node*)>& process) {
         std::vector<Node*> s;
 
         s.push_back(this);
@@ -131,7 +131,7 @@ namespace Templater::dynamic {
         return this->_isInTree;
     }
 
-    std::vector<Node*> Node::iterativeChildrenParse(const Node& object, std::function<bool(Node*)> condition) const {
+    std::vector<Node*> Node::iterativeChildrenParse(const Node& object, const std::function<bool(Node*)>& condition) const {
         std::vector<Node*> s;
         std::vector<Node*> result;
 
