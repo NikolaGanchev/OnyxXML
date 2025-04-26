@@ -54,4 +54,14 @@ namespace Templater::dynamic::index {
         
         return this->index;
     }
+
+    TagNameIndex::TagNameIndex(TagNameIndex&& other)
+        : Index{std::move(other)}, tagName(std::move(other.tagName)), index{std::move(other.index)} {}
+
+    TagNameIndex& TagNameIndex::operator=(TagNameIndex&& other) {
+        this->_assign_index_base(std::move(other));
+        this->index = std::move(other.index);
+        this->tagName = std::move(other.tagName);
+        return *this;
+    }
 }

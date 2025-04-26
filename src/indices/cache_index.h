@@ -117,6 +117,9 @@ namespace Templater::dynamic::index {
             template <typename Function, typename... Args>
             bool isCached(Function f, Args&&... args);
         
+            CacheIndex(CacheIndex&& other);
+            CacheIndex& operator=(CacheIndex&& other);
+        
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };
 

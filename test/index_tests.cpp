@@ -829,3 +829,125 @@ TEST_CASE("CacheIndex is faster than querying the tree", "[TagIndex]") {
 
     REQUIRE(timeIndex.count() < timeQuery.count());
 }
+
+TEST_CASE("Index move constructor works", "[Index]" ) {
+    using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "0")),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
+    };
+
+    REQUIRE(obj.getChildrenCount() > 0);
+
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
+
+    auto result = index.getByValue("3");
+
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("id") == "3");
+
+    index::AttributeNameIndex index2{std::move(index)};
+
+    REQUIRE(!index.isValid());
+
+    auto result2 = index2.getByValue("3");
+
+    REQUIRE(result2.size() == 1);
+
+    obj.addChild(GenericNode("div", false, Attribute("id", "3")));
+
+    auto result3 = index2.getByValue("3");
+
+    REQUIRE(result3.size() == 2);
+}
+
+TEST_CASE("Index move assignment operator works", "[Index]" ) {
+    using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("id", "0")),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
+    };
+
+    REQUIRE(obj.getChildrenCount() > 0);
+
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
+
+    auto result = index.getByValue("3");
+
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("id") == "3");
+
+    index::AttributeNameIndex index2 = std::move(index);
+
+    REQUIRE(!index.isValid());
+
+    auto result2 = index2.getByValue("3");
+
+    REQUIRE(result2.size() == 1);
+
+    obj.addChild(GenericNode("div", false, Attribute("id", "3")));
+
+    auto result3 = index2.getByValue("3");
+
+    REQUIRE(result3.size() == 2);
+}
+
+TEST_CASE("Index move assignment operator cleans up memory properly", "[Index]" ) {
+    using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false),
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("class", "0")),
+            GenericNode("div", false, Attribute("id", "3")),
+            GenericNode("div", false, Attribute("id", "4")))
+    };
+
+    REQUIRE(obj.getChildrenCount() > 0);
+
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
+
+    auto result = index.getByValue("3");
+
+    REQUIRE(result.size() == 1);
+    CHECK(result[0]->getAttributeValue("id") == "3");
+
+    {
+        index::AttributeNameIndex indexClass = index::createIndex<index::AttributeNameIndex>(&obj, "class");
+        auto resultClass = indexClass.getByValue("0");
+        REQUIRE(resultClass.size() == 1);
+        CHECK(resultClass[0]->getAttributeValue("class") == "0");
+        index = std::move(indexClass);
+    }
+
+    auto result2 = index.getByValue("0");
+    REQUIRE(result2.size() == 1);
+    CHECK(result2[0]->getAttributeValue("class") == "0");
+
+    obj.addChild(GenericNode("div", false, Attribute("class", "0")));
+    obj.addChild(GenericNode("div", false, Attribute("id", "3")));
+
+    auto result3 = index.getByValue("0");
+
+    REQUIRE(result3.size() == 2);
+    CHECK(result3[0]->getAttributeValue("class") == "0");
+}

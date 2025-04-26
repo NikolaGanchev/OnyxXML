@@ -14,7 +14,7 @@ namespace Templater::dynamic::index {
              * @brief The tag name to index. Constant from creation.
              * 
              */
-            const std::string tagName;
+            std::string tagName;
 
 
             /**
@@ -62,6 +62,9 @@ namespace Templater::dynamic::index {
              * @return const std::vector<Node*> 
              */
             const std::vector<Node*> get();
+
+            TagNameIndex(TagNameIndex&& other);
+            TagNameIndex& operator=(TagNameIndex&& other);
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };

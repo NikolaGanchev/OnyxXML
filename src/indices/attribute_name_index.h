@@ -16,7 +16,7 @@ namespace Templater::dynamic::index {
              * @brief The attribute name to index. Constant from creation.
              * 
              */
-            const std::string attributeName;
+            std::string attributeName;
 
 
             /**
@@ -56,6 +56,9 @@ namespace Templater::dynamic::index {
              * @return const std::vector<Node*> 
              */
             const std::vector<Node*> getByValue(const std::string& value);
+
+            AttributeNameIndex(AttributeNameIndex&& other);
+            AttributeNameIndex& operator=(AttributeNameIndex&& other);
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };

@@ -19,4 +19,12 @@ namespace Templater::dynamic::index {
         return true;
     }
 
+    CacheIndex::CacheIndex(CacheIndex&& other)
+        : Index{std::move(other)}, _cache{std::move(other._cache)} {}
+
+    CacheIndex& CacheIndex::operator=(CacheIndex&& other) {
+        this->_assign_index_base(std::move(other));
+        this->_cache = std::move(other._cache);
+        return *this;
+    }
 }

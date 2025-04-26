@@ -48,6 +48,9 @@ namespace Templater::dynamic::index {
              * @return const std::vector<Node*> 
              */
             const std::vector<Node*> getByTagName(const std::string& tagName);
+
+            TagIndex(TagIndex&& other);
+            TagIndex& operator=(TagIndex&& other);
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };

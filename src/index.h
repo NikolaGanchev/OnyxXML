@@ -146,12 +146,39 @@ namespace Templater::dynamic::index {
              */
             void invalidate();
 
+            /**
+             * @brief Destroy the Index object. Removes the index from the root Node and all its children.
+             * 
+             */
+            void destroy();
 
             /**
              * @brief Initialises the index. Adds the index to the root Node and its children and fills the internal index with data.
              * 
              */
             void init();
+
+            /**
+             * @brief Moves other into this assuming this did not previously exist
+             * 
+             * @param other 
+             */
+            void _move_index_base(Index&& other);
+
+            /**
+             * @brief Assigns other into this
+             * 
+             * @param other 
+             */
+            void _assign_index_base(Index&& other);
+            
+
+            /**
+             * @brief Construct a new Index object via move
+             * 
+             * @param other 
+             */
+            Index(Index&& other);
         public:
             /**
              * @brief Get the Root Node.
@@ -170,10 +197,13 @@ namespace Templater::dynamic::index {
 
 
             /**
-             * @brief Destroy the Index object. Removes the index from the root Node and all its children
+             * @brief Destroy the Index object. Removes the index from the root Node and all its children.
              * 
              */
             virtual ~Index();
+
+            Index(const Index&) = delete;
+            Index& operator=(const Index&) = delete;
     };
 }
 

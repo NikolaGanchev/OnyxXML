@@ -42,6 +42,7 @@ namespace Templater::dynamic {
             }
         });
     }
+    
     Node* Node::addChild(std::unique_ptr<Node> newChild)  {
         if (isVoid()) {
             throw std::runtime_error("Void " + getTagName() + " cannot have children.");
@@ -107,6 +108,18 @@ namespace Templater::dynamic {
         });
     }
 
+    void Node::replaceIndex(index::Index* oldIndex, index::Index* newIndex) {
+        iterativeProcessor(*this, [&oldIndex, &newIndex](Node* obj) -> void {
+            for (auto index = obj->indices.begin(); index != obj->indices.end();) {
+                if (oldIndex == *index) {
+                    *index = newIndex;
+                    break;
+                } else {
+                    index++;
+                }
+            }
+        });
+    }
 
     void Node::iterativeProcessor(Node& object, const std::function<void(Node*)>& process) {
         std::vector<Node*> s;

@@ -229,7 +229,6 @@ namespace Templater::dynamic {
              */
             void addIndex(index::Index* index);
 
-
             /**
              * @brief Removes an index from the current object's indices and from all its children. Calls Index::removeIfNeeded() for every Node in the tree.
              * 
@@ -237,6 +236,13 @@ namespace Templater::dynamic {
              */
             void removeIndex(index::Index* index);
 
+            /**
+             * @brief Replaces the address of of one index with another without changing any of the index contents. Internal use only.
+             * 
+             * @param oldIndex
+             * @param newIndex
+             */
+            void replaceIndex(index::Index* oldIndex, index::Index* newIndex);
 
             /**
              * @brief Safely iterates over indices
