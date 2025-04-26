@@ -25,7 +25,7 @@ namespace Templater::dynamic::index {
      * @returns T The constructed Index
      */
     template <typename T, typename... Args>
-    T createIndex(Args... args) requires (isIndex<T>); 
+    T createIndex(Args&&... args) requires (isIndex<T>); 
 
 
     /**
@@ -36,7 +36,7 @@ namespace Templater::dynamic::index {
      * @returns T* A pointer to the created Index
      */
     template <typename T, typename... Args>
-    T* createIndexPointer(Args... args) requires (isIndex<T>);
+    T* createIndexPointer(Args&&... args) requires (isIndex<T>);
 
 
     /**
@@ -46,7 +46,7 @@ namespace Templater::dynamic::index {
      * @tparam Args 
      */
     template <typename T, typename... Args>
-    std::unique_ptr<T> createIndexUniquePointer(Args... args) requires (isIndex<T>);
+    std::unique_ptr<T> createIndexUniquePointer(Args&&... args) requires (isIndex<T>);
 
     /**
      * @brief Creates a shared pointer to an Index of type T using the provided args and returns it to the user.
@@ -55,16 +55,16 @@ namespace Templater::dynamic::index {
      * @tparam Args 
      */
     template <typename T, typename... Args>
-    std::shared_ptr<T> createIndexSharedPointer(Args... args) requires (isIndex<T>);
+    std::shared_ptr<T> createIndexSharedPointer(Args&&... args) requires (isIndex<T>);
 
     #define BEFRIEND_INDEX_CREATOR_FUNCTIONS template <typename T, typename... Args>\
-                                        friend T Templater::dynamic::index::createIndex(Args... args) requires (isIndex<T>);\
+                                        friend T Templater::dynamic::index::createIndex(Args&&... args) requires (isIndex<T>);\
                                         template <typename T, typename... Args>\
-                                        friend T* Templater::dynamic::index::createIndexPointer(Args... args) requires (isIndex<T>);\
+                                        friend T* Templater::dynamic::index::createIndexPointer(Args&&... args) requires (isIndex<T>);\
                                         template <typename T, typename... Args>\
-                                        friend std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args... args) requires (isIndex<T>);\
+                                        friend std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args&&... args) requires (isIndex<T>);\
                                         template <typename T, typename... Args>\
-                                        friend std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args... args) requires (isIndex<T>);
+                                        friend std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args&&... args) requires (isIndex<T>);
 
 
     #define ADD_INDEX_MOVE_OPERATIONS(Access, ClassName, ...)\
@@ -84,7 +84,7 @@ namespace Templater::dynamic::index {
                 return *this;\
             };
 
-        /**
+    /**
      * @brief Indexes are non-owning indexings over a Node. 
      * A node with an Index also holds a non owning pointer to it. 
      * The index, with other words, is solely owned by the creator.
@@ -252,7 +252,7 @@ namespace Templater::dynamic::index {
 }
 
 template <typename T, typename... Args>
-T Templater::dynamic::index::createIndex(Args... args) requires (isIndex<T>) {
+T Templater::dynamic::index::createIndex(Args&&... args) requires (isIndex<T>) {
     T index(std::forward<Args>(args)...);
     index.init();
 
@@ -260,7 +260,7 @@ T Templater::dynamic::index::createIndex(Args... args) requires (isIndex<T>) {
 }
 
 template <typename T, typename... Args>
-T* Templater::dynamic::index::createIndexPointer(Args... args) requires (isIndex<T>) {
+T* Templater::dynamic::index::createIndexPointer(Args&&... args) requires (isIndex<T>) {
     T* index = new T(std::forward<Args>(args)...);
     index->init();
 
@@ -268,7 +268,7 @@ T* Templater::dynamic::index::createIndexPointer(Args... args) requires (isIndex
 }
 
 template <typename T, typename... Args>
-std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args... args) requires (isIndex<T>) {
+std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args&&... args) requires (isIndex<T>) {
     std::unique_ptr<T> index(new T(std::forward<Args>(args)...));
     index->init();
 
@@ -276,7 +276,7 @@ std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args... a
 }
 
 template <typename T, typename... Args>
-std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args... args) requires (isIndex<T>) {
+std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args&&... args) requires (isIndex<T>) {
     std::shared_ptr<T> index(new T(std::forward<Args>(args)...));
     index->init();
 
