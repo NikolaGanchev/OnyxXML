@@ -697,7 +697,7 @@ TEST_CASE("Template html runtime api serializes correctly", "[Node]" ) {
             head<>,
             body<Text<"Hello world!">>
         >
-    >::value("\t", true);
+    >::dynamicTree()->serializePretty("\t", true);
 
     std::string expected = "<html lang=\"en\">\n\t<head></head>\n\t<body>\n\t\tHello world!\n\t</body>\n</html>";
 
@@ -719,7 +719,7 @@ TEST_CASE("Template html runtime api enforces given indentation rules", "[Node]"
 
     std::string expected = "<html lang=\"en\" theme=\"light\">\n    <head></head>\n    <body>\n        Hello world!\n    </body>\n</html>";
 
-    CHECK(doc::value("    ", true) == expected);
+    CHECK(doc::dynamicTree()->serializePretty("    ", true) == expected);
 }
 
 TEST_CASE("HTML fragment using template runtime api serializes correctly", "[Node]" ) {
@@ -730,7 +730,7 @@ TEST_CASE("HTML fragment using template runtime api serializes correctly", "[Nod
         li<Text<"1">>,
         li<Text<"2">>,
         li<Text<"3">>
-    >::value("\t", true);;
+    >::dynamicTree()->serializePretty("\t", true);;
     
     std::string expected = "<li>\n\t1\n</li>\n<li>\n\t2\n</li>\n<li>\n\t3\n</li>";
 
@@ -775,7 +775,7 @@ TEST_CASE("Complex templated runtime api html with constant tags", "[Node]" ) {
                 >
             >
         >
-    >::value("\t", true);
+    >::dynamicTree()->serializePretty("\t", true);
     
     std::string expected = "<html lang=\"en\">\n\t<head>\n\t\t<title>\n\t\t\tTest Page\n\t\t</title>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<link href=\"styles.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<h1>\n\t\t\tWelcome to the Test Page\n\t\t</h1>\n\t\t<p>\n\t\t\tThis is a paragraph demonstrating compile-time HTML generation.\n\t\t</p>\n\t\t<div class=\"container\">\n\t\t\t<p>\n\t\t\t\tInside a div element.\n\t\t\t</p>\n\t\t\t<ul>\n\t\t\t\t<li>\n\t\t\t\t\tItem 1\n\t\t\t\t</li>\n\t\t\t\t<li>\n\t\t\t\t\tItem 2\n\t\t\t\t</li>\n\t\t\t\t<li>\n\t\t\t\t\tItem 3\n\t\t\t\t</li>\n\t\t\t</ul>\n\t\t</div>\n\t\t<form action=\"/submit\" method=\"post\">\n\t\t\t<label for=\"name\">\n\t\t\t\tName: \n\t\t\t</label>\n\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t<br/>\n\t\t\t<label for=\"email\">\n\t\t\t\tEmail: \n\t\t\t</label>\n\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t<br/>\n\t\t\t<button type=\"submit\">\n\t\t\t\tSubmit\n\t\t\t</button>\n\t\t</form>\n\t</body>\n</html>";
 

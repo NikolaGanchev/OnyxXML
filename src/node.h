@@ -519,7 +519,7 @@ namespace Templater::dynamic {
              * @return Node* 
              */
             Node* addChild(std::unique_ptr<Node> child);
-
+            
 
             /**
              * @brief Constructs a unique pointer from the given Node and adds it to children.

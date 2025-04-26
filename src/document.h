@@ -11,7 +11,7 @@
 
 #define COMPILE_DOCUMENT(...) [](){ \
     using namespace Templater::compile::ctags;\
-    static std::string str = Templater::compile::Document<__VA_ARGS__>::value();\
+    static std::string str = Templater::compile::Document<__VA_ARGS__>::dynamicTree();\
     return str; \
 }();
 
@@ -117,7 +117,7 @@ namespace Templater::compile {
              * 
              * @return std::unique_ptr<Templater::dynamic::Attribute> 
              */
-            static std::unique_ptr<Templater::dynamic::Attribute> attr() {
+            static std::unique_ptr<Templater::dynamic::Attribute> dynamicAttribute() {
                 return std::make_unique<Templater::dynamic::Attribute>(Name, Value);
             }
         };
@@ -131,7 +131,7 @@ namespace Templater::compile {
          */
         template <typename T>
         concept isAttribute = requires(T) {
-            { T::attr() } -> std::same_as<std::unique_ptr<Templater::dynamic::Attribute>>;
+            { T::dynamicAttribute() } -> std::same_as<std::unique_ptr<Templater::dynamic::Attribute>>;
         };
 
 
@@ -172,16 +172,16 @@ namespace Templater::compile {
              * 
              * @return std::unique_ptr<Templater::dynamic::Node> 
              */
-            static std::unique_ptr<Templater::dynamic::Node> value() {
+            static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
                 return std::make_unique<Templater::dynamic::dtags::Text>(Str);
             }
         };
 
 
         /**
-         * @brief Given a child, which is either a compile time Attribute or a struct which has a ::value() function,
+         * @brief Given a child, which is either a compile time Attribute or a struct which has a ::dynamicTree() function,
          * recursively constructs a dynamic Node tree.
-         * All different calls are generated at compile time via specialisation.
+         * All different calls are generated at compile time via specialization.
          * 
          * @tparam Child 
          * @param node 
@@ -189,11 +189,11 @@ namespace Templater::compile {
         template <typename Child>
         void parseChildren(Templater::dynamic::Node* node) {
             if constexpr(isAttribute<Child>) {
-                std::unique_ptr<Templater::dynamic::Attribute> attr = Child::attr();
+                std::unique_ptr<Templater::dynamic::Attribute> attr = Child::dynamicAttribute();
                 node->operator[](attr->getName()) = attr->getValue();
             }
             else {
-                node->addChild(Child::value());
+                node->addChild(Child::dynamicTree());
             }
         }
     }
@@ -338,19 +338,16 @@ namespace Templater::compile {
         } 
 
         /**
-         * @brief Returns the serialized std::string from the templated arguments. Returns an empty string if there are no children. Calculated at runtime.
+         * @brief Returns the dynamic tree from the templated arguments. Calculated at runtime.
          * 
-         * @param indentationSequence 
-         * @param sortAttributes 
          * @return std::string 
          */
-        static std::string value(
-            const std::string& indentationSequence = Templater::dynamic::Node::getIndentationSequence(), 
-            bool sortAttributes = Templater::dynamic::Node::getSortAttributes()) {
-            Templater::dynamic::dtags::EmptyNode obj;
+        static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
+            std::unique_ptr<Templater::dynamic::dtags::EmptyNode> obj = std::make_unique<Templater::dynamic::dtags::EmptyNode>();
+
             if constexpr (sizeof...(Children) == 0)
             {
-                return std::string("");
+                return obj;
             }
             else
             {
@@ -359,11 +356,11 @@ namespace Templater::compile {
                         return "Error. Trying to read attribute as root node";
                     }
                     else {
-                        obj.addChild(Children::value());
+                        obj->addChild(Children::dynamicTree());
                     }
                 }()), ...);
             }
-            return obj.serializePretty(indentationSequence, sortAttributes);
+            return obj;
         }
     };
 
