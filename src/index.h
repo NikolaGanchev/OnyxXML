@@ -66,17 +66,58 @@ namespace Templater::dynamic::index {
                                         template <typename T, typename... Args>\
                                         friend std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args... args) requires (isIndex<T>);
 
+
+    #define ADD_INDEX_MOVE_OPERATIONS(Access, ClassName, ...)\
+        private:\
+            template<typename... MemberPtrs>\
+            void _add_index_move_members_helper(ClassName&& other, MemberPtrs... mptrs) noexcept {\
+                ((this->*mptrs = std::move(other.*mptrs)), ...);\
+            };\
+        Access:\
+            ClassName(ClassName&& other) noexcept: Index{std::move(other)} {\
+                _add_index_move_members_helper(std::move(other), __VA_ARGS__);\
+            };\
+            ClassName& operator=(ClassName&& other) noexcept {\
+                if (this == &other) return *this;\
+                this->_assign_index_base(std::move(other));\
+                _add_index_move_members_helper(std::move(other), __VA_ARGS__);\
+                return *this;\
+            };
+
         /**
      * @brief Indexes are non-owning indexings over a Node. 
      * A node with an Index also holds a non owning pointer to it. 
      * The index, with other words, is solely owned by the creator.
      * Upon destruction of a Node, it invalidates its own indices. 
-     * Invalidate indices are to not return any values if queried.
-     * At destruction, the index, if valid, removes itself from the root note it is applied to.
+     * Invalidated indices must not return any values if queried.
+     * At destruction, the index, if valid, removes itself from the root node it is applied to.
      * As a rule, nodes do not query indices. An Index should have methods to return any required info it indexes.
-     * The index class is responsible for root keeping, invalidation and destruction. 
-     * The index class constructor is protected. Indices are to be created using "creator" functions, which are templated functions for instantiation of indices.
+     * The Index class is responsible for root keeping, invalidation and destruction. 
+     * 
+     * The Index class constructor is protected. Indices are to be created using "creator" functions, which are templated functions for instantiation of indices.
      * To use them, any subclass of Index should in its definition write the macro BEFRIEND_INDEX_CREATOR_FUNCTIONS; to add creators.
+     * This macro expands to the relevant friend declarations.
+     * Example usage of creators: 
+     * @code{}
+     *  index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
+     * @endcode{}
+     * 
+     * Indices are non-copyable but movable. Each subclass must provide its own move constructor and move assignment operator.
+     * Using the provided creators requires the existence of move constructors/assignment. Otherwise the code won't compile.
+     * For convenience, the ADD_INDEX_MOVE_OPERATIONS(Access, ClassName, ...) macro is available. It requires the access (public/private/protected)
+     * of the move operations, the class name of the Index and the references to any additional variables the subclass adds. 
+     * These variables are default moved using std::move(). To enable this, a private _add_index_move_members_helper() method is added to the class.
+     * Example of move operations adding:
+     * @code{.cpp}
+     * public:
+     *  ADD_INDEX_MOVE_OPERATIONS(public, TagNameIndex, &TagNameIndex::tagName, &TagNameIndex::index);
+     * @endcode
+     * 
+     * If any special move behaviour is required, the subclass should implement a custom function. For ease of use, the protected methods 
+     * Index::_assign_index_base(Index&& other) and Index::Index(Index&& other) can be called by children to sort out the base class' move behaviour. 
+     * It is expected that upon moving, the new object does not rebuild the index but takes it. The above referred functions internally switch the old
+     * Index* to the new Index* in all relevant nodes. The object being moved should be left in invalid state, ie Index::isValid() should return false.
+     * 
      * Subclasses are responsible for providing their own implementations of storage and getters, as well as decide when the Index should be updated.
      * Any index queries are, unless specified otherwise, only valid from the viewpoint of the root Node.
      * 
@@ -158,12 +199,14 @@ namespace Templater::dynamic::index {
              */
             void init();
 
+
             /**
              * @brief Moves other into this assuming this did not previously exist
              * 
              * @param other 
              */
             void _move_index_base(Index&& other);
+
 
             /**
              * @brief Assigns other into this
@@ -186,6 +229,7 @@ namespace Templater::dynamic::index {
              * @return const Node* 
              */
             const Node* getRoot() const;
+
 
             /**
              * @brief Whether the Index is valid. Queries on invalid indices should return empty values, but not cause exceptions.

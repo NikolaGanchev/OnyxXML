@@ -63,8 +63,7 @@ namespace Templater::dynamic::index {
              */
             const std::vector<Node*> get();
 
-            TagNameIndex(TagNameIndex&& other);
-            TagNameIndex& operator=(TagNameIndex&& other);
+            ADD_INDEX_MOVE_OPERATIONS(public, TagNameIndex, &TagNameIndex::tagName, &TagNameIndex::index);
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };

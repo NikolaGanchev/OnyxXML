@@ -57,8 +57,7 @@ namespace Templater::dynamic::index {
              */
             const std::vector<Node*> getByValue(const std::string& value);
 
-            AttributeNameIndex(AttributeNameIndex&& other);
-            AttributeNameIndex& operator=(AttributeNameIndex&& other);
+            ADD_INDEX_MOVE_OPERATIONS(public, AttributeNameIndex, &AttributeNameIndex::attributeName, &AttributeNameIndex::index);
         
         BEFRIEND_INDEX_CREATOR_FUNCTIONS;
     };
