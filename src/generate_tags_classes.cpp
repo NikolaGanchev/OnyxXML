@@ -131,7 +131,7 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
                                     "            return size;\n"
                                     "        }\n"
                                     "        static consteval std::array<char, size() + 1> serialize() {\n"
-                                    "            return " << ((tag.isVoid) ? "serializeVoidNode": "serializeNode") << "<size(), Children...>(\"" << tag.tagName << "\");\n"
+                                    "            return DocumentUtils::" << ((tag.isVoid) ? "serializeVoidNode": "serializeNode") << "<size(), Children...>(\"" << tag.tagName << "\");\n"
                                     "        }\n"
                                     "        static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {\n"
                                     "            std::unique_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_unique<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
