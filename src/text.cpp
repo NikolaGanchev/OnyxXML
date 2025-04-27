@@ -67,7 +67,7 @@ namespace Templater::dynamic::text {
         std::string escaped(escapedSize, '\0');
 
         // Setup pointers for reading the input string and writing to the escaped string.
-        const char* read = &str[0];
+        const char* read = str.data();
         char* write = escaped.data();
         const char* escapeSequence = 0;
 
@@ -125,7 +125,7 @@ namespace Templater::dynamic::text {
 
         // Adjust the final string size based on how many characters were written.
         // This trims any extra null characters.
-        escaped.resize(write - &escaped[0]);
+        escaped.resize(write - escaped.data());
 
         return escaped;
     }
