@@ -95,15 +95,15 @@ namespace Templater::compile {
             static consteval std::array<char, size() + 1> serialize() {
                 std::array<char, size() + 1> result = {};
                 result[0] = ' ';
-                int index = 1;
-                for (int i = 0; i < std::string_view(Name.value).size(); i++) {
+                size_t index = 1;
+                for (size_t i = 0; i < std::string_view(Name.value).size(); i++) {
                     result[index + i] = Name.value[i];
                 }
                 index += std::string_view(Name.value).size();
                 result[index] = '=';
                 result[index+1] = '\"';
                 index += 2;
-                for (int i = 0; i < std::string_view(Value.value).size(); i++) {
+                for (size_t i = 0; i < std::string_view(Value.value).size(); i++) {
                     result[index + i] = Value.value[i];
                 }
                 index += std::string_view(Value.value).size();
@@ -159,7 +159,7 @@ namespace Templater::compile {
              */
             static consteval std::array<char, size() + 1> serialize() {
                 std::array<char, size() + 1> result = {};
-                for (int i = 0; i < std::string_view(Str.value).size(); i++) {
+                for (size_t i = 0; i < std::string_view(Str.value).size(); i++) {
                     result[i] = Str.value[i];
                 }
                 result[size()] = '\0';
@@ -205,10 +205,10 @@ namespace Templater::compile {
                 result[1] = '!';
                 result[2] = '-';
                 result[3] = '-';
-                for (int i = 0; i < std::string_view(Str.value).size(); i++) {
+                for (size_t i = 0; i < std::string_view(Str.value).size(); i++) {
                     result[4 + i] = Str.value[i];
                 }
-                int newIndex = 4 + std::string_view(Str.value).size();
+                size_t newIndex = 4 + std::string_view(Str.value).size();
                 result[newIndex] = '-';
                 result[newIndex+1] = '-';
                 result[newIndex+2] = '>';
@@ -252,8 +252,8 @@ namespace Templater::compile {
         std::array<char, N + 1> result = {};
         bool passedAttr = false;
         result[0] = '<';
-        int index = 1;
-        for (int i = 0; i < std::string_view(tagName).size(); i++) {
+        size_t index = 1;
+        for (size_t i = 0; i < std::string_view(tagName).size(); i++) {
             result[index + i] = tagName[i];
         }
         index += std::string_view(tagName).size();
@@ -280,7 +280,7 @@ namespace Templater::compile {
                 }
                 
                 std::array<char, Children::size() + 1> in = Children::serialize();
-                for (int i = 0; i < Children::size(); i++) {
+                for (size_t i = 0; i < Children::size(); i++) {
                     result[index + i] = in[i];
                 }
                 index += Children::size();
@@ -289,7 +289,7 @@ namespace Templater::compile {
         result[index] = '<';
         result[index+1] = '/';
         index += 2;
-        for (int i = 0; i < std::string_view(tagName).size(); i++) {
+        for (size_t i = 0; i < std::string_view(tagName).size(); i++) {
             result[index + i] = tagName[i];
         }
         index += std::string_view(tagName).size();
@@ -303,8 +303,8 @@ namespace Templater::compile {
         std::array<char, N + 1> result = {};
         bool passedAttr = false;
         result[0] = '<';
-        int index = 1;
-        for (int i = 0; i < std::string_view(tagName).size(); i++) {
+        size_t index = 1;
+        for (size_t i = 0; i < std::string_view(tagName).size(); i++) {
             result[index + i] = tagName[i];
         }
         index += std::string_view(tagName).size();
@@ -317,7 +317,7 @@ namespace Templater::compile {
                 }
                 
                 std::array<char, Children::size() + 1> in = Children::serialize();
-                for (int i = 0; i < Children::size(); i++) {
+                for (size_t i = 0; i < Children::size(); i++) {
                     result[index + i] = in[i];
                 }
                 index += Children::size();
@@ -369,14 +369,14 @@ namespace Templater::compile {
          */
         static consteval std::array<char, size() + 1> serialize() {
             std::array<char, size() + 1> result = {};
-            int index = 0;
+            size_t index = 0;
             (([&] {
                 if constexpr(Templater::compile::ctags::isAttribute<Children>) {
                     throw "Cannot add attribute as root node of Document.";
                 }
                 else {
                     std::array<char, Children::size() + 1> in = Children::serialize();
-                    for (int i = 0; i < Children::size(); i++) {
+                    for (size_t i = 0; i < Children::size(); i++) {
                         result[index + i] = in[i];
                     }
                     index += Children::size();
