@@ -48,7 +48,7 @@ namespace Templater::dynamic {
     }
 
     void Node::processConstructorAttribute(Attribute&& attribute) {
-        this->operator[](std::move(attribute.getName())) = std::move(attribute.getValue());
+        this->operator[](attribute.getName()) = attribute.getValue();
     }
 
     void Node::destroy() {
@@ -258,7 +258,7 @@ namespace Templater::dynamic {
                     std::unique_ptr<Node> ref = std::move(children->operator[](i));
                     children->erase(children->begin() + i);
     
-                    return std::move(ref);
+                    return ref;
                 }
             }
 
@@ -301,7 +301,7 @@ namespace Templater::dynamic {
                 }
             }
         }
-        return std::move(root);
+        return root;
     }
            
     bool Node::shallowEquals(const Node& other) const {

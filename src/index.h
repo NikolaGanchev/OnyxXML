@@ -278,7 +278,7 @@ std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args&&...
     std::unique_ptr<T> index(new T(std::forward<Args>(args)...));
     index->init();
 
-    return std::move(index);
+    return index;
 }
 
 template <typename T, typename... Args>
