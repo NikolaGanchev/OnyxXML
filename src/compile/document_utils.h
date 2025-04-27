@@ -10,9 +10,22 @@
 
 namespace Templater::compile {
 
+
+    /**
+     * @brief Utilities for the compile Document api.
+     * 
+     */
     struct DocumentUtils {
         DocumentUtils() = delete;
 
+        /**
+         * @brief Constructs an std::array XML string with the non-void tagName node as the root and all its children.
+         * 
+         * @tparam N The size of the array
+         * @tparam Children 
+         * @param tagName 
+         * @return std::array<char, N + 1>
+         */
         template <size_t N, typename... Children>
         static consteval std::array<char, N + 1> serializeNode(const char* tagName) {
             std::array<char, N + 1> result = {};
@@ -52,7 +65,15 @@ namespace Templater::compile {
             index = CompileStringUtils::placeStringInArray(result, ">\0", index);
             return result;
         } 
-    
+
+        /**
+         * @brief Constructs an std::array XML string with the void tagName node as the root. Throws an error (compile error) if non-attribute children have been passed.
+         * 
+         * @tparam N The size of the array
+         * @tparam Children May only be of type ctags::Attribute
+         * @param tagName 
+         * @return std::array<char, N + 1>
+         */
         template <size_t N, typename... Children>
         static consteval std::array<char, N + 1> serializeVoidNode(const char* tagName) {
             std::array<char, N + 1> result = {};
