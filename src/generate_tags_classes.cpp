@@ -117,7 +117,7 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
     std::ofstream headerCompile(fullPath / "tags.h");
 
     headerCompile << "#pragma once\n";
-    headerCompile << "#include \"document.h\" \n";
+    headerCompile << "#include \"compile/document_utils.h\" \n";
     headerCompile << "#include \"dynamic/tags.h\" \n\n";
     headerCompile << "namespace Templater::compile::ctags {\n";
 
@@ -135,7 +135,7 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
                                     "        }\n"
                                     "        static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {\n"
                                     "            std::unique_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_unique<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
-                                    "            (parseChildren<Children>(node.get()), ...);\n"
+                                    "            (DocumentUtils::parseChildren<Children>(node.get()), ...);\n"
                                     "            return node;\n"
                                     "        }\n"
                                     "    };\n";

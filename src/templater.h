@@ -12,6 +12,10 @@
 #include "nodes/empty_node.h"
 #include "nodes/comment_node.h"
 #include "nodes/_dangerous_raw_text_node.h"
+#include "compile/compile_attribute.h"
+#include "compile/compile_comment.h"
+#include "compile/compile_text.h"
+#include "document.h"
 
 #if __has_include("dynamic/tags.h")
     #include "dynamic/tags.h"
