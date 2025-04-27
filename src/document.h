@@ -66,6 +66,102 @@ namespace Templater::compile {
 
     namespace ctags {
 
+        template <CompileString Name, CompileString Value>
+        struct Attribute;
+
+        /**
+         * @brief Checks if the given template param is a compile time Attribute.
+         * Since compile time Attributes are specialised with unpredictable inputs,
+         * the check can only be done by checking for the existence of the attr() static function.
+         * 
+         * @tparam T 
+         */
+        template <typename T>
+        concept isAttribute = requires(T) {
+            { T::dynamicAttribute() } -> std::same_as<std::unique_ptr<Templater::dynamic::Attribute>>;
+        };
+
+
+        class DocumentUtils {
+            public:
+                DocumentUtils() = delete;
+    
+                template <size_t N>
+                static consteval size_t placeStringInArray(std::array<char, N>& arr, const char* str, size_t index) {
+                    for (size_t i = 0; i < std::string_view(str).size(); i++) {
+                        arr[index + i] = str[i];
+                    }
+                
+                    return index + std::string_view(str).size();
+                }
+    
+                template <size_t N, typename... Children>
+                static consteval std::array<char, N + 1> serializeNode(const char* tagName) {
+                    std::array<char, N + 1> result = {};
+                    bool passedAttr = false;
+                    size_t index = DocumentUtils::placeStringInArray(result, "<", 0);
+                    index = DocumentUtils::placeStringInArray(result, tagName, index);
+                    if constexpr (sizeof...(Children) == 0)
+                    {
+                        index = DocumentUtils::placeStringInArray(result, ">", index);
+                    } else {
+                    
+                        (([&] {
+                            if constexpr(Templater::compile::ctags::isAttribute<Children>) {
+                                if (passedAttr) {
+                                    throw "Cannot add attribute after first child of node.";
+                                }
+                            }
+                            else {
+                            
+                                if (!passedAttr) {
+                                    passedAttr = true;
+                                    result[index] = '>';
+                                    index++;
+                                }
+                            
+                            }
+    
+                            std::array<char, Children::size() + 1> in = Children::serialize();
+                            for (size_t i = 0; i < Children::size(); i++) {
+                                result[index + i] = in[i];
+                            }
+                            index += Children::size();
+                        }()), ...);
+                    }
+                    index = DocumentUtils::placeStringInArray(result, "</", index);
+                    index = DocumentUtils::placeStringInArray(result, tagName, index);
+                    index = DocumentUtils::placeStringInArray(result, ">\0", index);
+                    return result;
+                } 
+            
+                template <size_t N, typename... Children>
+                static consteval std::array<char, N + 1> serializeVoidNode(const char* tagName) {
+                    std::array<char, N + 1> result = {};
+                    bool passedAttr = false;
+                    size_t index = DocumentUtils::placeStringInArray(result, "<", 0);
+                    index = DocumentUtils::placeStringInArray(result, tagName, index);
+                    if constexpr (sizeof...(Children) != 0)
+                    {
+                        (([&] {
+                            if constexpr(!Templater::compile::ctags::isAttribute<Children>) {
+                                throw "Cannot add non-attribute child for void node.";
+                            
+                            }
+    
+                            std::array<char, Children::size() + 1> in = Children::serialize();
+                            for (size_t i = 0; i < Children::size(); i++) {
+                                result[index + i] = in[i];
+                            }
+                            index += Children::size();
+                        }()), ...);
+                    }
+
+                    index = DocumentUtils::placeStringInArray(result, " />\0", index);
+                
+                    return result;
+                } 
+        };
 
         /**
          * @brief A compile time Attribute struct which has a Name and a Value.
@@ -94,21 +190,11 @@ namespace Templater::compile {
             */
             static consteval std::array<char, size() + 1> serialize() {
                 std::array<char, size() + 1> result = {};
-                result[0] = ' ';
-                size_t index = 1;
-                for (size_t i = 0; i < std::string_view(Name.value).size(); i++) {
-                    result[index + i] = Name.value[i];
-                }
-                index += std::string_view(Name.value).size();
-                result[index] = '=';
-                result[index+1] = '\"';
-                index += 2;
-                for (size_t i = 0; i < std::string_view(Value.value).size(); i++) {
-                    result[index + i] = Value.value[i];
-                }
-                index += std::string_view(Value.value).size();
-                result[index] = '\"';
-                result[index+1] = '\0';
+                size_t index = DocumentUtils::placeStringInArray(result, " ", 0);
+                index = DocumentUtils::placeStringInArray(result, Name.value, index);
+                index = DocumentUtils::placeStringInArray(result, "=\"", index);
+                index = DocumentUtils::placeStringInArray(result, Value.value, index);
+                index = DocumentUtils::placeStringInArray(result, "\"\0", index);
                 return result;
             } 
 
@@ -120,116 +206,6 @@ namespace Templater::compile {
             static std::unique_ptr<Templater::dynamic::Attribute> dynamicAttribute() {
                 return std::make_unique<Templater::dynamic::Attribute>(Name, Value);
             }
-        };
-
-        /**
-         * @brief Checks if the given template param is a compile time Attribute.
-         * Since compile time Attributes are specialised with unpredictable inputs,
-         * the check can only be done by checking for the existence of the attr() static function.
-         * 
-         * @tparam T 
-         */
-        template <typename T>
-        concept isAttribute = requires(T) {
-            { T::dynamicAttribute() } -> std::same_as<std::unique_ptr<Templater::dynamic::Attribute>>;
-        };
-
-        class DocumentUtils {
-            public:
-                DocumentUtils() = delete;
-    
-                template <size_t N>
-                static consteval size_t placeStringInArray(std::array<char, N>& arr, const char* str, size_t index) {
-                    for (size_t i = 0; i < std::string_view(str).size(); i++) {
-                        arr[index + i] = str[i];
-                    }
-                
-                    return index + std::string_view(str).size();
-                }
-    
-                template <size_t N, typename... Children>
-                static consteval std::array<char, N + 1> serializeNode(const char* tagName) {
-                    std::array<char, N + 1> result = {};
-                    bool passedAttr = false;
-                    result[0] = '<';
-                    size_t index = 1;
-                    for (size_t i = 0; i < std::string_view(tagName).size(); i++) {
-                        result[index + i] = tagName[i];
-                    }
-                    index += std::string_view(tagName).size();
-                    if constexpr (sizeof...(Children) == 0)
-                    {
-                        result[index] = '>';
-                        index++;
-                    } else {
-                    
-                        (([&] {
-                            if constexpr(Templater::compile::ctags::isAttribute<Children>) {
-                                if (passedAttr) {
-                                    throw "Cannot add attribute after first child of node.";
-                                }
-                            }
-                            else {
-                            
-                                if (!passedAttr) {
-                                    passedAttr = true;
-                                    result[index] = '>';
-                                    index++;
-                                }
-                            
-                            }
-    
-                            std::array<char, Children::size() + 1> in = Children::serialize();
-                            for (size_t i = 0; i < Children::size(); i++) {
-                                result[index + i] = in[i];
-                            }
-                            index += Children::size();
-                        }()), ...);
-                    }
-                    result[index] = '<';
-                    result[index+1] = '/';
-                    index += 2;
-                    for (size_t i = 0; i < std::string_view(tagName).size(); i++) {
-                        result[index + i] = tagName[i];
-                    }
-                    index += std::string_view(tagName).size();
-                    result[index] = '>';
-                    result[index+1] = '\0';
-                    return result;
-                } 
-            
-                template <size_t N, typename... Children>
-                static consteval std::array<char, N + 1> serializeVoidNode(const char* tagName) {
-                    std::array<char, N + 1> result = {};
-                    bool passedAttr = false;
-                    result[0] = '<';
-                    size_t index = 1;
-                    for (size_t i = 0; i < std::string_view(tagName).size(); i++) {
-                        result[index + i] = tagName[i];
-                    }
-                    index += std::string_view(tagName).size();
-                    if constexpr (sizeof...(Children) != 0)
-                    {
-                        (([&] {
-                            if constexpr(!Templater::compile::ctags::isAttribute<Children>) {
-                                throw "Cannot add non-attribute child for void node.";
-                            
-                            }
-    
-                            std::array<char, Children::size() + 1> in = Children::serialize();
-                            for (size_t i = 0; i < Children::size(); i++) {
-                                result[index + i] = in[i];
-                            }
-                            index += Children::size();
-                        }()), ...);
-                    }
-                    result[index] = ' ';
-                    result[index+1] = '/';
-                    result[index+2] = '>';
-                    result[index+3] = '\0';
-                
-                    return result;
-                } 
         };
 
         /**
@@ -256,10 +232,8 @@ namespace Templater::compile {
              */
             static consteval std::array<char, size() + 1> serialize() {
                 std::array<char, size() + 1> result = {};
-                for (size_t i = 0; i < std::string_view(Str.value).size(); i++) {
-                    result[i] = Str.value[i];
-                }
-                result[size()] = '\0';
+                size_t index = DocumentUtils::placeStringInArray(result, Str.value, 0);
+                index = DocumentUtils::placeStringInArray(result, "\0", index);
                 return result;
             } 
 
@@ -298,18 +272,10 @@ namespace Templater::compile {
              */
             static consteval std::array<char, size() + 1> serialize() {
                 std::array<char, size() + 1> result = {};
-                result[0] = '<';
-                result[1] = '!';
-                result[2] = '-';
-                result[3] = '-';
-                for (size_t i = 0; i < std::string_view(Str.value).size(); i++) {
-                    result[4 + i] = Str.value[i];
-                }
-                size_t newIndex = 4 + std::string_view(Str.value).size();
-                result[newIndex] = '-';
-                result[newIndex+1] = '-';
-                result[newIndex+2] = '>';
-                result[size()] = '\0';
+                size_t index = DocumentUtils::placeStringInArray(result, "<!--", 0);
+                index = DocumentUtils::placeStringInArray(result, Str.value, index);
+                index = DocumentUtils::placeStringInArray(result, "-->", index);
+                index = DocumentUtils::placeStringInArray(result, "\0", index);
                 return result;
             } 
 
