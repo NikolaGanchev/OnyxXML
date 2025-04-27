@@ -13,12 +13,8 @@ namespace Templater::dynamic {
 
     Node::Node(Node&& other)
         : attributes{std::move(other.attributes)}, children{std::move(other.children)}, indices{std::move(other.indices)}, _isInTree{other._isInTree} {
-            for (auto& index: this->indices) {
-                if (index->getRoot() == &other) {
-                    index->root = this;
-                }
-            }
-        }
+        this->takeOverIndices(other);
+    }
 
     Node::Node(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
         : attributes{std::move(attributes)}, children{std::move(children)}, indices{} {
@@ -26,12 +22,35 @@ namespace Templater::dynamic {
             child->_isInTree = true;
         }
     }
+    
+    Node& Node::operator=(Node&& other) {
+        this->destroy();
+        this->attributes = std::move(other.attributes);
+        other.attributes.clear();
+        this->children = std::move(other.children);
+        other.children.clear();
+        this->indices = std::move(other.indices);
+        other.indices.clear();
+
+        this->takeOverIndices(other);
+        this->_isInTree = other._isInTree;
+
+        return *this;
+    }
+
+    void Node::takeOverIndices(Node& other) {
+        for (auto& index: this->indices) {
+            if (index->getRoot() == &other) {
+                index->root = this;
+            }
+        }
+    }
 
     void Node::processConstructorAttribute(Attribute&& attribute) {
         this->operator[](std::move(attribute.getName())) = std::move(attribute.getValue());
     }
 
-    Node::~Node() {
+    void Node::destroy() {
         for (auto& child: this->children) {
             child->_isInTree = false;
 
@@ -47,6 +66,10 @@ namespace Templater::dynamic {
                 id->invalidate();
             }
         });
+    }
+
+    Node::~Node() {
+        this->destroy();
     }
     
     Node* Node::addChild(std::unique_ptr<Node> newChild)  {

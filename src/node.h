@@ -264,6 +264,20 @@ namespace Templater::dynamic {
              * The default value is false.
              */
             static bool sortAttributes;
+
+            
+            /**
+             * @brief Destroys this Node.
+             * 
+             */
+            void destroy();
+
+
+            /**
+             * @brief Takes over the indices of the Node other by changing their roots. Expects that the indices are already moved to this.
+             * 
+             */
+            void takeOverIndices(Node& other);
         public:  
             /**
              * @brief Used during serialization for keeping track of nodes.
@@ -344,6 +358,15 @@ namespace Templater::dynamic {
              * @param other 
              */
             explicit Node(Node&& other);
+
+
+            /**
+             * @brief Node move assignment.
+             * 
+             * @param other 
+             * @return Node& 
+             */
+            Node& operator=(Node&& other);
 
 
             /**
