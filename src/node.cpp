@@ -164,7 +164,7 @@ namespace Templater::dynamic {
             s.pop_back();
 
             const std::vector<std::unique_ptr<Node>>& children = obj->children;
-            for (int i = 0; i < children.size(); i++) {
+            for (size_t i = 0; i < children.size(); i++) {
                 s.push_back(children[i].get());
             }
         }
@@ -178,7 +178,7 @@ namespace Templater::dynamic {
         std::vector<Node*> s;
         std::vector<Node*> result;
 
-        for (int i = 0; i < this->children.size(); i++) {
+        for (size_t i = 0; i < this->children.size(); i++) {
             s.push_back(this->children[i].get());
         }
 
@@ -192,8 +192,8 @@ namespace Templater::dynamic {
             s.pop_back();
 
             auto& children = obj->children;
-            for (int i = children.size()-1; i >= 0; i--) {
-                s.push_back(children[i].get());
+            for (size_t i = children.size(); i > 0; i--) {
+                s.push_back(children[i - 1].get());
             }
         }
 
@@ -245,7 +245,7 @@ namespace Templater::dynamic {
         while(!s.empty()) {
             std::vector<std::unique_ptr<Node>>* children = s.back();
 
-            for (int i = 0; i < children->size(); i++) {
+            for (size_t i = 0; i < children->size(); i++) {
                 if (children->at(i).get() == childToRemove) {
     
                     this->indexParse([&childToRemove, this](index::Index* id) -> void {
@@ -264,7 +264,7 @@ namespace Templater::dynamic {
 
             s.pop_back();
 
-            for (int i = 0; i < children->size(); i++) {
+            for (size_t i = 0; i < children->size(); i++) {
                 s.push_back(&(children->at(i)->children));
             }
         }
@@ -315,7 +315,7 @@ namespace Templater::dynamic {
         std::vector<const Attribute*> attributes1;
         std::vector<const Attribute*> attributes2;
 
-        for (int i = 0; i < this->attributes.size(); i++) {
+        for (size_t i = 0; i < this->attributes.size(); i++) {
             attributes1.push_back(&(this->attributes[i]));
             attributes2.push_back(&(other.attributes[i]));
         }
@@ -330,7 +330,7 @@ namespace Templater::dynamic {
             return lhs->getName() < rhs->getName();
         });
 
-        for (int i = 0; i < attributes1.size(); i++) {
+        for (size_t i = 0; i < attributes1.size(); i++) {
             if ((*attributes1[i]) != (*attributes2[i])) {
                 return false;
             } 
@@ -607,7 +607,7 @@ namespace Templater::dynamic {
             result << indentation << "<" << tagName;
 
             attributes.clear();
-            for (int i = 0; i < obj->attributes.size(); i++) {
+            for (size_t i = 0; i < obj->attributes.size(); i++) {
                 attributes.push_back(&(obj->attributes[i]));
             }
             if (sortAttributes) {

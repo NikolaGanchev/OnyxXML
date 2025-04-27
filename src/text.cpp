@@ -31,7 +31,7 @@ namespace Templater::dynamic::text {
         size_t escapedSize = 0;
         bool safe = true;
 
-        for (int i = 0; i < str.size(); i++) {
+        for (size_t i = 0; i < str.size(); i++) {
             // If the current character can cause injections
             if ((unsigned char)str[i] < 128 && escapeTable[(unsigned char)str[i]]) {
                 // Add the length of its escape sequence to the total size.
@@ -115,7 +115,7 @@ namespace Templater::dynamic::text {
                     const std::string& entity = dictionary[codepointSequence.front()];
                     codepointSequence.pop();
                     // Write the entity into the output.
-                    for (int i = 0; i < entity.size(); i++) {
+                    for (size_t i = 0; i < entity.size(); i++) {
                         *write = entity[i];
                         write++;
                     }
