@@ -1334,3 +1334,29 @@ TEST_CASE("leafCount() returns 1 on empty tree", "[Node]") {
 
     REQUIRE(root.leafCount() == 1);
 }
+
+
+TEST_CASE("Node move properly handle indices", "[Node]") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    GenericNode obj{
+        "html", false,
+        GenericNode("body", false, 
+            GenericNode("div", false, Attribute("class", "container"),
+                GenericNode("div", false, Attribute("class", "item")),
+                GenericNode("div", false, Attribute("class", "item")),
+                GenericNode("div", false, Attribute("class", "item"))
+            )
+        )
+    };
+
+    REQUIRE(obj.getChildrenCount() > 0);
+    
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
+
+    REQUIRE(index.getRoot() == &obj);
+
+    GenericNode obj1(std::move(obj));
+    REQUIRE(index.getRoot() == &obj1);
+}

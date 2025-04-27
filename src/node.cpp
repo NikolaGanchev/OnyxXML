@@ -12,7 +12,13 @@ namespace Templater::dynamic {
         : attributes{}, children{}, indices{}, _isInTree{false} { }
 
     Node::Node(Node&& other)
-        : attributes{std::move(other.attributes)}, children{std::move(other.children)}, indices{other.indices}, _isInTree{other._isInTree} {}
+        : attributes{std::move(other.attributes)}, children{std::move(other.children)}, indices{std::move(other.indices)}, _isInTree{other._isInTree} {
+            for (auto& index: this->indices) {
+                if (index->getRoot() == &other) {
+                    index->root = this;
+                }
+            }
+        }
 
     Node::Node(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
         : attributes{std::move(attributes)}, children{std::move(children)}, indices{} {
