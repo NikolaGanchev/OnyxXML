@@ -226,7 +226,7 @@ namespace Templater::dynamic::index {
              * 
              * @param other 
              */
-            Index(Index&& other);
+            Index(Index&& other) noexcept;
         public:
             /**
              * @brief Get the Root Node.

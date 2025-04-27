@@ -56,7 +56,7 @@ namespace Templater::dynamic::index {
         this->_move_index_base(std::move(other));
     }
     
-    Index::Index(Index&& other) {
+    Index::Index(Index&& other) noexcept {
         this->_move_index_base(std::move(other));
     }
 }
