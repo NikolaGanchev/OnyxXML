@@ -23,6 +23,7 @@ namespace Templater::dynamic::dtags {
     GenericNode::GenericNode(Node&& other): tag{other.getTagName()}, _isVoid{other.isVoid()}, Node{std::move(other)} {};
 
     GenericNode& GenericNode::operator=(Node&& other) {
+        if (this == &other) return *this;
         this->_isVoid = other.isVoid();
         this->tag = other.getTagName();
         Node::operator=(std::move(other));

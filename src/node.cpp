@@ -24,6 +24,7 @@ namespace Templater::dynamic {
     }
     
     Node& Node::operator=(Node&& other) {
+        if (this == &other) return *this;
         this->destroy();
         this->attributes = std::move(other.attributes);
         other.attributes.clear();
