@@ -726,9 +726,9 @@ Templater::dynamic::Node::Node(Args&&... args) requires (Templater::dynamic::isV
 template <typename T>
 void Templater::dynamic::Node::processConstructorArgs(T&& arg) {
     if constexpr (std::is_base_of_v<Node, std::decay_t<T>>) {
-        processConstructorObjectMove(std::move(arg));
+        processConstructorObjectMove(std::forward<T>(arg));
     } else {
-        processConstructorAttribute(std::move(arg));
+        processConstructorAttribute(std::forward<T>(arg));
     }
 }
 
@@ -769,6 +769,6 @@ void Templater::dynamic::Node::processConstructorObjectMove(T&& child) requires 
 
 template <typename T>
 Templater::dynamic::Node& Templater::dynamic::Node::operator+=(T&& right) requires (isNode<T>) {
-    addChild(std::move(right));
+    addChild(std::forward<T>(right));
     return (*this);
 }
