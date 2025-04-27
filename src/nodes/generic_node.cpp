@@ -22,6 +22,14 @@ namespace Templater::dynamic::dtags {
 
     GenericNode::GenericNode(Node&& other): tag{other.getTagName()}, _isVoid{other.isVoid()}, Node{std::move(other)} {};
 
+    GenericNode& GenericNode::operator=(Node&& other) {
+        this->_isVoid = other.isVoid();
+        this->tag = other.getTagName();
+        Node::operator=(std::move(other));
+
+        return *this;
+    }
+
     std::unique_ptr<Node> GenericNode::shallowCopy() const {
         return std::make_unique<GenericNode>(this->tag, this->_isVoid, this->getAttributes(), std::vector<std::unique_ptr<Node>>{});
     }

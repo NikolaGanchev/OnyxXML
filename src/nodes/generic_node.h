@@ -15,14 +15,14 @@ namespace Templater::dynamic::dtags {
              * @brief The tag name of the Node.
              * 
              */
-            const std::string tag;
+            std::string tag;
 
             
             /**
              * @brief Whether the Node is void or not.
              * 
              */
-            const bool _isVoid;
+            bool _isVoid;
         public: 
             /**
              * @brief Construct a new GenericNode object.
@@ -60,6 +60,15 @@ namespace Templater::dynamic::dtags {
              * @param other 
              */
             explicit GenericNode(Node&& other);
+
+
+            /**
+             * @brief GenericNode move assignment.
+             * 
+             * @param other 
+             * @return GenericNode& 
+             */
+            GenericNode& operator=(Node&& other);
             const std::string& getTagName() const override;
             bool isVoid() const override;
             std::unique_ptr<Node> shallowCopy() const override;
