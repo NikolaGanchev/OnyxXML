@@ -148,23 +148,21 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Invokes the process callback over the given Node and all its children.
+             * @brief Invokes the process callback over this and all its children.
              * Parses iteratively
              * 
-             * @param object The root node for parsing
              * @param process The process function
              */
-            void iterativeProcessor(Node& object, const std::function<void(Node*)>& process);
+            void iterativeProcessor(const std::function<void(Node*)>& process);
 
 
             /**
-             * @brief Parses over all children of the given Node and constructs a vector including only those that satisfy the condition function.
+             * @brief Parses over all children of this and constructs a vector including only those that satisfy the condition function.
              * 
-             * @param object The root for parsing. Not included in the parse.
              * @param condition A function which returns true if the given child should be included in the return vector and false if not
              * @return std::vector<Node*> 
              */
-            std::vector<Node*> iterativeChildrenParse(const Node& object, const std::function<bool(Node*)>& condition) const;
+            std::vector<Node*> iterativeChildrenParse(const std::function<bool(Node*)>& condition) const;
 
             
             /**

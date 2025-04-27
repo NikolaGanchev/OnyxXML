@@ -118,14 +118,14 @@ namespace Templater::dynamic {
 
     // Iteratively adds the index to this node and all its children
     void Node::addIndex(index::Index* index) {
-        iterativeProcessor(*this, [&index](Node* obj) -> void {
+        iterativeProcessor([&index](Node* obj) -> void {
             obj->indices.push_back(index);
             index->putIfNeeded(obj);
         });
     }
 
     void Node::removeIndex(index::Index* indexToRemove) {
-        iterativeProcessor(*this, [&indexToRemove](Node* obj) -> void {
+        iterativeProcessor([&indexToRemove](Node* obj) -> void {
             for (auto index = obj->indices.begin(); index != obj->indices.end();) {
                 if (indexToRemove == *index) {
                     obj->indices.erase(index);
@@ -139,7 +139,7 @@ namespace Templater::dynamic {
     }
 
     void Node::replaceIndex(index::Index* oldIndex, index::Index* newIndex) {
-        iterativeProcessor(*this, [&oldIndex, &newIndex](Node* obj) -> void {
+        iterativeProcessor([&oldIndex, &newIndex](Node* obj) -> void {
             for (auto index = obj->indices.begin(); index != obj->indices.end();) {
                 if (oldIndex == *index) {
                     *index = newIndex;
@@ -151,7 +151,7 @@ namespace Templater::dynamic {
         });
     }
 
-    void Node::iterativeProcessor(Node& object, const std::function<void(Node*)>& process) {
+    void Node::iterativeProcessor(const std::function<void(Node*)>& process) {
         std::vector<Node*> s;
 
         s.push_back(this);
@@ -174,13 +174,12 @@ namespace Templater::dynamic {
         return this->_isInTree;
     }
 
-    std::vector<Node*> Node::iterativeChildrenParse(const Node& object, const std::function<bool(Node*)>& condition) const {
+    std::vector<Node*> Node::iterativeChildrenParse(const std::function<bool(Node*)>& condition) const {
         std::vector<Node*> s;
         std::vector<Node*> result;
 
-        auto& objectChildren = object.children;
-        for (int i = 0; i < objectChildren.size(); i++) {
-            s.push_back(objectChildren[i].get());
+        for (int i = 0; i < this->children.size(); i++) {
+            s.push_back(this->children[i].get());
         }
 
         while(!s.empty()) {
@@ -202,12 +201,12 @@ namespace Templater::dynamic {
     }
 
     std::vector<Node*> Node::getChildrenByAttribute(const std::string& attribute, const std::string& value) const {
-        return iterativeChildrenParse(*this, ([&attribute, &value](Node* obj) -> bool 
+        return iterativeChildrenParse(([&attribute, &value](Node* obj) -> bool 
         {  return obj->hasAttribute(attribute) && obj->getAttributeValue(attribute) == value; }));
     }
 
     std::vector<Node*> Node::getChildrenByAttributeName(const std::string& attribute) const {
-        return iterativeChildrenParse(*this, ([&attribute](Node* obj) -> bool 
+        return iterativeChildrenParse(([&attribute](Node* obj) -> bool 
         {  return obj->hasAttribute(attribute); }));
     }
 
@@ -217,7 +216,7 @@ namespace Templater::dynamic {
     }
 
     std::vector<Node*> Node::getChildrenByTagName(const std::string& tagName) const {
-        return iterativeChildrenParse(*this, [&tagName](Node* obj) -> bool 
+        return iterativeChildrenParse([&tagName](Node* obj) -> bool 
             { return obj->getTagName() == tagName; });
     }
 

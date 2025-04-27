@@ -22,7 +22,7 @@ namespace Templater::dynamic::index {
 
     void Index::destroy() {
         if (this->valid && this->root) {
-            this->root->iterativeProcessor(*this->root, [this](Node* obj) -> void {
+            this->root->iterativeProcessor([this](Node* obj) -> void {
                 for (auto index = obj->indices.begin(); index != obj->indices.end();) {
                     if (this == *index) {
                         obj->indices.erase(index);
