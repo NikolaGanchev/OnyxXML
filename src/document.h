@@ -138,6 +138,15 @@ namespace Templater::compile {
             public:
                 DocumentUtils() = delete;
     
+                template <size_t N>
+                static consteval size_t placeStringInArray(std::array<char, N>& arr, const char* str, size_t index) {
+                    for (size_t i = 0; i < std::string_view(str).size(); i++) {
+                        arr[index + i] = str[i];
+                    }
+                
+                    return index + std::string_view(str).size();
+                }
+    
                 template <size_t N, typename... Children>
                 static consteval std::array<char, N + 1> serializeNode(const char* tagName) {
                     std::array<char, N + 1> result = {};
