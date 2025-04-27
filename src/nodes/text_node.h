@@ -15,14 +15,14 @@ namespace Templater::dynamic::dtags {
              * @brief The text
              * 
              */
-            const std::string text;
+            std::string text;
 
 
             /**
              * @brief Whether unicode sequences should be escaped. Set at construction.
              * 
              */
-            const bool escapeMultiByte;
+            bool escapeMultiByte;
         protected:    
             void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
             void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
@@ -54,6 +54,16 @@ namespace Templater::dynamic::dtags {
              * @param other 
              */
             explicit Text(Text&& other); 
+
+
+            /**
+             * @brief Text move assignment
+             * 
+             * @param other 
+             */
+            Text& operator=(Text&& other); 
+
+
             bool isVoid() const override;
 
 

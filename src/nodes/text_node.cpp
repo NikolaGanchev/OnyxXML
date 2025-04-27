@@ -7,6 +7,15 @@ namespace Templater::dynamic::dtags {
     Text::Text(const Text& other): text(other.text), escapeMultiByte(other.escapeMultiByte), Node{} {}
     Text::Text(Text&& other): text(std::move(other.text)), escapeMultiByte(other.escapeMultiByte), Node{} {}
 
+    Text& Text::operator=(Text&& other) {
+        if (this == &other) return *this;
+        this->text = std::move(other.text);
+        this->escapeMultiByte = other.escapeMultiByte;
+        Node::operator=(std::move(other));
+
+        return *this;
+    }
+
     const std::string& Text::getText() const {
         return this->text;
     }
