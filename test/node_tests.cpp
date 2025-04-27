@@ -844,6 +844,23 @@ TEST_CASE("Void tags are serialized correctly") {
     CHECK(std::string(doc::serialize().data()) == "<html><head></head><body><img src=\"img.jpg\" /></body></html>");
 }
 
+TEST_CASE("Comment tags are serialized correctly") {
+    using namespace Templater::compile;
+    using namespace Templater::compile::ctags;
+
+    using doc = Document<
+        html<
+            head<>,
+            Comment<"This is a comment!">,
+            body<
+                img<Attribute<"src", "img.jpg">>
+            >
+        >
+    >;
+
+    CHECK(std::string(doc::serialize().data()) == "<html><head></head><!--This is a comment!--><body><img src=\"img.jpg\" /></body></html>");
+}
+
 TEST_CASE("UTF-8 text strings are cut off properly") {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;

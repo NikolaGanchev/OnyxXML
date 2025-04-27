@@ -136,10 +136,9 @@ namespace Templater::compile {
 
 
         /**
-         * @brief A compile time Text struct which has a Name and a Value.
+         * @brief A compile time Text struct.
          * 
-         * @tparam Name 
-         * @tparam Value 
+         * @tparam Str
          */
         template <CompileString Str>
         struct Text {
@@ -174,6 +173,56 @@ namespace Templater::compile {
              */
             static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
                 return std::make_unique<Templater::dynamic::dtags::Text>(Str);
+            }
+        };
+
+
+        /**
+         * @brief A compile time Comment struct.
+         * 
+         * @tparam Str
+         */
+        template <CompileString Str>
+        struct Comment {
+            /**
+            * @brief The compile-time size of the Comment string. Does not account for '\0';
+            * 
+            * @return size_t 
+            */
+            static consteval size_t size() {
+                return std::string_view(Str.value).size() + 4 + 3; // added size for <!-- (4) and --> (3)
+            }
+
+
+            /**
+             * @brief The Comment string; evaluated at compile-time. Does not do any escaping.
+             * 
+             * @return std::array<char, size() + 1>
+             */
+            static consteval std::array<char, size() + 1> serialize() {
+                std::array<char, size() + 1> result = {};
+                result[0] = '<';
+                result[1] = '!';
+                result[2] = '-';
+                result[3] = '-';
+                for (int i = 0; i < std::string_view(Str.value).size(); i++) {
+                    result[4 + i] = Str.value[i];
+                }
+                int newIndex = 4 + std::string_view(Str.value).size();
+                result[newIndex] = '-';
+                result[newIndex+1] = '-';
+                result[newIndex+2] = '>';
+                result[size()] = '\0';
+                return result;
+            } 
+
+            /**
+             * @brief Construct a dynamic Comment Node from a compile time Comment struct.
+             * 
+             * @return std::unique_ptr<Templater::dynamic::Node> 
+             */
+            static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
+                return std::make_unique<Templater::dynamic::dtags::Comment>(Str);
             }
         };
 
