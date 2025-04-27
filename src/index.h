@@ -66,6 +66,9 @@ namespace Templater::dynamic::index {
                                         template <typename T, typename... Args>\
                                         friend std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args&&... args) requires (isIndex<T>);
 
+    #define DELETE_INDEX_COPY_OPERATIONS(ClassName)\
+        ClassName(ClassName& other) = delete;\
+        ClassName& operator=(ClassName& other) = delete;\
 
     #define ADD_INDEX_MOVE_OPERATIONS(Access, ClassName, ...)\
         private:\
@@ -74,6 +77,7 @@ namespace Templater::dynamic::index {
                 ((this->*mptrs = std::move(other.*mptrs)), ...);\
             };\
         Access:\
+            DELETE_INDEX_COPY_OPERATIONS(ClassName)\
             ClassName(ClassName&& other) noexcept: Index{std::move(other)} {\
                 _add_index_move_members_helper(std::move(other), __VA_ARGS__);\
             };\
@@ -107,7 +111,8 @@ namespace Templater::dynamic::index {
      * For convenience, the ADD_INDEX_MOVE_OPERATIONS(Access, ClassName, ...) macro is available. It requires the access (public/private/protected)
      * of the move operations, the class name of the Index and the references to any additional variables the subclass adds. 
      * These variables are default moved using std::move(). To enable this, a private _add_index_move_members_helper() method is added to the class.
-     * Example of move operations adding:
+     * This macro also handles deletion of the copy constructor/assignment operator via the DELETE_INDEX_COPY_OPERATIONS(ClassName) macro which it automatically calls.
+     * Example of adding move operations:
      * @code{.cpp}
      * public:
      *  ADD_INDEX_MOVE_OPERATIONS(public, TagNameIndex, &TagNameIndex::tagName, &TagNameIndex::index);
@@ -248,6 +253,7 @@ namespace Templater::dynamic::index {
 
             Index(const Index&) = delete;
             Index& operator=(const Index&) = delete;
+            Index& operator=(const Index&&) = delete;
     };
 }
 
