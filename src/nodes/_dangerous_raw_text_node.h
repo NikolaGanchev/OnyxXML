@@ -13,7 +13,7 @@ namespace Templater::dynamic::dtags {
              * @brief The text
              * 
              */
-            const std::string text;
+            std::string text;
         protected:
             void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
             void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
@@ -40,6 +40,14 @@ namespace Templater::dynamic::dtags {
              * @param other 
              */
             explicit __DangerousRawText(__DangerousRawText&& other); 
+
+
+            /**
+             * @brief __DangerousRawText move assignment
+             * 
+             * @param other 
+             */
+            __DangerousRawText& operator=(__DangerousRawText&& other); 
 
 
             bool isVoid() const override;

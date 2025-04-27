@@ -7,6 +7,14 @@ namespace Templater::dynamic::dtags {
     __DangerousRawText::__DangerousRawText(const __DangerousRawText& other): text(other.text), Node{} {}
     __DangerousRawText::__DangerousRawText(__DangerousRawText&& other): text(std::move(other.text)), Node{} {}
 
+    __DangerousRawText& __DangerousRawText::operator=(__DangerousRawText&& other) {
+        if (this == &other) return *this;
+        this->text = std::move(other.text);
+        Node::operator=(std::move(other));
+
+        return *this;
+    }
+
     const std::string& __DangerousRawText::getTagName() const {
         static const std::string name = ".rawText";
         return name;
