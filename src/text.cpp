@@ -138,7 +138,7 @@ namespace Templater::dynamic::text {
         // 1-byte ASCII character (0xxxxxxx)
         if ((unsigned char)*read < 128) { // 1-byte ASCII
 
-            codepoint = *read;
+            codepoint = (unsigned char) *read;
         }   
         // 2-byte sequence (110xxxxx 10xxxxxx) 
         else if (((unsigned char)*read >> 5) == 0x6) { // 2-byte sequence
