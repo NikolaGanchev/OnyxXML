@@ -7,7 +7,7 @@ namespace Templater::dynamic::dtags {
 
     GenericNode::GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
             : tag{std::move(tagName)}, _isVoid{isVoid}, Node{std::move(attributes), std::move(children)} {
-                if (this->isVoid() && this->getChildrenCount() > 0) {
+                if (isVoid && this->getChildrenCount() > 0) {
                     throw std::runtime_error("Void " + getTagName() + " cannot have children.");
                 }
     }
