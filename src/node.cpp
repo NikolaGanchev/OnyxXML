@@ -55,14 +55,14 @@ namespace Templater::dynamic {
         for (auto& child: this->children) {
             child->_isInTree = false;
 
-            this->indexParse([this, &child](index::Index* id) -> void {
+            this->indexParse([this, &child](Node::Index* id) -> void {
                 if (id->getRoot() == this) {
                     child->removeIndex(id);
                 }
             });
         }
 
-        this->indexParse([this](index::Index* id) -> void {
+        this->indexParse([this](Node::Index* id) -> void {
             if (id->getRoot() == this) {
                 id->invalidate();
             }
@@ -83,7 +83,7 @@ namespace Templater::dynamic {
         }
 
         newChild->_isInTree = true;
-        this->indexParse([&newChild](index::Index* id) -> void {
+        this->indexParse([&newChild](Node::Index* id) -> void {
             newChild->addIndex(id);
         });
 
@@ -109,7 +109,7 @@ namespace Templater::dynamic {
         return this->children.size();
     }
 
-    void Node::indexParse(const std::function<void(index::Index*)>& callback) {
+    void Node::indexParse(const std::function<void(Node::Index*)>& callback) {
         for (auto index: this->indices) {
             callback(index);
             index++;
@@ -117,14 +117,14 @@ namespace Templater::dynamic {
     }
 
     // Iteratively adds the index to this node and all its children
-    void Node::addIndex(index::Index* index) {
+    void Node::addIndex(Node::Index* index) {
         iterativeProcessor([&index](Node* obj) -> void {
             obj->indices.push_back(index);
             index->putIfNeeded(obj);
         });
     }
 
-    void Node::removeIndex(index::Index* indexToRemove) {
+    void Node::removeIndex(Node::Index* indexToRemove) {
         iterativeProcessor([&indexToRemove](Node* obj) -> void {
             for (auto index = obj->indices.begin(); index != obj->indices.end();) {
                 if (indexToRemove == *index) {
@@ -138,7 +138,7 @@ namespace Templater::dynamic {
         });
     }
 
-    void Node::replaceIndex(index::Index* oldIndex, index::Index* newIndex) {
+    void Node::replaceIndex(Node::Index* oldIndex, Node::Index* newIndex) {
         iterativeProcessor([&oldIndex, &newIndex](Node* obj) -> void {
             for (auto index = obj->indices.begin(); index != obj->indices.end();) {
                 if (oldIndex == *index) {
@@ -248,7 +248,7 @@ namespace Templater::dynamic {
             for (size_t i = 0; i < children->size(); i++) {
                 if (children->at(i).get() == childToRemove) {
     
-                    this->indexParse([&childToRemove, this](index::Index* id) -> void {
+                    this->indexParse([&childToRemove, this](Node::Index* id) -> void {
                         if (id->getRoot() == this) {
                             childToRemove->removeIndex(id);
                         }
@@ -473,7 +473,7 @@ namespace Templater::dynamic {
             if (attr.getName() == name) {
                 attr.setValue(newValue);
 
-                this->indexParse([this](index::Index* id) -> void {
+                this->indexParse([this](Node::Index* id) -> void {
                     id->update(this);
                 });
                 return;
@@ -481,7 +481,7 @@ namespace Templater::dynamic {
         }
 
         this->attributes.emplace_back(name, newValue);
-        this->indexParse([this](index::Index* id) -> void {
+        this->indexParse([this](Node::Index* id) -> void {
             id->update(this);
         });
     }
@@ -491,7 +491,7 @@ namespace Templater::dynamic {
             if (index->getName() == name) {
                 this->attributes.erase(index);
 
-                this->indexParse([this](index::Index* id) -> void {
+                this->indexParse([this](Node::Index* id) -> void {
                     id->update(this);
                 });
                 
@@ -693,7 +693,7 @@ namespace Templater::dynamic {
         for (auto& attr: this->attributes) {
             if (attr.getName() == name) {
                 return ObservableStringRef(&(attr.getValueMutable()), [this]() { 
-                    this->indexParse([this](index::Index* id) -> void {
+                    this->indexParse([this](Node::Index* id) -> void {
                         id->update(this);
                     });
                  });

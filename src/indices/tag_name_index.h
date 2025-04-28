@@ -8,7 +8,7 @@ namespace Templater::dynamic::index {
      * @brief An Index which keeps track of all nodes with a specific tag name. The underlying index structure is an std::vector.
      * 
      */
-    class TagNameIndex: public Index {
+    class TagNameIndex: public Node::Index {
         private:
             /**
              * @brief The tag name to index. Constant from creation.

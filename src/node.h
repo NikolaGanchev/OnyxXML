@@ -62,7 +62,8 @@ namespace Templater::dynamic {
      */
     class Node {
         friend dtags::EmptyNode;
-        friend index::Index;
+        public: 
+            class Index;
         private:
             /**
              * @brief An observable constant std::string reference. 
@@ -182,7 +183,7 @@ namespace Templater::dynamic {
              * @brief A vector holding raw pointers to the indices of this node
              * 
              */
-            std::vector<index::Index*> indices;
+            std::vector<Node::Index*> indices;
 
             
             /**
@@ -225,14 +226,14 @@ namespace Templater::dynamic {
              * 
              * @param index 
              */
-            void addIndex(index::Index* index);
+            void addIndex(Node::Index* index);
 
             /**
              * @brief Removes an index from the current object's indices and from all its children. Calls Index::removeIfNeeded() for every Node in the tree.
              * 
              * @param index 
              */
-            void removeIndex(index::Index* index);
+            void removeIndex(Node::Index* index);
 
             /**
              * @brief Replaces the address of of one index with another without changing any of the index contents. Internal use only.
@@ -240,14 +241,14 @@ namespace Templater::dynamic {
              * @param oldIndex
              * @param newIndex
              */
-            void replaceIndex(index::Index* oldIndex, index::Index* newIndex);
+            void replaceIndex(Node::Index* oldIndex, Node::Index* newIndex);
 
             /**
              * @brief Safely iterates over indices
              * 
              * @param callback Runs for every index of the current object
              */
-            void indexParse(const std::function<void(index::Index*)>& callback);
+            void indexParse(const std::function<void(Node::Index*)>& callback);
 
 
             /**
@@ -276,7 +277,7 @@ namespace Templater::dynamic {
              * 
              */
             void takeOverIndices(Node& other);
-        public:  
+        public:
             /**
              * @brief Used during serialization for keeping track of nodes.
              * 
@@ -744,7 +745,7 @@ Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild) requi
     std::unique_ptr<T> obj = std::make_unique<std::decay_t<T>>(std::forward<T>(newChild));
     (dynamic_cast<Node*>(obj.get()))->_isInTree = true;
     
-    this->indexParse([&obj](index::Index* id) -> void {
+    this->indexParse([&obj](Node::Index* id) -> void {
         (dynamic_cast<Node*>(obj.get()))->addIndex(id);
     });
 

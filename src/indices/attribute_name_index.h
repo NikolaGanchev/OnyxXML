@@ -10,7 +10,7 @@ namespace Templater::dynamic::index {
      * The underlying index data structure is an std::unordered_map.
      * 
      */
-    class AttributeNameIndex: public Index {
+    class AttributeNameIndex: public Node::Index {
         private:
             /**
              * @brief The attribute name to index. Constant from creation.

@@ -8,7 +8,7 @@ namespace Templater::dynamic::index {
      * If the tree changes in any way, this Index will invalidate its inner cache and delete all entries inside it.
      * The underlying data structure is an std::unordered_map.
      */
-    class CacheIndex: public Index {
+    class CacheIndex: public Node::Index {
         private:
             /**
              * @brief The std::unordered_map holding the cache. 

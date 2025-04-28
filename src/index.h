@@ -6,71 +6,73 @@
 #include <any>
 #include <stdexcept>
 
-namespace Templater::dynamic::index {
+namespace Templater::dynamic {
 
-    /**
-     * @brief Checks if the template parameter is a subclass of Index. 
-     * 
-     * @tparam T 
-     */
-    template <typename T>
-    concept isIndex = std::derived_from<T, Index>;
-    
-    
-    /**
-     * @brief Creates an Index of type T using the provided args.
-     * 
-     * @tparam T 
-     * @tparam Args 
-     * @returns T The constructed Index
-     */
-    template <typename T, typename... Args>
-    T createIndex(Args&&... args) requires (isIndex<T>); 
+    namespace index {
+            /**
+         * @brief Checks if the template parameter is a subclass of Index. 
+         * 
+         * @tparam T 
+         */
+        template <typename T>
+        concept isIndex = std::derived_from<T, Node::Index>;
+        
+        
+        /**
+         * @brief Creates an Index of type T using the provided args.
+         * 
+         * @tparam T 
+         * @tparam Args 
+         * @returns T The constructed Index
+         */
+        template <typename T, typename... Args>
+        T createIndex(Args&&... args) requires (isIndex<T>); 
+        
+        
+        /**
+         * @brief Creates a raw pointer to an Index of type T using the provided args. It is the caller's responsibility to delete the pointer.
+         * 
+         * @tparam T 
+         * @tparam Args 
+         * @returns T* A pointer to the created Index
+         */
+        template <typename T, typename... Args>
+        T* createIndexPointer(Args&&... args) requires (isIndex<T>);
+        
+        
+        /**
+         * @brief Creates a unique pointer to an Index of type T using the provided args and transfer ownership to the caller.
+         * 
+         * @tparam T 
+         * @tparam Args 
+         */
+        template <typename T, typename... Args>
+        std::unique_ptr<T> createIndexUniquePointer(Args&&... args) requires (isIndex<T>);
+        
+        /**
+         * @brief Creates a shared pointer to an Index of type T using the provided args and returns it to the user.
+         * 
+         * @tparam T 
+         * @tparam Args 
+         */
+        template <typename T, typename... Args>
+        std::shared_ptr<T> createIndexSharedPointer(Args&&... args) requires (isIndex<T>);
+        
+        #define BEFRIEND_INDEX_CREATOR_FUNCTIONS template <typename T, typename... Args>\
+                                            friend T Templater::dynamic::index::createIndex(Args&&... args) requires (isIndex<T>);\
+                                            template <typename T, typename... Args>\
+                                            friend T* Templater::dynamic::index::createIndexPointer(Args&&... args) requires (isIndex<T>);\
+                                            template <typename T, typename... Args>\
+                                            friend std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args&&... args) requires (isIndex<T>);\
+                                            template <typename T, typename... Args>\
+                                            friend std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args&&... args) requires (isIndex<T>);
+        
+        #define DELETE_INDEX_COPY_OPERATIONS(ClassName)\
+            ClassName(ClassName& other) = delete;\
+            ClassName& operator=(ClassName& other) = delete;\
+        
 
-
-    /**
-     * @brief Creates a raw pointer to an Index of type T using the provided args. It is the caller's responsibility to delete the pointer.
-     * 
-     * @tparam T 
-     * @tparam Args 
-     * @returns T* A pointer to the created Index
-     */
-    template <typename T, typename... Args>
-    T* createIndexPointer(Args&&... args) requires (isIndex<T>);
-
-
-    /**
-     * @brief Creates a unique pointer to an Index of type T using the provided args and transfer ownership to the caller.
-     * 
-     * @tparam T 
-     * @tparam Args 
-     */
-    template <typename T, typename... Args>
-    std::unique_ptr<T> createIndexUniquePointer(Args&&... args) requires (isIndex<T>);
-
-    /**
-     * @brief Creates a shared pointer to an Index of type T using the provided args and returns it to the user.
-     * 
-     * @tparam T 
-     * @tparam Args 
-     */
-    template <typename T, typename... Args>
-    std::shared_ptr<T> createIndexSharedPointer(Args&&... args) requires (isIndex<T>);
-
-    #define BEFRIEND_INDEX_CREATOR_FUNCTIONS template <typename T, typename... Args>\
-                                        friend T Templater::dynamic::index::createIndex(Args&&... args) requires (isIndex<T>);\
-                                        template <typename T, typename... Args>\
-                                        friend T* Templater::dynamic::index::createIndexPointer(Args&&... args) requires (isIndex<T>);\
-                                        template <typename T, typename... Args>\
-                                        friend std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(Args&&... args) requires (isIndex<T>);\
-                                        template <typename T, typename... Args>\
-                                        friend std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(Args&&... args) requires (isIndex<T>);
-
-    #define DELETE_INDEX_COPY_OPERATIONS(ClassName)\
-        ClassName(ClassName& other) = delete;\
-        ClassName& operator=(ClassName& other) = delete;\
-
-    #define ADD_INDEX_MOVE_OPERATIONS(Access, ClassName, ...)\
+        #define ADD_INDEX_MOVE_OPERATIONS(Access, ClassName, ...)\
         private:\
             template<typename... MemberPtrs>\
             void _add_index_move_members_helper(ClassName&& other, MemberPtrs... mptrs) noexcept {\
@@ -88,6 +90,7 @@ namespace Templater::dynamic::index {
                 return *this;\
             };
 
+    }
     /**
      * @brief Indexes are non-owning indexings over a Node. 
      * A node with an Index also holds a non owning pointer to it. 
@@ -127,7 +130,7 @@ namespace Templater::dynamic::index {
      * Any index queries are, unless specified otherwise, only valid from the viewpoint of the root Node.
      * 
      */
-    class Index {
+    class Node::Index {
         friend Node;
         private:
             /**
