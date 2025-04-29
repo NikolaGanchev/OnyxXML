@@ -11,6 +11,12 @@ namespace Templater::dynamic::dtags {
      */
     class Comment: public Text {
         using Text::Text;
+        private:
+            static constexpr std::array<const char*, 128> escapeTable = []() {
+                std::array<const char*, 128> table{};
+                table['-'] = "&#45;";
+                return table;
+            }();
         protected:
             void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
             void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;

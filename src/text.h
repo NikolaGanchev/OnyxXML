@@ -35,5 +35,22 @@ namespace Templater::dynamic {
          * @return uint32_t The codepoint if the sequence is valid, otherwise 0.
          */
         uint32_t getUnicodeCodepoint(const char* read);
+
+        /**
+         * @brief Escape a string from XML injection causing elements.
+         * This function does not provide the escape elements, they must be passed in escapeTable.
+         * It can also escape unicode sequences if the escapeMultiByte argument is set to true.
+         * Unicode sequences can be unsafe in environments that do not support UTF-8 and can be used to create injections. 
+         * Unicode escaping escapes any unicode sequence to an XML/HTML entity. 
+         * Due to the runtime cost and overall low risk this is false by default.
+         * For maximum performance, the escapeTable should be constexpr.
+         * 
+         * 
+         * @param str 
+         * @param escapeTable
+         * @param escapeMultiByte Whether Unicode characters should be escaped
+         * @return std::string 
+         */
+        std::string escape(const std::string& str, const std::array<const char*, 128>& escapeTable, bool escapeMultiByte = false);
     }
 }

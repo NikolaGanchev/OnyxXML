@@ -5,12 +5,14 @@
 #include <queue>
 
 namespace Templater::dynamic::text {
+
+
     // Escapes a given string so that it is safe for use in HTML contexts.
     // This function replaces reserved HTML characters with their corresponding entities
     // and converts non-ASCII characters to numeric HTML entities if enabled
     // Note: non-ASCII character escaping is disabled by default
     std::string escape(const std::string& str, bool escapeMultiByte) {
-
+        
         // Table of characters that must be escaped in HTML to their corresponding entity strings to keep HTML integrity
         static constexpr std::array<const char*, 128> escapeTable = []() {
             std::array<const char*, 128> table{};
@@ -22,6 +24,13 @@ namespace Templater::dynamic::text {
             return table;
         }();
 
+        return escape(str, escapeTable, escapeMultiByte);
+    }
+
+
+    // Escapes a given string.
+    // Note: non-ASCII character escaping is disabled by default
+    std::string escape(const std::string& str, const std::array<const char*, 128>& escapeTable, bool escapeMultiByte) {
         // A Queue to hold numeric HTML entities for multi-byte (non-ASCII) Unicode characters.
         std::queue<uint32_t> codepointSequence;
         std::unordered_map<uint32_t, std::string> dictionary{};
