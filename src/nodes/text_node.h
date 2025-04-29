@@ -53,7 +53,7 @@ namespace Templater::dynamic::dtags {
              * 
              * @param other 
              */
-            explicit Text(Text&& other); 
+            explicit Text(Text&& other) noexcept; 
 
 
             /**
@@ -61,7 +61,7 @@ namespace Templater::dynamic::dtags {
              * 
              * @param other 
              */
-            Text& operator=(Text&& other); 
+            Text& operator=(Text&& other) noexcept; 
 
 
             bool isVoid() const override;

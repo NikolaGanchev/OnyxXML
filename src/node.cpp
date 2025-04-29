@@ -11,7 +11,7 @@ namespace Templater::dynamic {
     Node::Node()
         : attributes{}, children{}, indices{}, _isInTree{false} { }
 
-    Node::Node(Node&& other)
+    Node::Node(Node&& other) noexcept
         : attributes{std::move(other.attributes)}, children{std::move(other.children)}, indices{std::move(other.indices)}, _isInTree{other._isInTree} {
         this->takeOverIndices(other);
     }
@@ -23,7 +23,7 @@ namespace Templater::dynamic {
         }
     }
     
-    Node& Node::operator=(Node&& other) {
+    Node& Node::operator=(Node&& other) noexcept {
         if (this == &other) return *this;
         this->destroy();
         this->attributes = std::move(other.attributes);

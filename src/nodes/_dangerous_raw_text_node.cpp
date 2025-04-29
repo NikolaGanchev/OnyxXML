@@ -5,9 +5,9 @@ namespace Templater::dynamic::dtags {
     __DangerousRawText::__DangerousRawText(std::string text): text(text), Node{} {}
 
     __DangerousRawText::__DangerousRawText(const __DangerousRawText& other): text(other.text), Node{} {}
-    __DangerousRawText::__DangerousRawText(__DangerousRawText&& other): text(std::move(other.text)), Node{} {}
+    __DangerousRawText::__DangerousRawText(__DangerousRawText&& other) noexcept: text(std::move(other.text)), Node{} {}
 
-    __DangerousRawText& __DangerousRawText::operator=(__DangerousRawText&& other) {
+    __DangerousRawText& __DangerousRawText::operator=(__DangerousRawText&& other) noexcept{
         if (this == &other) return *this;
         this->text = std::move(other.text);
         Node::operator=(std::move(other));

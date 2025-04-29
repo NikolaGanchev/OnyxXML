@@ -5,9 +5,9 @@ namespace Templater::dynamic::dtags {
     Text::Text(std::string text, bool escapeMultiByte): text(text), escapeMultiByte(escapeMultiByte), Node{} {}
 
     Text::Text(const Text& other): text(other.text), escapeMultiByte(other.escapeMultiByte), Node{} {}
-    Text::Text(Text&& other): text(std::move(other.text)), escapeMultiByte(other.escapeMultiByte), Node{} {}
+    Text::Text(Text&& other) noexcept: text(std::move(other.text)), escapeMultiByte(other.escapeMultiByte), Node{} {}
 
-    Text& Text::operator=(Text&& other) {
+    Text& Text::operator=(Text&& other) noexcept {
         if (this == &other) return *this;
         this->text = std::move(other.text);
         this->escapeMultiByte = other.escapeMultiByte;

@@ -59,7 +59,7 @@ namespace Templater::dynamic::dtags {
              * 
              * @param other 
              */
-            explicit GenericNode(Node&& other);
+            explicit GenericNode(Node&& other) noexcept;
 
 
             /**
@@ -68,7 +68,7 @@ namespace Templater::dynamic::dtags {
              * @param other 
              * @return GenericNode& 
              */
-            GenericNode& operator=(Node&& other);
+            GenericNode& operator=(Node&& other) noexcept;
             const std::string& getTagName() const override;
             bool isVoid() const override;
             std::unique_ptr<Node> shallowCopy() const override;

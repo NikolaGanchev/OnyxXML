@@ -356,7 +356,7 @@ namespace Templater::dynamic {
              * 
              * @param other 
              */
-            explicit Node(Node&& other);
+            explicit Node(Node&& other) noexcept;
 
 
             /**
@@ -365,7 +365,7 @@ namespace Templater::dynamic {
              * @param other 
              * @return Node& 
              */
-            Node& operator=(Node&& other);
+            Node& operator=(Node&& other) noexcept;
 
 
             /**

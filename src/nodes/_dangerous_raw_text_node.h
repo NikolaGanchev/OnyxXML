@@ -39,7 +39,7 @@ namespace Templater::dynamic::dtags {
              * 
              * @param other 
              */
-            explicit __DangerousRawText(__DangerousRawText&& other); 
+            explicit __DangerousRawText(__DangerousRawText&& other) noexcept; 
 
 
             /**
@@ -47,7 +47,7 @@ namespace Templater::dynamic::dtags {
              * 
              * @param other 
              */
-            __DangerousRawText& operator=(__DangerousRawText&& other); 
+            __DangerousRawText& operator=(__DangerousRawText&& other) noexcept; 
 
 
             bool isVoid() const override;

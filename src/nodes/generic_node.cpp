@@ -20,9 +20,9 @@ namespace Templater::dynamic::dtags {
         return this->_isVoid;
     }
 
-    GenericNode::GenericNode(Node&& other): tag{other.getTagName()}, _isVoid{other.isVoid()}, Node{std::move(other)} {};
+    GenericNode::GenericNode(Node&& other) noexcept: tag{other.getTagName()}, _isVoid{other.isVoid()}, Node{std::move(other)} {};
 
-    GenericNode& GenericNode::operator=(Node&& other) {
+    GenericNode& GenericNode::operator=(Node&& other) noexcept {
         if (this == &other) return *this;
         this->_isVoid = other.isVoid();
         this->tag = other.getTagName();
