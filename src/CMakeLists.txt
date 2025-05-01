@@ -20,6 +20,7 @@ target_sources(
         "nodes/generic_node.cpp"
         "nodes/comment_node.cpp"
         "nodes/_dangerous_raw_text_node.cpp"
+        "nodes/foreach_node.cpp"
 )
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.cpp" COPYONLY)

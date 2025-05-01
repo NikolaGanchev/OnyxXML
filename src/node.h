@@ -17,6 +17,7 @@ namespace Templater::dynamic {
 
     namespace dtags {
         class EmptyNode;
+        class ForEach;
     }
 
     /**
@@ -62,6 +63,7 @@ namespace Templater::dynamic {
      */
     class Node {
         friend dtags::EmptyNode;
+        friend dtags::ForEach;
         public: 
             class Index;
         private:

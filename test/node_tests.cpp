@@ -782,7 +782,6 @@ TEST_CASE("Complex templated runtime api html with constant tags", "[Node]" ) {
     CHECK(expected == doc4);
 }
 
-
 TEST_CASE("HTML is correctly serialized") {
     using namespace Templater::compile;
     using namespace Templater::compile::ctags;
@@ -1384,4 +1383,95 @@ TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
 
     obj = std::move(GenericNode("html", false));
     REQUIRE_FALSE(index.isValid());
+}
+
+TEST_CASE("ForEach Node unique_ptr constructor works") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    ul normalConstructed{
+        li(Text("1")),
+        li(Text("2")),
+        li(Text("3")),
+        li(Text("4")),
+        li(Text("5"))
+    };
+
+    ul forEachConstructed{
+        ForEach{std::array<int, 5>{1, 2, 3, 4, 5}, [](int index, const std::array<int, 5>& container) {
+            return std::make_unique<li>(Text(std::to_string(container[index])));
+        }}
+    };
+
+    REQUIRE(normalConstructed.serialize() == forEachConstructed.serialize());
+}
+
+TEST_CASE("ForEach Node unique_ptr constructor works with different types") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    cdiv normalConstructed{
+        section(Text("1")),
+        cdiv(Text("2")),
+        section(Text("3")),
+        cdiv(Text("4")),
+        section(Text("5"))
+    };
+
+    cdiv forEachConstructed{
+      ForEach{std::array<int, 5>{1, 2, 3, 4, 5}, [](int index, const std::array<int, 5>& container) -> std::unique_ptr<Node> {
+          if (container[index] % 2 == 0) {
+              return std::make_unique<cdiv>(Text(std::to_string(container[index])));
+          } else {
+              return std::make_unique<section>(Text(std::to_string(container[index])));
+          }
+      }}
+    };
+
+    REQUIRE(normalConstructed.serialize() == forEachConstructed.serialize());
+}
+
+TEST_CASE("ForEach Node type-locked constructor works") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    ul normalConstructed{
+        li(Text("1")),
+        li(Text("2")),
+        li(Text("3")),
+        li(Text("4")),
+        li(Text("5"))
+    };
+
+    ul forEachConstructed{
+        ForEach{std::array<int, 5>{1, 2, 3, 4, 5}, [](int index, const std::array<int, 5>& container) {
+            return li(Text(std::to_string(container[index])));
+        }}
+    };
+
+    REQUIRE(normalConstructed.serialize() == forEachConstructed.serialize());
+}
+
+TEST_CASE("ForEach Node works with strings") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    cdiv obscured{
+        span(Text("o")),
+        span(Text("b")),
+        span(Text("s")),
+        span(Text("c")),
+        span(Text("u")),
+        span(Text("r")),
+        span(Text("e")),
+        span(Text("d")),
+    };
+
+    cdiv forEachConstructed{
+        ForEach{std::string("obscured"), [](int index, const std::string& container) {
+            return span(Text(std::string(1, container[index])));
+        }}
+    };
+
+    REQUIRE(obscured.serialize() == forEachConstructed.serialize());
 }
