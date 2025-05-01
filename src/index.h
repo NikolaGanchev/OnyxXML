@@ -107,7 +107,7 @@ namespace Templater::dynamic {
      * Example usage of creators: 
      * @code{}
      *  index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "id");
-     * @endcode{}
+     * @endcode
      * 
      * Indices are non-copyable but movable. Each subclass must provide its own move constructor and move assignment operator.
      * Using the provided creators requires the existence of move constructors/assignment. Otherwise the code won't compile.
