@@ -73,7 +73,7 @@ namespace Templater::dynamic::dtags {
             If(bool condition, T&& nodeTrue, K&& nodeFalse) requires (isValidNodeChild<T> && isValidNodeChild<K>);
 
             /**
-             * @brief The tag name of an If node is the invalid xml tag name ".IF". 
+             * @brief The tag name of an If node is the invalid xml tag name ".if". 
              * This signals it shouldn't be used as a tag and is a marker of the class.
              * 
              * @return const std::string& 
