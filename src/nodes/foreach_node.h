@@ -25,16 +25,17 @@ namespace Templater::dynamic::dtags {
      *          return li(Text(std::to_string(container[index])));
      *      }}
      * };
+     * @endcode
      * 
-     * forEachConstructed.serialize() returns:
+     * forEachConstructed.prettySerialize("\t", false) returns:
+     * @code{.xml}
      * <ul>
      *  <li>0</li>
      *  <li>1</li>
      *  <li>2</li>
      *  <li>3</li>
      *  <li>4</li>
-     * </ul>
-     *
+     * </ul>    
      * @endcode
      * 
      */
@@ -106,7 +107,6 @@ namespace Templater::dynamic::dtags {
              * };
              * @endcode
              * 
-             * 
              * @tparam Iter std::forward_iterator
              * @tparam Func std::function<ReturnType(Iter)> where ReturnType can be either unique_ptr<Node> (if returning different Node subclasses) or any Node subclass (if returning only it)
              * @param first begin iterator
@@ -115,7 +115,73 @@ namespace Templater::dynamic::dtags {
              */
             template<std::forward_iterator Iter, typename Func>
             ForEach(Iter first, Iter last, Func producer);
-            
+
+            /**
+             * @brief Construct a ForEach object via a range. The range in inclusive, meaning producer will be called with begin and continue until end, inclusive.
+             * Note: end may be skipped depending on the step.
+             * The producer function can either return unique_ptr<Node> (if returning different Node subclasses) or any Node subclass (if returning only it)
+             * Example usage with the same node type:
+             * @code{.cpp}
+             * ul forEachConstructed{
+             *  ForEach{1, 5, 2, [](int index) {
+             *    return li(Text(std::to_string(index)));
+             *  }}
+             * };
+             * @endcode
+             * 
+             * forEachConstructed.prettySerialize("\t", false) returns:
+             * 
+             * @code{.xml}
+             * <ul>
+             *  <li>1</li>
+             *  <li>3</li>
+             *  <li>5</li>
+             * <ul>
+             * @endcode
+             * 
+             * @tparam Func std::function<ReturnType(int)> where ReturnType can be either unique_ptr<Node> (if returning different Node subclasses) or any Node subclass (if returning only it)
+             * @param begin starting index
+             * @param end ending index, inclusive
+             * @param step how much the index gets incremented on every iteration
+             * @param producer 
+             */
+            template<typename Func>
+            ForEach(int begin, int end, int step, Func producer);
+
+
+            /**
+             * @brief Construct a ForEach object via a range. The range in inclusive, meaning producer will be called with begin and continue until end, inclusive.
+             * The producer function can either return unique_ptr<Node> (if returning different Node subclasses) or any Node subclass (if returning only it)
+             * Example usage with the same node type:
+             * @code{.cpp}
+             * ul forEachConstructed{
+             *  ForEach{1, 5, [](int index) {
+             *    return li(Text(std::to_string(index)));
+             *  }}
+             * };
+             * @endcode
+             * 
+             * forEachConstructed.prettySerialize("\t", false) returns:
+             * 
+             * @code{.xml}
+             * <ul>
+             *  <li>1</li>
+             *  <li>2</li>
+             *  <li>3</li>
+             *  <li>4</li>
+             *  <li>5</li>
+             * <ul>
+             * @endcode
+             * Equivalent to calling ForEach(int begin, int end, int step, Func producer) with step = 1.
+             * 
+             * @tparam Func std::function<ReturnType(int)> where ReturnType can be either unique_ptr<Node> (if returning different Node subclasses) or any Node subclass (if returning only it)
+             * @param begin starting index
+             * @param end ending index, inclusive
+             * @param producer 
+             */
+            template<typename Func>
+            ForEach(int begin, int end, Func producer);
+
 
             /**
              * @brief The tag name of an empty node is the invalid xml tag name ".foreach". 
@@ -153,4 +219,20 @@ namespace Templater::dynamic::dtags {
             this->addChild(std::move(producer_(first)));
         }
     }
+
+    template<typename Func>
+    ForEach::ForEach(int begin, int end, int step, Func producer) {
+        using ReturnType = std::invoke_result_t<Func, int>;
+
+        std::function<ReturnType(int)> producer_;
+        producer_ = std::forward<Func>(producer);
+
+        for (int i = begin; i <= end; i += step) {
+            this->addChild(std::move(producer_(i)));
+        }
+    }
+
+
+    template<typename Func>
+    ForEach::ForEach(int begin, int end, Func producer): ForEach(begin, end, 1, std::forward<Func>(producer)) {}
 }

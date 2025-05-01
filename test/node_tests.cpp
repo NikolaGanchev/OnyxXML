@@ -1488,7 +1488,7 @@ TEST_CASE("ForEach Node iterator constructor works") {
         "Text 5"
     };
 
-    ul obscured{
+    ul normalConstructed{
         li(Text(text[0])),
         li(Text(text[1])),
         li(Text(text[2])),
@@ -1502,5 +1502,46 @@ TEST_CASE("ForEach Node iterator constructor works") {
         }}
     };
 
-    REQUIRE(obscured.serialize() == forEachConstructed.serialize());
+    REQUIRE(normalConstructed.serialize() == forEachConstructed.serialize());
+}
+
+TEST_CASE("ForEach Node no step range constructor works") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    ul normalConstructed{
+        li(Text("1")),
+        li(Text("2")),
+        li(Text("3")),
+        li(Text("4")),
+        li(Text("5"))
+    };
+
+    ul forEachConstructed{
+        ForEach{1, 5, [](int index) {
+            return li(Text(std::to_string(index)));
+        }}
+    };
+
+    REQUIRE(normalConstructed.serialize() == forEachConstructed.serialize());
+}
+
+
+TEST_CASE("ForEach Node step range constructor works") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    ul normalConstructed{
+        li(Text("1")),
+        li(Text("3")),
+        li(Text("5"))
+    };
+
+    ul forEachConstructed{
+        ForEach{1, 5, 2, [](int index) {
+            return li(Text(std::to_string(index)));
+        }}
+    };
+
+    REQUIRE(normalConstructed.serialize() == forEachConstructed.serialize());
 }
