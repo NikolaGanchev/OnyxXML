@@ -13,6 +13,7 @@
 #include "nodes/comment_node.h"
 #include "nodes/_dangerous_raw_text_node.h"
 #include "nodes/foreach_node.h"
+#include "nodes/if_node.h"
 #include "compile/compile_attribute.h"
 #include "compile/compile_comment.h"
 #include "compile/compile_text.h"

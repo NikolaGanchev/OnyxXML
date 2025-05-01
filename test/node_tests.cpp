@@ -1545,3 +1545,71 @@ TEST_CASE("ForEach Node step range constructor works") {
 
     REQUIRE(normalConstructed.serialize() == forEachConstructed.serialize());
 }
+
+TEST_CASE("If Node chooses correctly") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    cdiv nodeTrue{
+        If(5 > 2, 
+            Text("True"),
+            Text("False"))
+    };
+
+    cdiv nodeFalse{
+        If(3 > 5, 
+            Text("True"),
+            Text("False"))
+    };
+
+    REQUIRE(nodeTrue.serialize() == "<div>True</div>");
+    REQUIRE(nodeFalse.serialize() == "<div>False</div>");
+}
+
+TEST_CASE("If Node works with different Node argument types") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    std::string expected = "<div>True</div>";
+
+    SECTION("Node&& and Node&&") {
+        cdiv nodeTrue{
+            If(5 > 2, 
+                Text("True"),
+                Text("False"))
+        };
+
+        REQUIRE(nodeTrue.serialize() == expected);
+    }
+    SECTION("Node&& and std::unique_ptr<Node>") {
+        std::unique_ptr<Node> text = std::make_unique<Text>("False");
+        cdiv nodeTrue{
+            If(5 > 2, 
+                Text("True"),
+                std::move(text))
+        };
+
+        REQUIRE(nodeTrue.serialize() == expected);
+    }
+    SECTION("std::unique_ptr<Node> and Node&&") {
+        std::unique_ptr<Node> text = std::make_unique<Text>("True");
+        cdiv nodeTrue{
+            If(5 > 2, 
+                std::move(text),
+                Text("False"))
+        };
+
+        REQUIRE(nodeTrue.serialize() == expected);
+    }
+    SECTION("std::unique_ptr<Node> and std::unique_ptr<Node>") {
+        std::unique_ptr<Node> textTrue = std::make_unique<Text>("True");
+        std::unique_ptr<Node> textFalse = std::make_unique<Text>("True");
+        cdiv nodeTrue{
+            If(5 > 2, 
+                std::move(textTrue),
+                std::move(textFalse))
+        };
+
+        REQUIRE(nodeTrue.serialize() == expected);
+    }
+}
