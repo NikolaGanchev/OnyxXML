@@ -572,15 +572,7 @@ namespace Templater::dynamic {
             template <typename T>
             Node& operator+=(T&& right) requires (isNode<T>);
 
-
-            /**
-             * @brief Currently only checks pointer equality.
-             * 
-             * @param right 
-             * @return true 
-             * @return false 
-             */
-            bool operator==(Node& right);
+            bool operator==(Node& right) = delete;
 
             /**
              * @brief Removes a child from the current node iteratively. Any child in the tree with the current node as root is searched. 

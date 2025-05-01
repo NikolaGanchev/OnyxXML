@@ -671,7 +671,6 @@ namespace Templater::dynamic {
     bool Node::ObservableStringRef::operator==(const std::string& str) const { 
         return *this->ptr == str; 
     }
-
     
     bool Node::ObservableStringRef::operator!=(const std::string& str) const {
         return !(*this == str); 
@@ -706,10 +705,6 @@ namespace Templater::dynamic {
     Node& Node::operator+=(std::unique_ptr<Node> right) {
         addChild(std::move(right));
         return (*this);
-    }
-
-    bool Node::operator==(Node& right) {
-        return this == &right;
     }
 
     std::string Node::indentationSequence = "\t";
