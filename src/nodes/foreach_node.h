@@ -87,6 +87,37 @@ namespace Templater::dynamic::dtags {
         
 
             /**
+             * @brief Construct a ForEach object via a forward iterator.
+             * The producer function can either return unique_ptr<Node> (if returning different Node subclasses) or any Node subclass (if returning only it)
+             * Example usage with the same node type:
+             * @code{.cpp}
+             * std::vector<std::string> text = {
+             *  "Text 1",
+             *  "Text 2",
+             *  "Text 3",
+             *  "Text 4",
+             *  "Text 5"
+             * };
+             * 
+             * ul forEachConstructed{
+             *  ForEach{text.begin(), text.end(), [](auto iterator) {
+             *    return li(Text(*iterator));
+             *  }}
+             * };
+             * @endcode
+             * 
+             * 
+             * @tparam Iter std::forward_iterator
+             * @tparam Func std::function<ReturnType(Iter)> where ReturnType can be either unique_ptr<Node> (if returning different Node subclasses) or any Node subclass (if returning only it)
+             * @param first begin iterator
+             * @param last end iterator
+             * @param producer 
+             */
+            template<std::forward_iterator Iter, typename Func>
+            ForEach(Iter first, Iter last, Func producer);
+            
+
+            /**
              * @brief The tag name of an empty node is the invalid xml tag name ".foreach". 
              * This signals it shouldn't be used as a tag and is a marker of the class.
              * 
@@ -108,6 +139,18 @@ namespace Templater::dynamic::dtags {
 
         for (size_t i = 0; i < container.size(); i++) {
             this->addChild(std::move(producer_(i, container)));
+        }
+    }
+
+    template<std::forward_iterator Iter, typename Func>
+    ForEach::ForEach(Iter first, Iter last, Func producer) {
+        using ReturnType = std::invoke_result_t<Func, Iter>;
+
+        std::function<ReturnType(Iter)> producer_;
+        producer_ = std::forward<Func>(producer);
+
+        for (; first != last; ++first) {
+            this->addChild(std::move(producer_(first)));
         }
     }
 }

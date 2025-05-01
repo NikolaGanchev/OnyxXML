@@ -1475,3 +1475,32 @@ TEST_CASE("ForEach Node works with strings") {
 
     REQUIRE(obscured.serialize() == forEachConstructed.serialize());
 }
+
+TEST_CASE("ForEach Node iterator constructor works") {
+    using namespace Templater::dynamic;
+    using namespace Templater::dynamic::dtags;
+
+    std::vector<std::string> text = {
+        "Text 1",
+        "Text 2",
+        "Text 3",
+        "Text 4",
+        "Text 5"
+    };
+
+    ul obscured{
+        li(Text(text[0])),
+        li(Text(text[1])),
+        li(Text(text[2])),
+        li(Text(text[3])),
+        li(Text(text[4]))
+    };
+
+    ul forEachConstructed{
+        ForEach{text.begin(), text.end(), [](auto iterator) {
+            return li(Text(*iterator));
+        }}
+    };
+
+    REQUIRE(obscured.serialize() == forEachConstructed.serialize());
+}
