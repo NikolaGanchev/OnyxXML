@@ -726,4 +726,8 @@ namespace Templater::dynamic {
     bool Node::getSortAttributes() {
         return sortAttributes;
     }
+
+    const std::vector<std::unique_ptr<Node>>& Node::getChildrenLive() const {
+        return this->children;
+    }
 }

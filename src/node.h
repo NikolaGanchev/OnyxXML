@@ -279,6 +279,14 @@ namespace Templater::dynamic {
              * 
              */
             void takeOverIndices(Node& other);
+
+        protected:
+            /**
+             * @brief Get a reference to the live children std::vector
+             * 
+             * @return const std::vector<std::unique_ptr<Node>>& 
+             */
+            const std::vector<std::unique_ptr<Node>>& getChildrenLive() const;
         public:
             /**
              * @brief Used during serialization for keeping track of nodes.
