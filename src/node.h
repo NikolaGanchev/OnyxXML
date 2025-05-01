@@ -584,7 +584,7 @@ namespace Templater::dynamic {
 
             /**
              * @brief Removes a child from the current node iteratively. Any child in the tree with the current node as root is searched. 
-             * If the child is found, is is removed from uts parent, isInTree is set to false and ownership is transferred back to the caller via the return value.
+             * If the child is found, is is removed from its parent, isInTree is set to false and ownership is transferred back to the caller via the return value.
              * Returns nullptr if the child is not found.
              * 
              * @param childToRemove 

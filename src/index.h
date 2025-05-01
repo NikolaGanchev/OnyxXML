@@ -121,10 +121,10 @@ namespace Templater::dynamic {
      *  ADD_INDEX_MOVE_OPERATIONS(public, TagNameIndex, &TagNameIndex::tagName, &TagNameIndex::index);
      * @endcode
      * 
-     * If any special move behaviour is required, the subclass should implement a custom function. For ease of use, the protected methods 
-     * Index::_assign_index_base(Index&& other) and Index::Index(Index&& other) can be called by children to sort out the base class' move behaviour. 
+     * If any special move behavior is required, the subclass should implement a custom function. For ease of use, the protected methods 
+     * Index::_assign_index_base(Index&& other) and Index::Index(Index&& other) can be called by children to sort out the base class' move behavior. 
      * It is expected that upon moving, the new object does not rebuild the index but takes it. The above referred functions internally switch the old
-     * Index* to the new Index* in all relevant nodes. The object being moved should be left in invalid state, ie Index::isValid() should return false.
+     * Index* to the new Index* in all relevant nodes. The object being moved should be left in invalid state, i.e. Index::isValid() should return false.
      * 
      * Subclasses are responsible for providing their own implementations of storage and getters, as well as decide when the Index should be updated.
      * Any index queries are, unless specified otherwise, only valid from the viewpoint of the root Node.
