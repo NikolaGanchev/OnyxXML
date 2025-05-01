@@ -18,8 +18,9 @@ namespace Templater::dynamic::dtags {
 
     void ForEach::specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const {
         stack.pop_back();
-        for (size_t i = this->children.size(); i > 0; --i) {
-            stack.emplace_back(SerializationNode{this->children[i-1].get(), false});
+        const auto& children = this->getChildrenLive();
+        for (size_t i = children.size(); i > 0; --i) {
+            stack.emplace_back(SerializationNode{children[i-1].get(), false});
         }
     }
 

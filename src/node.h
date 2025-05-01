@@ -15,11 +15,6 @@ namespace Templater::dynamic {
         class Index;
     }
 
-    namespace dtags {
-        class EmptyNode;
-        class ForEach;
-    }
-
     /**
      * @brief Checks if the template parameter is s subclass of Node or an Attribute.
      * 
@@ -62,8 +57,6 @@ namespace Templater::dynamic {
      * 
      */
     class Node {
-        friend dtags::EmptyNode;
-        friend dtags::ForEach;
         public: 
             class Index;
         private:

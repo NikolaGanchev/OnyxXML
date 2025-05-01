@@ -184,7 +184,7 @@ namespace Templater::dynamic::dtags {
 
 
             /**
-             * @brief The tag name of an empty node is the invalid xml tag name ".foreach". 
+             * @brief The tag name of a ForEach node is the invalid xml tag name ".foreach". 
              * This signals it shouldn't be used as a tag and is a marker of the class.
              * 
              * @return const std::string& 
