@@ -794,7 +794,7 @@ TEST_CASE("HTML is correctly serialized") {
         >
     >;
 
-    CHECK(std::string(doc::serialize().data()) == "<html lang=\"en\"><head></head><body>Hello world!</body></html>");
+    CHECK(doc::toString() == "<html lang=\"en\"><head></head><body>Hello world!</body></html>");
 }
 
 TEST_CASE("Attributes are serialized correctly") {
@@ -810,7 +810,7 @@ TEST_CASE("Attributes are serialized correctly") {
         >
     >;
 
-    CHECK(std::string(doc::serialize().data()) == "<html theme=\"dark\" lang=\"en\"><head></head><body></body></html>");
+    CHECK(doc::toString() == "<html theme=\"dark\" lang=\"en\"><head></head><body></body></html>");
 }
 
 TEST_CASE("Text nodes are serialized correctly") {
@@ -824,7 +824,7 @@ TEST_CASE("Text nodes are serialized correctly") {
         >
     >;
 
-    CHECK(std::string(doc::serialize().data()) == "<html><head></head><body>This is a test!</body></html>");
+    CHECK(doc::toString() == "<html><head></head><body>This is a test!</body></html>");
 }
 
 TEST_CASE("Void tags are serialized correctly") {
@@ -840,7 +840,7 @@ TEST_CASE("Void tags are serialized correctly") {
         >
     >;
 
-    CHECK(std::string(doc::serialize().data()) == "<html><head></head><body><img src=\"img.jpg\" /></body></html>");
+    CHECK(doc::toString() == "<html><head></head><body><img src=\"img.jpg\" /></body></html>");
 }
 
 TEST_CASE("Comment tags are serialized correctly") {
@@ -857,7 +857,7 @@ TEST_CASE("Comment tags are serialized correctly") {
         >
     >;
 
-    CHECK(std::string(doc::serialize().data()) == "<html><head></head><!--This is a comment!--><body><img src=\"img.jpg\" /></body></html>");
+    CHECK(doc::toString() == "<html><head></head><!--This is a comment!--><body><img src=\"img.jpg\" /></body></html>");
 }
 
 TEST_CASE("UTF-8 text strings are cut off properly") {
@@ -871,8 +871,7 @@ TEST_CASE("UTF-8 text strings are cut off properly") {
         >
     >;
 
-    auto serialized = std::string(doc::serialize().data());
-    CHECK(serialized == "<html><head></head><body>Grüße</body></html>");
+    CHECK(doc::toString() == "<html><head></head><body>Grüße</body></html>");
 }
 
 TEST_CASE("Empty document serializes correctly") {
@@ -880,7 +879,7 @@ TEST_CASE("Empty document serializes correctly") {
     using namespace Templater::compile::ctags;
 
     using doc = Document<>;
-    CHECK(std::string(doc::serialize().data()) == "");
+    CHECK(doc::toString() == "");
 }
 
 TEST_CASE("Deeply nested elements serialize correctly") {
@@ -901,7 +900,7 @@ TEST_CASE("Deeply nested elements serialize correctly") {
         >
     >;
 
-    CHECK(std::string(doc::serialize().data()) ==
+    CHECK(doc::toString() ==
           "<html><head></head><body><div class=\"container\"><div>Nested content</div></div></body></html>");
 }
 
@@ -919,7 +918,7 @@ TEST_CASE("Multiple text nodes are serialized in sequence") {
         >
     >;
 
-    CHECK(std::string(doc::serialize().data()) == "<html><head></head><body>Hello world!</body></html>");
+    CHECK(doc::toString() == "<html><head></head><body>Hello world!</body></html>");
 }
 
 TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {

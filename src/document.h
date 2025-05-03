@@ -73,6 +73,11 @@ namespace Templater::compile {
             return result;
         } 
 
+
+        static std::string toString() {
+            return std::string(serialize().data());
+        }
+
         /**
          * @brief Returns the dynamic tree from the templated arguments. Calculated at runtime.
          * 
