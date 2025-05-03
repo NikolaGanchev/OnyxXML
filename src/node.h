@@ -50,6 +50,13 @@ namespace Templater::dynamic {
     template <typename T>
     concept isAttribute = std::same_as<T, Attribute>;
 
+    /**
+     * @brief  Checks if the type T can be used to call Node::addChild(), i.e., if T is a subclass of Node or std::unique_ptr<Node>.
+     * 
+     * @tparam T 
+     */
+    template<typename T>
+    concept isValidNodeChild = std::same_as<T, std::unique_ptr<Node>> || std::derived_from<std::decay_t<T>, Node>;
 
     /**
      * @brief An abstract class representing an XML Node. Any Node is a tree by itself. Node objects are not aware who its parent is, only if they have one.
