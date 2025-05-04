@@ -540,6 +540,16 @@ namespace Templater::dynamic {
 
             result << "<" << tagName;
 
+            attributes.clear();
+            for (size_t i = 0; i < obj->attributes.size(); i++) {
+                attributes.push_back(&(obj->attributes[i]));
+            }
+
+            for (const auto& attr: attributes) {
+                result << " " << attr->getName() << "=\"" << 
+                    (attr->shouldEscape() ? text::escape(attr->getValue()) : attr->getValue()) << "\"";
+            }
+
             if (!(obj->isVoid())) {
 
                 const std::vector<std::unique_ptr<Node>>& children = obj->children;

@@ -60,7 +60,7 @@ TEST_CASE("Vector constructor works", "[Node]" ) {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("Complex test case generates html", "[Node]" ) {
+TEST_CASE("Complex test case generates pretty html", "[Node]" ) {
     using namespace Templater::dynamic::dtags;
     using namespace Templater::dynamic;
 
@@ -163,6 +163,110 @@ TEST_CASE("Complex test case generates html", "[Node]" ) {
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<meta charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" rel=\"stylesheet\"/>\n\t</head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a href=\"#about\">\n\t\t\t\t\t\t\tAbout Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes various nested elements, attributes, and content.\n\t\t\t\t</p>\n\t\t\t\t<form name=\"contact-form\">\n\t\t\t\t\t<label for=\"name\">\n\t\t\t\t\t\tYour Name:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"name\" name=\"name\" type=\"text\"/>\n\t\t\t\t\t<label for=\"email\">\n\t\t\t\t\t\tYour Email:\n\t\t\t\t\t</label>\n\t\t\t\t\t<input id=\"email\" name=\"email\" type=\"email\"/>\n\t\t\t\t\t<button type=\"submit\">\n\t\t\t\t\t\tSubmit\n\t\t\t\t\t</button>\n\t\t\t\t</form>\n\t\t\t</section>\n\t\t\t<section id=\"features\">\n\t\t\t\t<h2>\n\t\t\t\t\tFeatures\n\t\t\t\t</h2>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 1\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 2\n\t\t\t\t\t</li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\tFeature 3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are the key features of the application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test Page\n\t\t\t</p>\n\t\t\t<a href=\"https://www.example.com\">\n\t\t\t\tPrivacy Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
 
     CHECK(expected == obj.serializePretty("\t", true));
+}
+
+TEST_CASE("Complex test case generates non-pretty html", "[Node]" ) {
+    using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
+
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        
+        GenericNode("head", false,
+            GenericNode("meta", true, 
+                Attribute("charset", "UTF-8")),
+            GenericNode("meta", true, 
+                Attribute("name", "viewport"),
+                Attribute("content", "width=device-width, initial-scale=1.0")),
+            GenericNode("title", false, 
+                Text("Complex Test Page")),
+            GenericNode("link", true,
+                Attribute("rel", "stylesheet"),
+                Attribute("href", "/styles/main.css"))
+        ),
+        
+        GenericNode("body", false, 
+            GenericNode("header", false, 
+                GenericNode("nav", false, 
+                    GenericNode("ul", false, 
+                        GenericNode("li", false, 
+                            GenericNode("a", false,
+                                Attribute("href", "#home"),
+                                Text("Home")
+                            )
+                        ),
+                        GenericNode("li", false, 
+                            GenericNode("a", false,
+                                Attribute("href", "#about"),
+                                Text("About Us")
+                            )
+                        )
+                    )
+                )
+            ),
+            
+            GenericNode("main", false,
+                GenericNode("section", false, 
+                    Attribute("id", "introduction"),
+                    GenericNode("h1", false, Text("Introduction")),
+                    GenericNode("p", false, Text("Welcome to the complex HTML structure test case.")),
+                    GenericNode("p", false, Text("This test includes various nested elements, attributes, and content.")),
+                    GenericNode("form", false, 
+                        Attribute("name", "contact-form"),
+                        GenericNode("label", false,
+                            Attribute("for", "name"),
+                            Text("Your Name:")
+                        ),
+                        GenericNode("input", true, 
+                            Attribute("type", "text"),
+                            Attribute("id", "name"),
+                            Attribute("name", "name")
+                        ),
+                        GenericNode("label", false, 
+                            Attribute("for", "email"),
+                            Text("Your Email:")
+                        ),
+                        GenericNode("input", true, 
+                            Attribute("type", "email"),
+                            Attribute("id", "email"),
+                            Attribute("name", "email")
+                        ),
+                        GenericNode("button", false, 
+                            Attribute("type", "submit"),
+                            Text("Submit")
+                        )
+                    )
+                ),
+                
+                GenericNode("section", false, 
+                    Attribute("id", "features"),
+                    GenericNode("h2", false, Text("Features")),
+                    GenericNode("ul", false, 
+                        GenericNode("li", false, Text("Feature 1")),
+                        GenericNode("li", false, Text("Feature 2")),
+                        GenericNode("li", false, Text("Feature 3"))
+                    ),
+                    GenericNode("p", false, Text("These are the key features of the application."))
+                )
+            ),
+            
+            GenericNode("footer", false,
+                GenericNode("p", false, Text("© 2025 Complex HTML Test Page")),
+                GenericNode("a", false,
+                    Attribute("href", "https://www.example.com"),
+                    Text("Privacy Policy")
+                )
+            )
+        )
+    };
+
+    std::string expected = "<html lang=\"en\" theme=\"dark\"><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/><title>Complex Test Page</title><link rel=\"stylesheet\" href=\"/styles/main.css\"/></head><body><header><nav><ul><li><a href=\"#home\">Home</a></li><li><a href=\"#about\">About Us</a></li></ul></nav></header><main><section id=\"introduction\"><h1>Introduction</h1><p>Welcome to the complex HTML structure test case.</p><p>This test includes various nested elements, attributes, and content.</p><form name=\"contact-form\"><label for=\"name\">Your Name:</label><input type=\"text\" id=\"name\" name=\"name\"/><label for=\"email\">Your Email:</label><input type=\"email\" id=\"email\" name=\"email\"/><button type=\"submit\">Submit</button></form></section><section id=\"features\"><h2>Features</h2><ul><li>Feature 1</li><li>Feature 2</li><li>Feature 3</li></ul><p>These are the key features of the application.</p></section></main><footer><p>© 2025 Complex HTML Test Page</p><a href=\"https://www.example.com\">Privacy Policy</a></footer></body></html>";
+    CHECK(expected == obj.serialize());
 }
 
 TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
