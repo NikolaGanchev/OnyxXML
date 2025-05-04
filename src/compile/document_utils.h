@@ -16,6 +16,7 @@ namespace Templater::compile {
      * 
      */
     struct DocumentUtils {
+        static constexpr const char* dynamicBindingTagName = ".templater::dynamic";
         DocumentUtils() = delete;
 
         /**

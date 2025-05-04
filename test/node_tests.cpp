@@ -1756,3 +1756,49 @@ TEST_CASE("Child replace works", "[Node]" ) {
     children = obj.getChildrenById("2");
     REQUIRE(children.size() == 1);
 }
+
+
+TEST_CASE("Compile api dynamic bindings work") {
+    using namespace Templater::compile;
+    using namespace Templater::dynamic;
+    using namespace Templater::compile::ctags;
+
+    dtags::cdiv cd{dtags::Text{"Hello!"}};
+
+    using doc = Document<
+        html<
+            head<>,
+            body<
+                Bind<"cd">,
+                Bind<"ab">
+            >
+        >
+    >;
+
+    dtags::ul valueToBind{
+        dtags::li(dtags::Text("1")),
+        dtags::li(dtags::Text("2")),
+        dtags::li(dtags::Text("3")),
+        dtags::li(dtags::Text("4")),
+        dtags::li(dtags::Text("5"))
+    };
+
+    dtags::section valueToBind2{
+        dtags::article{
+            dtags::p{},
+            dtags::p{},
+            dtags::span{},
+            dtags::p{},
+            dtags::span{},
+            dtags::img{}
+        }
+    };
+
+    std::string expected = "<html><head></head><body><ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li></ul><section><article><p></p><p></p><span></span><p></p><span></span><img/></article></section></body></html>";
+
+    REQUIRE(doc::serializeWithBindings("cd", valueToBind, 
+                                        "ab", valueToBind2) == expected);
+
+    REQUIRE(doc::dynamicTreeWithBindings("cd", valueToBind, 
+                                        "ab", valueToBind2)->serialize() == expected);
+}

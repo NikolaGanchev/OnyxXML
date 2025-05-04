@@ -18,6 +18,7 @@
 #include "compile/compile_comment.h"
 #include "compile/compile_text.h"
 #include "document.h"
+#include "compile/dynamic_binding.h"
 
 #if __has_include("dynamic/tags.h")
     #include "dynamic/tags.h"
