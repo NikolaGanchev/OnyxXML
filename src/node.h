@@ -558,9 +558,21 @@ namespace Templater::dynamic {
              * Throws a runtime error if the current node is void.
              * 
              * @tparam T 
+             * @param child
              */
             template <typename T>
             Node* addChild(T&& child) requires (isNode<T>);
+
+
+            /**
+             * @brief Replace the given child with a different child. Returns the removed child.
+             * 
+             * @tparam T 
+             * @param childToReplace
+             * @param newChild
+             */
+            template <typename T>
+            std::unique_ptr<Node> replaceChild(Node* childToReplace, T&& newChild) requires (isValidNodeChild<T>);
 
 
             /**
@@ -774,4 +786,24 @@ template <typename T>
 Templater::dynamic::Node& Templater::dynamic::Node::operator+=(T&& right) requires (isNode<T>) {
     addChild(std::forward<T>(right));
     return (*this);
+}
+
+template <typename T>
+std::unique_ptr<Templater::dynamic::Node> Templater::dynamic::Node::replaceChild(Node* childToReplace, T&& newChild) requires (isValidNodeChild<T>) {
+    std::unique_ptr<Node> res(nullptr);
+
+    iterativeProcessor([&childToReplace, &newChild, &res](Node* obj) -> void {
+        for (auto& child: obj->children) {
+            if (child.get() == childToReplace) {
+                obj->addChild(std::move(newChild));
+                res = std::move(obj->removeChild(childToReplace));
+            }
+        }
+    });
+
+    if (!res.get()) {
+        throw std::invalid_argument("Could not find request child to replace.");
+    }
+
+    return res;
 }

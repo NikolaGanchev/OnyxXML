@@ -1716,3 +1716,43 @@ TEST_CASE("If Node works with different Node argument types") {
         REQUIRE(nodeTrue.serialize() == expected);
     }
 }
+
+TEST_CASE("Child replace works", "[Node]" ) {
+    using namespace Templater::dynamic::dtags;
+    using namespace Templater::dynamic;
+
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>(
+        "div", false, Attribute("id", "1")
+    );
+
+    std::vector<std::unique_ptr<Node>> vec;
+    vec.push_back(std::move(child));
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false),
+        GenericNode("body", false, {}, std::move(vec))};
+
+    auto children = obj.getChildrenById("1");
+
+    REQUIRE(children.size() == 1);
+    CHECK(children[0]->isInTree());
+
+    std::unique_ptr<Node> child2 = std::make_unique<GenericNode>(
+        "div", false, Attribute("id", "2")
+    );
+
+    std::unique_ptr<Node> result = obj.replaceChild(children[0], std::move(child2));
+
+    REQUIRE(result);
+
+    children = obj.getChildrenById("1");
+
+    REQUIRE(children.size() == 0);
+    CHECK(!result->isInTree());
+
+    children = obj.getChildrenById("2");
+    REQUIRE(children.size() == 1);
+}
