@@ -19,6 +19,7 @@
 #include "compile/compile_text.h"
 #include "document.h"
 #include "compile/dynamic_binding.h"
+#include "compile/document_with_bindings.h"
 
 #if __has_include("dynamic/tags.h")
     #include "dynamic/tags.h"

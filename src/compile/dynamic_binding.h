@@ -12,11 +12,6 @@
 
 namespace Templater::compile::ctags {
 
-    template <typename T>
-    concept isDynamicBinding = requires(T) {
-        { T::dynamicTreeEvaluate() } -> std::same_as<std::unique_ptr<Templater::dynamic::Node>>;
-    };
-
     /**
      * @brief A compile time Dynamic binding struct.
      * Used to to embed "placeholders" in Document that later need to be filled.

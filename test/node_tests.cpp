@@ -1765,7 +1765,7 @@ TEST_CASE("Compile api dynamic bindings work") {
 
     dtags::cdiv cd{dtags::Text{"Hello!"}};
 
-    using doc = Document<
+    using doc = DocumentWithBindings<
         html<
             head<>,
             body<
