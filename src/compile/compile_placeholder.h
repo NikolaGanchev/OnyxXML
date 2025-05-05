@@ -13,20 +13,33 @@
 namespace Templater::compile::ctags {
 
     /**
-     * @brief A compile time Dynamic binding struct.
-     * Used to to embed "placeholders" in Document that later need to be filled.
+     * @brief A compile time Placeholder struct.
+     * Used to mark places in a template document where later dynamic content should be inserted.
+     * If using Placeholder in a Document, PlaceholderDocument should instead be used as it provides the methods to properly insert the dynamic content.
+     * Placeholder strings should be unique. If they aren't unique and the user properly provides the non-unique string twice when evaluating,
+     * evaluation will probably succeed, but is not guaranteed to.
+     * Note: If you use Placeholders with a regular Document, no exceptions will be thrown. Exercise caution.
      * 
-     * 
-     * @tparam Str
+     * @tparam Str id
      */
     template <CompileString Str>
     struct Placeholder {
         private:
+            /**
+             * @brief The compile time attribute the Placeholder will inject: name="<string>".
+             * 
+             */
             using nameAttribute = Attribute<"name", Str>;
         public:
-        static constexpr const char* TAG_NAME = ".templater::placeholder";
         /**
-        * @brief The compile-time size of the Comment string. Does not account for '\0';
+         * @brief The invalid tag name ".templater::placeholder" is used to reduce chances of collisions.
+         * 
+         */
+        static constexpr const char* TAG_NAME = ".templater::placeholder";
+
+
+        /**
+        * @brief The compile-time size of the Placeholder. Does not account for '\0';
         * 
         * @return size_t 
         */
@@ -36,7 +49,7 @@ namespace Templater::compile::ctags {
 
 
         /**
-         * @brief The Comment string; evaluated at compile-time. Does not do any escaping.
+         * @brief The Placeholder, evaluated at compile time. Of the form <.templater::placeholder name="<string>" />
          * 
          * @return std::array<char, size() + 1>
          */
@@ -45,7 +58,8 @@ namespace Templater::compile::ctags {
         }
 
         /**
-         * @brief Construct a dynamic Comment Node from a compile time Comment struct.
+         * @brief Construct a dynamic Placeholder Node from a compile time Placeholder struct.\
+         * Generates a void GenericNode with TAG_NAME and the Attribute name="<string>".
          * 
          * @return std::unique_ptr<Templater::dynamic::Node> 
          */
