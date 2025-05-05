@@ -77,6 +77,11 @@ namespace Templater::compile {
         } 
 
 
+        /**
+         * @brief Casts the compile time std::array from ::serialize() to an std::string at runtime.
+         * 
+         * @return std::string 
+         */
         static std::string toString() {
             return std::string(serialize().data());
         }
