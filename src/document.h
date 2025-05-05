@@ -10,7 +10,6 @@
 #include "compile/document_utils.h"
 #include <initializer_list>
 #include <utility>
-#include "compile/dynamic_binding.h"
 
 #define COMPILE_DOCUMENT(...) [](){ \
     using namespace Templater::compile::ctags;\

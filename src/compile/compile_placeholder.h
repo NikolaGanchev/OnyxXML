@@ -20,17 +20,18 @@ namespace Templater::compile::ctags {
      * @tparam Str
      */
     template <CompileString Str>
-    struct Bind {
+    struct Placeholder {
         private:
             using nameAttribute = Attribute<"name", Str>;
         public:
+        static constexpr const char* TAG_NAME = ".templater::placeholder";
         /**
         * @brief The compile-time size of the Comment string. Does not account for '\0';
         * 
         * @return size_t 
         */
         static consteval size_t size() {
-            return Bind::nameAttribute::size() + std::string_view(DocumentUtils::dynamicBindingTagName).size() + 4;
+            return Placeholder::nameAttribute::size() + std::string_view(TAG_NAME).size() + 4;
         }
 
 
@@ -40,7 +41,7 @@ namespace Templater::compile::ctags {
          * @return std::array<char, size() + 1>
          */
         static consteval std::array<char, size() + 1> serialize() {
-            return DocumentUtils::serializeVoidNode<size(), Attribute<"name", Str>>(DocumentUtils::dynamicBindingTagName);
+            return DocumentUtils::serializeVoidNode<size(), Attribute<"name", Str>>(TAG_NAME);
         }
 
         /**
@@ -49,7 +50,7 @@ namespace Templater::compile::ctags {
          * @return std::unique_ptr<Templater::dynamic::Node> 
          */
         static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
-            return std::make_unique<Templater::dynamic::dtags::GenericNode>(DocumentUtils::dynamicBindingTagName, true, 
+            return std::make_unique<Templater::dynamic::dtags::GenericNode>(TAG_NAME, true, 
                 Templater::dynamic::Attribute("name", std::string(Str)));
         }
     };

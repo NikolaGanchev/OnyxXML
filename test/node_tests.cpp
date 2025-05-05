@@ -1765,12 +1765,12 @@ TEST_CASE("Compile api dynamic bindings work") {
 
     dtags::cdiv cd{dtags::Text{"Hello!"}};
 
-    using doc = DocumentWithBindings<
+    using doc = PlaceholderDocument<
         html<
             head<>,
             body<
-                Bind<"cd">,
-                Bind<"ab">
+                Placeholder<"cd">,
+                Placeholder<"ab">
             >
         >
     >;
@@ -1796,9 +1796,9 @@ TEST_CASE("Compile api dynamic bindings work") {
 
     std::string expected = "<html><head></head><body><ul><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li></ul><section><article><p></p><p></p><span></span><p></p><span></span><img/></article></section></body></html>";
 
-    REQUIRE(doc::serializeWithBindings("cd", valueToBind, 
+    REQUIRE(doc::serializeWithPlaceholders("cd", valueToBind, 
                                         "ab", valueToBind2) == expected);
 
-    REQUIRE(doc::dynamicTreeWithBindings("cd", valueToBind, 
+    REQUIRE(doc::dynamicTreeWithPlaceholders("cd", valueToBind, 
                                         "ab", valueToBind2)->serialize() == expected);
 }

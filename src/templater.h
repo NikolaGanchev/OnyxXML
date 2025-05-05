@@ -18,8 +18,8 @@
 #include "compile/compile_comment.h"
 #include "compile/compile_text.h"
 #include "document.h"
-#include "compile/dynamic_binding.h"
-#include "compile/document_with_bindings.h"
+#include "compile/compile_placeholder.h"
+#include "compile/placeholder_document.h"
 
 #if __has_include("dynamic/tags.h")
     #include "dynamic/tags.h"
