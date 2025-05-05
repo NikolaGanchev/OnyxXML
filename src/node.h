@@ -339,6 +339,13 @@ namespace Templater::dynamic {
                      * @param sortAttributes Whether attributes should be sorted.
                      */
                     virtual void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const = 0;
+
+
+                    /**
+                     * @brief Destroy the Special Serializable object
+                     * 
+                     */
+                    virtual ~SpecialSerializable() {};
             };
 
             /**
