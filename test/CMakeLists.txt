@@ -18,7 +18,7 @@ target_sources(
 
 include(../src/use_tags_file.cmake)
 
-use_tags_file("${CMAKE_CURRENT_SOURCE_DIR}/tags.txt")
+use_tags_file("${CMAKE_CURRENT_SOURCE_DIR}/tags.txt" OFF)
 
 # Automatically register all tests
 catch_discover_tests(unit-tests)

@@ -25,6 +25,7 @@ target_sources(
 )
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.cpp" COPYONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.py" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.py" COPYONLY)
 
 add_executable(application)
 

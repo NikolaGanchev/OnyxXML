@@ -1,4 +1,4 @@
-function(use_tags_file tags_path)
+function(use_tags_file tags_path cross_compilation)
     if(NOT tags_path)
         message(FATAL_ERROR "A tags file path must be passed.")
     endif()
@@ -20,26 +20,46 @@ function(use_tags_file tags_path)
         target_sources(samplelib
             PRIVATE
                 "${GENERATED_TAGS_CPP}")
-             
-        add_executable(generate "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.cpp")
 
-        add_custom_command(
-            OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
-            COMMAND generate "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
-            DEPENDS generate "${tags_path}" "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.cpp"
-            COMMENT "Running the generate executable to generate the html tags files"
-            VERBATIM
-        )
+        if (cross_compilation)
+            message(WARNING "Running python ${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.py ${tags_path} ${DYNAMIC_TAGS_DIRECTORY} ${COMPILE_TAGS_DIRECTORY}")
+            add_custom_command(
+                OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
+                COMMAND "python" "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.py" "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
+                DEPENDS "${tags_path}" "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.py"
+                COMMENT "Running the generate executable to generate the html tags files"
+                VERBATIM
+            )
 
-        add_custom_target(
-            generate_files ALL
-            DEPENDS "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
-            COMMENT "Ensuring generated files are up-to-date"
-        )
+            add_custom_target(
+                generate_files ALL
+                DEPENDS "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
+                COMMENT "Ensuring generated files are up-to-date"
+            )
+    
+            add_dependencies(samplelib generate_files)
+        else()
+            add_executable(generate "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.cpp")
 
-        add_dependencies(samplelib generate_files)
+            add_custom_command(
+                OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
+                COMMAND generate "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
+                DEPENDS generate "${tags_path}" "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.cpp"
+                COMMENT "Running the generate executable to generate the html tags files"
+                VERBATIM
+            )
 
-        add_dependencies(generate_files generate)
+            add_custom_target(
+                generate_files ALL
+                DEPENDS "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
+                COMMENT "Ensuring generated files are up-to-date"
+            )
+    
+            add_dependencies(samplelib generate_files)
+    
+            add_dependencies(generate_files generate)
+        endif()
+        
     else()
         message(FATAL_ERROR "A tags file path must be passed.")
     endif()
