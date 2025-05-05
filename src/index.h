@@ -138,11 +138,6 @@ namespace Templater::dynamic {
              * 
              */
             Node* root;
-            /**
-             * @brief Whether the Index is valid or not
-             * 
-             */
-            bool valid;
         protected:
             /**
              * @brief Indexes the given Node if it satisfies the conditions for indexing and is not already in the index.

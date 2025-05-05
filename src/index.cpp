@@ -2,18 +2,18 @@
 
 namespace Templater::dynamic {
 
-    Node::Index::Index(Node* root): root{root}, valid{true} {}
+    Node::Index::Index(Node* root): root{root} {}
 
     const Node* Node::Index::getRoot() const {
-        return this->valid ? this->root: nullptr;
+        return this->root;
     }
 
     bool Node::Index::isValid() const {
-        return this->valid;
+        return this->root != nullptr;
     }
 
     void Node::Index::invalidate() {
-        this->valid = false;
+        this->root = nullptr;
     }
 
     void Node::Index::init() {
@@ -21,7 +21,7 @@ namespace Templater::dynamic {
     }
 
     void Node::Index::destroy() {
-        if (this->valid && this->root) {
+        if (this->isValid() && this->root) {
             this->root->iterativeProcessor([this](Node* obj) -> void {
                 for (auto index = obj->indices.begin(); index != obj->indices.end();) {
                     if (this == *index) {
@@ -41,13 +41,11 @@ namespace Templater::dynamic {
     
     void Node::Index::_move_index_base(Index&& other) {
         this->root = other.root;
-        this->valid = other.valid;
 
         if (other.isValid()) {
             other.root->replaceIndex(&other, this);
         }
 
-        other.valid = false;
         other.root = nullptr;
     }
 
