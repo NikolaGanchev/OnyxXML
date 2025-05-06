@@ -187,14 +187,14 @@ namespace Templater::dynamic {
              */
             std::vector<Node::Index*> indices;
 
-            
+
             /**
-             * @brief Signifies whether this node is in a tree
+             * @brief The parent of this Node. nullptr if no parent exists.
              * 
              */
-            bool _isInTree = false;
-
+            Node* parent;
             
+
             /**
              * @brief A recursive constructor argument move processor. Takes an argument and delegates to either @ref processConstructorAttribute(Attribute&&) or processConstructorObjectMove(T&&).
              * 
@@ -423,6 +423,14 @@ namespace Templater::dynamic {
              * @return false 
              */
             bool isInTree() const;
+
+
+            /**
+             * @brief Get the Parent Node. Will be nullptr if the Node has no parent.
+             * 
+             * @return Node* 
+             */
+            Node* getParentNode() const;
             
 
             /**
@@ -696,7 +704,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Checks if the attributes, children and data members of the two nodes are equal. Does not compare indices.
+             * @brief Checks if the attributes, children and data members of the two nodes are equal. Does not compare indices, nor parents.
              * 
              * @param other 
              * @return true 
@@ -741,7 +749,7 @@ namespace Templater::dynamic {
 
 template <typename... Args>
 Templater::dynamic::Node::Node(Args&&... args) requires (Templater::dynamic::isValidNodeConstructorType<Args>&& ...)
-    : attributes{}, children{}, _isInTree{false}, indices{} { 
+    : attributes{}, children{}, parent{nullptr}, indices{} { 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
@@ -764,7 +772,7 @@ Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild) requi
         return nullptr;
     }
     std::unique_ptr<T> obj = std::make_unique<std::decay_t<T>>(std::forward<T>(newChild));
-    (dynamic_cast<Node*>(obj.get()))->_isInTree = true;
+    (dynamic_cast<Node*>(obj.get()))->parent = this;
     
     this->indexParse([&obj](Node::Index* id) -> void {
         (dynamic_cast<Node*>(obj.get()))->addIndex(id);
@@ -780,11 +788,11 @@ Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild) requi
 template <typename T>
 void Templater::dynamic::Node::processConstructorObjectMove(T&& child) requires (isNode<T>) {
     if (child.isInTree()) {
-        throw std::runtime_error("Attempted to construct Object with a child that is already a child of another Object.");
+        throw std::runtime_error("Attempted to construct Node with a child that is already a child of another Node.");
     }
 
     std::unique_ptr<T> obj = std::make_unique<std::decay_t<T>>(std::forward<T>(child));
-    (dynamic_cast<Node*>(obj.get()))->_isInTree = true;
+    (dynamic_cast<Node*>(obj.get()))->parent = this;
     
     children.push_back(std::move(obj));
 }
@@ -797,20 +805,11 @@ Templater::dynamic::Node& Templater::dynamic::Node::operator+=(T&& right) requir
 
 template <typename T>
 std::unique_ptr<Templater::dynamic::Node> Templater::dynamic::Node::replaceChild(Node* childToReplace, T&& newChild) requires (isValidNodeChild<T>) {
-    std::unique_ptr<Node> res(nullptr);
-
-    iterativeProcessor([&childToReplace, &newChild, &res](Node* obj) -> void {
-        for (auto& child: obj->children) {
-            if (child.get() == childToReplace) {
-                obj->addChild(std::move(newChild));
-                res = std::move(obj->removeChild(childToReplace));
-            }
-        }
-    });
-
-    if (!res.get()) {
-        throw std::invalid_argument("Could not find request child to replace.");
+    // TODO: Check if childToReplace is in the tree
+    if (!childToReplace->isInTree()) {
+        throw std::invalid_argument("Child to replace has no parent");
     }
 
-    return res;
+    childToReplace->parent->addChild(std::move(newChild));
+    return childToReplace->parent->removeChild(childToReplace);
 }

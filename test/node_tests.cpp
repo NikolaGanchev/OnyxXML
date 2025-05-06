@@ -496,18 +496,19 @@ TEST_CASE("Child add works", "[Node]" ) {
         GenericNode("head", false),
         GenericNode("body", false)};
 
-    auto children = obj.getChildrenByTagName("body");
+    auto body = obj.getChildrenByTagName("body");
 
     std::unique_ptr<Node> child = std::make_unique<GenericNode>(
         "div", false, Attribute("id", "1")
     );
 
-    children[0]->addChild(std::move(child));
+    body[0]->addChild(std::move(child));
 
-    children = obj.getChildrenById("1");
+    auto children = obj.getChildrenById("1");
 
     REQUIRE(children.size() == 1);
     CHECK(children[0]->isInTree());
+    CHECK(children[0]->getParentNode() == body[0]);
 }
 
 TEST_CASE("Child remove works", "[Node]" ) {
@@ -1460,6 +1461,9 @@ TEST_CASE("Node move properly handle indices", "[Node]") {
     REQUIRE(index.getRoot() == &obj);
 
     GenericNode obj1(std::move(obj));
+    for (auto& child: obj1.getChildren()) {
+        REQUIRE(child->getParentNode() == &obj1);
+    }
     REQUIRE(index.getRoot() == &obj1);
 }
 
@@ -1738,8 +1742,10 @@ TEST_CASE("Child replace works", "[Node]" ) {
     auto children = obj.getChildrenById("1");
 
     REQUIRE(children.size() == 1);
-    CHECK(children[0]->isInTree());
+    REQUIRE(children[0]->isInTree());
 
+    Node* parent = children[0]->getParentNode();
+    
     std::unique_ptr<Node> child2 = std::make_unique<GenericNode>(
         "div", false, Attribute("id", "2")
     );
@@ -1755,6 +1761,7 @@ TEST_CASE("Child replace works", "[Node]" ) {
 
     children = obj.getChildrenById("2");
     REQUIRE(children.size() == 1);
+    REQUIRE(children[0]->getParentNode() == parent);
 }
 
 

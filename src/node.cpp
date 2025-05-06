@@ -9,17 +9,21 @@
 
 namespace Templater::dynamic {
     Node::Node()
-        : attributes{}, children{}, indices{}, _isInTree{false} { }
+        : attributes{}, children{}, indices{}, parent{nullptr} { }
 
     Node::Node(Node&& other) noexcept
-        : attributes{std::move(other.attributes)}, children{std::move(other.children)}, indices{std::move(other.indices)}, _isInTree{other._isInTree} {
+        : attributes{std::move(other.attributes)}, children{std::move(other.children)}, indices{std::move(other.indices)}, parent{other.parent} {
+        other.parent = nullptr;
         this->takeOverIndices(other);
+        for (auto& child: this->children) {
+            child->parent = this;
+        }
     }
 
     Node::Node(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
-        : attributes{std::move(attributes)}, children{std::move(children)}, indices{} {
+        : attributes{std::move(attributes)}, children{std::move(children)}, indices{}, parent{nullptr} {
         for (auto& child: this->children) {
-            child->_isInTree = true;
+            child->parent = this;
         }
     }
     
@@ -34,7 +38,12 @@ namespace Templater::dynamic {
         other.indices.clear();
 
         this->takeOverIndices(other);
-        this->_isInTree = other._isInTree;
+        this->parent = other.parent;
+        other.parent = nullptr;
+
+        for (auto& child: this->children) {
+            child->parent = this;
+        }
 
         return *this;
     }
@@ -53,7 +62,7 @@ namespace Templater::dynamic {
 
     void Node::destroy() {
         for (auto& child: this->children) {
-            child->_isInTree = false;
+            child->parent = nullptr;
 
             this->indexParse([this, &child](Node::Index* id) -> void {
                 if (id->getRoot() == this) {
@@ -82,7 +91,7 @@ namespace Templater::dynamic {
             return nullptr;
         }
 
-        newChild->_isInTree = true;
+        newChild->parent = this;
         this->indexParse([&newChild](Node::Index* id) -> void {
             newChild->addIndex(id);
         });
@@ -171,7 +180,11 @@ namespace Templater::dynamic {
     }
 
     bool Node::isInTree() const {
-        return this->_isInTree;
+        return this->parent != nullptr;
+    }
+
+    Node* Node::getParentNode() const {
+        return this->parent;
     }
 
     std::vector<Node*> Node::iterativeChildrenParse(const std::function<bool(Node*)>& condition) const {
@@ -254,7 +267,7 @@ namespace Templater::dynamic {
                         }
                     });
     
-                    childToRemove->_isInTree = false;
+                    childToRemove->parent = nullptr;
                     std::unique_ptr<Node> ref = std::move(children->operator[](i));
                     children->erase(children->begin() + i);
     
@@ -306,7 +319,6 @@ namespace Templater::dynamic {
            
     bool Node::shallowEquals(const Node& other) const {
         if (this == &other) return true;
-        if (this->_isInTree != other._isInTree) return false;
         if (this->isVoid() != other.isVoid()) return false;
         if (this->getTagName() != other.getTagName()) return false;
         if (this->attributes.size() != other.attributes.size()) return false;
