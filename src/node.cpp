@@ -31,11 +31,8 @@ namespace Templater::dynamic {
         if (this == &other) return *this;
         this->destroy();
         this->attributes = std::move(other.attributes);
-        other.attributes.clear();
         this->children = std::move(other.children);
-        other.children.clear();
         this->indices = std::move(other.indices);
-        other.indices.clear();
 
         this->takeOverIndices(other);
         this->parent = other.parent;

@@ -3,7 +3,7 @@
 #include <chrono>
 
 TEST_CASE("Index is added correctly", "[Index]" ) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -30,7 +30,7 @@ TEST_CASE("Index is added correctly", "[Index]" ) {
 }
 
 TEST_CASE("Index handles multiple matches correctly", "[Index]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -57,7 +57,7 @@ TEST_CASE("Index handles multiple matches correctly", "[Index]") {
 }
 
 TEST_CASE("Index returns empty when no match found", "[Index]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -76,7 +76,7 @@ TEST_CASE("Index returns empty when no match found", "[Index]") {
 }
 
 TEST_CASE("Index works with nested attributes", "[Index]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -98,7 +98,7 @@ TEST_CASE("Index works with nested attributes", "[Index]") {
 }
 
 TEST_CASE("Index updates correctly when attributes change", "[Index]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{"div", false, Attribute("id", "test")};
@@ -122,7 +122,7 @@ TEST_CASE("Index updates correctly when attributes change", "[Index]") {
 }
 
 TEST_CASE("Index updates correctly when children are added", "[Index]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{"div", false};
@@ -140,7 +140,7 @@ TEST_CASE("Index updates correctly when children are added", "[Index]") {
 }
 
 TEST_CASE("Index updates correctly when children are added using move", "[Index]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{"div", false};
@@ -156,7 +156,7 @@ TEST_CASE("Index updates correctly when children are added using move", "[Index]
 }
 
 TEST_CASE("Index updates correctly when attributes are modified using operator []", "[Index]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{"div", false};
@@ -177,7 +177,7 @@ TEST_CASE("Index updates correctly when attributes are modified using operator [
 }
 
 TEST_CASE("Children are properly removed from parent indices", "[Index]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode parent{"div", false};
@@ -192,7 +192,7 @@ TEST_CASE("Children are properly removed from parent indices", "[Index]") {
 }
 
 TEST_CASE("Children keep their own indices when removed", "[Index]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     std::unique_ptr<Node> child = std::make_unique<GenericNode>("span", false, Attribute("id", "child"));
@@ -211,7 +211,7 @@ TEST_CASE("Children keep their own indices when removed", "[Index]") {
 }
 
 TEST_CASE("Index is created with createIndexPointer ", "[Index]" ) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -240,7 +240,7 @@ TEST_CASE("Index is created with createIndexPointer ", "[Index]" ) {
 }
 
 TEST_CASE("Index is created with createIndexUniquePointer ", "[Index]" ) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -267,7 +267,7 @@ TEST_CASE("Index is created with createIndexUniquePointer ", "[Index]" ) {
 }
 
 TEST_CASE("Index is created with createIndexSharedPointer ", "[Index]" ) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -294,7 +294,7 @@ TEST_CASE("Index is created with createIndexSharedPointer ", "[Index]" ) {
 }
 
 TEST_CASE("Index is invalidated correctly", "[Index]" ) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     std::shared_ptr<index::AttributeNameIndex> ptr;
@@ -323,7 +323,7 @@ TEST_CASE("Index is invalidated correctly", "[Index]" ) {
 }
 
 TEST_CASE("Node operations work after an index is removed", "[Index]" ) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -353,7 +353,7 @@ TEST_CASE("Node operations work after an index is removed", "[Index]" ) {
 }
 
 TEST_CASE("Indexing multiple occurrences of the same tag", "[TagNameIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -371,7 +371,7 @@ TEST_CASE("Indexing multiple occurrences of the same tag", "[TagNameIndex]") {
 }
 
 TEST_CASE("Indexing nested elements with the same tag name", "[TagNameIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -388,7 +388,7 @@ TEST_CASE("Indexing nested elements with the same tag name", "[TagNameIndex]") {
 }
 
 TEST_CASE("Indexing multiple different tag names", "[TagNameIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -408,7 +408,7 @@ TEST_CASE("Indexing multiple different tag names", "[TagNameIndex]") {
 }
 
 TEST_CASE("Indexing when no elements match", "[TagNameIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -423,7 +423,7 @@ TEST_CASE("Indexing when no elements match", "[TagNameIndex]") {
 }
 
 TEST_CASE("Removing a child updates the index", "[TagNameIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -444,7 +444,7 @@ TEST_CASE("Removing a child updates the index", "[TagNameIndex]") {
 }
 
 TEST_CASE("Indexing nested elements with multiple occurrences of the same tag", "[TagIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -463,7 +463,7 @@ TEST_CASE("Indexing nested elements with multiple occurrences of the same tag", 
 }
 
 TEST_CASE("Indexing multiple different tag names in a tree", "[TagIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -488,7 +488,7 @@ TEST_CASE("Indexing multiple different tag names in a tree", "[TagIndex]") {
 }
 
 TEST_CASE("Indexing when no elements match", "[TagIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -503,7 +503,7 @@ TEST_CASE("Indexing when no elements match", "[TagIndex]") {
 }
 
 TEST_CASE("Removing a child element updates the index", "[TagIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -524,7 +524,7 @@ TEST_CASE("Removing a child element updates the index", "[TagIndex]") {
 }
 
 TEST_CASE("Indexing when no elements are present", "[TagIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     EmptyNode obj{};
@@ -535,7 +535,7 @@ TEST_CASE("Indexing when no elements are present", "[TagIndex]") {
 }
 
 TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -562,7 +562,7 @@ TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
 }
 
 TEST_CASE("CacheIndex works", "[CacheIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -598,8 +598,8 @@ TEST_CASE("CacheIndex works", "[CacheIndex]") {
     CHECK_THROWS(index.getCached(&GenericNode::serializePretty, "\t", true));
 }
 
-Templater::dynamic::dtags::GenericNode getComplexTree() {
-    using namespace Templater::dynamic::dtags;
+Templater::dynamic::tags::GenericNode getComplexTree() {
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -701,7 +701,7 @@ Templater::dynamic::dtags::GenericNode getComplexTree() {
 }
 
 TEST_CASE("AttributeNameIndex is faster than querying the tree", "[AttributeNameIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
@@ -734,7 +734,7 @@ TEST_CASE("AttributeNameIndex is faster than querying the tree", "[AttributeName
 
 
 TEST_CASE("TagNameIndex is faster than querying the tree", "[TagNameIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
@@ -766,7 +766,7 @@ TEST_CASE("TagNameIndex is faster than querying the tree", "[TagNameIndex]") {
 
 
 TEST_CASE("TagIndex is faster than querying the tree", "[TagIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
@@ -798,7 +798,7 @@ TEST_CASE("TagIndex is faster than querying the tree", "[TagIndex]") {
 
 
 TEST_CASE("CacheIndex is faster than querying the tree", "[TagIndex]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
@@ -831,7 +831,7 @@ TEST_CASE("CacheIndex is faster than querying the tree", "[TagIndex]") {
 }
 
 TEST_CASE("Index move constructor works", "[Index]" ) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -870,7 +870,7 @@ TEST_CASE("Index move constructor works", "[Index]" ) {
 }
 
 TEST_CASE("Index move assignment operator works", "[Index]" ) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{
@@ -908,7 +908,7 @@ TEST_CASE("Index move assignment operator works", "[Index]" ) {
 }
 
 TEST_CASE("Index move assignment operator cleans up memory properly", "[Index]" ) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     using namespace Templater::dynamic;
 
     GenericNode obj{

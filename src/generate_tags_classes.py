@@ -52,10 +52,10 @@ def generate_dynamic(tags, output_path):
     header_content.write('#pragma once\n')
     header_content.write('#include "node.h"\n')
     header_content.write('#include "void_node.h"\n\n')
-    header_content.write('namespace Templater::dynamic::dtags {\n')
+    header_content.write('namespace Templater::dynamic::tags {\n')
     
     cpp_content.write('#include "tags.h"\n\n')
-    cpp_content.write('namespace Templater::dynamic::dtags {\n')
+    cpp_content.write('namespace Templater::dynamic::tags {\n')
     
     for tag in tags:
         if not tag.isVoid:
@@ -136,7 +136,7 @@ def generate_compile(tags, output_path):
         header_content.write('        }\n')
         
         header_content.write('        static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {\n')
-        header_content.write(f'            std::unique_ptr<Templater::dynamic::dtags::{tag.dynamicName}> node = std::make_unique<Templater::dynamic::dtags::{tag.dynamicName}>();\n')
+        header_content.write(f'            std::unique_ptr<Templater::dynamic::tags::{tag.dynamicName}> node = std::make_unique<Templater::dynamic::tags::{tag.dynamicName}>();\n')
         header_content.write('            (DocumentUtils::parseChildren<Children>(node.get()), ...);\n')
         header_content.write('            return node;\n')
         header_content.write('        }\n    };\n')

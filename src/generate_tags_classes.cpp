@@ -56,10 +56,10 @@ void generateDynamic(const std::vector<Tag>& tags, const char* path) {
     headerDynamic << "#pragma once\n";
     headerDynamic << "#include \"node.h\" \n";
     headerDynamic << "#include \"void_node.h\" \n\n";
-    headerDynamic << "namespace Templater::dynamic::dtags {\n";
+    headerDynamic << "namespace Templater::dynamic::tags {\n";
 
     cppDynamic << "#include \"tags.h\"\n\n";
-    cppDynamic << "namespace Templater::dynamic::dtags {\n";
+    cppDynamic << "namespace Templater::dynamic::tags {\n";
 
     for (auto& tag: tags) {
         if (!tag.isVoid) {
@@ -134,7 +134,7 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
                                     "            return DocumentUtils::" << ((tag.isVoid) ? "serializeVoidNode": "serializeNode") << "<size(), Children...>(\"" << tag.tagName << "\");\n"
                                     "        }\n"
                                     "        static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {\n"
-                                    "            std::unique_ptr<Templater::dynamic::dtags::" << tag.dynamicName << "> node = std::make_unique<Templater::dynamic::dtags::" << tag.dynamicName << ">();\n"
+                                    "            std::unique_ptr<Templater::dynamic::tags::" << tag.dynamicName << "> node = std::make_unique<Templater::dynamic::tags::" << tag.dynamicName << ">();\n"
                                     "            (DocumentUtils::parseChildren<Children>(node.get()), ...);\n"
                                     "            return node;\n"
                                     "        }\n"

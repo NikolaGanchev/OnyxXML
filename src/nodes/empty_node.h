@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
     
     /**
      * @brief A node which provides no serialization structure. Used as a root to partial trees with adjacent children. 

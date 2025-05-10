@@ -2,7 +2,7 @@
 #include <concepts>
 #include <cstddef>
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
     /**
      * @brief A Node that upon a condition decides which of two given Nodes to add as a child.
      * The child can be passed as either a move or an std::unique_ptr<Node>.

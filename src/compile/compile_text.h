@@ -42,7 +42,7 @@ namespace Templater::compile::ctags {
          * @return std::unique_ptr<Templater::dynamic::Node> 
          */
         static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
-            return std::make_unique<Templater::dynamic::dtags::Text>(Str);
+            return std::make_unique<Templater::dynamic::tags::Text>(Str);
         }
     };
 }

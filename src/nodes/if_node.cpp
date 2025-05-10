@@ -1,6 +1,6 @@
 #include "if_node.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
     If::If(): Node{} {}
 
     const std::string& If::getTagName() const {

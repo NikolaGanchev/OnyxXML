@@ -2,7 +2,7 @@
 #include <concepts>
 #include <cstddef>
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
 
 
     /**

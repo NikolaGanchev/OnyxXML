@@ -3,7 +3,7 @@
 #include "node.h"
 #include "text_node.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
 
     /**
      * @brief A comment Node

@@ -1,7 +1,7 @@
 #include "comment_node.h"
 #include "text.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
     const std::string& Comment::getTagName() const {
         static const std::string name = ".comment";
         return name;

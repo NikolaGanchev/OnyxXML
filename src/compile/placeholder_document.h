@@ -22,18 +22,18 @@ namespace Templater::compile {
      *     >
      * >;
      * 
-     * dtags::ul valueToBind{
-     *     dtags::li(dtags::Text("1")),
-     *     dtags::li(dtags::Text("2")),
-     *     dtags::li(dtags::Text("3")),
+     * tags::ul valueToBind{
+     *     tags::li(tags::Text("1")),
+     *     tags::li(tags::Text("2")),
+     *     tags::li(tags::Text("3")),
      * };
      * 
      * 
-     * dtags::section valueToBind2{
-     *     dtags::article{
-     *         dtags::p{},
-     *         dtags::p{},
-     *         dtags::span{}
+     * tags::section valueToBind2{
+     *     tags::article{
+     *         tags::p{},
+     *         tags::p{},
+     *         tags::span{}
      *     }
      * };
      * 

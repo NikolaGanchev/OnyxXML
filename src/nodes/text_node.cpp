@@ -1,7 +1,7 @@
 #include "text_node.h"
 #include "text.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
     Text::Text(std::string text, bool escapeMultiByte): text(text), escapeMultiByte(escapeMultiByte), Node{} {}
 
     Text::Text(const Text& other): text(other.text), escapeMultiByte(other.escapeMultiByte), Node{} {}

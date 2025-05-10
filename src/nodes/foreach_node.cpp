@@ -1,6 +1,6 @@
 #include "foreach_node.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
     ForEach::ForEach(): Node{} {}
 
     const std::string& ForEach::getTagName() const {

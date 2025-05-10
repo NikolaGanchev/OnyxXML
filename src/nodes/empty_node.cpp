@@ -1,6 +1,6 @@
 #include "empty_node.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
 
     const std::string& EmptyNode::getTagName() const {
         static const std::string name = ".empty";

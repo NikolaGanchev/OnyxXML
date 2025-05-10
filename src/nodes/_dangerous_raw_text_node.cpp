@@ -1,6 +1,6 @@
 #include "_dangerous_raw_text_node.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
     
     __DangerousRawText::__DangerousRawText(std::string text): text(text), Node{} {}
 

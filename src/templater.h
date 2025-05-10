@@ -28,3 +28,20 @@
 #if __has_include("compile/tags.h")
     #include "compile/tags.h"
 #endif
+
+namespace Templater {
+    namespace tags = dynamic::tags;
+    namespace ctags = compile::ctags;
+    namespace index = dynamic::index;
+    namespace text = dynamic::text;
+
+    namespace dynamic::tags {
+        using Templater::dynamic::Node;
+        using Templater::dynamic::Attribute;
+    }
+
+    namespace compile::ctags {
+        using Templater::compile::Document;
+        using Templater::compile::PlaceholderDocument;
+    }
+}

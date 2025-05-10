@@ -4,8 +4,7 @@
 #include <chrono>
 
 TEST_CASE("HTML is generated", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -23,8 +22,7 @@ TEST_CASE("HTML is generated", "[Node]" ) {
 }
 
 TEST_CASE("Attribute remove works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     GenericNode obj{
         "html", false,
@@ -39,8 +37,7 @@ TEST_CASE("Attribute remove works", "[Node]" ) {
 }
 
 TEST_CASE("Vector constructor works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -50,10 +47,10 @@ TEST_CASE("Vector constructor works", "[Node]" ) {
 
     attributes.emplace_back("id", "list");
     for (int i = 1; i <= 3; i++) {
-        children.push_back(std::make_unique<dtags::li>(Text(std::to_string(i))));
+        children.push_back(std::make_unique<li>(Text(std::to_string(i))));
     }
 
-    dtags::ul obj{attributes, std::move(children)};
+    ul obj{attributes, std::move(children)};
 
     std::string expected = "<ul id=\"list\">\n\t<li>\n\t\t1\n\t</li>\n\t<li>\n\t\t2\n\t</li>\n\t<li>\n\t\t3\n\t</li>\n</ul>";
 
@@ -61,8 +58,7 @@ TEST_CASE("Vector constructor works", "[Node]" ) {
 }
 
 TEST_CASE("Complex test case generates pretty html", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -166,8 +162,7 @@ TEST_CASE("Complex test case generates pretty html", "[Node]" ) {
 }
 
 TEST_CASE("Complex test case generates non-pretty html", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -270,8 +265,7 @@ TEST_CASE("Complex test case generates non-pretty html", "[Node]" ) {
 }
 
 TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     REQUIRE_THROWS(GenericNode{"img", true, GenericNode{"div", false}});
 
@@ -284,8 +278,7 @@ TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
 }
 
 TEST_CASE("Node::addChild() throws if used on a void node", "[Node::addChild]") {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     GenericNode image{"img", true};
 
@@ -297,8 +290,7 @@ TEST_CASE("Node::addChild() throws if used on a void node", "[Node::addChild]") 
 }
 
 TEST_CASE("Children return by tag name works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -324,8 +316,7 @@ TEST_CASE("Children return by tag name works", "[Node]" ) {
 }
 
 TEST_CASE("Children return by id works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -353,8 +344,7 @@ TEST_CASE("Children return by id works", "[Node]" ) {
 }
 
 TEST_CASE("Children return by name works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -387,8 +377,7 @@ TEST_CASE("Children return by name works", "[Node]" ) {
 }
 
 TEST_CASE("Children return by class name works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -423,8 +412,7 @@ TEST_CASE("Children return by class name works", "[Node]" ) {
 }
 
 TEST_CASE("Children return by attribute works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -453,8 +441,7 @@ TEST_CASE("Children return by attribute works", "[Node]" ) {
 }
 
 TEST_CASE("Children return by attribute name works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -483,8 +470,7 @@ TEST_CASE("Children return by attribute name works", "[Node]" ) {
 }
 
 TEST_CASE("Child add works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -512,8 +498,7 @@ TEST_CASE("Child add works", "[Node]" ) {
 }
 
 TEST_CASE("Child remove works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -548,8 +533,7 @@ TEST_CASE("Child remove works", "[Node]" ) {
 }
 
 TEST_CASE("Operator [] works for attribute access", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -570,8 +554,7 @@ TEST_CASE("Operator [] works for attribute access", "[Node]" ) {
 }
 
 TEST_CASE("Operator += works for child add", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -599,8 +582,7 @@ TEST_CASE("Operator += works for child add", "[Node]" ) {
 }
 
 TEST_CASE("Complex html with dynamic tags", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -699,20 +681,20 @@ TEST_CASE("Complex html with dynamic tags", "[Node]" ) {
 }
 
 TEST_CASE("Empty html tree has size 1", "[Node::size()]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     html root;
     REQUIRE(root.size() == 1);
 }
 
 TEST_CASE("Html tree with one child has size 2", "[Node::size()]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     html root;
     root.addChild(body());
     REQUIRE(root.size() == 2);
 }
 
 TEST_CASE("Html tree with 5 nodes has size 6", "[Node::size()]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     html root{
         p(),
         p(),
@@ -724,7 +706,7 @@ TEST_CASE("Html tree with 5 nodes has size 6", "[Node::size()]") {
 }
 
 TEST_CASE("Html tree with 5001 nodes has size 5001", "[Node::size()]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     html root;
     for (int i = 0; i < 1000; i++) {
         root.addChild(section(
@@ -752,7 +734,7 @@ std::string generateRandomString(size_t length) {
 }
 
 void addChildren(Templater::dynamic::Node* root, int level) {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     std::unique_ptr<section> s = std::make_unique<section>();
     if (level > 0) {
@@ -763,8 +745,7 @@ void addChildren(Templater::dynamic::Node* root, int level) {
 }
 
 TEST_CASE("3000 tags serialize in under 50ms", "[Node]") {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::duration;
@@ -793,8 +774,7 @@ TEST_CASE("3000 tags serialize in under 50ms", "[Node]") {
 }
 
 TEST_CASE("Template html runtime api serializes correctly", "[Node]" ) {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     std::string doc1 = Document<
         html<
@@ -810,15 +790,14 @@ TEST_CASE("Template html runtime api serializes correctly", "[Node]" ) {
 }
 
 TEST_CASE("Template html runtime api enforces given indentation rules", "[Node]" ) {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<
         html<
-            ctags::Attribute<"theme", "light">,
-            ctags::Attribute<"lang", "en">,
+            Attribute<"theme", "light">,
+            Attribute<"lang", "en">,
             head<>,
-            body<ctags::Text<"Hello world!">>
+            body<Text<"Hello world!">>
         >
     >;
 
@@ -828,8 +807,7 @@ TEST_CASE("Template html runtime api enforces given indentation rules", "[Node]"
 }
 
 TEST_CASE("HTML fragment using template runtime api serializes correctly", "[Node]" ) {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     std::string doc3 = Document<
         li<Text<"1">>,
@@ -843,8 +821,7 @@ TEST_CASE("HTML fragment using template runtime api serializes correctly", "[Nod
 }
 
 TEST_CASE("Complex templated runtime api html with constant tags", "[Node]" ) {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+        using namespace Templater::ctags;
 
     std::string doc4 = Document<
         html<
@@ -888,8 +865,7 @@ TEST_CASE("Complex templated runtime api html with constant tags", "[Node]" ) {
 }
 
 TEST_CASE("HTML is correctly serialized") {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<
         html<
@@ -903,8 +879,7 @@ TEST_CASE("HTML is correctly serialized") {
 }
 
 TEST_CASE("Attributes are serialized correctly") {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<
         html<
@@ -919,8 +894,7 @@ TEST_CASE("Attributes are serialized correctly") {
 }
 
 TEST_CASE("Text nodes are serialized correctly") {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<
         html<
@@ -933,8 +907,7 @@ TEST_CASE("Text nodes are serialized correctly") {
 }
 
 TEST_CASE("Void tags are serialized correctly") {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<
         html<
@@ -949,8 +922,7 @@ TEST_CASE("Void tags are serialized correctly") {
 }
 
 TEST_CASE("Comment tags are serialized correctly") {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<
         html<
@@ -966,8 +938,7 @@ TEST_CASE("Comment tags are serialized correctly") {
 }
 
 TEST_CASE("UTF-8 text strings are cut off properly") {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<
         html<
@@ -980,16 +951,14 @@ TEST_CASE("UTF-8 text strings are cut off properly") {
 }
 
 TEST_CASE("Empty document serializes correctly") {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<>;
     CHECK(doc::toString() == "");
 }
 
 TEST_CASE("Deeply nested elements serialize correctly") {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<
         html<
@@ -1010,8 +979,7 @@ TEST_CASE("Deeply nested elements serialize correctly") {
 }
 
 TEST_CASE("Multiple text nodes are serialized in sequence") {
-    using namespace Templater::compile;
-    using namespace Templater::compile::ctags;
+    using namespace Templater::ctags;
 
     using doc = Document<
         html<
@@ -1026,9 +994,8 @@ TEST_CASE("Multiple text nodes are serialized in sequence") {
     CHECK(doc::toString() == "<html><head></head><body>Hello world!</body></html>");
 }
 
-TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+TEST_CASE("Text properly escapes html", "[dynamic::tags::Text]" ) {
+    using namespace Templater::tags;
 
     std::string textToEscape = "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
@@ -1039,8 +1006,8 @@ TEST_CASE("Text properly escapes html", "[dynamic::dtags::Text]" ) {
     CHECK(d.serializePretty("\t", true) == expected);
 }
 
-TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "[dynamic::dtags::Text]" ) {
-    using namespace Templater::dynamic::dtags;
+TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "[dynamic::tags::Text]" ) {
+    using namespace Templater::tags;
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
@@ -1051,8 +1018,8 @@ TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled", "
     CHECK(d.serializePretty("\t", true) == expected);
 }
 
-TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "[dynamic::dtags::Text]" ) {
-    using namespace Templater::dynamic::dtags;
+TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "[dynamic::tags::Text]" ) {
+    using namespace Templater::tags;
 
     std::string textToEscape = "<div class=\"content\"><h1>😀Welcome to <span style=\"color: red;\">My Awesome Website</span></h1><p>Today's date is: <script>alert('Hacked!');</script></p><a href=\"https://example.com?param=<script>evil()</script>\">Click here</a><p>&copy; 2025 My Awesome Website</p></div>";
 
@@ -1064,8 +1031,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
 }
 
 TEST_CASE("HTML comments are generated", "[Comment]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     GenericNode obj{
         "html", false,
@@ -1080,8 +1046,7 @@ TEST_CASE("HTML comments are generated", "[Comment]" ) {
 }
 
 TEST_CASE("HTML comments are escaped", "[Comment]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     GenericNode obj{
         "html", false,
@@ -1097,8 +1062,7 @@ TEST_CASE("HTML comments are escaped", "[Comment]" ) {
 
 
 TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     GenericNode obj{
         "html", false,
@@ -1113,8 +1077,7 @@ TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
 }
 
 TEST_CASE("Node deepCopy() works", "[Node]") {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     html obj{
         Attribute("lang", "en"),
@@ -1149,7 +1112,7 @@ TEST_CASE("Node deepCopy() works", "[Node]") {
                 )
             ),
             
-            dtags::main(
+            main(
                 section(
                     Attribute("id", "introduction"),
                     h1(Text("Introduction")),
@@ -1211,8 +1174,7 @@ TEST_CASE("Node deepCopy() works", "[Node]") {
 }
 
 TEST_CASE("Node deepCopy creates a new instance with identical attributes", "[Node]") {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
     
     GenericNode obj{"html", false, 
         Attribute("class", "test"), 
@@ -1237,7 +1199,7 @@ TEST_CASE("Node deepCopy creates a new instance with identical attributes", "[No
 }
 
 TEST_CASE("Node deepCopy with empty node", "[Node]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     p obj{};
 
@@ -1249,8 +1211,7 @@ TEST_CASE("Node deepCopy with empty node", "[Node]") {
 }
 
 TEST_CASE("Node deepCopy does not share internal state", "[Node]") {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
     
     html obj{
         Attribute("class", "testNode"), 
@@ -1265,8 +1226,7 @@ TEST_CASE("Node deepCopy does not share internal state", "[Node]") {
 }
 
 TEST_CASE("Node deepEquals() works", "[Node]") {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     html obj{
         Attribute("lang", "en"),
@@ -1301,7 +1261,7 @@ TEST_CASE("Node deepEquals() works", "[Node]") {
                 )
             ),
             
-            dtags::main(
+            main(
                 section(
                     Attribute("id", "introduction"),
                     h1(Text("Introduction")),
@@ -1367,21 +1327,21 @@ TEST_CASE("Node deepEquals() works", "[Node]") {
 
 
 TEST_CASE("Single Node has depth 0", "[Node]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     cdiv root;
     REQUIRE(root.depth() == 0);
 }
 
 TEST_CASE("One level of children increases depth", "[Node]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     cdiv root{p()};
     REQUIRE(root.depth() == 1);
 }
 
 TEST_CASE("Nested children increase depth", "[Node]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
     
     body root{
         cdiv(
@@ -1395,7 +1355,7 @@ TEST_CASE("Nested children increase depth", "[Node]") {
 }
 
 TEST_CASE("Deepest of multiple branches determines the depth of a tree", "[Node]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     main root{
         nav(),
@@ -1410,7 +1370,7 @@ TEST_CASE("Deepest of multiple branches determines the depth of a tree", "[Node]
 }
 
 TEST_CASE("leafCount() works", "[Node]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     main root{
         nav(),
@@ -1431,7 +1391,7 @@ TEST_CASE("leafCount() works", "[Node]") {
 }
 
 TEST_CASE("leafCount() returns 1 on empty tree", "[Node]") {
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     main root{};
 
@@ -1440,8 +1400,8 @@ TEST_CASE("leafCount() returns 1 on empty tree", "[Node]") {
 
 
 TEST_CASE("Node move properly handle indices", "[Node]") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater;
+    using namespace Templater::tags;
 
     GenericNode obj{
         "html", false,
@@ -1468,8 +1428,8 @@ TEST_CASE("Node move properly handle indices", "[Node]") {
 }
 
 TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater;
+    using namespace Templater::tags;
 
     GenericNode obj{
         "html", false,
@@ -1493,8 +1453,7 @@ TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
 }
 
 TEST_CASE("ForEach Node unique_ptr constructor works") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     ul normalConstructed{
         li(Text("1")),
@@ -1514,8 +1473,7 @@ TEST_CASE("ForEach Node unique_ptr constructor works") {
 }
 
 TEST_CASE("ForEach Node unique_ptr constructor works with different types") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     cdiv normalConstructed{
         section(Text("1")),
@@ -1539,8 +1497,7 @@ TEST_CASE("ForEach Node unique_ptr constructor works with different types") {
 }
 
 TEST_CASE("ForEach Node type-locked constructor works") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     ul normalConstructed{
         li(Text("1")),
@@ -1560,8 +1517,7 @@ TEST_CASE("ForEach Node type-locked constructor works") {
 }
 
 TEST_CASE("ForEach Node works with strings") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     cdiv obscured{
         span(Text("o")),
@@ -1584,8 +1540,7 @@ TEST_CASE("ForEach Node works with strings") {
 }
 
 TEST_CASE("ForEach Node iterator constructor works") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     std::vector<std::string> text = {
         "Text 1",
@@ -1613,8 +1568,7 @@ TEST_CASE("ForEach Node iterator constructor works") {
 }
 
 TEST_CASE("ForEach Node no step range constructor works") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     ul normalConstructed{
         li(Text("1")),
@@ -1635,8 +1589,7 @@ TEST_CASE("ForEach Node no step range constructor works") {
 
 
 TEST_CASE("ForEach Node step range constructor works") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     ul normalConstructed{
         li(Text("1")),
@@ -1654,8 +1607,7 @@ TEST_CASE("ForEach Node step range constructor works") {
 }
 
 TEST_CASE("If Node chooses correctly") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     cdiv nodeTrue{
         If(5 > 2, 
@@ -1674,8 +1626,7 @@ TEST_CASE("If Node chooses correctly") {
 }
 
 TEST_CASE("If Node works with different Node argument types") {
-    using namespace Templater::dynamic;
-    using namespace Templater::dynamic::dtags;
+    using namespace Templater::tags;
 
     std::string expected = "<div>True</div>";
 
@@ -1722,8 +1673,7 @@ TEST_CASE("If Node works with different Node argument types") {
 }
 
 TEST_CASE("Child replace works", "[Node]" ) {
-    using namespace Templater::dynamic::dtags;
-    using namespace Templater::dynamic;
+    using namespace Templater::tags;
 
     std::unique_ptr<Node> child = std::make_unique<GenericNode>(
         "div", false, Attribute("id", "1")
@@ -1766,11 +1716,10 @@ TEST_CASE("Child replace works", "[Node]" ) {
 
 
 TEST_CASE("Compile api dynamic bindings work") {
-    using namespace Templater::compile;
-    using namespace Templater::dynamic;
-    using namespace Templater::compile::ctags;
+    using namespace Templater;
+    using namespace Templater::ctags;
 
-    dtags::cdiv cd{dtags::Text{"Hello!"}};
+    tags::cdiv cd{tags::Text{"Hello!"}};
 
     using doc = PlaceholderDocument<
         html<
@@ -1782,22 +1731,22 @@ TEST_CASE("Compile api dynamic bindings work") {
         >
     >;
 
-    dtags::ul valueToBind{
-        dtags::li(dtags::Text("1")),
-        dtags::li(dtags::Text("2")),
-        dtags::li(dtags::Text("3")),
-        dtags::li(dtags::Text("4")),
-        dtags::li(dtags::Text("5"))
+    tags::ul valueToBind{
+        tags::li(tags::Text("1")),
+        tags::li(tags::Text("2")),
+        tags::li(tags::Text("3")),
+        tags::li(tags::Text("4")),
+        tags::li(tags::Text("5"))
     };
 
-    dtags::section valueToBind2{
-        dtags::article{
-            dtags::p{},
-            dtags::p{},
-            dtags::span{},
-            dtags::p{},
-            dtags::span{},
-            dtags::img{}
+    tags::section valueToBind2{
+        tags::article{
+            tags::p{},
+            tags::p{},
+            tags::span{},
+            tags::p{},
+            tags::span{},
+            tags::img{}
         }
     };
 

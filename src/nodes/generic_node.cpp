@@ -1,6 +1,6 @@
 #include "generic_node.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
     
     GenericNode::GenericNode(std::string tagName, bool isVoid)
             : tag{std::move(tagName)}, _isVoid{isVoid}, Node() {}

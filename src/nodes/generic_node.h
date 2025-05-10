@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
     
     /**
      * @brief A Node which can is given its tag name and whether it is void or not at construction. Used when concrete classes aren't available/convenient.

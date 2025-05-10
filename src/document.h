@@ -92,7 +92,7 @@ namespace Templater::compile {
          * @return std::string 
          */
         static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
-            std::unique_ptr<Templater::dynamic::dtags::EmptyNode> obj = std::make_unique<Templater::dynamic::dtags::EmptyNode>();
+            std::unique_ptr<Templater::dynamic::tags::EmptyNode> obj = std::make_unique<Templater::dynamic::tags::EmptyNode>();
 
             if constexpr (sizeof...(Children) == 0)
             {

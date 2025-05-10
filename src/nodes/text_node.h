@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-namespace Templater::dynamic::dtags {
+namespace Templater::dynamic::tags {
 
 
     /**
