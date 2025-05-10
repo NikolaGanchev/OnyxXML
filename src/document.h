@@ -11,13 +11,7 @@
 #include <initializer_list>
 #include <utility>
 
-#define COMPILE_DOCUMENT(...) [](){ \
-    using namespace Templater::compile::ctags;\
-    static std::string str = Templater::compile::Document<__VA_ARGS__>::dynamicTree();\
-    return str; \
-}();
-
-#define RAW_TEMPLATE(...) std::string(#__VA_ARGS__)
+#define RAW_XML(...) std::string(#__VA_ARGS__)
 
 namespace Templater::compile {
 
