@@ -59,9 +59,8 @@ namespace Templater::dynamic::parser {
                 || ch == '.';
     }       
 
-    std::string_view readTagName(const char* pos) {
+    std::string_view readName(const char* pos) {
         const char* localPos = pos;
-
         if (!isNameStartChar(*localPos)) return std::string_view();
         localPos++;
         while (isNameChar(*localPos)) {
@@ -82,8 +81,21 @@ namespace Templater::dynamic::parser {
         return std::string_view(pos, localPos-pos);
     }
 
+    std::string_view extractAttributeValue(const char* pos, char attributeQuote) {
+        const char* localPos = pos;
+
+        while (*localPos != attributeQuote) {
+            if (*localPos == '\0') return std::string_view();
+            localPos++;
+        }
+
+        return std::string_view(pos, localPos-pos);
+    }
+
+
     ParseResult DomParser::parse(std::string_view input) {
         std::vector<Node*> stack;
+        std::vector<Attribute> attributes;
 
         const char* pos = input.data();
 
@@ -94,6 +106,7 @@ namespace Templater::dynamic::parser {
         pos = skipWhitespace(pos);
 
         while(*pos != '\0') {
+            attributes.clear();
             // Invariant - always at the start of either a tag or a sequence of text
             if (*pos != '<') {
                 std::string_view text = extractText(pos);
@@ -127,21 +140,80 @@ namespace Templater::dynamic::parser {
             }
 
             // Invariant - pos always at tag name start
-            std::string_view tagName = readTagName(pos);
+            std::string_view tagName = readName(pos);
             if (tagName.empty()) {
                 throw std::invalid_argument("Invalid tag name");
             }
             pos += tagName.size();
+            
+            bool couldHaveAttributes = isWhitespace(*pos) && !isClosing;
 
             // Invariant - pos always after tag name end
-
             pos = skipWhitespace(pos);
 
             if (*pos == '\0') {
                 throw std::invalid_argument("Premature end of document");
             }
 
+            if (couldHaveAttributes) {
+                // Invariant - either at start of attribute or at >
+                while (*pos != '>' && *pos != '/') {
+                    std::string_view attributeName = readName(pos);
+                    if (attributeName.empty()) {
+                        throw std::invalid_argument("Invalid non-closing tag");
+                    }
+                    pos += attributeName.size();
+
+                    // Invariant - after attribute name
+                    pos = skipWhitespace(pos);
+
+                    // Invariant - at = or error state
+                    if (*pos == '\0' || *pos != '=') {
+                        throw std::invalid_argument("No = after attribute");
+                    }
+                    pos++;
+                    // Invariant - after attribute =
+                    pos = skipWhitespace(pos);
+                    char attributeQuote = '\0';
+                    if (*pos == '\0') {
+                        throw std::invalid_argument("Premature end at attribute");
+                    }
+
+                    if (*pos == '\'' || *pos == '\"') {
+                        attributeQuote = *pos;
+                    } else {
+                        throw std::invalid_argument("No quote (\" or \') after attribute =");
+                    }
+                    pos++;
+
+                    // Invariant - after attribute value opening quote
+                    std::string_view attributeValue = extractAttributeValue(pos, attributeQuote);
+                    if (attributeValue.empty() && *pos != attributeQuote) {
+                        throw std::invalid_argument("Improperly closed attribute value");
+                    }
+                    pos += attributeValue.size();
+
+                    // Invariant - pos is at closing quote
+                    pos++;
+
+                    // Invariant - pos is just after closing quote
+                    // Allows non-standard <tagName name="value"/> where the backslash is exactly after the quote
+                    if (!isWhitespace(*pos) && *pos != '>' && *pos != '/') {
+                        throw std::invalid_argument("No whitespace after attribute closing quote");
+                    }
+
+                    attributes.emplace_back(std::string(attributeName), std::string(attributeValue)); 
+
+                    // Continues to either >, /> or another attribute
+                    pos = skipWhitespace(pos);
+                    if (*pos == '\0') {
+                        throw std::invalid_argument("Premature end after attribute");
+                    }
+                }
+            }
+
             bool isSelfClosing = false;
+            // Invariant - pos is always at / or >
             if (*pos == '>') {
                 pos++;
             } else if (*pos == '/') {
@@ -155,14 +227,14 @@ namespace Templater::dynamic::parser {
                 isSelfClosing = true;
                 pos++;
             } else {
-                throw std::invalid_argument("Invalid tag close - tag is not closed at all");
+                throw std::invalid_argument("No tag close");
             }
 
             // Invariant - pos always after valid tag close
-
             if (!isClosing) {
                 // Invariant - pos is after > of a non-closing tag
-                Node* newNode = new tags::GenericNode(std::string(tagName), isSelfClosing);
+                Node* newNode = new tags::GenericNode(std::string(tagName), isSelfClosing, std::move(attributes), {});
+                attributes = std::vector<Attribute>();
 
                 // Invariant - top stack node is always current parent
                 stack.back()->addChild(std::unique_ptr<Node>{newNode});
