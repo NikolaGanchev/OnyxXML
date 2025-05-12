@@ -14,6 +14,7 @@ target_sources(
         "node_tests.cpp"
         "text_tests.cpp"
         "index_tests.cpp"
+        "parser_tests.cpp"
 )
 
 include(../src/use_tags_file.cmake)

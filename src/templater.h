@@ -20,6 +20,7 @@
 #include "document.h"
 #include "compile/compile_placeholder.h"
 #include "compile/placeholder_document.h"
+#include "parse/dom_parser.h"
 
 #if __has_include("dynamic/tags.h")
     #include "dynamic/tags.h"
@@ -34,6 +35,7 @@ namespace Templater {
     namespace ctags = compile::ctags;
     namespace index = dynamic::index;
     namespace text = dynamic::text;
+    namespace parser = dynamic::parser;
 
     namespace dynamic::tags {
         using Templater::dynamic::Node;
