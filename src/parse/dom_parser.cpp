@@ -59,7 +59,7 @@ namespace Templater::dynamic::parser {
                 || ch == '.';
     }       
 
-    char* readTagName(const char* pos) {
+    std::string_view readTagName(const char* pos) {
         const char* localPos = pos;
 
         if (!isNameStartChar(*localPos)) return nullptr;
@@ -68,28 +68,18 @@ namespace Templater::dynamic::parser {
             localPos++;
         }
 
-        size_t size = localPos - pos;
-        char* name = new char[size + 1];
-        strncpy(name, pos, size);
-        name[size] = '\0';
-
-        return name;
+        return std::string_view(pos, localPos-pos);
     }
 
-    char* extractText(const char* pos) {
+    std::string_view extractText(const char* pos) {
         const char* localPos = pos;
 
         while (*localPos != '<') {
-            if (*localPos == '\0') return nullptr;
+            if (*localPos == '\0') break;
             localPos++;
         }
 
-        size_t size = localPos - pos;
-        char* text = new char[size + 1];
-        strncpy(text, pos, size);
-        text[size] = '\0';
-
-        return text;
+        return std::string_view(pos, localPos-pos);
     }
 
     ParseResult DomParser::parse(std::string_view input) {
@@ -106,19 +96,17 @@ namespace Templater::dynamic::parser {
         while(*pos != '\0') {
             // Invariant - always at the start of either > or a sequence of text
             if (*pos != '<') {
-                char* text = extractText(pos);
-                if (text == nullptr) {
+                std::string_view text = extractText(pos);
+                if (text[text.size() - 1] == '\0') {
                     while (*pos != '\0') {
                         if (!isWhitespace(*pos)) throw std::invalid_argument("Invalid end after tag open");
                         pos++;
                     }
                     break;
                 }
-                pos += strlen(text);
+                pos += text.size();
 
-                stack.back()->addChild(tags::Text(std::move(text)));
-
-                delete text;
+                stack.back()->addChild(tags::Text(std::string(text)));
 
                 continue;
             }
@@ -139,18 +127,17 @@ namespace Templater::dynamic::parser {
             }
 
             // Invariant - pos always at tag name start
-            char* tagName = readTagName(pos);
-            if (tagName == nullptr) {
+            std::string_view tagName = readTagName(pos);
+            if (tagName[tagName.size() - 1] == '\0') {
                 throw std::invalid_argument("Invalid tag name");
             }
-            pos += strlen(tagName);
+            pos += tagName.size();
 
             // Invariant - pos always after tag name end
 
             pos = skipWhitespace(pos);
 
             if (*pos == '\0') {
-                delete tagName;
                 throw std::invalid_argument("Premature end of document");
             }
 
@@ -159,18 +146,15 @@ namespace Templater::dynamic::parser {
                 pos++;
             } else if (*pos == '/') {
                 if (isClosing) {
-                    delete tagName;
                     throw std::invalid_argument("Trying to double-close closing tag");
                 }
                 pos++;
                 if (*pos != '>') {
-                    delete tagName;
                     throw std::invalid_argument("Invalid tag close - must have > after /");
                 }
                 isSelfClosing = true;
                 pos++;
             } else {
-                delete tagName;
                 throw std::invalid_argument("Invalid tag close - tag is not closed at all");
             }
 
@@ -178,7 +162,7 @@ namespace Templater::dynamic::parser {
 
             if (!isClosing) {
                 // Invariant - pos is after > of a non-closing tag
-                Node* newNode = new tags::GenericNode(std::move(tagName), isSelfClosing);
+                Node* newNode = new tags::GenericNode(std::string(tagName), isSelfClosing);
 
                 // Invariant - top stack node is always current parent
                 stack.back()->addChild(std::unique_ptr<Node>{newNode});
@@ -189,17 +173,13 @@ namespace Templater::dynamic::parser {
                 // Invariant - when closing node, the current parent (stack top) must be of the node type
                 Node* thisNode = stack.back();
                 if (thisNode->getTagName() != tagName) {
-                    delete tagName;
                     throw std::invalid_argument("Closing unopened tag");
                 }
                 stack.pop_back();
                 if (stack.empty()) {
-                    delete tagName;
                     throw std::invalid_argument("Closing non-existent tags");
                 }
             }
-
-            delete tagName;
         }
 
         // Invariant - stack may only contain the root
