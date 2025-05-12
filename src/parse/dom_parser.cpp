@@ -62,7 +62,7 @@ namespace Templater::dynamic::parser {
     std::string_view readTagName(const char* pos) {
         const char* localPos = pos;
 
-        if (!isNameStartChar(*localPos)) return nullptr;
+        if (!isNameStartChar(*localPos)) return std::string_view();
         localPos++;
         while (isNameChar(*localPos)) {
             localPos++;
@@ -75,7 +75,7 @@ namespace Templater::dynamic::parser {
         const char* localPos = pos;
 
         while (*localPos != '<') {
-            if (*localPos == '\0') break;
+            if (*localPos == '\0') return std::string_view();
             localPos++;
         }
 
@@ -94,10 +94,10 @@ namespace Templater::dynamic::parser {
         pos = skipWhitespace(pos);
 
         while(*pos != '\0') {
-            // Invariant - always at the start of either > or a sequence of text
+            // Invariant - always at the start of either a tag or a sequence of text
             if (*pos != '<') {
                 std::string_view text = extractText(pos);
-                if (text[text.size() - 1] == '\0') {
+                if (text.empty()) {
                     while (*pos != '\0') {
                         if (!isWhitespace(*pos)) throw std::invalid_argument("Invalid end after tag open");
                         pos++;
@@ -128,7 +128,7 @@ namespace Templater::dynamic::parser {
 
             // Invariant - pos always at tag name start
             std::string_view tagName = readTagName(pos);
-            if (tagName[tagName.size() - 1] == '\0') {
+            if (tagName.empty()) {
                 throw std::invalid_argument("Invalid tag name");
             }
             pos += tagName.size();
@@ -175,10 +175,10 @@ namespace Templater::dynamic::parser {
                 if (thisNode->getTagName() != tagName) {
                     throw std::invalid_argument("Closing unopened tag");
                 }
-                stack.pop_back();
-                if (stack.empty()) {
+                if (stack.size() == 1) {
                     throw std::invalid_argument("Closing non-existent tags");
                 }
+                stack.pop_back();
             }
         }
 
