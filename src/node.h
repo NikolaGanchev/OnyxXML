@@ -178,7 +178,7 @@ namespace Templater::dynamic {
              * @brief A vector holding unique pointers to the children of this node
              * 
              */
-            std::vector<std::unique_ptr<Node>> children;
+            std::vector<Node*> children;
 
 
             /**
@@ -284,9 +284,9 @@ namespace Templater::dynamic {
             /**
              * @brief Get a reference to the live children std::vector
              * 
-             * @return const std::vector<std::unique_ptr<Node>>& 
+             * @return const std::vector<Node*>& 
              */
-            const std::vector<std::unique_ptr<Node>>& getChildrenLive() const;
+            const std::vector<Node*>& getChildrenLive() const;
         public:
             /**
              * @brief Used during serialization for keeping track of nodes.
@@ -591,7 +591,7 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Calls addChild() using the given unique pointer.
+             * @brief Calls addChild() using the given pointer.
              * 
              * @param right 
              * @return Node& this
@@ -771,18 +771,16 @@ Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild) requi
         throw std::runtime_error("Attempted to add child to " + getTagName() + "  that is already a child of another Object.");
         return nullptr;
     }
-    std::unique_ptr<T> obj = std::make_unique<std::decay_t<T>>(std::forward<T>(newChild));
-    (dynamic_cast<Node*>(obj.get()))->parent = this;
+    T* obj = new std::decay_t<T>(std::forward<T>(newChild));
+    (dynamic_cast<Node*>(obj))->parent = this;
     
     this->indexParse([&obj](Node::Index* id) -> void {
-        (dynamic_cast<Node*>(obj.get()))->addIndex(id);
+        (dynamic_cast<Node*>(obj))->addIndex(id);
     });
 
-    Node* objRef = obj.get();
+    children.push_back(obj);
 
-    children.push_back(std::move(obj));
-
-    return objRef;
+    return obj;
 }
 
 template <typename T>
@@ -791,10 +789,10 @@ void Templater::dynamic::Node::processConstructorObjectMove(T&& child) requires 
         throw std::runtime_error("Attempted to construct Node with a child that is already a child of another Node.");
     }
 
-    std::unique_ptr<T> obj = std::make_unique<std::decay_t<T>>(std::forward<T>(child));
-    (dynamic_cast<Node*>(obj.get()))->parent = this;
+    T* obj = new std::decay_t<T>(std::forward<T>(child));
+    (dynamic_cast<Node*>(obj))->parent = this;
     
-    children.push_back(std::move(obj));
+    children.push_back(obj);
 }
 
 template <typename T>

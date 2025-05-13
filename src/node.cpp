@@ -21,7 +21,10 @@ namespace Templater::dynamic {
     }
 
     Node::Node(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
-        : attributes{std::move(attributes)}, children{std::move(children)}, indices{}, parent{nullptr} {
+        : attributes{std::move(attributes)}, indices{}, parent{nullptr} {
+        for (auto& child: children) {
+            this->children.push_back(child.release());
+        }
         for (auto& child: this->children) {
             child->parent = this;
         }
@@ -73,6 +76,10 @@ namespace Templater::dynamic {
                 id->invalidate();
             }
         });
+
+        for (auto& child: this->children) {
+            delete child;
+        }
     }
 
     Node::~Node() {
@@ -95,20 +102,13 @@ namespace Templater::dynamic {
 
         Node* newChildRef = newChild.get();
 
-         this->children.push_back(std::move(newChild));
+        this->children.push_back(newChild.release());
 
         return newChildRef;
     }
 
     std::vector<Node*> Node::getChildren() const {
-        std::vector<Node*> copy;
-
-        copy.reserve( this->children.size());
-        for (const auto& child : this->children) {
-            copy.push_back(child.get());
-        }
-
-        return copy;
+        return std::vector<Node*>(this->children);
     }
 
     size_t Node::getChildrenCount() const {
@@ -169,9 +169,9 @@ namespace Templater::dynamic {
 
             s.pop_back();
 
-            const std::vector<std::unique_ptr<Node>>& children = obj->children;
+            const std::vector<Node*>& children = obj->children;
             for (size_t i = 0; i < children.size(); i++) {
-                s.push_back(children[i].get());
+                s.push_back(children[i]);
             }
         }
     }
@@ -189,7 +189,7 @@ namespace Templater::dynamic {
         std::vector<Node*> result;
 
         for (size_t i = 0; i < this->children.size(); i++) {
-            s.push_back(this->children[i].get());
+            s.push_back(this->children[i]);
         }
 
         while(!s.empty()) {
@@ -203,7 +203,7 @@ namespace Templater::dynamic {
 
             auto& children = obj->children;
             for (size_t i = children.size(); i > 0; i--) {
-                s.push_back(children[i - 1].get());
+                s.push_back(children[i - 1]);
             }
         }
 
@@ -248,15 +248,15 @@ namespace Templater::dynamic {
     std::unique_ptr<Node> Node::removeChild(Node* childToRemove) {
         if (!childToRemove->isInTree()) return nullptr;
 
-        std::vector<std::vector<std::unique_ptr<Node>>*> s;
+        std::vector<std::vector<Node*>*> s;
 
         s.push_back(&(this->children));
 
         while(!s.empty()) {
-            std::vector<std::unique_ptr<Node>>* children = s.back();
+            std::vector<Node*>* children = s.back();
 
             for (size_t i = 0; i < children->size(); i++) {
-                if (children->at(i).get() == childToRemove) {
+                if (children->at(i) == childToRemove) {
     
                     this->indexParse([&childToRemove, this](Node::Index* id) -> void {
                         if (id->getRoot() == this) {
@@ -265,7 +265,7 @@ namespace Templater::dynamic {
                     });
     
                     childToRemove->parent = nullptr;
-                    std::unique_ptr<Node> ref = std::move(children->operator[](i));
+                    std::unique_ptr<Node> ref(children->operator[](i));
                     children->erase(children->begin() + i);
     
                     return ref;
@@ -301,11 +301,11 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     for (size_t i = 0; i < children.size(); i++) {
                         std::unique_ptr<Node> child = children[i]->shallowCopy();
-                        s.emplace_back(ParseNode{children[i].get(), child.get()});
+                        s.emplace_back(ParseNode{children[i], child.get()});
                         node.copy->addChild(std::move(child));
                     }
                 }
@@ -370,13 +370,13 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
-                const std::vector<std::unique_ptr<Node>>& childrenOther = other->children;
+                const std::vector<Node*>& children = obj->children;
+                const std::vector<Node*>& childrenOther = other->children;
                 if (!children.empty()) {
                     for (size_t i = 0; i < children.size(); i++) {
                         // Because of obj->shallowEquals(*other) succeeding, it is known
                         // that at this point the two nodes have the same amount of children
-                        s.emplace_back(ParseNode{children[i].get(), childrenOther[i].get()});
+                        s.emplace_back(ParseNode{children[i], childrenOther[i]});
                     }
                 }
             }
@@ -410,7 +410,7 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     depth++;
                     if (depth > maxDepth) {
@@ -418,7 +418,7 @@ namespace Templater::dynamic {
                     }
                     s.emplace_back(nullptr);
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(children[i-1].get());
+                        s.emplace_back(children[i-1]);
                     }
                 }
             }
@@ -440,10 +440,10 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(children[i-1].get());
+                        s.emplace_back(children[i-1]);
                     }
                 } else {
                     leaves++;
@@ -561,11 +561,11 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     result << ">";
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(SerializationNode{children[i-1].get(), false});
+                        s.emplace_back(SerializationNode{children[i-1], false});
                     }
                 } else {
                     result << "></" << tagName << ">";
@@ -643,13 +643,13 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     result << ">\n";
                     s.emplace_back(SerializationNode{nullptr, false});
                     indentation += indentationSequence;
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(SerializationNode{children[i-1].get(), false});
+                        s.emplace_back(SerializationNode{children[i-1], false});
                     }
                 } else {
                     result << "></" << tagName << ">\n";
@@ -746,7 +746,7 @@ namespace Templater::dynamic {
         return sortAttributes;
     }
 
-    const std::vector<std::unique_ptr<Node>>& Node::getChildrenLive() const {
+    const std::vector<Node*>& Node::getChildrenLive() const {
         return this->children;
     }
 }
