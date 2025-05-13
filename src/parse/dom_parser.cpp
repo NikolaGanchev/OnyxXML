@@ -95,7 +95,8 @@ namespace Templater::dynamic::parser {
 
     ParseResult DomParser::parse(std::string_view input) {
         std::vector<Node*> stack;
-        std::vector<Attribute> attributes;
+        std::vector<std::string_view> attributeNames;
+        std::vector<std::string_view> attributeValues;
 
         const char* pos = input.data();
 
@@ -106,7 +107,8 @@ namespace Templater::dynamic::parser {
         pos = skipWhitespace(pos);
 
         while(*pos != '\0') {
-            attributes.clear();
+            attributeNames.clear();
+            attributeValues.clear();
             // Invariant - always at the start of either a tag or a sequence of text
             if (*pos != '<') {
                 std::string_view text = extractText(pos);
@@ -202,7 +204,8 @@ namespace Templater::dynamic::parser {
                         throw std::invalid_argument("No whitespace after attribute closing quote");
                     }
 
-                    attributes.emplace_back(std::string(attributeName), std::string(attributeValue)); 
+                    attributeNames.push_back(attributeName); 
+                    attributeValues.push_back(attributeValue); 
 
                     // Continues to either >, /> or another attribute
                     pos = skipWhitespace(pos);
@@ -233,8 +236,13 @@ namespace Templater::dynamic::parser {
             // Invariant - pos always after valid tag close
             if (!isClosing) {
                 // Invariant - pos is after > of a non-closing tag
-                Node* newNode = new tags::GenericNode(std::string(tagName), isSelfClosing, std::move(attributes), {});
-                attributes = std::vector<Attribute>();
+                Node* newNode = new tags::GenericNode(std::string(tagName), isSelfClosing);
+
+                // Invariant - attributeNames and attributeValues have the same size
+                auto& attributes = newNode->attributes;
+                for (int i = 0; i < attributeNames.size(); i++) {
+                    attributes.emplace_back(std::string(attributeNames[i]), std::string(attributeValues[i]));
+                }
 
                 // Invariant - top stack node is always current parent
                 stack.back()->addChild(std::unique_ptr<Node>{newNode});

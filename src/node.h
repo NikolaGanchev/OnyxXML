@@ -14,6 +14,9 @@ namespace Templater::dynamic {
     namespace index {
         class Index;
     }
+    namespace parser {
+        class DomParser;
+    }
 
     /**
      * @brief Checks if the template parameter is s subclass of Node or an Attribute.
@@ -64,6 +67,7 @@ namespace Templater::dynamic {
      * 
      */
     class Node {
+        friend parser::DomParser;
         public: 
             class Index;
         private:
