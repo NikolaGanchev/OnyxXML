@@ -1875,3 +1875,31 @@ TEST_CASE("Move assignment transfers pointer and ownership", "[NodeHandle]") {
     REQUIRE(h1.get() == nullptr);
     REQUIRE(h1.owning() == false);
 }
+
+TEST_CASE("Non-owning Node does not destroy its children") {
+    using namespace Templater::tags;
+
+    Node* body = new GenericNode(NonOwning, "body", false);
+    {
+        GenericNode root(NonOwning, "html", false);
+
+        root.addChild(body);
+    }
+
+    REQUIRE(body->getTagName() == "body");
+}
+
+TEST_CASE("Mixing owning and non-owning Nodes with move constructor causes exception") {
+    using namespace Templater::tags;
+
+    REQUIRE_THROWS(GenericNode("html", false,
+        GenericNode(NonOwning, "body", false)));
+}
+
+TEST_CASE("Mixing owning and non-owning Nodes causes exception") {
+    using namespace Templater::tags;
+
+    GenericNode root("html", false);
+    Node* body = new GenericNode(NonOwning, "body", false);
+    REQUIRE_THROWS(root.addChild(body));
+}

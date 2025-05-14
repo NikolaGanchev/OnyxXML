@@ -9,10 +9,17 @@
 
 namespace Templater::dynamic {
     Node::Node()
-        : attributes{}, children{}, indices{}, parent{nullptr} { }
+        : attributes{}, children{}, indices{}, parent{nullptr}, _isOwning(true) { }
+
+    Node::Node(NonOwningNodeTag)
+        : attributes{}, children{}, indices{}, parent{nullptr}, _isOwning(false) { }
 
     Node::Node(Node&& other) noexcept
-        : attributes{std::move(other.attributes)}, children{std::move(other.children)}, indices{std::move(other.indices)}, parent{other.parent} {
+        : attributes{std::move(other.attributes)}, 
+        children{std::move(other.children)}, 
+        indices{std::move(other.indices)}, 
+        parent{other.parent}, 
+        _isOwning(other._isOwning) {
         other.parent = nullptr;
         this->takeOverIndices(other);
         for (auto& child: this->children) {
@@ -21,7 +28,18 @@ namespace Templater::dynamic {
     }
 
     Node::Node(std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
-        : attributes{std::move(attributes)}, indices{}, parent{nullptr} {
+        : attributes{std::move(attributes)}, indices{}, parent{nullptr}, _isOwning(true) {
+        for (auto& child: children) {
+            this->children.push_back(child.release());
+        }
+        for (auto& child: this->children) {
+            child->parent = this;
+        }
+    }
+
+    
+    Node::Node(NonOwningNodeTag, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
+        : attributes{std::move(attributes)}, indices{}, parent{nullptr}, _isOwning(false) {
         for (auto& child: children) {
             this->children.push_back(child.release());
         }
@@ -36,6 +54,7 @@ namespace Templater::dynamic {
         this->attributes = std::move(other.attributes);
         this->children = std::move(other.children);
         this->indices = std::move(other.indices);
+        this->_isOwning = other._isOwning;
 
         this->takeOverIndices(other);
         this->parent = other.parent;
@@ -77,8 +96,10 @@ namespace Templater::dynamic {
             }
         });
 
-        for (auto& child: this->children) {
-            delete child;
+        if (this->_isOwning) {
+            for (auto& child: this->children) {
+                delete child;
+            }
         }
     }
 
@@ -91,8 +112,10 @@ namespace Templater::dynamic {
             throw std::runtime_error("Void " + getTagName() + " cannot have children.");
         }
         if (newChild->isInTree()) {
-            throw std::runtime_error("Attempted to add child to " + getTagName() + "  that is already a child of another Object.");
-            return nullptr;
+            throw std::runtime_error("Attempted to add child to " + getTagName() + " that is already a child of another Object.");
+        }
+        if (newChild.owning() != this->_isOwning) {
+            throw std::runtime_error("Attempted to add child to " + getTagName() + " with different owning mode.");
         }
 
         newChild->parent = this;
@@ -273,7 +296,13 @@ namespace Templater::dynamic {
                     });
     
                     childToRemove->parent = nullptr;
-                    std::unique_ptr<Node> ref(children->operator[](i));
+                    NodeHandle ref(nullptr);
+                    if (this->_isOwning) {
+                        ref = NodeHandle(std::unique_ptr<Node>(children->operator[](i)));
+                    } else {
+                        ref = NodeHandle(children->operator[](i));
+                    }
+                    
                     children->erase(children->begin() + i);
     
                     return ref;

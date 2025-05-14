@@ -6,6 +6,7 @@ namespace Templater::dynamic::tags {
     /**
      * @brief A Node that upon a condition decides which of two given Nodes to add as a child.
      * The child can be passed as either a move or an std::unique_ptr<Node>.
+     * If Nodes are always owning, as the move constructors of a Node cannot be used with non-owning nodes.
      * Example usage:
      * @code{.cpp}
      * // Node&& and Node&&

@@ -6,4 +6,6 @@ namespace Templater::dynamic {
     }
 
     VoidNode::VoidNode(std::vector<Attribute> attributes): Node(std::move(attributes), {}) {}
+
+    VoidNode::VoidNode(NonOwningNodeTag, std::vector<Attribute> attributes): Node(NonOwning, std::move(attributes), {}) {}
 }

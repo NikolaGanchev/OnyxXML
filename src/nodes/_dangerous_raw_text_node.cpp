@@ -3,6 +3,7 @@
 namespace Templater::dynamic::tags {
     
     __DangerousRawText::__DangerousRawText(std::string text): text(text), Node{} {}
+    __DangerousRawText::__DangerousRawText(NonOwningNodeTag, std::string text): text(text), Node{NonOwning} {}
 
     __DangerousRawText::__DangerousRawText(const __DangerousRawText& other): text(other.text), Node{} {}
     __DangerousRawText::__DangerousRawText(__DangerousRawText&& other) noexcept: text(std::move(other.text)), Node{} {}

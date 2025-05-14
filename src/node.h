@@ -59,10 +59,15 @@ namespace Templater::dynamic {
      */
     template<typename T>
     concept isValidNodeChild = std::same_as<T, std::unique_ptr<Node>> || std::same_as<T, Node*> || std::derived_from<std::decay_t<T>, Node>;
+    
+    struct NonOwningNodeTag {};
+    inline constexpr NonOwningNodeTag NonOwning{};
 
     /**
      * @brief An abstract class representing an XML Node. Any Node is a tree by itself. Node objects are not aware who its parent is, only if they have one.
-     * The Node owns and manages its children. It cannot be copied or copy assigned. Moves are allowed.
+     * The Node owns and manages its children by default. By passing the NonOwning tag to constructors, a non-owning Node can be created. 
+     * Non-owning and owning nodes cannot be mixed.
+     * Nodes cannot be copied or copy assigned. Moves are allowed.
      * 
      */
     class Node {
@@ -196,6 +201,14 @@ namespace Templater::dynamic {
              * 
              */
             Node* parent;
+
+
+            /**
+             * @brief Whether this Node is owning. An owning Node must release the memory of its children upon destruction.
+             * Owning Nodes can only contain owning children. Non-owning Nodes can only contain non-owning children.
+             * 
+             */
+            bool _isOwning;
             
 
             /**
@@ -352,8 +365,8 @@ namespace Templater::dynamic {
             };
 
             /**
-             * @brief Construct a new Node object via moved arguments. Allows supplying rvalue references to other Node objects of any subclass and Attributes in any order.
-             * Validated at compile time. Internally, for Nodes constructs a unique pointer from the rvalue reference.
+             * @brief Construct a new owning Node object via moved arguments. Allows supplying rvalue references to other Node objects of any subclass and Attributes in any order.
+             * Validated at compile time. Internally, for Nodes constructs a pointer from the rvalue reference.
              * @tparam Args 
              */
             template <typename... Args>
@@ -361,18 +374,29 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Construct a new Node object at runtime. Enforced order of attributes first, then children. Children need to be given over using unique pointers.
+             * @brief Construct a new owning Node object at runtime. Enforced order of attributes first, then children. Children need to be given over using unique pointers.
              * 
              * @param attributes A vector of Attributes
              * @param children A vector of children
              */
             explicit Node(std::vector<Attribute> attributes, std::vector<NodeHandle>&& children);
+
+
+            /**
+             * @brief Construct a new non-owning Node object at runtime. Enforced order of attributes first, then children. Children need to be given over using unique pointers.
+             * 
+             * @param attributes A vector of Attributes
+             * @param children A vector of children
+             */
+            explicit Node(NonOwningNodeTag, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children);
+
+
             explicit Node(const Node& other) = delete;
             Node& operator=(const Node& other) = delete;
 
 
             /**
-             * @brief Construct a new Node object using a Move
+             * @brief Construct a new Node object using a move.
              * 
              * @param other 
              */
@@ -389,10 +413,16 @@ namespace Templater::dynamic {
 
 
             /**
-             * @brief Construct a new Node object with default values
+             * @brief Construct a new owning Node object with default values
              * 
              */
             explicit Node();
+
+            /**
+             * @brief Construct a new non-owning Node object with default values
+             * 
+             */
+            explicit Node(NonOwningNodeTag);
 
 
             /**
@@ -426,6 +456,15 @@ namespace Templater::dynamic {
              * @return false 
              */
             bool isInTree() const;
+
+
+            /**
+             * @brief Whether the Node is owning.
+             * 
+             * @return true 
+             * @return false 
+             */
+            bool isOwning() const;
 
 
             /**
@@ -775,7 +814,7 @@ namespace Templater::dynamic {
 
 template <typename... Args>
 Templater::dynamic::Node::Node(Args&&... args) requires (Templater::dynamic::isValidNodeConstructorType<Args>&& ...)
-    : attributes{}, children{}, parent{nullptr}, indices{} { 
+    : attributes{}, children{}, parent{nullptr}, indices{}, _isOwning(true) { 
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
@@ -795,8 +834,11 @@ Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild) requi
     }
     if (newChild.isInTree()) {
         throw std::runtime_error("Attempted to add child to " + getTagName() + "  that is already a child of another Object.");
-        return nullptr;
     }
+    if (newChild._isOwning != this->_isOwning) {
+        throw std::runtime_error("Attempted to add child to " + getTagName() + " with different owning mode.");
+    }
+
     T* obj = new std::decay_t<T>(std::forward<T>(newChild));
     (dynamic_cast<Node*>(obj))->parent = this;
     
@@ -813,6 +855,9 @@ template <typename T>
 void Templater::dynamic::Node::processConstructorObjectMove(T&& child) requires (isNode<T>) {
     if (child.isInTree()) {
         throw std::runtime_error("Attempted to construct Node with a child that is already a child of another Node.");
+    }
+    if (child._isOwning != this->_isOwning) {
+        throw std::runtime_error("Attempted to add child to Node with different owning mode.");
     }
 
     T* obj = new std::decay_t<T>(std::forward<T>(child));

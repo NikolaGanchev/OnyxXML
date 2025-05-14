@@ -25,7 +25,7 @@ namespace Templater::dynamic::tags {
             bool _isVoid;
         public: 
             /**
-             * @brief Construct a new GenericNode object.
+             * @brief Construct a new owning GenericNode.
              * 
              * @tparam Args 
              * @param tagName The tag name of this node
@@ -34,8 +34,10 @@ namespace Templater::dynamic::tags {
              */
             template <typename... Args>
             explicit GenericNode(std::string tagName, bool isVoid, Args&&... args);
+
+
             /**
-             * @brief Construct an empty GenericNode object
+             * @brief Construct an empty owning GenericNode object
              * 
              * @param tagName The tag name of this node
              * @param isVoid Whether this Node is void
@@ -44,7 +46,7 @@ namespace Templater::dynamic::tags {
 
 
             /**
-             * @brief Construct a fully runtime GenericNode object
+             * @brief Construct a fully runtime owning GenericNode object
              * 
              * @param tagName The tag name of this node
              * @param isVoid Whether this Node is void
@@ -52,6 +54,26 @@ namespace Templater::dynamic::tags {
              * @param children Children to be forwarded to the Node constructor
              */
             explicit GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children);
+
+
+            /**
+             * @brief Construct an empty non-owning GenericNode object
+             * 
+             * @param tagName The tag name of this node
+             * @param isVoid Whether this Node is void
+             */
+            explicit GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid);
+
+
+            /**
+             * @brief Construct a fully runtime non-owning GenericNode object
+             * 
+             * @param tagName The tag name of this node
+             * @param isVoid Whether this Node is void
+             * @param attributes Attributes to be forwarded to the Node constructor
+             * @param children Children to be forwarded to the Node constructor
+             */
+            explicit GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children);
 
 
             /**

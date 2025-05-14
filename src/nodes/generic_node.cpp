@@ -12,6 +12,16 @@ namespace Templater::dynamic::tags {
                 }
     }
 
+    GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid)
+            : tag{std::move(tagName)}, _isVoid{isVoid}, Node(NonOwning) {}
+
+    GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
+            : tag{std::move(tagName)}, _isVoid{isVoid}, Node{NonOwning, std::move(attributes), std::move(children)} {
+                if (isVoid && this->getChildrenCount() > 0) {
+                    throw std::runtime_error("Void " + getTagName() + " cannot have children.");
+                }
+    }
+
     const std::string& GenericNode::getTagName() const {
         return this->tag;
     }

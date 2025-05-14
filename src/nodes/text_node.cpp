@@ -3,6 +3,8 @@
 
 namespace Templater::dynamic::tags {
     Text::Text(std::string text, bool escapeMultiByte): text(text), escapeMultiByte(escapeMultiByte), Node{} {}
+    Text::Text(NonOwningNodeTag, std::string text, bool escapeMultiByte): text(text), escapeMultiByte(escapeMultiByte), Node{NonOwning} {}
+
 
     Text::Text(const Text& other): text(other.text), escapeMultiByte(other.escapeMultiByte), Node{} {}
     Text::Text(Text&& other) noexcept: text(std::move(other.text)), escapeMultiByte(other.escapeMultiByte), Node{} {}

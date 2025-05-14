@@ -40,6 +40,7 @@ namespace Templater {
         using Templater::dynamic::Node;
         using Templater::dynamic::Attribute;
         using Templater::dynamic::NodeHandle;
+        using Templater::dynamic::NonOwning;
     }
 
     namespace compile::ctags {
