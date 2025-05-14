@@ -304,12 +304,7 @@ namespace Templater::dynamic {
                     });
     
                     childToRemove->parent = nullptr;
-                    NodeHandle ref(nullptr);
-                    if (this->_isOwning) {
-                        ref = NodeHandle(std::unique_ptr<Node>(children->operator[](i)));
-                    } else {
-                        ref = NodeHandle(children->operator[](i));
-                    }
+                    NodeHandle ref(children->operator[](i), this->_isOwning);
                     
                     children->erase(children->begin() + i);
     
