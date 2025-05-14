@@ -1887,6 +1887,8 @@ TEST_CASE("Non-owning Node does not destroy its children") {
     }
 
     REQUIRE(body->getTagName() == "body");
+
+    delete body;
 }
 
 TEST_CASE("Mixing owning and non-owning Nodes with move constructor causes exception") {
@@ -1902,4 +1904,6 @@ TEST_CASE("Mixing owning and non-owning Nodes causes exception") {
     GenericNode root("html", false);
     Node* body = new GenericNode(NonOwning, "body", false);
     REQUIRE_THROWS(root.addChild(body));
+
+    delete body;
 }
