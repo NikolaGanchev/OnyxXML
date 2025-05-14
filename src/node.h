@@ -11,6 +11,7 @@
 
 namespace Templater::dynamic {
     class Node;
+    class NodeHandle;
     namespace index {
         class Index;
     }
@@ -66,6 +67,7 @@ namespace Templater::dynamic {
     class Node {
         public: 
             class Index;
+            using Handle = NodeHandle;
         private:
             /**
              * @brief An observable constant std::string reference. 

@@ -1758,3 +1758,120 @@ TEST_CASE("Compile api dynamic bindings work") {
     REQUIRE(doc::dynamicTreeWithPlaceholders("cd", valueToBind, 
                                         "ab", valueToBind2)->serialize() == expected);
 }
+
+TEST_CASE("Owning NodeHandle reports owning and retains pointer", "[NodeHandle]") {
+    using namespace Templater::tags;
+
+    auto up = std::make_unique<GenericNode>("div", false);
+    Node* raw = up.get();
+
+    NodeHandle h(std::move(up));
+
+    REQUIRE(h.owning() == true);
+    REQUIRE(h.get() == raw);
+}
+
+TEST_CASE("Can construct owning NodeHandle with raw pointer", "[NodeHandle]") {
+    using namespace Templater::tags;
+
+    GenericNode* node = new GenericNode("span", false);
+
+    NodeHandle h(node, true);
+
+    REQUIRE(h.owning() == true);
+    REQUIRE(h.get() == node);
+}
+
+TEST_CASE("Non-owning NodeHandle reports non-owning and retains pointer", "[NodeHandle]") {
+    using namespace Templater::tags;
+
+    GenericNode* node = new GenericNode("span", false);
+
+    NodeHandle h(node, false);
+
+    REQUIRE(h.owning() == false);
+    REQUIRE(h.get() == node);
+
+    // Clean up manually since non‑owning handle won't delete
+    delete node;
+}
+
+TEST_CASE("releaseRaw transfers pointer and resets handle", "[NodeHandle]") {
+    using namespace Templater::tags;
+    auto up = std::make_unique<GenericNode>("p", false);
+    Node* raw = up.get();
+
+    NodeHandle h(std::move(up));
+
+    REQUIRE(h.owning() == true);
+    REQUIRE(h.get() == raw);
+
+    Node* released = h.releaseRaw();
+    REQUIRE(released == raw);
+    REQUIRE(h.get() == nullptr);
+    REQUIRE(h.owning() == false);
+
+    delete released;
+}
+
+TEST_CASE("toUnique on owning handle yields unique_ptr and becomes non-owning", "[NodeHandle]") {
+    using namespace Templater::tags;
+
+    auto up = std::make_unique<GenericNode>("section", false);
+    Node* raw = up.get();
+    NodeHandle h(std::move(up));
+
+    REQUIRE(h.owning() == true);
+    auto u2 = h.toUnique();
+
+    REQUIRE(u2.get() == raw);
+
+    REQUIRE(h.owning() == false);
+}
+
+TEST_CASE("toUnique on non-owning handle throws logic_error", "[NodeHandle]") {
+    using namespace Templater::tags;
+    GenericNode* node = new GenericNode("header", false);
+
+    NodeHandle h(node, false);
+
+    REQUIRE(h.owning() == false);
+    REQUIRE_THROWS_AS(h.toUnique(), std::logic_error);
+
+    delete node;
+}
+
+TEST_CASE("Move constructor transfers pointer and ownership", "[NodeHandle]") {
+    using namespace Templater::tags;
+    auto up = std::make_unique<GenericNode>("footer", false);
+    Node* raw = up.get();
+
+    NodeHandle h1(std::move(up));
+    REQUIRE(h1.owning() == true);
+
+    NodeHandle h2(std::move(h1));
+    REQUIRE(h2.owning() == true);
+    REQUIRE(h2.get() == raw);
+    REQUIRE(h1.get() == nullptr);
+    REQUIRE(h1.owning() == false);
+}
+
+TEST_CASE("Move assignment transfers pointer and ownership", "[NodeHandle]") {
+    using namespace Templater::tags;
+    auto up1 = std::make_unique<GenericNode>("article", false);
+    Node* raw = up1.get();
+
+    NodeHandle h1(std::move(up1));
+    REQUIRE(h1.owning() == true);
+
+    GenericNode dummy("div", false);
+    NodeHandle h2(&dummy, false);
+    REQUIRE(h2.owning() == false);
+
+    h2 = std::move(h1);
+
+    REQUIRE(h2.owning() == true);
+    REQUIRE(h2.get() == raw);
+    REQUIRE(h1.get() == nullptr);
+    REQUIRE(h1.owning() == false);
+}

@@ -20,6 +20,7 @@
 #include "document.h"
 #include "compile/compile_placeholder.h"
 #include "compile/placeholder_document.h"
+#include "node_handle.h"
 
 #if __has_include("dynamic/tags.h")
     #include "dynamic/tags.h"
@@ -38,6 +39,7 @@ namespace Templater {
     namespace dynamic::tags {
         using Templater::dynamic::Node;
         using Templater::dynamic::Attribute;
+        using Templater::dynamic::NodeHandle;
     }
 
     namespace compile::ctags {
