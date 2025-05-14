@@ -30,6 +30,11 @@ namespace Templater::dynamic {
     Node::Node(std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
         : attributes{std::move(attributes)}, indices{}, parent{nullptr}, _isOwning(true) {
         for (auto& child: children) {
+            if (child.owning() != this->_isOwning) {
+                throw std::invalid_argument("Mixing Nodes with different ownership modes");
+            }
+        }
+        for (auto& child: children) {
             this->children.push_back(child.release());
         }
         for (auto& child: this->children) {
@@ -41,6 +46,9 @@ namespace Templater::dynamic {
     Node::Node(NonOwningNodeTag, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
         : attributes{std::move(attributes)}, indices{}, parent{nullptr}, _isOwning(false) {
         for (auto& child: children) {
+            if (child.owning() != this->_isOwning) {
+                throw std::invalid_argument("Mixing Nodes with different ownership modes");
+            }
             this->children.push_back(child.release());
         }
         for (auto& child: this->children) {

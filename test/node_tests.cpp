@@ -1907,3 +1907,26 @@ TEST_CASE("Mixing owning and non-owning Nodes causes exception") {
 
     delete body;
 }
+
+TEST_CASE("Vector constructor throws when mixing ownership modes", "[Node]" ) {
+    using namespace Templater::tags;
+
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
+
+    std::vector<Attribute> attributes;
+    std::vector<NodeHandle> children;
+
+    attributes.emplace_back("id", "list");
+    for (int i = 1; i <= 3; i++) {
+        children.emplace_back(std::make_unique<cdiv>(Text(std::to_string(i))));
+    }
+
+    Node* nonOwned = new GenericNode("div", false);
+
+    children.emplace_back(nonOwned);
+
+    REQUIRE_THROWS(body{attributes, std::move(children)});
+
+    delete nonOwned;
+}
