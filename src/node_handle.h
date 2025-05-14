@@ -1,8 +1,6 @@
 #pragma once
 #include <memory>
 #include <stdexcept>
-#include "node.h"
-
 
 namespace Templater::dynamic {
     class Node;
@@ -124,7 +122,7 @@ namespace Templater::dynamic {
              * 
              * @return Node* 
              */
-            Node* releaseRaw();
+            Node* release();
 
 
             /**
@@ -134,5 +132,14 @@ namespace Templater::dynamic {
              * @return false 
              */
             bool owning();
+
+
+            /**
+             * @brief Returns whether this NodeHandle has nullptr
+             * 
+             * @return true 
+             * @return false 
+             */
+            operator bool() const;
     };
 }

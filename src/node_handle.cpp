@@ -1,4 +1,5 @@
 #include "node_handle.h"
+#include "node.h"
 
 namespace Templater::dynamic {
 
@@ -55,7 +56,7 @@ namespace Templater::dynamic {
         return this->pointer; 
     }
     
-    Node* NodeHandle::releaseRaw() {
+    Node* NodeHandle::release() {
         isOwning = false;
         Node* tmp = this->pointer;
         this->pointer = nullptr;
@@ -64,5 +65,9 @@ namespace Templater::dynamic {
 
     bool NodeHandle::owning() {
         return this->isOwning;
+    }
+
+    NodeHandle::operator bool() const {
+        return this != nullptr;
     }
 }

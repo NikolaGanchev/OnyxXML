@@ -73,7 +73,7 @@ def generate_dynamic(tags, output_path):
             cpp_content.write('    }\n')
             
             cpp_content.write(f'    std::unique_ptr<Node> {tag.dynamicName}::shallowCopy() const {{\n')
-            cpp_content.write(f'        return std::make_unique<{tag.dynamicName}>(this->getAttributes(), std::vector<std::unique_ptr<Node>>{{}});\n')
+            cpp_content.write(f'        return std::make_unique<{tag.dynamicName}>(this->getAttributes(), std::vector<NodeHandle>{{}});\n')
             cpp_content.write('    }\n')
             
             cpp_content.write(f'    bool {tag.dynamicName}::isVoid() const {{\n')

@@ -76,7 +76,7 @@ void generateDynamic(const std::vector<Tag>& tags, const char* path) {
             "        return name;\n"
             "    }\n"
             "    std::unique_ptr<Node> " << tag.dynamicName << "::shallowCopy() const {\n"
-            "        return std::make_unique<" << tag.dynamicName << ">(this->getAttributes(), std::vector<std::unique_ptr<Node>>{});\n"
+            "        return std::make_unique<" << tag.dynamicName << ">(this->getAttributes(), std::vector<NodeHandle>{});\n"
             "    }\n"
             "    bool " << tag.dynamicName << "::isVoid() const {\n"
             "        return " << (int) (tag.isVoid) << ";\n"

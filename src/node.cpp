@@ -20,7 +20,7 @@ namespace Templater::dynamic {
         }
     }
 
-    Node::Node(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
+    Node::Node(std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
         : attributes{std::move(attributes)}, indices{}, parent{nullptr} {
         for (auto& child: children) {
             this->children.push_back(child.release());
@@ -86,7 +86,7 @@ namespace Templater::dynamic {
         this->destroy();
     }
     
-    Node* Node::addChild(std::unique_ptr<Node> newChild)  {
+    Node* Node::addChild(NodeHandle newChild)  {
         if (isVoid()) {
             throw std::runtime_error("Void " + getTagName() + " cannot have children.");
         }
@@ -105,6 +105,14 @@ namespace Templater::dynamic {
         this->children.push_back(newChild.release());
 
         return newChildRef;
+    }
+    
+    Node* Node::addChild(std::unique_ptr<Node> child) {
+        return addChild(NodeHandle(std::move(child)));
+    }
+
+    Node* Node::addChild(Node* child) {
+        return addChild(NodeHandle(child, false));
     }
 
     std::vector<Node*> Node::getChildren() const {
@@ -245,7 +253,7 @@ namespace Templater::dynamic {
         return this->attributes;
     }
 
-    std::unique_ptr<Node> Node::removeChild(Node* childToRemove) {
+    NodeHandle Node::removeChild(Node* childToRemove) {
         if (!childToRemove->isInTree()) return nullptr;
 
         std::vector<std::vector<Node*>*> s;
@@ -721,7 +729,7 @@ namespace Templater::dynamic {
         throw std::logic_error("Unreachable: attribute not found even after being inserted. Check for memory or multithreading issues.");
     }
 
-    Node& Node::operator+=(std::unique_ptr<Node> right) {
+    Node& Node::operator+=(NodeHandle right) {
         addChild(std::move(right));
         return (*this);
     }

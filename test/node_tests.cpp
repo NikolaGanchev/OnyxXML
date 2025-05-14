@@ -43,11 +43,11 @@ TEST_CASE("Vector constructor works", "[Node]" ) {
     Node::setSortAttributes(true);
 
     std::vector<Attribute> attributes;
-    std::vector<std::unique_ptr<Node>> children;
+    std::vector<NodeHandle> children;
 
     attributes.emplace_back("id", "list");
     for (int i = 1; i <= 3; i++) {
-        children.push_back(std::make_unique<li>(Text(std::to_string(i))));
+        children.emplace_back(std::make_unique<li>(Text(std::to_string(i))));
     }
 
     ul obj{attributes, std::move(children)};
@@ -271,7 +271,7 @@ TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
 
     std::unique_ptr<Node> d = std::make_unique<GenericNode>("div", false);
     
-    std::vector<std::unique_ptr<Node>> vec;
+    std::vector<NodeHandle> vec;
     vec.push_back(std::move(d));
 
     REQUIRE_THROWS(GenericNode{"img", true, {}, std::move(vec)});
@@ -507,7 +507,7 @@ TEST_CASE("Child remove works", "[Node]" ) {
         "div", false, Attribute("id", "1")
     );
 
-    std::vector<std::unique_ptr<Node>> vec;
+    std::vector<NodeHandle> vec;
     vec.push_back(std::move(child));
 
     GenericNode obj{
@@ -522,7 +522,7 @@ TEST_CASE("Child remove works", "[Node]" ) {
     REQUIRE(children.size() == 1);
     CHECK(children[0]->isInTree());
 
-    std::unique_ptr<Node> result = obj.removeChild(children[0]);
+    NodeHandle result = obj.removeChild(children[0]);
 
     REQUIRE(result);
 
@@ -1679,7 +1679,7 @@ TEST_CASE("Child replace works", "[Node]" ) {
         "div", false, Attribute("id", "1")
     );
 
-    std::vector<std::unique_ptr<Node>> vec;
+    std::vector<NodeHandle> vec;
     vec.push_back(std::move(child));
 
     GenericNode obj{
@@ -1700,7 +1700,7 @@ TEST_CASE("Child replace works", "[Node]" ) {
         "div", false, Attribute("id", "2")
     );
 
-    std::unique_ptr<Node> result = obj.replaceChild(children[0], std::move(child2));
+    NodeHandle result = obj.replaceChild(children[0], std::move(child2));
 
     REQUIRE(result);
 
@@ -1806,7 +1806,7 @@ TEST_CASE("releaseRaw transfers pointer and resets handle", "[NodeHandle]") {
     REQUIRE(h.owning() == true);
     REQUIRE(h.get() == raw);
 
-    Node* released = h.releaseRaw();
+    Node* released = h.release();
     REQUIRE(released == raw);
     REQUIRE(h.get() == nullptr);
     REQUIRE(h.owning() == false);

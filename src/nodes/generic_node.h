@@ -51,7 +51,7 @@ namespace Templater::dynamic::tags {
              * @param attributes Attributes to be forwarded to the Node constructor
              * @param children Children to be forwarded to the Node constructor
              */
-            explicit GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children);
+            explicit GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children);
 
 
             /**
@@ -77,7 +77,7 @@ namespace Templater::dynamic::tags {
     
     template <typename... Args>
     GenericNode::GenericNode(std::string tagName, bool isVoid, Args&&... args)
-        : tag{std::move(tagName)}, _isVoid{isVoid}, Node(std::move(args)...) {
+        : tag{std::move(tagName)}, _isVoid{isVoid}, Node(std::forward<Args>(args)...) {
 
         if (this->isVoid() && this->getChildrenCount() > 0) {
             throw std::runtime_error("Void " + getTagName() + " cannot have children.");

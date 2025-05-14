@@ -12,7 +12,7 @@ namespace Templater::dynamic::tags {
     }
     
     std::unique_ptr<Node> EmptyNode::shallowCopy() const {
-        return std::make_unique<EmptyNode>(std::vector<Attribute>{}, std::vector<std::unique_ptr<Node>>{});
+        return std::make_unique<EmptyNode>(std::vector<Attribute>{}, std::vector<NodeHandle>{});
     }
 
     void EmptyNode::specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const {

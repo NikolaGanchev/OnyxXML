@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include "attribute.h"
 #include <sstream>
+#include "node_handle.h"
 
 namespace Templater::dynamic {
     class Node;
@@ -31,7 +32,7 @@ namespace Templater::dynamic {
      * @tparam T The type
      */
     template <typename T>
-    concept isValidNodeConstructorTypePtr = std::same_as<T, std::unique_ptr<Node>> || std::same_as<T, Attribute>;
+    concept isValidNodeConstructorTypePtr = std::same_as<T, std::unique_ptr<Node>> || std::same_as<T, Node*> || std::same_as<T, Attribute>;
 
 
     /**
@@ -57,7 +58,7 @@ namespace Templater::dynamic {
      * @tparam T 
      */
     template<typename T>
-    concept isValidNodeChild = std::same_as<T, std::unique_ptr<Node>> || std::derived_from<std::decay_t<T>, Node>;
+    concept isValidNodeChild = std::same_as<T, std::unique_ptr<Node>> || std::same_as<T, Node*> || std::derived_from<std::decay_t<T>, Node>;
 
     /**
      * @brief An abstract class representing an XML Node. Any Node is a tree by itself. Node objects are not aware who its parent is, only if they have one.
@@ -365,7 +366,7 @@ namespace Templater::dynamic {
              * @param attributes A vector of Attributes
              * @param children A vector of children
              */
-            explicit Node(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children);
+            explicit Node(std::vector<Attribute> attributes, std::vector<NodeHandle>&& children);
             explicit Node(const Node& other) = delete;
             Node& operator=(const Node& other) = delete;
 
@@ -561,14 +562,36 @@ namespace Templater::dynamic {
 
 
             /**
+             * @brief Adds a Node as a child of the current node. Sets the node's isInTree to true. Returns a reference to the node.
+             * Throws a runtime error if the current node is void.
+             * Throws a runtime error if the owning mode of this isn't the same as that of NodeHandle.
+             * 
+             * @param child 
+             * @return Node* 
+             */
+            Node* addChild(NodeHandle child);
+
+            /**
              * @brief Takes ownership of a Node and adds it as a child of the current node. Sets the node's isInTree to true. Returns a reference to the node.
              * Throws a runtime error if the current node is void.
+             * Throws a runtime error if this is in non-owning mode.
              * 
              * @param child 
              * @return Node* 
              */
             Node* addChild(std::unique_ptr<Node> child);
+
             
+            /**
+             * @brief Adds a Node as a child of the current node. Sets the node's isInTree to true. Returns a reference to the node.
+             * Throws a runtime error if the current node is void.
+             * Throws a runtime error if this is in owning mode.
+             * 
+             * @param child 
+             * @return Node* 
+             */
+            Node* addChild(Node* child);
+        
 
             /**
              * @brief Constructs a unique pointer from the given Node and adds it to children.
@@ -589,7 +612,7 @@ namespace Templater::dynamic {
              * @param newChild
              */
             template <typename T>
-            std::unique_ptr<Node> replaceChild(Node* childToReplace, T&& newChild) requires (isValidNodeChild<T>);
+            NodeHandle replaceChild(Node* childToReplace, T&& newChild) requires (isValidNodeChild<T>);
 
 
             /**
@@ -598,7 +621,7 @@ namespace Templater::dynamic {
              * @param right 
              * @return Node& this
              */
-            Node& operator+=(std::unique_ptr<Node> right);
+            Node& operator+=(NodeHandle right);
 
 
             /**
@@ -617,9 +640,9 @@ namespace Templater::dynamic {
              * Returns nullptr if the child is not found.
              * 
              * @param childToRemove 
-             * @return std::unique_ptr<Node> The ownership carrying unique pointer to the removed Node. May be nullptr if the child isn't found.
+             * @return NodeHandle The ownership carrying handle to the removed Node. May be nullptr if the child isn't found.
              */
-            std::unique_ptr<Node> removeChild(Node* childToRemove);
+            NodeHandle removeChild(Node* childToRemove);
 
 
             /**
@@ -749,6 +772,7 @@ namespace Templater::dynamic {
     };
 }
 
+
 template <typename... Args>
 Templater::dynamic::Node::Node(Args&&... args) requires (Templater::dynamic::isValidNodeConstructorType<Args>&& ...)
     : attributes{}, children{}, parent{nullptr}, indices{} { 
@@ -804,7 +828,7 @@ Templater::dynamic::Node& Templater::dynamic::Node::operator+=(T&& right) requir
 }
 
 template <typename T>
-std::unique_ptr<Templater::dynamic::Node> Templater::dynamic::Node::replaceChild(Node* childToReplace, T&& newChild) requires (isValidNodeChild<T>) {
+Templater::dynamic::NodeHandle Templater::dynamic::Node::replaceChild(Node* childToReplace, T&& newChild) requires (isValidNodeChild<T>) {
     // TODO: Check if childToReplace is in the tree
     if (!childToReplace->isInTree()) {
         throw std::invalid_argument("Child to replace has no parent");
