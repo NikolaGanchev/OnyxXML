@@ -87,6 +87,12 @@ namespace Templater::dynamic {
         this->operator[](attribute.getName()) = attribute.getValue();
     }
 
+    void Node::processConstructorObjectMoveCleanup() {
+        for (size_t i = 0; i < this->children.size(); i++) {
+            delete this->children[i];
+        }
+    }
+
     void Node::destroy() {
         for (auto& child: this->children) {
             child->parent = nullptr;

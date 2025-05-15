@@ -239,6 +239,14 @@ namespace Templater::dynamic {
 
 
             /**
+             * @brief The processConstructorObjectMove(T&&) method can fail, leaving the Node in an invalid state. 
+             * Cleanup needs to be done for the already allocated nodes.
+             * 
+             */
+            void processConstructorObjectMoveCleanup();
+
+
+            /**
              * @brief Adds an index.
              * Works by adding the index to the current object's indices and then adding it to all children. Calls Index::putIfNeeded() for every Node in the tree.
              * 
@@ -854,9 +862,11 @@ Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild) requi
 template <typename T>
 void Templater::dynamic::Node::processConstructorObjectMove(T&& child) requires (isNode<T>) {
     if (child.isInTree()) {
+        processConstructorObjectMoveCleanup();
         throw std::runtime_error("Attempted to construct Node with a child that is already a child of another Node.");
     }
     if (child._isOwning != this->_isOwning) {
+        processConstructorObjectMoveCleanup();
         throw std::runtime_error("Attempted to add child to Node with different owning mode.");
     }
 
