@@ -68,6 +68,6 @@ namespace Templater::dynamic {
     }
 
     NodeHandle::operator bool() const {
-        return this != nullptr;
+        return this->pointer != nullptr;
     }
 }
