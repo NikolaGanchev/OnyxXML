@@ -23,6 +23,8 @@ target_sources(
         "nodes/foreach_node.cpp"
         "nodes/if_node.cpp"
         "parse/dom_parser.cpp"
+        "node_handle.cpp"
+        "arena.cpp"
 )
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.cpp" COPYONLY)

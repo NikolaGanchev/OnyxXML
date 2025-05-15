@@ -204,7 +204,7 @@ TEST_CASE("Children keep their own indices when removed", "[Index]") {
     index::AttributeNameIndex parentIndex = index::createIndex<index::AttributeNameIndex>(&parent, "id");
 
     Node* childRef = parent.addChild(std::move(child));
-    std::unique_ptr<Node> child2 = parent.removeChild(childRef);
+    NodeHandle child2 = parent.removeChild(childRef);
 
     REQUIRE(child2);
     REQUIRE(childIndex.getByValue("child").size() == 1);

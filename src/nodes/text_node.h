@@ -28,16 +28,27 @@ namespace Templater::dynamic::tags {
             void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
         public:
             /**
-             * @brief Construct a new Text object by given text and whether unicode sequences should be escaped. 
+             * @brief Construct a new owning Text object by given text and whether unicode sequences should be escaped. 
              * Unicode sequences can be unsafe in environments that do not support UTF-8 and can be used to create injections. 
              * Unicode escaping escapes any unicode sequence to an XML/HTML entity. 
              * Due to the runtime cost and overall low risk this is false by default.
-             * The escaping is not done by this class; it is a suggestion to consumers.
              * 
              * @param text 
              * @param escapeMultiByte 
              */
             explicit Text(std::string text, bool escapeMultiByte = false); 
+
+
+             /**
+             * @brief Construct a new non-owning Text object by given text and whether unicode sequences should be escaped. 
+             * Unicode sequences can be unsafe in environments that do not support UTF-8 and can be used to create injections. 
+             * Unicode escaping escapes any unicode sequence to an XML/HTML entity. 
+             * Due to the runtime cost and overall low risk this is false by default.
+             * 
+             * @param text 
+             * @param escapeMultiByte 
+             */
+            explicit Text(NonOwningNodeTag, std::string text, bool escapeMultiByte = false); 
 
 
             /**

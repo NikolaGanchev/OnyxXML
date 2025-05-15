@@ -21,6 +21,8 @@
 #include "compile/compile_placeholder.h"
 #include "compile/placeholder_document.h"
 #include "parse/dom_parser.h"
+#include "node_handle.h"
+#include "arena.h"
 
 #if __has_include("dynamic/tags.h")
     #include "dynamic/tags.h"
@@ -40,6 +42,9 @@ namespace Templater {
     namespace dynamic::tags {
         using Templater::dynamic::Node;
         using Templater::dynamic::Attribute;
+        using Templater::dynamic::NodeHandle;
+        using Templater::dynamic::NonOwning;
+        using Templater::dynamic::Arena;
     }
 
     namespace compile::ctags {

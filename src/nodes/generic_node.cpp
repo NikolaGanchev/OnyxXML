@@ -5,8 +5,18 @@ namespace Templater::dynamic::tags {
     GenericNode::GenericNode(std::string tagName, bool isVoid)
             : tag{std::move(tagName)}, _isVoid{isVoid}, Node() {}
 
-    GenericNode::GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
+    GenericNode::GenericNode(std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
             : tag{std::move(tagName)}, _isVoid{isVoid}, Node{std::move(attributes), std::move(children)} {
+                if (isVoid && this->getChildrenCount() > 0) {
+                    throw std::runtime_error("Void " + getTagName() + " cannot have children.");
+                }
+    }
+
+    GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid)
+            : tag{std::move(tagName)}, _isVoid{isVoid}, Node(NonOwning) {}
+
+    GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
+            : tag{std::move(tagName)}, _isVoid{isVoid}, Node{NonOwning, std::move(attributes), std::move(children)} {
                 if (isVoid && this->getChildrenCount() > 0) {
                     throw std::runtime_error("Void " + getTagName() + " cannot have children.");
                 }
@@ -32,6 +42,6 @@ namespace Templater::dynamic::tags {
     }
 
     std::unique_ptr<Node> GenericNode::shallowCopy() const {
-        return std::make_unique<GenericNode>(this->tag, this->_isVoid, this->getAttributes(), std::vector<std::unique_ptr<Node>>{});
+        return std::make_unique<GenericNode>(this->tag, this->_isVoid, this->getAttributes(), std::vector<NodeHandle>{});
     }
 }

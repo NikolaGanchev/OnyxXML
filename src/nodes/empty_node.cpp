@@ -12,14 +12,14 @@ namespace Templater::dynamic::tags {
     }
     
     std::unique_ptr<Node> EmptyNode::shallowCopy() const {
-        return std::make_unique<EmptyNode>(std::vector<Attribute>{}, std::vector<std::unique_ptr<Node>>{});
+        return std::make_unique<EmptyNode>(std::vector<Attribute>{}, std::vector<NodeHandle>{});
     }
 
     void EmptyNode::specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const {
         stack.pop_back();
         const auto& children = this->getChildrenLive();
         for (size_t i = children.size(); i > 0; --i) {
-            stack.emplace_back(SerializationNode{children[i-1].get(), false});
+            stack.emplace_back(SerializationNode{children[i-1], false});
         }
     }
 

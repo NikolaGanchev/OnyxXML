@@ -43,11 +43,11 @@ TEST_CASE("Vector constructor works", "[Node]" ) {
     Node::setSortAttributes(true);
 
     std::vector<Attribute> attributes;
-    std::vector<std::unique_ptr<Node>> children;
+    std::vector<NodeHandle> children;
 
     attributes.emplace_back("id", "list");
     for (int i = 1; i <= 3; i++) {
-        children.push_back(std::make_unique<li>(Text(std::to_string(i))));
+        children.emplace_back(std::make_unique<li>(Text(std::to_string(i))));
     }
 
     ul obj{attributes, std::move(children)};
@@ -271,7 +271,7 @@ TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
 
     std::unique_ptr<Node> d = std::make_unique<GenericNode>("div", false);
     
-    std::vector<std::unique_ptr<Node>> vec;
+    std::vector<NodeHandle> vec;
     vec.push_back(std::move(d));
 
     REQUIRE_THROWS(GenericNode{"img", true, {}, std::move(vec)});
@@ -507,7 +507,7 @@ TEST_CASE("Child remove works", "[Node]" ) {
         "div", false, Attribute("id", "1")
     );
 
-    std::vector<std::unique_ptr<Node>> vec;
+    std::vector<NodeHandle> vec;
     vec.push_back(std::move(child));
 
     GenericNode obj{
@@ -522,7 +522,7 @@ TEST_CASE("Child remove works", "[Node]" ) {
     REQUIRE(children.size() == 1);
     CHECK(children[0]->isInTree());
 
-    std::unique_ptr<Node> result = obj.removeChild(children[0]);
+    NodeHandle result = obj.removeChild(children[0]);
 
     REQUIRE(result);
 
@@ -1427,6 +1427,46 @@ TEST_CASE("Node move properly handle indices", "[Node]") {
     REQUIRE(index.getRoot() == &obj1);
 }
 
+TEST_CASE("Nodes get removed from indices upon destruction in non-owning trees", "[Node]") {
+    using namespace Templater;
+    using namespace Templater::tags;
+
+    GenericNode obj{NonOwning, "html", false};
+
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
+
+    REQUIRE(index.getRoot() == &obj);
+
+    Node* child = new GenericNode(NonOwning, "div", false);
+    child->setAttributeValue("class", "item");
+
+    obj.addChild(child);
+
+    REQUIRE(index.getByValue("item").size() == 1);
+
+    delete child;
+
+    REQUIRE(index.getByValue("item").size() == 0);
+}
+
+TEST_CASE("Nodes get removed from parents upon destruction in non-owning trees", "[Node]") {
+    using namespace Templater;
+    using namespace Templater::tags;
+
+    GenericNode obj{NonOwning, "html", false};
+
+    Node* child = new GenericNode(NonOwning, "div", false);
+    child->setAttributeValue("class", "item");
+
+    obj.addChild(child);
+
+    REQUIRE(obj.getChildrenCount() == 1);
+
+    delete child;
+
+    REQUIRE(obj.getChildrenCount() == 0);
+}
+
 TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
     using namespace Templater;
     using namespace Templater::tags;
@@ -1679,7 +1719,7 @@ TEST_CASE("Child replace works", "[Node]" ) {
         "div", false, Attribute("id", "1")
     );
 
-    std::vector<std::unique_ptr<Node>> vec;
+    std::vector<NodeHandle> vec;
     vec.push_back(std::move(child));
 
     GenericNode obj{
@@ -1700,7 +1740,7 @@ TEST_CASE("Child replace works", "[Node]" ) {
         "div", false, Attribute("id", "2")
     );
 
-    std::unique_ptr<Node> result = obj.replaceChild(children[0], std::move(child2));
+    NodeHandle result = obj.replaceChild(children[0], std::move(child2));
 
     REQUIRE(result);
 
@@ -1757,4 +1797,230 @@ TEST_CASE("Compile api dynamic bindings work") {
 
     REQUIRE(doc::dynamicTreeWithPlaceholders("cd", valueToBind, 
                                         "ab", valueToBind2)->serialize() == expected);
+}
+
+TEST_CASE("Owning NodeHandle reports owning and retains pointer", "[NodeHandle]") {
+    using namespace Templater::tags;
+
+    auto up = std::make_unique<GenericNode>("div", false);
+    Node* raw = up.get();
+
+    NodeHandle h(std::move(up));
+
+    REQUIRE(h.owning() == true);
+    REQUIRE(h.get() == raw);
+}
+
+TEST_CASE("Can construct owning NodeHandle with raw pointer", "[NodeHandle]") {
+    using namespace Templater::tags;
+
+    GenericNode* node = new GenericNode("span", false);
+
+    NodeHandle h(node, true);
+
+    REQUIRE(h.owning() == true);
+    REQUIRE(h.get() == node);
+}
+
+TEST_CASE("Non-owning NodeHandle reports non-owning and retains pointer", "[NodeHandle]") {
+    using namespace Templater::tags;
+
+    GenericNode* node = new GenericNode("span", false);
+
+    NodeHandle h(node, false);
+
+    REQUIRE(h.owning() == false);
+    REQUIRE(h.get() == node);
+
+    // Clean up manually since non‑owning handle won't delete
+    delete node;
+}
+
+TEST_CASE("releaseRaw transfers pointer and resets handle", "[NodeHandle]") {
+    using namespace Templater::tags;
+    auto up = std::make_unique<GenericNode>("p", false);
+    Node* raw = up.get();
+
+    NodeHandle h(std::move(up));
+
+    REQUIRE(h.owning() == true);
+    REQUIRE(h.get() == raw);
+
+    Node* released = h.release();
+    REQUIRE(released == raw);
+    REQUIRE(h.get() == nullptr);
+    REQUIRE(h.owning() == false);
+
+    delete released;
+}
+
+TEST_CASE("toUnique on owning handle yields unique_ptr and becomes non-owning", "[NodeHandle]") {
+    using namespace Templater::tags;
+
+    auto up = std::make_unique<GenericNode>("section", false);
+    Node* raw = up.get();
+    NodeHandle h(std::move(up));
+
+    REQUIRE(h.owning() == true);
+    auto u2 = h.toUnique();
+
+    REQUIRE(u2.get() == raw);
+
+    REQUIRE(h.owning() == false);
+}
+
+TEST_CASE("toUnique on non-owning handle throws logic_error", "[NodeHandle]") {
+    using namespace Templater::tags;
+    GenericNode* node = new GenericNode("header", false);
+
+    NodeHandle h(node, false);
+
+    REQUIRE(h.owning() == false);
+    REQUIRE_THROWS_AS(h.toUnique(), std::logic_error);
+
+    delete node;
+}
+
+TEST_CASE("Move constructor transfers pointer and ownership", "[NodeHandle]") {
+    using namespace Templater::tags;
+    auto up = std::make_unique<GenericNode>("footer", false);
+    Node* raw = up.get();
+
+    NodeHandle h1(std::move(up));
+    REQUIRE(h1.owning() == true);
+
+    NodeHandle h2(std::move(h1));
+    REQUIRE(h2.owning() == true);
+    REQUIRE(h2.get() == raw);
+    REQUIRE(h1.get() == nullptr);
+    REQUIRE(h1.owning() == false);
+}
+
+TEST_CASE("Move assignment transfers pointer and ownership", "[NodeHandle]") {
+    using namespace Templater::tags;
+    auto up1 = std::make_unique<GenericNode>("article", false);
+    Node* raw = up1.get();
+
+    NodeHandle h1(std::move(up1));
+    REQUIRE(h1.owning() == true);
+
+    GenericNode dummy("div", false);
+    NodeHandle h2(&dummy, false);
+    REQUIRE(h2.owning() == false);
+
+    h2 = std::move(h1);
+
+    REQUIRE(h2.owning() == true);
+    REQUIRE(h2.get() == raw);
+    REQUIRE(h1.get() == nullptr);
+    REQUIRE(h1.owning() == false);
+}
+
+TEST_CASE("Non-owning Node does not destroy its children") {
+    using namespace Templater::tags;
+
+    Node* body = new GenericNode(NonOwning, "body", false);
+    {
+        GenericNode root(NonOwning, "html", false);
+
+        root.addChild(body);
+    }
+
+    REQUIRE(body->getTagName() == "body");
+
+    delete body;
+}
+
+TEST_CASE("Mixing owning and non-owning Nodes with move constructor causes exception") {
+    using namespace Templater::tags;
+
+    // This will leak unless move constructor properly cleans up memory
+    REQUIRE_THROWS(GenericNode("html", false,
+        GenericNode("body", false),
+        GenericNode(NonOwning, "div", false)));
+}
+
+TEST_CASE("Mixing owning and non-owning Nodes causes exception") {
+    using namespace Templater::tags;
+
+    GenericNode root("html", false);
+    Node* body = new GenericNode(NonOwning, "body", false);
+    REQUIRE_THROWS(root.addChild(body));
+
+    delete body;
+}
+
+TEST_CASE("Vector constructor throws when mixing ownership modes", "[Node]" ) {
+    using namespace Templater::tags;
+
+    Node::setIndentationSequence("\t");
+    Node::setSortAttributes(true);
+
+    std::vector<Attribute> attributes;
+    std::vector<NodeHandle> children;
+
+    attributes.emplace_back("id", "list");
+    for (int i = 1; i <= 3; i++) {
+        children.emplace_back(std::make_unique<cdiv>(Text(std::to_string(i))));
+    }
+
+    Node* nonOwned = new GenericNode("div", false);
+
+    children.emplace_back(nonOwned);
+
+    REQUIRE_THROWS(body{attributes, std::move(children)});
+
+    delete nonOwned;
+}
+
+TEST_CASE("Arena allocates and constructs nodes", "[Arena]") {
+    using namespace Templater::tags;
+    Arena::Builder builder;
+    builder.preallocate<GenericNode>()
+            .preallocate<Text>();
+
+    Arena arena = builder.build();
+
+    auto* parent = arena.allocate<GenericNode>("html", false);
+    auto* child = arena.allocate<Text>("hello world");
+
+    REQUIRE(parent->getTagName() == "html");
+    REQUIRE(child->getTagName() == ".text");
+
+    parent->addChild(child);
+
+    REQUIRE(parent->getChildrenCount() == 1);
+    REQUIRE(parent->getChildren()[0]->getTagName() == ".text");
+    REQUIRE(static_cast<Text*>(parent->getChildren()[0])->getText() == "hello world");
+}
+
+TEST_CASE("Arena cleans up memory", "[Arena]") {
+    using namespace Templater::tags;
+    Arena::Builder builder;
+    builder.preallocate<GenericNode>();
+    for (int i = 0; i < 5; ++i) {
+        builder.preallocate<Text>();
+    }
+    builder.preallocate<Text>();
+    
+    EmptyNode parent{NonOwning};
+
+    {
+        Arena arena = builder.build();
+        Node* ptr = parent.addChild(arena.allocate<GenericNode>("html", false));
+        for (int i = 0; i < 5; ++i) {
+            parent.addChild(arena.allocate<Text>("abc"));
+        }
+        ptr->addChild(arena.allocate<Text>("abc"));
+    }
+
+    REQUIRE(parent.getChildrenCount() == 0);
+}
+
+TEST_CASE("Arena throws on over allocation", "[Arena]") {
+    using namespace Templater::tags;
+
+    Arena arena(2);
+    
+    REQUIRE_THROWS(arena.allocate<Text>(""));
 }

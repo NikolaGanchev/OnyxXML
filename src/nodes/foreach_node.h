@@ -18,6 +18,7 @@ namespace Templater::dynamic::tags {
 
     /**
      * @brief A ForEach Node meant to simplify creating multiple sequential Nodes based on an iterable type.
+     * ForEach Nodes are always owning, as the move constructors of a Node cannot be used with non-owning nodes.
      * Example usage:
      * @code{.cpp}
      * ul forEachConstructed{

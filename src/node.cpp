@@ -9,10 +9,17 @@
 
 namespace Templater::dynamic {
     Node::Node()
-        : attributes{}, children{}, indices{}, parent{nullptr} { }
+        : attributes{}, children{}, indices{}, parent{nullptr}, _isOwning(true) { }
+
+    Node::Node(NonOwningNodeTag)
+        : attributes{}, children{}, indices{}, parent{nullptr}, _isOwning(false) { }
 
     Node::Node(Node&& other) noexcept
-        : attributes{std::move(other.attributes)}, children{std::move(other.children)}, indices{std::move(other.indices)}, parent{other.parent} {
+        : attributes{std::move(other.attributes)}, 
+        children{std::move(other.children)}, 
+        indices{std::move(other.indices)}, 
+        parent{other.parent}, 
+        _isOwning(other._isOwning) {
         other.parent = nullptr;
         this->takeOverIndices(other);
         for (auto& child: this->children) {
@@ -20,8 +27,30 @@ namespace Templater::dynamic {
         }
     }
 
-    Node::Node(std::vector<Attribute> attributes, std::vector<std::unique_ptr<Node>>&& children)
-        : attributes{std::move(attributes)}, children{std::move(children)}, indices{}, parent{nullptr} {
+    Node::Node(std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
+        : attributes{std::move(attributes)}, indices{}, parent{nullptr}, _isOwning(true) {
+        for (auto& child: children) {
+            if (child.owning() != this->_isOwning) {
+                throw std::invalid_argument("Mixing Nodes with different ownership modes");
+            }
+        }
+        for (auto& child: children) {
+            this->children.push_back(child.release());
+        }
+        for (auto& child: this->children) {
+            child->parent = this;
+        }
+    }
+
+    
+    Node::Node(NonOwningNodeTag, std::vector<Attribute> attributes, std::vector<NodeHandle>&& children)
+        : attributes{std::move(attributes)}, indices{}, parent{nullptr}, _isOwning(false) {
+        for (auto& child: children) {
+            if (child.owning() != this->_isOwning) {
+                throw std::invalid_argument("Mixing Nodes with different ownership modes");
+            }
+            this->children.push_back(child.release());
+        }
         for (auto& child: this->children) {
             child->parent = this;
         }
@@ -33,6 +62,7 @@ namespace Templater::dynamic {
         this->attributes = std::move(other.attributes);
         this->children = std::move(other.children);
         this->indices = std::move(other.indices);
+        this->_isOwning = other._isOwning;
 
         this->takeOverIndices(other);
         this->parent = other.parent;
@@ -57,6 +87,12 @@ namespace Templater::dynamic {
         this->operator[](attribute.getName()) = attribute.getValue();
     }
 
+    void Node::processConstructorObjectMoveCleanup() {
+        for (size_t i = 0; i < this->children.size(); i++) {
+            delete this->children[i];
+        }
+    }
+
     void Node::destroy() {
         for (auto& child: this->children) {
             child->parent = nullptr;
@@ -69,23 +105,50 @@ namespace Templater::dynamic {
         }
 
         this->indexParse([this](Node::Index* id) -> void {
+            // In owning trees, a Node can only leave the tree using removeChild()
+            // removeChild() of course removes the Node from all indices
+            // Upon destruction of an owning tree, it is surely known that any indices applied on the tree will be invalidated
+            // In turn meaning that the Node does not need to be removed (which is not guaranteed to be a cheap operation)
+            // In non-owning trees this is not guaranteed, as the destructor of a Node in the tree can be called arbitrarily
+            if (this->parent && !this->parent->_isOwning) {
+                id->removeIfNeeded(this);
+            }
             if (id->getRoot() == this) {
                 id->invalidate();
             }
         });
+
+        if (this->_isOwning) {
+            for (auto& child: this->children) {
+                delete child;
+            }
+        }
+        if (this->parent && !this->parent->_isOwning) {
+            // In non-owning trees, nodes are not guaranteed to be sequentially destroyed, 
+            // so they need to manually remove themselves from the parent's child vector to guarantee no dangling pointers are left
+            auto& parentChildren = this->parent->children;
+            for (size_t i = 0; i < parentChildren.size(); i++) {
+                if (parentChildren[i] == this) {
+                    parentChildren.erase(parentChildren.begin() + i);
+                    break;
+                }
+            }
+        }
     }
 
     Node::~Node() {
         this->destroy();
     }
     
-    Node* Node::addChild(std::unique_ptr<Node> newChild)  {
+    Node* Node::addChild(NodeHandle newChild)  {
         if (isVoid()) {
             throw std::runtime_error("Void " + getTagName() + " cannot have children.");
         }
         if (newChild->isInTree()) {
-            throw std::runtime_error("Attempted to add child to " + getTagName() + "  that is already a child of another Object.");
-            return nullptr;
+            throw std::runtime_error("Attempted to add child to " + getTagName() + " that is already a child of another Object.");
+        }
+        if (newChild.owning() != this->_isOwning) {
+            throw std::runtime_error("Attempted to add child to " + getTagName() + " with different owning mode.");
         }
 
         newChild->parent = this;
@@ -95,20 +158,21 @@ namespace Templater::dynamic {
 
         Node* newChildRef = newChild.get();
 
-         this->children.push_back(std::move(newChild));
+        this->children.push_back(newChild.release());
 
         return newChildRef;
     }
+    
+    Node* Node::addChild(std::unique_ptr<Node> child) {
+        return addChild(NodeHandle(std::move(child)));
+    }
+
+    Node* Node::addChild(Node* child) {
+        return addChild(NodeHandle(child, false));
+    }
 
     std::vector<Node*> Node::getChildren() const {
-        std::vector<Node*> copy;
-
-        copy.reserve( this->children.size());
-        for (const auto& child : this->children) {
-            copy.push_back(child.get());
-        }
-
-        return copy;
+        return std::vector<Node*>(this->children);
     }
 
     size_t Node::getChildrenCount() const {
@@ -169,9 +233,9 @@ namespace Templater::dynamic {
 
             s.pop_back();
 
-            const std::vector<std::unique_ptr<Node>>& children = obj->children;
+            const std::vector<Node*>& children = obj->children;
             for (size_t i = 0; i < children.size(); i++) {
-                s.push_back(children[i].get());
+                s.push_back(children[i]);
             }
         }
     }
@@ -189,7 +253,7 @@ namespace Templater::dynamic {
         std::vector<Node*> result;
 
         for (size_t i = 0; i < this->children.size(); i++) {
-            s.push_back(this->children[i].get());
+            s.push_back(this->children[i]);
         }
 
         while(!s.empty()) {
@@ -203,7 +267,7 @@ namespace Templater::dynamic {
 
             auto& children = obj->children;
             for (size_t i = children.size(); i > 0; i--) {
-                s.push_back(children[i - 1].get());
+                s.push_back(children[i - 1]);
             }
         }
 
@@ -245,18 +309,18 @@ namespace Templater::dynamic {
         return this->attributes;
     }
 
-    std::unique_ptr<Node> Node::removeChild(Node* childToRemove) {
+    NodeHandle Node::removeChild(Node* childToRemove) {
         if (!childToRemove->isInTree()) return nullptr;
 
-        std::vector<std::vector<std::unique_ptr<Node>>*> s;
+        std::vector<std::vector<Node*>*> s;
 
         s.push_back(&(this->children));
 
         while(!s.empty()) {
-            std::vector<std::unique_ptr<Node>>* children = s.back();
+            std::vector<Node*>* children = s.back();
 
             for (size_t i = 0; i < children->size(); i++) {
-                if (children->at(i).get() == childToRemove) {
+                if (children->at(i) == childToRemove) {
     
                     this->indexParse([&childToRemove, this](Node::Index* id) -> void {
                         if (id->getRoot() == this) {
@@ -264,8 +328,9 @@ namespace Templater::dynamic {
                         }
                     });
     
+                    NodeHandle ref(childToRemove, childToRemove->parent->_isOwning);
                     childToRemove->parent = nullptr;
-                    std::unique_ptr<Node> ref = std::move(children->operator[](i));
+                    
                     children->erase(children->begin() + i);
     
                     return ref;
@@ -301,11 +366,11 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     for (size_t i = 0; i < children.size(); i++) {
                         std::unique_ptr<Node> child = children[i]->shallowCopy();
-                        s.emplace_back(ParseNode{children[i].get(), child.get()});
+                        s.emplace_back(ParseNode{children[i], child.get()});
                         node.copy->addChild(std::move(child));
                     }
                 }
@@ -370,13 +435,13 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
-                const std::vector<std::unique_ptr<Node>>& childrenOther = other->children;
+                const std::vector<Node*>& children = obj->children;
+                const std::vector<Node*>& childrenOther = other->children;
                 if (!children.empty()) {
                     for (size_t i = 0; i < children.size(); i++) {
                         // Because of obj->shallowEquals(*other) succeeding, it is known
                         // that at this point the two nodes have the same amount of children
-                        s.emplace_back(ParseNode{children[i].get(), childrenOther[i].get()});
+                        s.emplace_back(ParseNode{children[i], childrenOther[i]});
                     }
                 }
             }
@@ -410,7 +475,7 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     depth++;
                     if (depth > maxDepth) {
@@ -418,7 +483,7 @@ namespace Templater::dynamic {
                     }
                     s.emplace_back(nullptr);
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(children[i-1].get());
+                        s.emplace_back(children[i-1]);
                     }
                 }
             }
@@ -440,10 +505,10 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(children[i-1].get());
+                        s.emplace_back(children[i-1]);
                     }
                 } else {
                     leaves++;
@@ -561,11 +626,11 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     result << ">";
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(SerializationNode{children[i-1].get(), false});
+                        s.emplace_back(SerializationNode{children[i-1], false});
                     }
                 } else {
                     result << "></" << tagName << ">";
@@ -643,13 +708,13 @@ namespace Templater::dynamic {
 
             if (!(obj->isVoid())) {
 
-                const std::vector<std::unique_ptr<Node>>& children = obj->children;
+                const std::vector<Node*>& children = obj->children;
                 if (!children.empty()) {
                     result << ">\n";
                     s.emplace_back(SerializationNode{nullptr, false});
                     indentation += indentationSequence;
                     for (size_t i = children.size(); i > 0; --i) {
-                        s.emplace_back(SerializationNode{children[i-1].get(), false});
+                        s.emplace_back(SerializationNode{children[i-1], false});
                     }
                 } else {
                     result << "></" << tagName << ">\n";
@@ -721,7 +786,7 @@ namespace Templater::dynamic {
         throw std::logic_error("Unreachable: attribute not found even after being inserted. Check for memory or multithreading issues.");
     }
 
-    Node& Node::operator+=(std::unique_ptr<Node> right) {
+    Node& Node::operator+=(NodeHandle right) {
         addChild(std::move(right));
         return (*this);
     }
@@ -746,7 +811,7 @@ namespace Templater::dynamic {
         return sortAttributes;
     }
 
-    const std::vector<std::unique_ptr<Node>>& Node::getChildrenLive() const {
+    const std::vector<Node*>& Node::getChildrenLive() const {
         return this->children;
     }
 }

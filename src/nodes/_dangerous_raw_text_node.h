@@ -19,11 +19,19 @@ namespace Templater::dynamic::tags {
             void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
         public:
             /**
-             * @brief Construct a new __DangerousRawText object by given text. Escaping is not done.
+             * @brief Construct a new owning __DangerousRawText object by given text. Escaping is not done.
              * 
              * @param text 
              */
             explicit __DangerousRawText(std::string text); 
+
+
+             /**
+             * @brief Construct a new non-owning __DangerousRawText object by given text. Escaping is not done.
+             * 
+             * @param text 
+             */
+            explicit __DangerousRawText(NonOwningNodeTag, std::string text); 
 
 
             /**
