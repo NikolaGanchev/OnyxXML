@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../node.h"
+#include "../arena.h"
+#include <stack>
 
 namespace Templater::dynamic::parser {
     class DomParser;
@@ -8,24 +10,24 @@ namespace Templater::dynamic::parser {
     class ParseResult {
         friend DomParser;
         private:
-            char* buffer;
+            Arena arena;
 
             ParseResult();
 
-            ParseResult(char* buffer, std::unique_ptr<Node> root);
+            ParseResult(Arena arena, Node* root);
         public:
-            std::unique_ptr<Node> root;
+            Node* root;
 
             ParseResult(const ParseResult& other) = delete;
             ParseResult& operator=(const ParseResult& other) = delete;
 
             ParseResult(ParseResult&& other);
             ParseResult& operator=(ParseResult&& other);
-
-            ~ParseResult();
     };
 
     class DomParser {
+        private:
+            static Arena parseDryRun(std::string_view input);
         public:
             static ParseResult parse(std::string_view input);
     };
