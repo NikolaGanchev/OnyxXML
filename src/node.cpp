@@ -104,7 +104,7 @@ namespace Templater::dynamic {
             // Upon destruction of an owning tree, it is surely known that any indices applied on the tree will be invalidated
             // In turn meaning that the Node does not need to be removed (which is not guaranteed to be a cheap operation)
             // In non-owning trees this is not guaranteed, as the destructor of a Node in the tree can be called arbitrarily
-            if (!this->_isOwning) {
+            if (this->parent && !this->parent->_isOwning) {
                 id->removeIfNeeded(this);
             }
             if (id->getRoot() == this) {
@@ -115,6 +115,17 @@ namespace Templater::dynamic {
         if (this->_isOwning) {
             for (auto& child: this->children) {
                 delete child;
+            }
+        }
+        if (this->parent && !this->parent->_isOwning) {
+            // In non-owning trees, nodes are not guaranteed to be sequentially destroyed, 
+            // so they need to manually remove themselves from the parent's child vector to guarantee no dangling pointers are left
+            auto& parentChildren = this->parent->children;
+            for (size_t i = 0; i < parentChildren.size(); i++) {
+                if (parentChildren[i] == this) {
+                    parentChildren.erase(parentChildren.begin() + i);
+                    break;
+                }
             }
         }
     }

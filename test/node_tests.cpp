@@ -1449,6 +1449,23 @@ TEST_CASE("Nodes get removed from indices upon destruction in non-owning trees",
     REQUIRE(index.getByValue("item").size() == 0);
 }
 
+TEST_CASE("Nodes get removed from parents upon destruction in non-owning trees", "[Node]") {
+    using namespace Templater;
+    using namespace Templater::tags;
+
+    GenericNode obj{NonOwning, "html", false};
+
+    Node* child = new GenericNode(NonOwning, "div", false);
+    child->setAttributeValue("class", "item");
+
+    obj.addChild(child);
+
+    REQUIRE(obj.getChildrenCount() == 1);
+
+    delete child;
+
+    REQUIRE(obj.getChildrenCount() == 0);
+}
 
 TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
     using namespace Templater;
