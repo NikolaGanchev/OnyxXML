@@ -1934,8 +1934,10 @@ TEST_CASE("Non-owning Node does not destroy its children") {
 TEST_CASE("Mixing owning and non-owning Nodes with move constructor causes exception") {
     using namespace Templater::tags;
 
+    // This will leak unless move constructor properly cleans up memory
     REQUIRE_THROWS(GenericNode("html", false,
-        GenericNode(NonOwning, "body", false)));
+        GenericNode("body", false),
+        GenericNode(NonOwning, "div", false)));
 }
 
 TEST_CASE("Mixing owning and non-owning Nodes causes exception") {
