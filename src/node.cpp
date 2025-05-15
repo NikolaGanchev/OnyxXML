@@ -99,6 +99,14 @@ namespace Templater::dynamic {
         }
 
         this->indexParse([this](Node::Index* id) -> void {
+            // In owning trees, a Node can only leave the tree using removeChild()
+            // removeChild() of course removes the Node from all indices
+            // Upon destruction of an owning tree, it is surely known that any indices applied on the tree will be invalidated
+            // In turn meaning that the Node does not need to be removed (which is not guaranteed to be a cheap operation)
+            // In non-owning trees this is not guaranteed, as the destructor of a Node in the tree can be called arbitrarily
+            if (!this->_isOwning) {
+                id->removeIfNeeded(this);
+            }
             if (id->getRoot() == this) {
                 id->invalidate();
             }

@@ -1427,6 +1427,29 @@ TEST_CASE("Node move properly handle indices", "[Node]") {
     REQUIRE(index.getRoot() == &obj1);
 }
 
+TEST_CASE("Nodes get removed from indices upon destruction in non-owning trees", "[Node]") {
+    using namespace Templater;
+    using namespace Templater::tags;
+
+    GenericNode obj{NonOwning, "html", false};
+
+    index::AttributeNameIndex index = index::createIndex<index::AttributeNameIndex>(&obj, "class");
+
+    REQUIRE(index.getRoot() == &obj);
+
+    Node* child = new GenericNode(NonOwning, "div", false);
+    child->setAttributeValue("class", "item");
+
+    obj.addChild(child);
+
+    REQUIRE(index.getByValue("item").size() == 1);
+
+    delete child;
+
+    REQUIRE(index.getByValue("item").size() == 0);
+}
+
+
 TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
     using namespace Templater;
     using namespace Templater::tags;
