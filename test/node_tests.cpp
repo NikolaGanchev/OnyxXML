@@ -1972,3 +1972,55 @@ TEST_CASE("Vector constructor throws when mixing ownership modes", "[Node]" ) {
 
     delete nonOwned;
 }
+
+TEST_CASE("Arena allocates and constructs nodes", "[Arena]") {
+    using namespace Templater::tags;
+    Arena::Builder builder;
+    builder.preallocate<GenericNode>()
+            .preallocate<Text>();
+
+    Arena arena = builder.build();
+
+    auto* parent = arena.allocate<GenericNode>("html", false);
+    auto* child = arena.allocate<Text>("hello world");
+
+    REQUIRE(parent->getTagName() == "html");
+    REQUIRE(child->getTagName() == ".text");
+
+    parent->addChild(child);
+
+    REQUIRE(parent->getChildrenCount() == 1);
+    REQUIRE(parent->getChildren()[0]->getTagName() == ".text");
+    REQUIRE(static_cast<Text*>(parent->getChildren()[0])->getText() == "hello world");
+}
+
+TEST_CASE("Arena cleans up memory", "[Arena]") {
+    using namespace Templater::tags;
+    Arena::Builder builder;
+    builder.preallocate<GenericNode>();
+    for (int i = 0; i < 5; ++i) {
+        builder.preallocate<Text>();
+    }
+    builder.preallocate<Text>();
+    
+    EmptyNode parent{NonOwning};
+
+    {
+        Arena arena = builder.build();
+        Node* ptr = parent.addChild(arena.allocate<GenericNode>("html", false));
+        for (int i = 0; i < 5; ++i) {
+            parent.addChild(arena.allocate<Text>("abc"));
+        }
+        ptr->addChild(arena.allocate<Text>("abc"));
+    }
+
+    REQUIRE(parent.getChildrenCount() == 0);
+}
+
+TEST_CASE("Arena throws on over allocation", "[Arena]") {
+    using namespace Templater::tags;
+
+    Arena arena(2);
+    
+    REQUIRE_THROWS(arena.allocate<Text>(""));
+}
