@@ -3,7 +3,7 @@
 #include "../nodes/generic_node.h"
 #include "../nodes/empty_node.h"
 #include "../nodes/text_node.h"
-#include <iostream>
+#include "../nodes/comment_node.h"
 
 namespace Templater::dynamic::parser {
     ParseResult::ParseResult(): arena{0}, root{nullptr} {}
@@ -82,6 +82,21 @@ namespace Templater::dynamic::parser {
         return std::string_view(pos, localPos-pos);
     }
 
+    const char* checkSequence(const char* toCheck, const char* pos) {
+        const char* copy = pos;
+        while (*toCheck != '\0' && *pos != '\0') {
+            if (*toCheck != *pos) {
+                return copy;
+            }
+            toCheck++;
+            pos++;
+        }
+
+        if (*toCheck == '\0') return pos;
+        
+        return copy;
+    }
+
     Arena DomParser::parseDryRun(std::string_view input) {
         std::vector<size_t> stack;
 
@@ -133,6 +148,28 @@ namespace Templater::dynamic::parser {
 
             if (*pos == '\0') {
                 throw std::invalid_argument("Premature end of document");
+            }
+
+            const char* commentCheckPos = checkSequence("!--", pos);
+            if (commentCheckPos != pos) {
+                pos = commentCheckPos;
+                if (*pos == '\0') {
+                    throw std::invalid_argument("Premature end of document");
+                }
+                const char* localPos = pos;
+
+                while (checkSequence("--", localPos) == localPos) {
+                    if (*localPos == '\0') throw std::invalid_argument("Invalid comment without ending");
+                    localPos++;
+                }
+
+                localPos = checkSequence("--", localPos);
+
+                if (*localPos != '>') throw std::invalid_argument("-- inside of comment not allowed");
+                pos = localPos;
+                pos++;
+                builder.preallocate<tags::Comment>();
+                continue;
             }
 
             // Invariant - pos always at tag name start
@@ -302,6 +339,32 @@ namespace Templater::dynamic::parser {
 
             if (*pos == '\0') {
                 throw std::invalid_argument("Premature end of document");
+            }
+
+            const char* commentCheckPos = checkSequence("!--", pos);
+            if (commentCheckPos != pos) {
+                pos = commentCheckPos;
+                if (*pos == '\0') {
+                    throw std::invalid_argument("Premature end of document");
+                }
+                const char* localPos = pos;
+
+                while (checkSequence("--", localPos) == localPos) {
+                    if (*localPos == '\0') throw std::invalid_argument("Invalid comment without ending");
+                    localPos++;
+                }
+
+                std::string_view commentText(pos, localPos-pos);
+
+                localPos = checkSequence("--", localPos);
+
+                if (*localPos == '\0' || *localPos != '>') throw std::invalid_argument("-- inside of comment not allowed");
+                pos = localPos;
+                pos++;
+                Node* newNode = arena.allocate<tags::Comment>(std::string(commentText));
+                stack.back()->addChild(newNode);
+
+                continue;
             }
 
             // Invariant - pos always at tag name start

@@ -192,3 +192,25 @@ TEST_CASE("DomParser parses complex html") {
     INFO(time.count());
     REQUIRE(time.count() < 0);
 }
+
+TEST_CASE("dom parser works with comments") {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<html theme=\"dark\"><!--This is a comment!--><body><div> Hello<span></span>World! </div></body></html>";
+    
+    GenericNode output{
+        "html", false,
+        Attribute("theme", "dark"),
+        Comment("This is a comment!"),
+        GenericNode("body", false,
+            GenericNode("div", false,
+                Text(" Hello"), GenericNode("span", false), Text("World! ")))
+    };
+
+    ParseResult pr = DomParser::parse(input);
+
+    INFO(output.serialize());
+    INFO(pr.root->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+}
