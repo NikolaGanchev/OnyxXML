@@ -158,12 +158,12 @@ namespace Templater::dynamic::parser {
                 }
                 const char* localPos = pos;
 
-                while (checkSequence("--", localPos) == localPos) {
-                    if (*localPos == '\0') throw std::invalid_argument("Invalid comment without ending");
+                while (!(*localPos == '-' && *(localPos + 1) != '\0' && *(localPos + 1) == '-')) {
                     localPos++;
+                    if (*localPos == '\0') throw std::invalid_argument("Invalid comment without ending");
                 }
 
-                localPos = checkSequence("--", localPos);
+                localPos += 2;
 
                 if (*localPos != '>') throw std::invalid_argument("-- inside of comment not allowed");
                 pos = localPos;
@@ -349,14 +349,14 @@ namespace Templater::dynamic::parser {
                 }
                 const char* localPos = pos;
 
-                while (checkSequence("--", localPos) == localPos) {
-                    if (*localPos == '\0') throw std::invalid_argument("Invalid comment without ending");
+                while (!(*localPos == '-' && *(localPos + 1) != '\0' && *(localPos + 1) == '-')) {
                     localPos++;
+                    if (*localPos == '\0') throw std::invalid_argument("Invalid comment without ending");
                 }
 
                 std::string_view commentText(pos, localPos-pos);
 
-                localPos = checkSequence("--", localPos);
+                localPos += 2;
 
                 if (*localPos == '\0' || *localPos != '>') throw std::invalid_argument("-- inside of comment not allowed");
                 pos = localPos;
