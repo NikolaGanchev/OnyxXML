@@ -1052,10 +1052,10 @@ TEST_CASE("HTML comments are escaped", "[Comment]" ) {
         "html", false,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false, Comment("A comment. --><dangerous>sequence."))
+        GenericNode("head", false, Comment("A comment. - --><dangerous>sequence."))
     };
 
-    std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<!--A comment. &#45;&#45;><dangerous>sequence.-->\n\t</head>\n</html>";
+    std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<!--A comment. - &#x2d;&#x2d;><dangerous>sequence.-->\n\t</head>\n</html>";
 
     CHECK(expected == obj.serializePretty("\t", true));
 }
