@@ -186,4 +186,77 @@ namespace Templater::dynamic::text {
         oss << "&#x" << std::hex << codepoint << ";";
         return oss.str();
     }
+
+    std::string escapeSequence(const std::string& str, const char* sequence) {
+        std::string escapeSeq = "";
+
+        const char* seqPos = sequence;
+        while (*seqPos != '\0') {
+            escapeSeq += numericEntity(getUnicodeCodepoint(seqPos));
+            seqPos++;
+        }
+
+        // Calculate the total size required for the escaped string.
+        // This pre-calculation helps in allocating the exact amount of memory needed.
+        size_t escapedSize = 0;
+        bool safe = true;
+
+        for (size_t i = 0; i < str.size(); i++) {
+            if ((unsigned char)str[i] == *sequence) {
+                const char* seqPos = sequence;
+                int j = i;
+                while (j < str.size() && *seqPos != '\0' && str[j] == *seqPos) {
+                    j++;
+                    seqPos++;
+                }
+                if (*seqPos == '\0') {
+                    i = j - 1;
+                    safe = false;
+                    escapedSize += escapeSeq.size();
+                    continue;
+                }
+            }
+            escapedSize++;
+        }
+
+        if (safe) return std::string(str);
+
+        // Create a new string with the computed size.
+        // Initialize with null characters as placeholders.
+        std::string escaped(escapedSize, '\0');
+
+        // Setup pointers for reading the input string and writing to the escaped string.
+        const char* read = str.data();
+        char* write = escaped.data();
+
+        // Process the input string until we reach its null terminator.
+        while (*read != '\0') {
+            if ((unsigned char)*read == *sequence) {
+                const char* seqPos = sequence;
+                const char* readSequenceCandidate = read;
+                while (*readSequenceCandidate != '\0' && *seqPos != '\0' && *readSequenceCandidate == *seqPos) {
+                    readSequenceCandidate++;
+                    seqPos++;
+                }
+                if (*seqPos == '\0') {
+                    read = readSequenceCandidate;
+                    safe = false;
+                    for (size_t i = 0; i < escapeSeq.size(); i++) {
+                        *write = escapeSeq[i];
+                        write++;
+                    }
+                    continue;
+                }
+            }
+            *write = *read;
+            write++;
+            read++;
+        }
+
+        // Adjust the final string size based on how many characters were written.
+        // This trims any extra null characters.
+        escaped.resize(write - escaped.data());
+
+        return escaped;
+    }
 }
