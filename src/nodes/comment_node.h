@@ -13,16 +13,11 @@ namespace Templater::dynamic::tags {
         using Text::Text;
         private:
             /**
-             * @brief The escape table to be passed to text::escape()
-             * This is an escape table that only handles the hyphen character, '-'
-             * Only the "--" sequence is forbidden inside comments, but escaping the 
-             * whole string "--" would lead to performance issues.
-             * For this reason, any '-' in the comment is escaped with the normal html escape sequence.
+             * @brief The escape table to be passed to text::escape(). This is an empty table, used to trigger unicode-only escapes.
              * 
              */
             static constexpr std::array<const char*, 128> escapeTable = []() {
                 std::array<const char*, 128> table{};
-                table['-'] = "&#45;";
                 return table;
             }();
         protected:

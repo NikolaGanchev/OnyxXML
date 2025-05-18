@@ -110,3 +110,36 @@ TEST_CASE("Escape 1 million character safe string in under 100ms", "[escape]") {
 
     REQUIRE(time.count() < 100);
 }
+
+TEST_CASE("Escapes random sequence correctly", "[escapeSequence]") {
+    using namespace Templater::text;
+    std::string input = "This is an ill--formatted html comment with two -- inside!";
+    std::string expected = "This is an ill&#x2d;&#x2d;formatted html comment with two &#x2d;&#x2d; inside!";
+    REQUIRE(escapeSequence(input, "--") == expected);
+}
+
+TEST_CASE("Escapes empty sequence correctly", "[escapeSequence]") {
+    using namespace Templater::text;
+    std::string input = "This is a good sequence!";
+    REQUIRE(escapeSequence(input, "") == input);
+}
+
+TEST_CASE("Does not escape sequence when not in string", "[escapeSequence]") {
+    using namespace Templater::text;
+    std::string input = "This is a good sequence!";
+    REQUIRE(escapeSequence(input, "--") == input);
+}
+
+TEST_CASE("Escapes single sequence correctly", "[escapeSequence]") {
+    using namespace Templater::text;
+    std::string input = "-";
+    std::string expected = "&#x2d;";
+    REQUIRE(escapeSequence(input, "-") == expected);
+}
+
+TEST_CASE("Escapes unicode sequence correctly", "[escapeSequence]") {
+    using namespace Templater::text;
+    std::string input = "Hello! 😊😊";
+    std::string expected = "Hello! &#x1f60a;&#x1f60a;";
+    REQUIRE(escapeSequence(input, "😊😊") == input);
+}

@@ -52,5 +52,15 @@ namespace Templater::dynamic {
          * @return std::string 
          */
         std::string escape(const std::string& str, const std::array<const char*, 128>& escapeTable, bool escapeMultiByte = false);
+
+
+        /**
+         * @brief Escapes all occurrences the given sequence with entities in the whole string.
+         * 
+         * @param str 
+         * @param sequence 
+         * @return std::string 
+         */
+        std::string escapeSequence(const std::string& str, const char* sequence);
     }
 }
