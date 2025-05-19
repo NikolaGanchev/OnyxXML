@@ -187,6 +187,19 @@ namespace Templater::dynamic::text {
         return oss.str();
     }
 
+
+    std::string escapeMultiByte(const std::string& str, bool escapeMultiByte) {
+        if (!escapeMultiByte) return std::string(str);
+
+        static constexpr std::array<const char*, 128> emptyEscapeTable = []() {
+            std::array<const char*, 128> table{};
+            return table;
+        }();
+
+        return escape(str, emptyEscapeTable, escapeMultiByte);
+    }
+
+    
     std::string escapeSequence(const std::string& str, const char* sequence) {
         std::string escapeSeq = "";
 
