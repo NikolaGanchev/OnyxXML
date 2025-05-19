@@ -6,7 +6,7 @@
 namespace Templater::dynamic::tags {
 
     /**
-     * @brief A comment Node
+     * @brief A comment Node. Automatically escapes the invalid string "--" into "&#x2d;&#x2d;".
      * 
      */
     class Comment: public Text {

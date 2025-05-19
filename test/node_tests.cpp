@@ -1060,6 +1060,35 @@ TEST_CASE("HTML comments are escaped", "[Comment]" ) {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
+TEST_CASE("XML processing instructions are generated", "[Comment]" ) {
+    using namespace Templater::tags;
+
+    GenericNode obj{
+        "root", false,
+        Attribute("lang", "en"),
+        ProcessingInstruction("templater", "doSomething 5 > 4 somethingElse")
+    };
+
+    std::string expected = "<root lang=\"en\"><?templater doSomething 5 > 4 somethingElse?></root>";
+
+    CHECK(expected == obj.serialize());
+}
+
+
+TEST_CASE("XML processing instructions are escaped", "[Comment]" ) {
+    using namespace Templater::tags;
+
+    GenericNode obj{
+        "root", false,
+        Attribute("lang", "en"),
+        ProcessingInstruction("templater", "doSomething 5 > 4 ?> somethingElse")
+    };
+
+    std::string expected = "<root lang=\"en\"><?templater doSomething 5 > 4 &#x3f;&#x3e; somethingElse?></root>";
+
+    CHECK(expected == obj.serialize());
+}
+
 
 TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
     using namespace Templater::tags;
