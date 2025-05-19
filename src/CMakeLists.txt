@@ -20,6 +20,7 @@ target_sources(
         "nodes/generic_node.cpp"
         "nodes/comment_node.cpp"
         "nodes/_dangerous_raw_text_node.cpp"
+        "nodes/processing_instruction_node.cpp"
         "nodes/foreach_node.cpp"
         "nodes/if_node.cpp"
         "parse/dom_parser.cpp"

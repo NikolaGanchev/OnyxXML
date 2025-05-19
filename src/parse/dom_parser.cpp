@@ -4,6 +4,7 @@
 #include "../nodes/empty_node.h"
 #include "../nodes/text_node.h"
 #include "../nodes/comment_node.h"
+#include "../nodes/processing_instruction_node.h"
 
 namespace Templater::dynamic::parser {
     ParseResult::ParseResult(): arena{0}, root{nullptr} {}
@@ -97,7 +98,7 @@ namespace Templater::dynamic::parser {
         return copy;
     }
  
-#define PARSE_BODY                                                                                                                                      \
+#define PARSE_BODY(validate)                                                                                                                            \
     bool firstTag = true;                                                                                                                               \
     while(*pos != '\0') {                                                                                                                               \
             /* Invariant - always at the start of either a tag or a sequence of text */                                                                 \
@@ -105,7 +106,7 @@ namespace Templater::dynamic::parser {
                 std::string_view text = extractText(pos);                                                                                               \
                 if (text.empty()) {                                                                                                                     \
                     while (*pos != '\0') {                                                                                                              \
-                        if (!isWhitespace(*pos)) throw std::invalid_argument("Invalid end after tag open");                                             \
+                        if (validate && !isWhitespace(*pos)) throw std::invalid_argument("Invalid end after tag open");                                 \
                         pos++;                                                                                                                          \
                     }                                                                                                                                   \
                     break;                                                                                                                              \
@@ -120,15 +121,56 @@ namespace Templater::dynamic::parser {
             /* Invariant - always in tag name */                                                                                                        \
             pos++;                                                                                                                                      \
                                                                                                                                                         \
-            if (*pos == '\0') {                                                                                                                         \
+            if (validate && *pos == '\0') {                                                                                                             \
                 throw std::invalid_argument("Premature end of document");                                                                               \
             }                                                                                                                                           \
+                                                                                                                                                        \
+            if (*pos == '?') {                                                                                                                          \
+                /* Invariant - at processing directive */                                                                                               \
+                pos++;                                                                                                                                  \
+                if (validate && *pos == '\0') {                                                                                                         \
+                    throw std::invalid_argument("Premature end of document");                                                                           \
+                }                                                                                                                                       \
+                std::string_view tagName = readName(pos);                                                                                               \
+                if (validate && tagName.empty()) {                                                                                                      \
+                    throw std::invalid_argument("Invalid tag name");                                                                                    \
+                }                                                                                                                                       \
+                pos += tagName.size();                                                                                                                  \
+                /* Invariant - after tag name */                                                                                                        \
+                if (validate && tagName.size() == 3 && tolower(tagName[0]) == 'x' && tolower(tagName[1]) == 'm' && tolower(tagName[2]) == 'l') {        \
+                    if (!firstTag) {                                                                                                                    \
+                        throw std::invalid_argument("<?xml ?> directive is only allowed at the first position in the prologue");                        \
+                    } else {                                                                                                                            \
+                        /* TODO ?xml instructions */                                                                                                    \
+                    }                                                                                                                                   \
+                }                                                                                                                                       \
+                if (validate && (*pos != ' ' || *(pos+1) == '\0')) {                                                                                    \
+                    throw std::invalid_argument("No space between processing instruction target and processing instruction content");                   \
+                }                                                                                                                                       \
+                pos++;                                                                                                                                  \
+                                                                                                                                                        \
+                const char* localPos = pos;                                                                                                             \
+                                                                                                                                                        \
+                while (!(*localPos == '?' && *(localPos + 1) != '\0' && *(localPos + 1) == '>')) {                                                      \
+                    localPos++;                                                                                                                         \
+                    if (validate && *localPos == '\0') throw std::invalid_argument("Invalid processing instruction without ending");                    \
+                }                                                                                                                                       \
+                                                                                                                                                        \
+                std::string_view processingInstruction(pos, localPos-pos);                                                                              \
+                                                                                                                                                        \
+                pos = localPos + 2;                                                                                                                     \
+                                                                                                                                                        \
+                /* Invariant - just after processing instruction end */                                                                                 \
+                INSTRUCTION_ACTION(tagName, processingInstruction, pos);                                                                                \
+                continue;                                                                                                                               \
+            }                                                                                                                                           \
+                                                                                                                                                        \
                                                                                                                                                         \
             bool isClosing = (*pos == '/');                                                                                                             \
                                                                                                                                                         \
             if (isClosing) pos++;                                                                                                                       \
                                                                                                                                                         \
-            if (*pos == '\0') {                                                                                                                         \
+            if (validate && *pos == '\0') {                                                                                                             \
                 throw std::invalid_argument("Premature end of document");                                                                               \
             }                                                                                                                                           \
                                                                                                                                                         \
@@ -136,14 +178,14 @@ namespace Templater::dynamic::parser {
             if (commentCheckPos != pos) {                                                                                                               \
                 pos = commentCheckPos;                                                                                                                  \
                 /* Invariant - right after <!-- of comment */                                                                                           \
-                if (*pos == '\0') {                                                                                                                     \
+                if (validate && *pos == '\0') {                                                                                                         \
                     throw std::invalid_argument("Premature end of document");                                                                           \
                 }                                                                                                                                       \
                 const char* localPos = pos;                                                                                                             \
                                                                                                                                                         \
                 while (!(*localPos == '-' && *(localPos + 1) != '\0' && *(localPos + 1) == '-')) {                                                      \
                     localPos++;                                                                                                                         \
-                    if (*localPos == '\0') throw std::invalid_argument("Invalid comment without ending");                                               \
+                    if (validate && *localPos == '\0') throw std::invalid_argument("Invalid comment without ending");                                   \
                 }                                                                                                                                       \
                                                                                                                                                         \
                 std::string_view commentText(pos, localPos-pos);                                                                                        \
@@ -151,7 +193,7 @@ namespace Templater::dynamic::parser {
                 localPos += 2;                                                                                                                          \
                                                                                                                                                         \
                 /* Invariant - either at error state or at > */                                                                                         \
-                if (*localPos != '>') throw std::invalid_argument("-- inside of comment not allowed");                                                  \
+                if (validate && *localPos != '>') throw std::invalid_argument("-- inside of comment not allowed");                                      \
                 pos = localPos;                                                                                                                         \
                 pos++;                                                                                                                                  \
                 COMMENT_ACTION(commentText, pos);                                                                                                       \
@@ -160,7 +202,7 @@ namespace Templater::dynamic::parser {
                                                                                                                                                         \
             /* Invariant - pos always at tag name start */                                                                                              \
             std::string_view tagName = readName(pos);                                                                                                   \
-            if (tagName.empty()) {                                                                                                                      \
+            if (validate && tagName.empty()) {                                                                                                          \
                 throw std::invalid_argument("Invalid tag name");                                                                                        \
             }                                                                                                                                           \
             pos += tagName.size();                                                                                                                      \
@@ -170,7 +212,7 @@ namespace Templater::dynamic::parser {
             /* Invariant - pos always after tag name end */                                                                                             \
             pos = skipWhitespace(pos);                                                                                                                  \
                                                                                                                                                         \
-            if (*pos == '\0') {                                                                                                                         \
+            if (validate && *pos == '\0') {                                                                                                             \
                 throw std::invalid_argument("Premature end of document");                                                                               \
             }                                                                                                                                           \
                                                                                                                                                         \
@@ -187,27 +229,27 @@ namespace Templater::dynamic::parser {
                     pos = skipWhitespace(pos);                                                                                                          \
                                                                                                                                                         \
                     /* Invariant - at = or error state */                                                                                               \
-                    if (*pos == '\0' || *pos != '=') {                                                                                                  \
+                    if (validate && (*pos == '\0' || *pos != '=')) {                                                                                    \
                         throw std::invalid_argument("No = after attribute");                                                                            \
                     }                                                                                                                                   \
                     pos++;                                                                                                                              \
                     /* Invariant - after attribute = */                                                                                                 \
                     pos = skipWhitespace(pos);                                                                                                          \
                     char attributeQuote = '\0';                                                                                                         \
-                    if (*pos == '\0') {                                                                                                                 \
+                    if (validate && *pos == '\0') {                                                                                                     \
                         throw std::invalid_argument("Premature end at attribute");                                                                      \
                     }                                                                                                                                   \
                                                                                                                                                         \
                     if (*pos == '\'' || *pos == '\"') {                                                                                                 \
                         attributeQuote = *pos;                                                                                                          \
-                    } else {                                                                                                                            \
+                    } else if (validate) {                                                                                                              \
                         throw std::invalid_argument("No quote (\" or \') after attribute =");                                                           \
                     }                                                                                                                                   \
                     pos++;                                                                                                                              \
                                                                                                                                                         \
                     /* Invariant - after attribute value opening quote */                                                                               \
                     std::string_view attributeValue = extractAttributeValue(pos, attributeQuote);                                                       \
-                    if (attributeValue.empty() && *pos != attributeQuote) {                                                                             \
+                    if (validate && attributeValue.empty() && *pos != attributeQuote) {                                                                 \
                         throw std::invalid_argument("Improperly closed attribute value");                                                               \
                     }                                                                                                                                   \
                     pos += attributeValue.size();                                                                                                       \
@@ -217,7 +259,7 @@ namespace Templater::dynamic::parser {
                                                                                                                                                         \
                     /* Invariant - pos is just after closing quote */                                                                                   \
                     /* Allows non-standard <tagName name="value"/> where the backslash is exactly after the quote */                                    \
-                    if (!isWhitespace(*pos) && *pos != '>' && *pos != '/') {                                                                            \
+                    if (validate && !isWhitespace(*pos) && *pos != '>' && *pos != '/') {                                                                \
                         throw std::invalid_argument("No whitespace after attribute closing quote");                                                     \
                     }                                                                                                                                   \
                                                                                                                                                         \
@@ -225,7 +267,7 @@ namespace Templater::dynamic::parser {
                                                                                                                                                         \
                     /* Continues to either >, /> or another attribute */                                                                                \
                     pos = skipWhitespace(pos);                                                                                                          \
-                    if (*pos == '\0') {                                                                                                                 \
+                    if (validate && *pos == '\0') {                                                                                                     \
                         throw std::invalid_argument("Premature end after attribute");                                                                   \
                     }                                                                                                                                   \
                 }                                                                                                                                       \
@@ -245,7 +287,7 @@ namespace Templater::dynamic::parser {
                 }                                                                                                                                       \
                 isSelfClosing = true;                                                                                                                   \
                 pos++;                                                                                                                                  \
-            } else {                                                                                                                                    \
+            } else if (validate) {                                                                                                                      \
                 throw std::invalid_argument("No tag close");                                                                                            \
             }                                                                                                                                           \
                                                                                                                                                         \
@@ -286,6 +328,7 @@ namespace Templater::dynamic::parser {
 
         #define COMMENT_ACTION(commentText, pos) builder.preallocate<tags::Comment>();
 
+        #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) builder.preallocate<tags::ProcessingInstruction>();
 
         #define ATTRIBUTE_ACTION(tagName, processingInstruction, pos) 
 
@@ -305,10 +348,11 @@ namespace Templater::dynamic::parser {
             }                                                              \
             stack.pop_back();
 
-        PARSE_BODY;
+        PARSE_BODY(true);
         
         #undef TEXT_ACTION
         #undef COMMENT_ACTION
+        #undef INSTRUCTION_ACTION
         #undef ATTRIBUTE_ACTION
         #undef OPEN_ACTION
         #undef CLOSE_ACTION
@@ -340,6 +384,8 @@ namespace Templater::dynamic::parser {
 
         #define COMMENT_ACTION(commentText, pos) stack.back()->addChild(arena.allocate<tags::Comment>(std::string(commentText)));
 
+        #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) \
+                stack.back()->addChild(arena.allocate<tags::ProcessingInstruction>(std::string(tagName), std::string(processingInstruction)));
 
         #define ATTRIBUTE_ACTION(tagName, processingInstruction, pos)   attributeNames.push_back(attributeName);\
                                                                         attributeValues.push_back(attributeValue); 
@@ -369,10 +415,11 @@ namespace Templater::dynamic::parser {
             }                                                                       \
             stack.pop_back();
 
-        PARSE_BODY;
+        PARSE_BODY(false);
         
         #undef TEXT_ACTION
         #undef COMMENT_ACTION
+        #undef INSTRUCTION_ACTION
         #undef ATTRIBUTE_ACTION
         #undef OPEN_ACTION
         #undef CLOSE_ACTION

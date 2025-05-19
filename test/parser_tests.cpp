@@ -214,3 +214,22 @@ TEST_CASE("dom parser works with comments") {
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
 }
+
+TEST_CASE("dom parser works with processing instructions", "[Comment]" ) {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<root lang=\"en\"><?templater doSomething 5 > 4 somethingElse?></root>";
+
+    GenericNode output{
+        "root", false,
+        Attribute("lang", "en"),
+        ProcessingInstruction("templater", "doSomething 5 > 4 somethingElse")
+    };
+
+    ParseResult pr = DomParser::parse(input);
+
+    INFO(output.serialize());
+    INFO(pr.root->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+}
