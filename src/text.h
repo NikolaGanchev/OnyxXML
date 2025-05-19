@@ -20,6 +20,15 @@ namespace Templater::dynamic {
 
 
         /**
+         * @brief Only escapes unicode sequences if escapeMultiByte is true. Otherwise returns a copy of the string.
+         * 
+         * @param escapeMultiByte 
+         * @return std::string 
+         */
+        std::string escapeMultiByte(const std::string& str, bool escapeMultiByte);
+
+
+        /**
          * @brief For a given unicode codepoint returns the appropriate XML/HTML entity.
          * 
          * @param codepoint 

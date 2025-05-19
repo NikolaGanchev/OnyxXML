@@ -11,15 +11,6 @@ namespace Templater::dynamic::tags {
      */
     class Comment: public Text {
         using Text::Text;
-        private:
-            /**
-             * @brief The escape table to be passed to text::escape(). This is an empty table, used to trigger unicode-only escapes.
-             * 
-             */
-            static constexpr std::array<const char*, 128> escapeTable = []() {
-                std::array<const char*, 128> table{};
-                return table;
-            }();
         protected:
             void specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const override;
             void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
