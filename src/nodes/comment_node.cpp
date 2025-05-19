@@ -8,7 +8,7 @@ namespace Templater::dynamic::tags {
     }
 
     std::string Comment::serialize() const {
-        return "<!--" + text::escape(text::escapeSequence(this->getText(), "--"), Comment::escapeTable, this->shouldEscapeMultiByte()) + "-->";
+        return "<!--" + text::escapeMultiByte(text::escapeSequence(this->getText(), "--"), this->shouldEscapeMultiByte()) + "-->";
     }
 
     std::string Comment::serializePretty(const std::string& indentationSequence, bool sortAttributes) const {
@@ -24,12 +24,12 @@ namespace Templater::dynamic::tags {
     }
 
     void Comment::specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const {
-        result << "<!--" << text::escape(text::escapeSequence(this->getText(), "--"), Comment::escapeTable, this->shouldEscapeMultiByte()) << "-->";
+        result << "<!--" << text::escapeMultiByte(text::escapeSequence(this->getText(), "--"), this->shouldEscapeMultiByte()) << "-->";
         stack.pop_back();
     }
 
     void Comment::specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const {
-        result << indentation << "<!--" << text::escape(text::escapeSequence(this->getText(), "--"), Comment::escapeTable, this->shouldEscapeMultiByte()) << "-->\n";
+        result << indentation << "<!--" << text::escapeMultiByte(text::escapeSequence(this->getText(), "--"), this->shouldEscapeMultiByte()) << "-->\n";
         stack.pop_back();
     }
 }
