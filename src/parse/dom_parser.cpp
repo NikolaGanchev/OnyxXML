@@ -358,7 +358,7 @@ namespace Templater::dynamic::parser {
         #undef CLOSE_ACTION
 
         // Invariant - stack may only contain the root
-        if (stack.size() != 1 && stack[0] != hasher(root)) {
+        if (stack.size() != 1 || stack[0] != hasher(root)) {
             throw std::invalid_argument("Unclosed tags left");
         }
 
@@ -425,7 +425,7 @@ namespace Templater::dynamic::parser {
         #undef CLOSE_ACTION
 
         // Invariant - stack may only contain the root
-        if (stack.size() != 1 && stack[0] != root) {
+        if (stack.size() != 1 || stack[0] != root) {
             throw std::invalid_argument("Unclosed tags left");
         }
 

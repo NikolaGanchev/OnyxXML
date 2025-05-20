@@ -233,3 +233,165 @@ TEST_CASE("dom parser works with processing instructions", "[Comment]" ) {
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
 }
+
+
+TEST_CASE("DomParser throws \"Invalid end after tag open\"") {
+    using namespace Templater::parser;
+
+    std::string input = "<tag>   \n\t   ";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Unclosed tags left");
+}
+
+TEST_CASE("DomParser throws \"Premature end of document after <\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end of document");
+}
+
+TEST_CASE("DomParser throws \"Premature end in processing instruction\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<?";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end of document");
+}
+
+TEST_CASE("DomParser throws \"Empty processing instruction tag name\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<? >";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid tag name");
+}
+
+TEST_CASE("DomParser throws \"<?xml?> not at first tag\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag></tag><?xml ?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "<?xml ?> directive is only allowed at the first position in the prologue");
+}
+
+TEST_CASE("DomParser throws \"Missing space after PI target\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<?pi?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "No space between processing instruction target and processing instruction content");
+}
+
+TEST_CASE("DomParser throws \"Unterminated processing instruction\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<?pi content";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid processing instruction without ending");
+}
+
+TEST_CASE("DomParser throws \"Unterminated comment\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<!-- comment";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid comment without ending");
+}
+
+TEST_CASE("DomParser throws \"-- inside comment\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<!-- comment-- ->";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "-- inside of comment not allowed");
+}
+
+TEST_CASE("DomParser throws \"Empty tag name\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid tag name");
+}
+
+TEST_CASE("DomParser throws \"Invalid attribute name\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag =\"value\">";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid non-closing tag");
+}
+
+TEST_CASE("DomParser throws \"No equals after attribute name\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag attr>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "No = after attribute");
+}
+
+TEST_CASE("DomParser throws \"Premature end at attribute\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag attr=";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end at attribute");
+}
+
+TEST_CASE("DomParser throws \"No quote after attribute equals\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag attr=value>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "No quote (\" or ') after attribute =");
+}
+
+TEST_CASE("DomParser throws \"Improperly closed attribute value\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag attr=\"";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Improperly closed attribute value");
+}
+
+TEST_CASE("DomParser throws \"No whitespace after closing attribute quote\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag attr=\"val\"x>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "No whitespace after attribute closing quote");
+}
+
+TEST_CASE("DomParser throws \"Premature end after attribute\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag attr=\"val\"";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "No whitespace after attribute closing quote");
+}
+
+TEST_CASE("DomParser throws \"Double closing tag\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "</tag/>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Trying to double-close closing tag");
+}
+
+TEST_CASE("DomParser throws \"Invalid tag close after /\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag/ ";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid tag close - must have > after /");
+}
+
+TEST_CASE("DomParser throws \"No tag close\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<tag attr=\"val\" x";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "No = after attribute");
+}
+
+TEST_CASE("DomParser throws \"Closing unopened tag\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<a></b>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Closing unopened tag");
+}
+
+TEST_CASE("DomParser throws \"Closing non-existent tags\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "</a>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Closing unopened tag");
+}
+
+TEST_CASE("DomParser throws \"Unclosed tags left\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<a><b></b>";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Unclosed tags left");
+}
