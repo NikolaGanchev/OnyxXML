@@ -37,7 +37,7 @@ TEST_CASE("DomParser works with text") {
     REQUIRE(output.deepEquals(*pr.root));
 }
 
-TEST_CASE("dom parser works with a single attribute") {
+TEST_CASE("DomParser works with a single attribute") {
     using namespace Templater::tags;
     using namespace Templater::parser;
 
@@ -193,7 +193,8 @@ TEST_CASE("DomParser parses complex html") {
     REQUIRE(time.count() < 0);
 }
 
-TEST_CASE("dom parser works with comments") {
+
+TEST_CASE("DomParser works with comments") {
     using namespace Templater::tags;
     using namespace Templater::parser;
 
@@ -215,7 +216,7 @@ TEST_CASE("dom parser works with comments") {
     REQUIRE(output.deepEquals(*pr.root));
 }
 
-TEST_CASE("dom parser works with processing instructions", "[Comment]" ) {
+TEST_CASE("DomParser works with processing instructions", "[Comment]" ) {
     using namespace Templater::tags;
     using namespace Templater::parser;
 
@@ -234,6 +235,24 @@ TEST_CASE("dom parser works with processing instructions", "[Comment]" ) {
     REQUIRE(output.deepEquals(*pr.root));
 }
 
+TEST_CASE("DomParser works with CDATA", "[Comment]" ) {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<root lang=\"en\"><![CDATA[<someElement> This is some literal text, in which & and <, > can safely be written!]]></root>";
+
+    GenericNode output{
+        "root", false,
+        Attribute("lang", "en"),
+        CData("<someElement> This is some literal text, in which & and <, > can safely be written!")
+    };
+
+    ParseResult pr = DomParser::parse(input);
+
+    INFO(output.serialize());
+    INFO(pr.root->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+}
 
 TEST_CASE("DomParser throws \"Invalid end after tag open\"") {
     using namespace Templater::parser;
@@ -394,4 +413,25 @@ TEST_CASE("DomParser throws \"Unclosed tags left\"") {
     
     std::string input = "<a><b></b>";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Unclosed tags left");
+}
+
+TEST_CASE("DomParser throws \"Premature end of CDATA section\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<![CD";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end of CDATA section");
+}
+
+TEST_CASE("DomParser throws \"Invalid CDATA without ending\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<![CDATA[asdfasfasfasfasfasfasda";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid CDATA without ending");
+}
+
+TEST_CASE("DomParser throws \"Tag name cannot contain '!'\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<!as";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Tag name cannot contain '!'");
 }

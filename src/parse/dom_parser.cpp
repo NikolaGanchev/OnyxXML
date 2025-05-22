@@ -5,6 +5,7 @@
 #include "../nodes/text_node.h"
 #include "../nodes/comment_node.h"
 #include "../nodes/processing_instruction_node.h"
+#include "../nodes/cdata_node.h"
 
 namespace Templater::dynamic::parser {
     ParseResult::ParseResult(): arena{0}, root{nullptr} {}
@@ -82,6 +83,12 @@ namespace Templater::dynamic::parser {
 
         return std::string_view(pos, localPos-pos);
     }
+
+#define INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, character, exceptionString) \
+    if (validate && *pos != character) {              \
+        throw std::invalid_argument(exceptionString); \
+    }                                                 \
+    pos++;
  
 #define PARSE_BODY(validate)                                                                                                                            \
     bool firstTag = true;                                                                                                                               \
@@ -156,10 +163,7 @@ namespace Templater::dynamic::parser {
                                                                                                                                                         \
                 if (*pos == '-') {                                                                                                                      \
                     pos++;                                                                                                                              \
-                    if (validate && *pos != '-') {                                                                                                      \
-                        throw std::invalid_argument("Premature end of comment");                                                                        \
-                    }                                                                                                                                   \
-                    pos++;                                                                                                                              \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, '-', "Premature end of comment");                                                   \
                     /* Invariant - right after <!-- of comment */                                                                                       \
                     if (validate && *pos == '\0') {                                                                                                     \
                         throw std::invalid_argument("Premature end of document");                                                                       \
@@ -181,6 +185,34 @@ namespace Templater::dynamic::parser {
                     pos++;                                                                                                                              \
                     COMMENT_ACTION(commentText, pos);                                                                                                   \
                     continue;                                                                                                                           \
+                } else if (*pos == '[') {                                                                                                               \
+                    pos++;                                                                                                                              \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'C', "Premature end of CDATA section");                                             \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'D', "Premature end of CDATA section");                                             \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'A', "Premature end of CDATA section");                                             \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'T', "Premature end of CDATA section");                                             \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'A', "Premature end of CDATA section");                                             \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, '[', "Premature end of CDATA section");                                             \
+                    /* Invariant - right after <![CDATA[ */                                                                                             \
+                    if (validate && *pos == '\0') {                                                                                                     \
+                        throw std::invalid_argument("Premature end of document");                                                                       \
+                    }                                                                                                                                   \
+                    const char* localPos = pos;                                                                                                         \
+                                                                                                                                                        \
+                    while (!(*localPos == ']'                                                                                                           \
+                                && *(localPos + 1) != '\0' && *(localPos + 1) == ']'                                                                    \
+                                && *(localPos + 2) != '\0' && *(localPos + 2) == '>')) {                                                                \
+                        localPos++;                                                                                                                     \
+                        if (validate && *localPos == '\0') throw std::invalid_argument("Invalid CDATA without ending");                                 \
+                    }                                                                                                                                   \
+                                                                                                                                                        \
+                    std::string_view cdataText(pos, localPos-pos);                                                                                      \
+                                                                                                                                                        \
+                    pos = localPos + 3;                                                                                                                 \
+                    CDATA_ACTION(cdataText, pos);                                                                                                       \
+                    continue;                                                                                                                           \
+                } else if (validate) {                                                                                                                  \
+                    throw std::invalid_argument("Tag name cannot contain '!'");                                                                         \
                 }                                                                                                                                       \
             }                                                                                                                                           \
                                                                                                                                                         \
@@ -295,7 +327,6 @@ namespace Templater::dynamic::parser {
             }                                                                                                                                           \
         }
 
-
     Arena DomParser::parseDryRun(std::string_view input) {
         std::vector<size_t> stack;
 
@@ -319,6 +350,8 @@ namespace Templater::dynamic::parser {
         #define TEXT_ACTION(text, pos) builder.preallocate<tags::Text>();
 
         #define COMMENT_ACTION(commentText, pos) builder.preallocate<tags::Comment>();
+
+        #define CDATA_ACTION(cdataText, pos) builder.preallocate<tags::CData>();
 
         #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) builder.preallocate<tags::ProcessingInstruction>();
 
@@ -344,6 +377,7 @@ namespace Templater::dynamic::parser {
         
         #undef TEXT_ACTION
         #undef COMMENT_ACTION
+        #undef CDATA_ACTION
         #undef INSTRUCTION_ACTION
         #undef ATTRIBUTE_ACTION
         #undef OPEN_ACTION
@@ -375,6 +409,8 @@ namespace Templater::dynamic::parser {
         #define TEXT_ACTION(text, pos) stack.back()->addChild(arena.allocate<tags::Text>(std::string(text)));
 
         #define COMMENT_ACTION(commentText, pos) stack.back()->addChild(arena.allocate<tags::Comment>(std::string(commentText)));
+
+        #define CDATA_ACTION(cdataText, pos) stack.back()->addChild(arena.allocate<tags::CData>(std::string(cdataText)));
 
         #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) \
                 stack.back()->addChild(arena.allocate<tags::ProcessingInstruction>(std::string(tagName), std::string(processingInstruction)));
@@ -411,6 +447,7 @@ namespace Templater::dynamic::parser {
         
         #undef TEXT_ACTION
         #undef COMMENT_ACTION
+        #undef CDATA_ACTION
         #undef INSTRUCTION_ACTION
         #undef ATTRIBUTE_ACTION
         #undef OPEN_ACTION
@@ -429,3 +466,5 @@ namespace Templater::dynamic::parser {
         return ParseResult{std::move(arena), root};
     }
 }
+
+#undef INCREMENT_POS_IF_EQUALS_OR_THROW
