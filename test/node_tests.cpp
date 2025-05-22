@@ -1030,7 +1030,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
     CHECK(d.serializePretty("\t", true) == expected);
 }
 
-TEST_CASE("HTML comments are generated", "[Comment]" ) {
+TEST_CASE("XML comments are generated", "[Comment]" ) {
     using namespace Templater::tags;
 
     GenericNode obj{
@@ -1045,7 +1045,7 @@ TEST_CASE("HTML comments are generated", "[Comment]" ) {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("HTML comments are escaped", "[Comment]" ) {
+TEST_CASE("XML comments are escaped", "[Comment]" ) {
     using namespace Templater::tags;
 
     GenericNode obj{
@@ -1056,6 +1056,36 @@ TEST_CASE("HTML comments are escaped", "[Comment]" ) {
     };
 
     std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<!--A comment. - &#x2d;&#x2d;><dangerous>sequence.-->\n\t</head>\n</html>";
+
+    CHECK(expected == obj.serializePretty("\t", true));
+}
+
+TEST_CASE("XML CDATA sections are generated", "[Comment]" ) {
+    using namespace Templater::tags;
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false, CData("A CDATA section can contain arbitrary characters, like >, <, =, \", \' and even &!"))
+    };
+
+    std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<![CDATA[A CDATA section can contain arbitrary characters, like >, <, =, \", \' and even &!]]>\n\t</head>\n</html>";
+
+    CHECK(expected == obj.serializePretty("\t", true));
+}
+
+TEST_CASE("XML CDATA sections are escaped", "[Comment]" ) {
+    using namespace Templater::tags;
+
+    GenericNode obj{
+        "html", false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false, CData("A CDATA section is only forbidden from containing ]]>!"))
+    };
+
+    std::string expected = "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<![CDATA[A CDATA section is only forbidden from containing &#x5d;&#x5d;&#x3e;!]]>\n\t</head>\n</html>";
 
     CHECK(expected == obj.serializePretty("\t", true));
 }

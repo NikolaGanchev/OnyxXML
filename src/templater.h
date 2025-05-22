@@ -24,6 +24,7 @@
 #include "node_handle.h"
 #include "arena.h"
 #include "nodes/processing_instruction_node.h"
+#include "nodes/cdata_node.h"
 
 #if __has_include("dynamic/tags.h")
     #include "dynamic/tags.h"
