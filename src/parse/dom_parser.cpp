@@ -82,21 +82,6 @@ namespace Templater::dynamic::parser {
 
         return std::string_view(pos, localPos-pos);
     }
-
-    const char* checkSequence(const char* toCheck, const char* pos) {
-        const char* copy = pos;
-        while (*toCheck != '\0' && *pos != '\0') {
-            if (*toCheck != *pos) {
-                return copy;
-            }
-            toCheck++;
-            pos++;
-        }
-
-        if (*toCheck == '\0') return pos;
-        
-        return copy;
-    }
  
 #define PARSE_BODY(validate)                                                                                                                            \
     bool firstTag = true;                                                                                                                               \
@@ -163,8 +148,41 @@ namespace Templater::dynamic::parser {
                 /* Invariant - just after processing instruction end */                                                                                 \
                 INSTRUCTION_ACTION(tagName, processingInstruction, pos);                                                                                \
                 continue;                                                                                                                               \
-            }                                                                                                                                           \
+            } else if (*pos == '!') {                                                                                                                   \
+                pos++;                                                                                                                                  \
+                if (validate && *pos == '\0') {                                                                                                         \
+                    throw std::invalid_argument("Premature end of <! tag");                                                                             \
+                }                                                                                                                                       \
                                                                                                                                                         \
+                if (*pos == '-') {                                                                                                                      \
+                    pos++;                                                                                                                              \
+                    if (validate && *pos != '-') {                                                                                                      \
+                        throw std::invalid_argument("Premature end of comment");                                                                        \
+                    }                                                                                                                                   \
+                    pos++;                                                                                                                              \
+                    /* Invariant - right after <!-- of comment */                                                                                       \
+                    if (validate && *pos == '\0') {                                                                                                     \
+                        throw std::invalid_argument("Premature end of document");                                                                       \
+                    }                                                                                                                                   \
+                    const char* localPos = pos;                                                                                                         \
+                                                                                                                                                        \
+                    while (!(*localPos == '-' && *(localPos + 1) != '\0' && *(localPos + 1) == '-')) {                                                  \
+                        localPos++;                                                                                                                     \
+                        if (validate && *localPos == '\0') throw std::invalid_argument("Invalid comment without ending");                               \
+                    }                                                                                                                                   \
+                                                                                                                                                        \
+                    std::string_view commentText(pos, localPos-pos);                                                                                    \
+                                                                                                                                                        \
+                    localPos += 2;                                                                                                                      \
+                                                                                                                                                        \
+                    /* Invariant - either at error state or at > */                                                                                     \
+                    if (validate && *localPos != '>') throw std::invalid_argument("-- inside of comment not allowed");                                  \
+                    pos = localPos;                                                                                                                     \
+                    pos++;                                                                                                                              \
+                    COMMENT_ACTION(commentText, pos);                                                                                                   \
+                    continue;                                                                                                                           \
+                }                                                                                                                                       \
+            }                                                                                                                                           \
                                                                                                                                                         \
             bool isClosing = (*pos == '/');                                                                                                             \
                                                                                                                                                         \
@@ -172,32 +190,6 @@ namespace Templater::dynamic::parser {
                                                                                                                                                         \
             if (validate && *pos == '\0') {                                                                                                             \
                 throw std::invalid_argument("Premature end of document");                                                                               \
-            }                                                                                                                                           \
-                                                                                                                                                        \
-            const char* commentCheckPos = checkSequence("!--", pos);                                                                                    \
-            if (commentCheckPos != pos) {                                                                                                               \
-                pos = commentCheckPos;                                                                                                                  \
-                /* Invariant - right after <!-- of comment */                                                                                           \
-                if (validate && *pos == '\0') {                                                                                                         \
-                    throw std::invalid_argument("Premature end of document");                                                                           \
-                }                                                                                                                                       \
-                const char* localPos = pos;                                                                                                             \
-                                                                                                                                                        \
-                while (!(*localPos == '-' && *(localPos + 1) != '\0' && *(localPos + 1) == '-')) {                                                      \
-                    localPos++;                                                                                                                         \
-                    if (validate && *localPos == '\0') throw std::invalid_argument("Invalid comment without ending");                                   \
-                }                                                                                                                                       \
-                                                                                                                                                        \
-                std::string_view commentText(pos, localPos-pos);                                                                                        \
-                                                                                                                                                        \
-                localPos += 2;                                                                                                                          \
-                                                                                                                                                        \
-                /* Invariant - either at error state or at > */                                                                                         \
-                if (validate && *localPos != '>') throw std::invalid_argument("-- inside of comment not allowed");                                      \
-                pos = localPos;                                                                                                                         \
-                pos++;                                                                                                                                  \
-                COMMENT_ACTION(commentText, pos);                                                                                                       \
-                continue;                                                                                                                               \
             }                                                                                                                                           \
                                                                                                                                                         \
             /* Invariant - pos always at tag name start */                                                                                              \
