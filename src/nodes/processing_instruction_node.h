@@ -88,5 +88,6 @@ namespace Templater::dynamic::tags {
             std::string serializePretty(const std::string& indentationSequence, bool sortAttributes) const override;
             bool hasSpecialSerialization() const override;
             std::unique_ptr<Node> shallowCopy() const override;
+            virtual bool shallowEquals(const Node& other) const override;
     };
 }

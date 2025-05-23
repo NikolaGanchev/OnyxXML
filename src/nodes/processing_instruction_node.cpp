@@ -51,4 +51,11 @@ namespace Templater::dynamic::tags {
         result << indentation << "<?" << this->getTarget() << " " << text::escapeMultiByte(text::escapeSequence(this->getText(), "?>"), this->shouldEscapeMultiByte()) << "?>\n";
         stack.pop_back();
     }
+
+    bool ProcessingInstruction::shallowEquals(const Node& _other) const {
+        if (!Text::shallowEquals(_other)) return false;
+        const ProcessingInstruction* other = dynamic_cast<const ProcessingInstruction*>(&_other);
+
+        return this->target == other->target;
+    }
 }
