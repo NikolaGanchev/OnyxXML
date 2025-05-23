@@ -56,7 +56,7 @@ namespace Templater::dynamic::tags {
             encoding(other.encoding), 
             standalone(other.standalone), 
             hadEncoding(other.hadEncoding),
-            hadStandalone(other.standalone),
+            hadStandalone(other.hadStandalone),
             ProcessingInstruction(other) {}
 
     XmlDeclaration::XmlDeclaration(XmlDeclaration&& other) noexcept 
@@ -64,7 +64,7 @@ namespace Templater::dynamic::tags {
             encoding(std::move(other.encoding)), 
             standalone(other.standalone), 
             hadEncoding(other.hadEncoding),
-            hadStandalone(other.standalone),
+            hadStandalone(other.hadStandalone),
             ProcessingInstruction(std::move(other)) {} 
 
     XmlDeclaration& XmlDeclaration::operator=(XmlDeclaration&& other) noexcept {
@@ -98,8 +98,8 @@ namespace Templater::dynamic::tags {
 
     std::string XmlDeclaration::serialize() const {
         return "<?xml version=\"" + text::escape(this->versionInfo, this->shouldEscapeMultiByte()) + "\"" + 
-            (this->hadEncoding ? (" encoding = \"" + text::escape(this->encoding, this->shouldEscapeMultiByte()) + "\""): "") +
-            (this->hadEncoding ? (" standalone = \"" + std::string(this->standalone ? "yes\"": "no\"")): "") + "?>";
+            (this->hadEncoding ? (" encoding=\"" + text::escape(this->encoding, this->shouldEscapeMultiByte()) + "\""): "") +
+            (this->hadStandalone ? (" standalone=\"" + std::string(this->standalone ? "yes\"": "no\"")): "") + "?>";
     }
 
     std::string XmlDeclaration::serializePretty(const std::string& indentationSequence, bool sortAttributes) const {
@@ -116,15 +116,15 @@ namespace Templater::dynamic::tags {
 
     void XmlDeclaration::specialSerialize(std::vector<Node::SerializationNode>& stack, std::ostringstream& result) const {\
         result << "<?xml version=\"" << text::escape(this->versionInfo, this->shouldEscapeMultiByte()) << "\""
-                 << (this->hadEncoding ? (" encoding = \"" + text::escape(this->encoding, this->shouldEscapeMultiByte()) + "\""): "")
-                 << (this->hadEncoding ? (" standalone = \"" + std::string(this->standalone ? "yes\"": "no\"")): "") << "?>";
+                 << (this->hadEncoding ? (" encoding=\"" + text::escape(this->encoding, this->shouldEscapeMultiByte()) + "\""): "")
+                 << (this->hadStandalone ? (" standalone=\"" + std::string(this->standalone ? "yes\"": "no\"")): "") << "?>";
         stack.pop_back();
     }
 
     void XmlDeclaration::specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const {
         result << "<?xml version=\"" << text::escape(this->versionInfo, this->shouldEscapeMultiByte()) << "\" "
-                 << (this->hadEncoding ? (" encoding = \"" + text::escape(this->encoding, this->shouldEscapeMultiByte()) + "\""): "")
-                 << (this->hadEncoding ? (" standalone = \"" + std::string(this->standalone ? "yes\"": "no\"")): "") << "?>\n";
+                 << (this->hadEncoding ? (" encoding=\"" + text::escape(this->encoding, this->shouldEscapeMultiByte()) + "\""): "")
+                 << (this->hadStandalone ? (" standalone=\"" + std::string(this->standalone ? "yes\"": "no\"")): "") << "?>\n";
         stack.pop_back();
     }
 }
