@@ -127,4 +127,15 @@ namespace Templater::dynamic::tags {
                  << (this->hadStandalone ? (" standalone=\"" + std::string(this->standalone ? "yes\"": "no\"")): "") << "?>\n";
         stack.pop_back();
     }
+
+    bool XmlDeclaration::shallowEquals(const Node& _other) const {
+        if (!ProcessingInstruction::shallowEquals(_other)) return false;
+        const XmlDeclaration* other = dynamic_cast<const XmlDeclaration*>(&_other);
+
+        return this->hadEncoding == other->hadEncoding
+                && this->hadStandalone == other->hadStandalone
+                && this->standalone == other->standalone
+                && this->versionInfo == other->versionInfo
+                && this->encoding == other->encoding;
+    }
 }
