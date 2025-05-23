@@ -233,6 +233,7 @@ namespace Templater::dynamic::parser {
                             throw std::invalid_argument("Invalid standalone value, must be 'yes' or 'no'");                                             \
                         }                                                                                                                               \
                         bool isStandalone = (standalone[0] == 'y');                                                                                     \
+                        if (encoding.size() == 0) encoding = "UTF-8";                                                                                   \
                                                                                                                                                         \
                         XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, hasStandalone, pos);                                       \
                         continue;                                                                                                                       \
