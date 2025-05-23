@@ -1182,7 +1182,7 @@ TEST_CASE("XmlDeclaration serialize with encoding and standalone attributes") {
 
     XmlDeclaration decl("1.0", "ISO-8859-1", true);
     std::string serialized = decl.serialize();
-    REQUIRE(serialized == "<?xml version=\"1.0\" encoding = \"ISO-8859-1\" standalone = \"yes\"?>");
+    REQUIRE(serialized == "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?>");
 }
 
 TEST_CASE("XmlDeclaration serialize with no encoding and no standalone (defaults)") {
@@ -1198,7 +1198,7 @@ TEST_CASE("XmlDeclaration serialize with encoding but standalone false") {
 
     XmlDeclaration decl("1.0", "UTF-8", false);
     std::string serialized = decl.serialize();
-    REQUIRE(serialized == "<?xml version=\"1.0\" encoding = \"UTF-8\" standalone = \"no\"?>");
+    REQUIRE(serialized == "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
 }
 
 TEST_CASE("XmlDeclaration special serialize with encoding and standalone attributes") {
@@ -1206,7 +1206,7 @@ TEST_CASE("XmlDeclaration special serialize with encoding and standalone attribu
 
     EmptyNode root(XmlDeclaration("1.0", "ISO-8859-1", true), GenericNode("node", true));
     std::string serialized = root.serialize();
-    REQUIRE(serialized == "<?xml version=\"1.0\" encoding = \"ISO-8859-1\" standalone = \"yes\"?><node/>");
+    REQUIRE(serialized == "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?><node/>");
 }
 
 TEST_CASE("XmlDeclaration special serialize with no encoding and no standalone (defaults)") {
@@ -1222,7 +1222,7 @@ TEST_CASE("XmlDeclaration special serialize with encoding but standalone false")
 
     EmptyNode root(XmlDeclaration("1.0", "UTF-8", false), GenericNode("node", true));
     std::string serialized = root.serialize();
-    REQUIRE(serialized == "<?xml version=\"1.0\" encoding = \"UTF-8\" standalone = \"no\"?><node/>");
+    REQUIRE(serialized == "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><node/>");
 }
 
 TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
