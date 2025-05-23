@@ -1119,6 +1119,111 @@ TEST_CASE("XML processing instructions are escaped", "[Comment]" ) {
     CHECK(expected == obj.serialize());
 }
 
+TEST_CASE("XmlDeclaration constructor with version, encoding, standalone (hadEncoding=true, hadStandalone=true)") {
+    using namespace Templater::tags;
+
+    XmlDeclaration decl("1.0", "ISO-8859-1", true);
+    REQUIRE(decl.getVersionInfo() == "1.0");
+    REQUIRE(decl.getEncoding() == "ISO-8859-1");
+    REQUIRE(decl.getStandalone() == true);
+}
+
+TEST_CASE("XmlDeclaration constructor with only version (defaults encoding and standalone)") {
+    using namespace Templater::tags;
+
+    XmlDeclaration decl("1.1");
+    REQUIRE(decl.getVersionInfo() == "1.1");
+    REQUIRE(decl.getEncoding() == "UTF-8");
+    REQUIRE(decl.getStandalone() == false);
+}
+
+TEST_CASE("XmlDeclaration constructor with version, encoding, hasEncoding, standalone, hasStandalone") {
+    using namespace Templater::tags;
+
+    XmlDeclaration decl("1.0", "UTF-16", false, true, false);
+    REQUIRE(decl.getVersionInfo() == "1.0");
+    REQUIRE(decl.getEncoding() == "UTF-16");
+    REQUIRE(decl.getStandalone() == true);
+}
+
+TEST_CASE("XmlDeclaration copy constructor duplicates values") {
+    using namespace Templater::tags;
+
+    XmlDeclaration original("1.0", "UTF-8", true);
+    XmlDeclaration copy(original);
+    REQUIRE(copy.getVersionInfo() == original.getVersionInfo());
+    REQUIRE(copy.getEncoding() == original.getEncoding());
+    REQUIRE(copy.getStandalone() == original.getStandalone());
+}
+
+TEST_CASE("XmlDeclaration move constructor transfers values") {
+    using namespace Templater::tags;
+
+    XmlDeclaration original("1.0", "ISO-8859-1", true);
+    XmlDeclaration moved(std::move(original));
+    REQUIRE(moved.getVersionInfo() == "1.0");
+    REQUIRE(moved.getEncoding() == "ISO-8859-1");
+    REQUIRE(moved.getStandalone() == true);
+}
+
+TEST_CASE("XmlDeclaration move assignment operator transfers values") {
+    using namespace Templater::tags;
+
+    XmlDeclaration original("1.0", "ISO-8859-1", true);
+    XmlDeclaration target("1.1");
+    target = std::move(original);
+    REQUIRE(target.getVersionInfo() == "1.0");
+    REQUIRE(target.getEncoding() == "ISO-8859-1");
+    REQUIRE(target.getStandalone() == true);
+}
+
+TEST_CASE("XmlDeclaration serialize with encoding and standalone attributes") {
+    using namespace Templater::tags;
+
+    XmlDeclaration decl("1.0", "ISO-8859-1", true);
+    std::string serialized = decl.serialize();
+    REQUIRE(serialized == "<?xml version=\"1.0\" encoding = \"ISO-8859-1\" standalone = \"yes\"?>");
+}
+
+TEST_CASE("XmlDeclaration serialize with no encoding and no standalone (defaults)") {
+    using namespace Templater::tags;
+
+    XmlDeclaration decl("1.0");
+    std::string serialized = decl.serialize();
+    REQUIRE(serialized == "<?xml version=\"1.0\"?>");
+}
+
+TEST_CASE("XmlDeclaration serialize with encoding but standalone false") {
+    using namespace Templater::tags;
+
+    XmlDeclaration decl("1.0", "UTF-8", false);
+    std::string serialized = decl.serialize();
+    REQUIRE(serialized == "<?xml version=\"1.0\" encoding = \"UTF-8\" standalone = \"no\"?>");
+}
+
+TEST_CASE("XmlDeclaration special serialize with encoding and standalone attributes") {
+    using namespace Templater::tags;
+
+    EmptyNode root(XmlDeclaration("1.0", "ISO-8859-1", true), GenericNode("node", true));
+    std::string serialized = root.serialize();
+    REQUIRE(serialized == "<?xml version=\"1.0\" encoding = \"ISO-8859-1\" standalone = \"yes\"?><node/>");
+}
+
+TEST_CASE("XmlDeclaration special serialize with no encoding and no standalone (defaults)") {
+    using namespace Templater::tags;
+
+    EmptyNode root(XmlDeclaration("1.0"), GenericNode("node", true));
+    std::string serialized = root.serialize();
+    REQUIRE(serialized == "<?xml version=\"1.0\"?><node/>");
+}
+
+TEST_CASE("XmlDeclaration special serialize with encoding but standalone false") {
+    using namespace Templater::tags;
+
+    EmptyNode root(XmlDeclaration("1.0", "UTF-8", false), GenericNode("node", true));
+    std::string serialized = root.serialize();
+    REQUIRE(serialized == "<?xml version=\"1.0\" encoding = \"UTF-8\" standalone = \"no\"?><node/>");
+}
 
 TEST_CASE("__DangerousRawText works", "[DangerousRawText]" ) {
     using namespace Templater::tags;

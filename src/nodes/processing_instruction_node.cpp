@@ -12,7 +12,7 @@ namespace Templater::dynamic::tags {
     ProcessingInstruction& ProcessingInstruction::operator=(ProcessingInstruction&& other) noexcept {
         if (this == &other) return *this;
         this->target = std::move(other.target);
-        Node::operator=(std::move(other));
+        Text::operator=(std::move(other));
 
         return *this;
     }
@@ -23,7 +23,7 @@ namespace Templater::dynamic::tags {
     }
 
     std::string ProcessingInstruction::serialize() const {
-        return "<?" + text::escapeMultiByte(this->getText(), this->shouldEscapeMultiByte()) + "?>";
+        return "<?" + this->getTarget() + " " + text::escapeMultiByte(text::escapeSequence(this->getText(), "?>"), this->shouldEscapeMultiByte()) + "?>";
     }
 
     std::string ProcessingInstruction::serializePretty(const std::string& indentationSequence, bool sortAttributes) const {

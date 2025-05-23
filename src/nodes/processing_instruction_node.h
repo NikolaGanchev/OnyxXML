@@ -21,7 +21,7 @@ namespace Templater::dynamic::tags {
             void specialSerializePretty(std::vector<Node::SerializationNode>& stack, std::ostringstream& result, std::string& indentation, const std::string& indentationSequence, bool sortAttributes) const override;
         public:
             /**
-             * @brief Construct a new owning ProcessingInstruction by given target, text and whether to escape "?>".
+             * @brief Construct a new owning ProcessingInstruction by given target and text
              * 
              * @param text 
              * @param target
@@ -31,7 +31,7 @@ namespace Templater::dynamic::tags {
 
 
              /**
-             * Construct a new non-owning ProcessingInstruction by given target, text and whether to escape "?>".
+             * Construct a new non-owning ProcessingInstruction by given target and text
              * 
              * @param target
              * @param text 
