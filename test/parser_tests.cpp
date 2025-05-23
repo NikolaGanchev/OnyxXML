@@ -254,6 +254,51 @@ TEST_CASE("DomParser works with CDATA", "[Comment]" ) {
     REQUIRE(output.deepEquals(*pr.root));
 }
 
+TEST_CASE("DomParser works with XML declarations") {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<?xml version=\"1.0\"?>";
+
+    XmlDeclaration output("1.0", "UTF-8", false, false, false, false);
+
+    ParseResult pr = DomParser::parse(input);
+
+    INFO(output.serialize());
+    INFO(pr.root->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+}
+
+TEST_CASE("DomParser works with XML declarations with encoding") {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<?xml version=\"1.1\" encoding=\"ISO-8859-1\"?>";
+
+    XmlDeclaration output("1.1", "ISO-8859-1", true, false, false, false);
+
+    ParseResult pr = DomParser::parse(input);
+
+    INFO(output.serialize());
+    INFO(pr.root->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+}
+
+TEST_CASE("DomParser works with XML declarations with standalone") {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<?xml version=\"1.0\" standalone=\"yes\"?>";
+
+    XmlDeclaration output("1.0", "UTF-8", false, true, true, false);
+
+    ParseResult pr = DomParser::parse(input);
+
+    INFO(output.serialize());
+    INFO(pr.root->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+}
+
 TEST_CASE("DomParser throws \"Invalid end after tag open\"") {
     using namespace Templater::parser;
 
@@ -282,11 +327,11 @@ TEST_CASE("DomParser throws \"Empty processing instruction tag name\"") {
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid tag name");
 }
 
-TEST_CASE("DomParser throws \"<?xml?> not at first tag\"") {
+TEST_CASE("DomParser throws \"XML declaration is only allowed at the first position in the prologue\"") {
     using namespace Templater::parser;
     
     std::string input = "<tag></tag><?xml ?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "<?xml ?> directive is only allowed at the first position in the prologue");
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "XML declaration is only allowed at the first position in the prologue");
 }
 
 TEST_CASE("DomParser throws \"Missing space after PI target\"") {
@@ -434,4 +479,60 @@ TEST_CASE("DomParser throws \"Tag name cannot contain '!'\"") {
     
     std::string input = "<!as";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Tag name cannot contain '!'");
+}
+
+TEST_CASE("DomParser throws \"XML declaration must include version\"") {
+    using namespace Templater::parser;
+    
+    std::string xml = "<?xml encoding=\"UTF-8\"?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), "XML declaration must include version");
+}
+
+TEST_CASE("DomParser throws \"Unsupported XML version, must be '1.0' or '1.1'\"") {
+    using namespace Templater::parser;
+    
+    std::string xml = "<?xml version=\"2.0\"?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), "Unsupported XML version, must be '1.0' or '1.1'");
+}
+
+TEST_CASE("DomParser throws \"No '=' after XML declaration attribute name\"") {
+    using namespace Templater::parser;
+    
+    std::string xml = "<?xml version \"1.0\"?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), "No '=' after XML declaration attribute name");
+}
+
+TEST_CASE("DomParser throws \"XML declaration attribute value not quoted\"") {
+    using namespace Templater::parser;
+    
+    std::string xml = "<?xml version=1.0?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), "XML declaration attribute value not quoted");
+}
+
+TEST_CASE("DomParser throws \"Unterminated XML declaration attribute value\"") {
+    using namespace Templater::parser;
+    
+    std::string xml = "<?xml version=\"1.0?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), "Unterminated XML declaration attribute value");
+}
+
+TEST_CASE("DomParser throws \"Invalid encoding in XML declaration\"") {
+    using namespace Templater::parser;
+    
+    std::string xml = "<?xml version=\"1.0\" encoding=\"123-UTF\"?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), "Invalid encoding in XML declaration");
+}
+
+TEST_CASE("DomParser throws \"Invalid standalone value, must be 'yes' or 'no'\"") {
+    using namespace Templater::parser;
+    
+    std::string xml = "<?xml version=\"1.0\" standalone=\"maybe\"?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), "Invalid standalone value, must be 'yes' or 'no'");
+}
+
+TEST_CASE("DomParser throws \"Invalid XML declaration attribute 'extra'\"") {
+    using namespace Templater::parser;
+    
+    std::string xml = "<?xml version=\"1.0\" extra=\"oops\"?>";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), "Invalid XML declaration attribute 'extra'");
 }

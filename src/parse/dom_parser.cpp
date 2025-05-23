@@ -6,6 +6,7 @@
 #include "../nodes/comment_node.h"
 #include "../nodes/processing_instruction_node.h"
 #include "../nodes/cdata_node.h"
+#include "../nodes/xml_declaration_node.h"
 
 namespace Templater::dynamic::parser {
     ParseResult::ParseResult(): arena{0}, root{nullptr} {}
@@ -129,11 +130,112 @@ namespace Templater::dynamic::parser {
                 }                                                                                                                                       \
                 pos += tagName.size();                                                                                                                  \
                 /* Invariant - after tag name */                                                                                                        \
-                if (validate && tagName.size() == 3 && tolower(tagName[0]) == 'x' && tolower(tagName[1]) == 'm' && tolower(tagName[2]) == 'l') {        \
+                if (tagName.size() == 3 && tolower(tagName[0]) == 'x' && tolower(tagName[1]) == 'm' && tolower(tagName[2]) == 'l') {        \
                     if (!firstTag) {                                                                                                                    \
-                        throw std::invalid_argument("<?xml ?> directive is only allowed at the first position in the prologue");                        \
+                        throw std::invalid_argument("XML declaration is only allowed at the first position in the prologue");                           \
                     } else {                                                                                                                            \
-                        /* TODO ?xml instructions */                                                                                                    \
+                        /* Invariant - right after xml tag */                                                                                           \
+                        bool hasVersion = false;                                                                                                        \
+                        bool hasEncoding = false;                                                                                                       \
+                        bool hasStandalone = false;                                                                                                     \
+                        std::string_view version, encoding, standalone;                                                                                 \
+                                                                                                                                                        \
+                        /* Walk through all pseudo-attributes in the xml decl */                                                                        \
+                        while (*pos != '\0' && *pos != '?') {                                                                                           \
+                            /* skip whitespace */                                                                                                       \
+                            pos = skipWhitespace(pos);                                                                                                  \
+                            if (*pos == '?') {                                                                                                          \
+                                break;                                                                                                                  \
+                            }                                                                                                                           \
+                            if (*pos == '\0') {                                                                                                         \
+                                throw std::invalid_argument("Premature end of document");                                                               \
+                            }                                                                                                                           \
+                                                                                                                                                        \
+                            /* read attribute name */                                                                                                   \
+                            std::string_view attrName = readName(pos);                                                                                  \
+                            if (validate && attrName.empty()) {                                                                                         \
+                                throw std::invalid_argument("Invalid XML declaration attribute name");                                                  \
+                            }                                                                                                                           \
+                            pos += attrName.size();                                                                                                     \
+                                                                                                                                                        \
+                            /* expect '=' */                                                                                                            \
+                            pos = skipWhitespace(pos);                                                                                                  \
+                            if (validate && *pos != '=') {                                                                                              \
+                                throw std::invalid_argument("No '=' after XML declaration attribute name");                                             \
+                            }                                                                                                                           \
+                            pos++;                                                                                                                      \
+                            if (*pos == '\0') {                                                                                                         \
+                                throw std::invalid_argument("Premature end of document");                                                               \
+                            }                                                                                                                           \
+                                                                                                                                                        \
+                            pos = skipWhitespace(pos);                                                                                                  \
+                            if (validate && (*pos != '"' && *pos != '\''))  {                                                                           \
+                                throw std::invalid_argument("XML declaration attribute value not quoted");                                              \
+                            }                                                                                                                           \
+                            char quote = *pos++;                                                                                                        \
+                                                                                                                                                        \
+                            const char* valStart = pos;                                                                                                 \
+                            while (*pos != '\0' && *pos != '?' && *pos != quote) {                                                                      \
+                                pos++;                                                                                                                  \
+                            }                                                                                                                           \
+                            if (validate && (*pos == '?' || *pos == '\0' || *pos != quote)) {                                                           \
+                                throw std::invalid_argument("Unterminated XML declaration attribute value");                                            \
+                            }                                                                                                                           \
+                            std::string_view val(valStart, (size_t) (pos - valStart));                                                                  \
+                            pos++;  /* skip closing quote */                                                                                            \
+                            if (*pos == '\0') {                                                                                                         \
+                                throw std::invalid_argument("Premature end of document");                                                               \
+                            }                                                                                                                           \
+                                                                                                                                                        \
+                            if (attrName == "version") {                                                                                                \
+                                version = val;                                                                                                          \
+                                hasVersion = true;                                                                                                      \
+                            }                                                                                                                           \
+                            else if (attrName == "encoding") {                                                                                          \
+                                encoding = val;                                                                                                         \
+                                hasEncoding = true;                                                                                                     \
+                            }                                                                                                                           \
+                            else if (attrName == "standalone") {                                                                                        \
+                                standalone = val;                                                                                                       \
+                                hasStandalone = true;                                                                                                   \
+                            }                                                                                                                           \
+                            else if (validate) {                                                                                                        \
+                                throw std::invalid_argument(std::string("Invalid XML declaration attribute '") + std::string(attrName) + "'");          \
+                            }                                                                                                                           \
+                        }                                                                                                                               \
+                        /* Invariant - pos at ?*/                                                                                                       \
+                        if (*(pos+1) != '>') {                                                                                                          \
+                                throw std::invalid_argument("Unclosed XML declaration");                                                                \
+                        }                                                                                                                               \
+                        pos++;                                                                                                                          \
+                        if (*pos == '\0') {                                                                                                             \
+                            throw std::invalid_argument("Premature end of document");                                                                   \
+                        }                                                                                                                               \
+                        pos++;                                                                                                                          \
+                                                                                                                                                        \
+                        /* enforce presence and legality */                                                                                             \
+                        if (!hasVersion) {                                                                                                              \
+                            throw std::invalid_argument("XML declaration must include version");                                                        \
+                        }                                                                                                                               \
+                        if (validate && version != "1.0" && version != "1.1") {                                                                         \
+                            throw std::invalid_argument("Unsupported XML version, must be '1.0' or '1.1'");                                             \
+                        }                                                                                                                               \
+                        /* encoding is optional in 1.0, but if present must match NMTOKEN */                                                            \
+                        if (hasEncoding && validate) {                                                                                                  \
+                            /* simple check: no spaces, starts with letter */                                                                           \
+                            if (encoding.empty() || !isalpha(encoding[0]))                                                                              \
+                                throw std::invalid_argument("Invalid encoding in XML declaration");                                                     \
+                        }                                                                                                                               \
+                        /* standalone defaults to "no" if not present */                                                                                \
+                        if (!hasStandalone) {                                                                                                           \
+                            standalone = "no";                                                                                                          \
+                        } else if (validate && standalone != "yes" && standalone != "no") {                                                             \
+                            throw std::invalid_argument("Invalid standalone value, must be 'yes' or 'no'");                                             \
+                        }                                                                                                                               \
+                        bool isStandalone = (standalone[0] == 'y');                                                                                     \
+                                                                                                                                                        \
+                        XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, hasStandalone, pos);                                       \
+                        continue;                                                                                                                       \
                     }                                                                                                                                   \
                 }                                                                                                                                       \
                 if (validate && (*pos != ' ' || *(pos+1) == '\0')) {                                                                                    \
@@ -154,6 +256,7 @@ namespace Templater::dynamic::parser {
                                                                                                                                                         \
                 /* Invariant - just after processing instruction end */                                                                                 \
                 INSTRUCTION_ACTION(tagName, processingInstruction, pos);                                                                                \
+                firstTag = false;                                                                                                                       \
                 continue;                                                                                                                               \
             } else if (*pos == '!') {                                                                                                                   \
                 pos++;                                                                                                                                  \
@@ -184,6 +287,7 @@ namespace Templater::dynamic::parser {
                     pos = localPos;                                                                                                                     \
                     pos++;                                                                                                                              \
                     COMMENT_ACTION(commentText, pos);                                                                                                   \
+                    firstTag = false;                                                                                                                   \
                     continue;                                                                                                                           \
                 } else if (*pos == '[') {                                                                                                               \
                     pos++;                                                                                                                              \
@@ -210,6 +314,7 @@ namespace Templater::dynamic::parser {
                                                                                                                                                         \
                     pos = localPos + 3;                                                                                                                 \
                     CDATA_ACTION(cdataText, pos);                                                                                                       \
+                    firstTag = false;                                                                                                                   \
                     continue;                                                                                                                           \
                 } else if (validate) {                                                                                                                  \
                     throw std::invalid_argument("Tag name cannot contain '!'");                                                                         \
@@ -353,6 +458,8 @@ namespace Templater::dynamic::parser {
 
         #define CDATA_ACTION(cdataText, pos) builder.preallocate<tags::CData>();
 
+        #define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, hasStandalone, pos) builder.preallocate<tags::XmlDeclaration>();
+
         #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) builder.preallocate<tags::ProcessingInstruction>();
 
         #define ATTRIBUTE_ACTION(tagName, processingInstruction, pos) 
@@ -381,6 +488,7 @@ namespace Templater::dynamic::parser {
         #undef INSTRUCTION_ACTION
         #undef ATTRIBUTE_ACTION
         #undef OPEN_ACTION
+        #undef XML_DECLARATION_ACTION
         #undef CLOSE_ACTION
 
         // Invariant - stack may only contain the root
@@ -417,6 +525,10 @@ namespace Templater::dynamic::parser {
 
         #define ATTRIBUTE_ACTION(tagName, processingInstruction, pos)   attributeNames.push_back(attributeName);\
                                                                         attributeValues.push_back(attributeValue); 
+                                                                        
+        #define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, hasStandalone, pos) \
+            stack.back()->addChild(arena.allocate<tags::XmlDeclaration>(\
+                            std::string(version), std::string(encoding), hasEncoding, isStandalone, hasStandalone, false));
 
         #define OPEN_ACTION(tagName, pos, isSelfClosing)                                                            \
             Node* newNode = arena.allocate<tags::GenericNode>(std::string(tagName), isSelfClosing);                 \
@@ -451,6 +563,7 @@ namespace Templater::dynamic::parser {
         #undef INSTRUCTION_ACTION
         #undef ATTRIBUTE_ACTION
         #undef OPEN_ACTION
+        #undef XML_DECLARATION_ACTION
         #undef CLOSE_ACTION
 
         // Invariant - stack may only contain the root
