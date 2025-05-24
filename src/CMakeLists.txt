@@ -28,6 +28,7 @@ target_sources(
         "node_handle.cpp"
         "arena.cpp"
         "nodes/xml_declaration_node.cpp"
+        "nodes/doctype_node.cpp"
 )
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.cpp" COPYONLY)

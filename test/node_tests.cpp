@@ -1030,7 +1030,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled", "
     CHECK(d.serializePretty("\t", true) == expected);
 }
 
-TEST_CASE("XML comments are generated", "[Comment]" ) {
+TEST_CASE("XML comments are generated") {
     using namespace Templater::tags;
 
     GenericNode obj{
@@ -1045,7 +1045,7 @@ TEST_CASE("XML comments are generated", "[Comment]" ) {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("XML comments are escaped", "[Comment]" ) {
+TEST_CASE("XML comments are escaped") {
     using namespace Templater::tags;
 
     GenericNode obj{
@@ -1060,7 +1060,7 @@ TEST_CASE("XML comments are escaped", "[Comment]" ) {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("XML CDATA sections are generated", "[Comment]" ) {
+TEST_CASE("XML CDATA sections are generated") {
     using namespace Templater::tags;
 
     GenericNode obj{
@@ -1075,7 +1075,7 @@ TEST_CASE("XML CDATA sections are generated", "[Comment]" ) {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("XML CDATA sections are escaped", "[Comment]" ) {
+TEST_CASE("XML CDATA sections are escaped") {
     using namespace Templater::tags;
 
     GenericNode obj{
@@ -1090,7 +1090,7 @@ TEST_CASE("XML CDATA sections are escaped", "[Comment]" ) {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("XML processing instructions are generated", "[Comment]" ) {
+TEST_CASE("XML processing instructions are generated") {
     using namespace Templater::tags;
 
     GenericNode obj{
@@ -1105,7 +1105,7 @@ TEST_CASE("XML processing instructions are generated", "[Comment]" ) {
 }
 
 
-TEST_CASE("XML processing instructions are escaped", "[Comment]" ) {
+TEST_CASE("XML processing instructions are escaped") {
     using namespace Templater::tags;
 
     GenericNode obj{
@@ -1115,6 +1115,22 @@ TEST_CASE("XML processing instructions are escaped", "[Comment]" ) {
     };
 
     std::string expected = "<root lang=\"en\"><?templater doSomething 5 > 4 &#x3f;&#x3e; somethingElse?></root>";
+
+    CHECK(expected == obj.serialize());
+}
+
+TEST_CASE("DOCTYPEs are generated") {
+    using namespace Templater::tags;
+
+    EmptyNode obj {
+        Doctype("some_list SYSTEM \"example.dtd\""),
+        GenericNode(
+        "html", false,
+        Attribute("lang", "en"),
+        GenericNode("head", false))
+    };
+
+    std::string expected = "<!DOCTYPE some_list SYSTEM \"example.dtd\"><html lang=\"en\"><head></head></html>";
 
     CHECK(expected == obj.serialize());
 }
