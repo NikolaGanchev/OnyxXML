@@ -193,7 +193,6 @@ TEST_CASE("DomParser parses complex html") {
     REQUIRE(time.count() < 0);
 }
 
-
 TEST_CASE("DomParser works with comments") {
     using namespace Templater::tags;
     using namespace Templater::parser;
@@ -216,7 +215,7 @@ TEST_CASE("DomParser works with comments") {
     REQUIRE(output.deepEquals(*pr.root));
 }
 
-TEST_CASE("DomParser works with processing instructions", "[Comment]" ) {
+TEST_CASE("DomParser works with processing instructions") {
     using namespace Templater::tags;
     using namespace Templater::parser;
 
@@ -235,7 +234,7 @@ TEST_CASE("DomParser works with processing instructions", "[Comment]" ) {
     REQUIRE(output.deepEquals(*pr.root));
 }
 
-TEST_CASE("DomParser works with CDATA", "[Comment]" ) {
+TEST_CASE("DomParser works with CDATA") {
     using namespace Templater::tags;
     using namespace Templater::parser;
 
@@ -266,6 +265,8 @@ TEST_CASE("DomParser works with XML declarations") {
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
+    INFO(dynamic_cast<XmlDeclaration*>(pr.root)->getStandalone());
+    INFO(dynamic_cast<XmlDeclaration*>(pr.root)->getEncoding());
     REQUIRE(output.deepEquals(*pr.root));
 }
 
@@ -291,6 +292,30 @@ TEST_CASE("DomParser works with XML declarations with standalone") {
     std::string input = "<?xml version=\"1.0\" standalone=\"yes\"?>";
 
     XmlDeclaration output("1.0", "UTF-8", false, true, true, false);
+
+    ParseResult pr = DomParser::parse(input);
+
+    INFO(output.serialize());
+    INFO(pr.root->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+}
+
+
+TEST_CASE("DomParser works with DOCTYPE") {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<!DOCTYPE html><html theme=\"dark\"><body><div> Hello<span></span>World! </div></body></html>";
+    
+    EmptyNode output{
+        Doctype("html"),
+        GenericNode(
+            "html", false,
+            Attribute("theme", "dark"),
+            GenericNode("body", false,
+                GenericNode("div", false,
+                    Text(" Hello"), GenericNode("span", false), Text("World! "))))
+    };
 
     ParseResult pr = DomParser::parse(input);
 

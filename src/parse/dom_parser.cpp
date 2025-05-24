@@ -7,6 +7,7 @@
 #include "../nodes/processing_instruction_node.h"
 #include "../nodes/cdata_node.h"
 #include "../nodes/xml_declaration_node.h"
+#include "../nodes/doctype_node.h"
 
 namespace Templater::dynamic::parser {
     ParseResult::ParseResult(): arena{0}, root{nullptr} {}
@@ -317,6 +318,30 @@ namespace Templater::dynamic::parser {
                     CDATA_ACTION(cdataText, pos);                                                                                                       \
                     firstTag = false;                                                                                                                   \
                     continue;                                                                                                                           \
+                } else if (*pos == 'D') {                                                                                                               \
+                    pos++;                                                                                                                              \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'O', "Premature end of DOCTYPE section");                                           \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'C', "Premature end of DOCTYPE section");                                           \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'T', "Premature end of DOCTYPE section");                                           \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'Y', "Premature end of DOCTYPE section");                                           \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'P', "Premature end of DOCTYPE section");                                           \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, 'E', "Premature end of DOCTYPE section");                                           \
+                    INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, ' ', "Premature end of DOCTYPE section");                                           \
+                                                                                                                                                        \
+                    const char* localPos = pos;                                                                                                         \
+                                                                                                                                                        \
+                    while (*localPos != '>') {                                                                                                          \
+                        localPos++;                                                                                                                     \
+                        if (validate && *localPos == '\0') throw std::invalid_argument("Invalid DOCTYPE without ending");                               \
+                    }                                                                                                                                   \
+                                                                                                                                                        \
+                    std::string_view doctypeText(pos, localPos-pos);                                                                                    \
+                                                                                                                                                        \
+                    pos = localPos;                                                                                                                     \
+                    pos++;                                                                                                                              \
+                    DOCTYPE_ACTION(doctypeText, pos);                                                                                                   \
+                    firstTag = false;                                                                                                                   \
+                    continue;                                                                                                                           \
                 } else if (validate) {                                                                                                                  \
                     throw std::invalid_argument("Tag name cannot contain '!'");                                                                         \
                 }                                                                                                                                       \
@@ -465,6 +490,8 @@ namespace Templater::dynamic::parser {
 
         #define ATTRIBUTE_ACTION(tagName, processingInstruction, pos) 
 
+        #define DOCTYPE_ACTION(doctypeText, pos) builder.preallocate<tags::Doctype>();
+
         #define OPEN_ACTION(tagName, pos, isSelfClosing)           \
             builder.preallocate<tags::GenericNode>();              \
             if (!isSelfClosing) {                                  \
@@ -490,6 +517,7 @@ namespace Templater::dynamic::parser {
         #undef ATTRIBUTE_ACTION
         #undef OPEN_ACTION
         #undef XML_DECLARATION_ACTION
+        #undef DOCTYPE_ACTION
         #undef CLOSE_ACTION
 
         // Invariant - stack may only contain the root
@@ -530,6 +558,8 @@ namespace Templater::dynamic::parser {
         #define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, hasStandalone, pos) \
             stack.back()->addChild(arena.allocate<tags::XmlDeclaration>(\
                             std::string(version), std::string(encoding), hasEncoding, isStandalone, hasStandalone, false));
+        
+        #define DOCTYPE_ACTION(doctypeText, pos) stack.back()->addChild(arena.allocate<tags::Doctype>(std::string(doctypeText)));
 
         #define OPEN_ACTION(tagName, pos, isSelfClosing)                                                            \
             Node* newNode = arena.allocate<tags::GenericNode>(std::string(tagName), isSelfClosing);                 \
@@ -565,6 +595,7 @@ namespace Templater::dynamic::parser {
         #undef ATTRIBUTE_ACTION
         #undef OPEN_ACTION
         #undef XML_DECLARATION_ACTION
+        #undef DOCTYPE_ACTION
         #undef CLOSE_ACTION
 
         // Invariant - stack may only contain the root
