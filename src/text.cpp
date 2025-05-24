@@ -209,6 +209,11 @@ namespace Templater::dynamic::text {
             seqPos++;
         }
 
+        return replaceSequence(str, sequence, escapeSeq);
+    }
+
+    std::string replaceSequence(const std::string& str, const char* sequence, std::string_view replaceSequence) {
+
         // Calculate the total size required for the escaped string.
         // This pre-calculation helps in allocating the exact amount of memory needed.
         size_t escapedSize = 0;
@@ -225,7 +230,7 @@ namespace Templater::dynamic::text {
                 if (*seqPos == '\0') {
                     i = j - 1;
                     safe = false;
-                    escapedSize += escapeSeq.size();
+                    escapedSize += replaceSequence.size();
                     continue;
                 }
             }
@@ -254,8 +259,8 @@ namespace Templater::dynamic::text {
                 if (*seqPos == '\0') {
                     read = readSequenceCandidate;
                     safe = false;
-                    for (size_t i = 0; i < escapeSeq.size(); i++) {
-                        *write = escapeSeq[i];
+                    for (size_t i = 0; i < replaceSequence.size(); i++) {
+                        *write = replaceSequence[i];
                         write++;
                     }
                     continue;

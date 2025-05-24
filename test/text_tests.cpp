@@ -118,16 +118,23 @@ TEST_CASE("Escapes random sequence correctly", "[escapeSequence]") {
     REQUIRE(escapeSequence(input, "--") == expected);
 }
 
+TEST_CASE("Escapes random sequence correctly", "[replaceSequence]") {
+    using namespace Templater::text;
+    std::string input = "This is an ill--formatted html comment with two -- inside!";
+    std::string expected = "This is an ill- -formatted html comment with two - - inside!";
+    REQUIRE(replaceSequence(input, "--", "- -") == expected);
+}
+
 TEST_CASE("Escapes empty sequence correctly", "[escapeSequence]") {
     using namespace Templater::text;
     std::string input = "This is a good sequence!";
     REQUIRE(escapeSequence(input, "") == input);
 }
 
-TEST_CASE("Does not escape sequence when not in string", "[escapeSequence]") {
+TEST_CASE("Does not escape sequence when not in string", "[replaceSequence]") {
     using namespace Templater::text;
     std::string input = "This is a good sequence!";
-    REQUIRE(escapeSequence(input, "--") == input);
+    REQUIRE(replaceSequence(input, "--", "- -") == input);
 }
 
 TEST_CASE("Escapes single sequence correctly", "[escapeSequence]") {

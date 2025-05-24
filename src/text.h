@@ -71,5 +71,15 @@ namespace Templater::dynamic {
          * @return std::string 
          */
         std::string escapeSequence(const std::string& str, const char* sequence);
+
+
+        /**
+         * @brief Replaces all occurrences the given sequence with the replace sequence in the whole string.
+         * 
+         * @param str 
+         * @param sequence 
+         * @return std::string 
+         */
+        std::string replaceSequence(const std::string& str, const char* sequence, std::string_view replaceSequence);
     }
 }
