@@ -139,128 +139,88 @@ namespace Templater::dynamic::text {
         return escaped;
     }
 
-    // Helper to decode a numeric entity (decimal or hex) into a UTF-8 string
-    std::string decodeNumericEntity(const std::string& entity) {
-        // entity includes the leading '#'
-        unsigned int codepoint = 0;
-        if (entity.size() > 1 && (entity[1] == 'x' || entity[1] == 'X')) {
-            // Hexadecimal
-            codepoint = std::strtoul(entity.c_str() + 2, nullptr, 16);
-        } else {
-            // Decimal
-            codepoint = std::strtoul(entity.c_str() + 1, nullptr, 10);
-        }
-        return encodeUtf8(codepoint);
-    }
-
-    // Encodes a single Unicode code point as a UTF-8 string.
-    std::string encodeUtf8(uint32_t codePoint) {
-        std::string result;
-
-        if (codePoint <= 0x7F) {
-            // 1-byte sequence: 0xxxxxxx
-            result.push_back(static_cast<char>(codePoint));
-        }
-        else if (codePoint <= 0x7FF) {
-            // 2-byte sequence: 110xxxxx 10xxxxxx
-            result.push_back(static_cast<char>(0xC0 | (codePoint >> 6)));
-            result.push_back(static_cast<char>(0x80 | (codePoint & 0x3F)));
-        }
-        else if (codePoint <= 0xFFFF) {
-            // 3-byte sequence: 1110xxxx 10xxxxxx 10xxxxxx
-            result.push_back(static_cast<char>(0xE0 | (codePoint >> 12)));
-            result.push_back(static_cast<char>(0x80 | ((codePoint >> 6) & 0x3F)));
-            result.push_back(static_cast<char>(0x80 | (codePoint & 0x3F)));
-        }
-        else {
-            // 4-byte sequence: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-            result.push_back(static_cast<char>(0xF0 | (codePoint >> 18)));
-            result.push_back(static_cast<char>(0x80 | ((codePoint >> 12) & 0x3F)));
-            result.push_back(static_cast<char>(0x80 | ((codePoint >> 6)  & 0x3F)));
-            result.push_back(static_cast<char>(0x80 | (codePoint & 0x3F)));
-        }
-
-        return result;
-    }
-
-
     std::string expandEntities(std::string_view input) {
-            // Predefined XML named entities
-        static const std::unordered_map<std::string, std::string> named = {
-            {"lt", "<"}, {"gt", ">"}, {"amp", "&"}, {"apos", "'"}, {"quot", "\""}
-        };
-
-        size_t neededSize = 0;
-        bool hasEntities = false;
-        // Cache for memoized expansions
-        std::unordered_map<std::string, std::string> cache;
-        // Sequence of expansions in input order
-        std::vector<std::string> sequence;
-
-        // First pass: identify entities, compute expansions, record size
-        for (size_t i = 0; i < input.size(); ++i) {
-            if (input[i] == '&') {
-                size_t semi = input.find(';', i + 1);
-                if (semi != std::string::npos) {
-                    std::string key(input.substr(i + 1, semi - i - 1));
-                    std::string expansion;
-
-                    // Check cache first
-                    auto itCache = cache.find(key);
-                    if (itCache != cache.end()) {
-                        expansion = itCache->second;
-                    } else {
-                        // Not in cache: compute expansion
-                        auto itNamed = named.find(key);
-                        if (itNamed != named.end()) {
-                            expansion = itNamed->second;
-                        } else if (!key.empty() && key[0] == '#') {
-                            expansion = decodeNumericEntity(key);
-                        } else {
-                            // Unknown entity: leave as-is
-                            expansion = "&" + key + ";";
-                        }
-                        // Store in cache
-                        cache.emplace(key, expansion);
-                    }
-
-                    sequence.push_back(expansion);
-                    neededSize += expansion.size();
-                    hasEntities = true;
-
-                    i = semi;  // Skip past the entity
-                    continue;
-                }
-            }
-            // Regular character
-            neededSize += 1;
-        }
-
-        // If no entities found, return original string
-        if (!hasEntities) {
-            return std::string(input);
-        }
-
-        // Second pass: build output
         std::string output;
-        output.resize(neededSize);
-        size_t writePos = 0;
-        size_t seqIndex = 0;
+        // Reserve with a modest overhead to minimize reallocations
+        output.reserve(input.size() * 6 / 5);
 
-        for (size_t i = 0; i < input.size(); ++i) {
-            if (input[i] == '&') {
-                size_t semi = input.find(';', i + 1);
-                if (semi != std::string::npos) {
-                    const std::string& exp = sequence[seqIndex++];
-                    for (char c : exp) {
-                        output[writePos++] = c;
+        static constexpr std::array<std::pair<std::string_view, char32_t>, 5> namedEntities = {{
+            {"lt",   '<'},
+            {"gt",   '>'},
+            {"amp",  '&'},
+            {"apos", '\''},
+            {"quot", '"'}
+        }};
+
+        const char* p = input.data();
+        const char* end = p + input.size();
+
+        while (p < end) {
+            if (*p == '&') {
+                const char* q = p + 1;
+                // limit maximum entity length (e.g., max 10 chars before ';')
+                const char* limit = std::min(end, q + 10);
+                const char* semi = std::find(q, limit, ';');
+
+                if (semi != limit && *semi == ';') {
+                    std::string_view token(q, semi - q);
+
+                    // Named entity lookup
+                    for (auto const& [name, code]: namedEntities) {
+                        if (token == name) {
+                            // UTF-8 encode code point 0x00--0x7F
+                            output.push_back(static_cast<char>(code));
+                            p = semi + 1;
+                            goto cont;
+                        }
                     }
-                    i = semi;
-                    continue;
+
+                    // Numeric entity
+                    if (!token.empty() && token[0] == '#') {
+                        bool isHex = token.size() > 1 && (token[1] == 'x' || token[1] == 'X');
+                        uint32_t cp = 0;
+                        auto start = token.begin() + (isHex ? 2 : 1);
+                        bool valid = true;
+                        for (auto it = start; it != token.end(); ++it) {
+                            char c = *it;
+                            uint32_t digit = 0;
+                            if (c >= '0' && c <= '9') digit = c - '0';
+                            else if (isHex && c >= 'a' && c <= 'f') digit = 10 + (c - 'a');
+                            else if (isHex && c >= 'A' && c <= 'F') digit = 10 + (c - 'A');
+                            else { valid = false; break; }
+                            cp = isHex ? (cp << 4) | digit : cp * 10 + digit;
+                        }
+                        if (valid) {
+                            // encode cp in UTF-8
+                            if (cp <= 0x7F) {
+                                output.push_back(static_cast<char>(cp));
+                            } else if (cp <= 0x7FF) {
+                                output.push_back(static_cast<char>(0xC0 | (cp >> 6)));
+                                output.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+                            } else if (cp <= 0xFFFF) {
+                                output.push_back(static_cast<char>(0xE0 | (cp >> 12)));
+                                output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+                                output.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+                            } else {
+                                output.push_back(static_cast<char>(0xF0 | (cp >> 18)));
+                                output.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));
+                                output.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
+                                output.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+                            }
+                            p = semi + 1;
+                            goto cont;
+                        }
+                    }
+
+                    // Fallback: copy verbatim
+                    output.append(p, semi + 1 - p);
+                    p = semi + 1;
+                    goto cont;
                 }
             }
-            // Copy literal character
-            output[writePos++] = input[i];
+            // Normal copy
+            output.push_back(*p++);
+            cont:;
         }
 
         return output;

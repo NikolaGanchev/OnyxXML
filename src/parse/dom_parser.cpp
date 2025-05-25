@@ -9,6 +9,7 @@
 #include "../nodes/xml_declaration_node.h"
 #include "../nodes/doctype_node.h"
 #include "text.h"
+#include <utility>
 
 namespace Templater::dynamic::parser {
     ParseResult::ParseResult(): arena{0}, root{nullptr} {}
@@ -65,28 +66,6 @@ namespace Templater::dynamic::parser {
         return std::string_view(pos, localPos-pos);
     }
 
-    std::string_view extractText(const char* pos) {
-        const char* localPos = pos;
-
-        while (*localPos != '<') {
-            if (*localPos == '\0') return std::string_view();
-            localPos++;
-        }
-
-        return std::string_view(pos, localPos-pos);
-    }
-
-    std::string_view extractAttributeValue(const char* pos, char attributeQuote) {
-        const char* localPos = pos;
-
-        while (*localPos != attributeQuote) {
-            if (*localPos == '\0') return std::string_view();
-            localPos++;
-        }
-
-        return std::string_view(pos, localPos-pos);
-    }
-
 #define INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, character, exceptionString) \
     if (validate && *pos != character) {              \
         throw std::invalid_argument(exceptionString); \
@@ -98,17 +77,26 @@ namespace Templater::dynamic::parser {
     while(*pos != '\0') {                                                                                                                               \
             /* Invariant - always at the start of either a tag or a sequence of text */                                                                 \
             if (*pos != '<') {                                                                                                                          \
-                std::string_view text = extractText(pos);                                                                                               \
-                if (text.empty()) {                                                                                                                     \
-                    while (*pos != '\0') {                                                                                                              \
-                        if (validate && !isWhitespace(*pos)) throw std::invalid_argument("Invalid end after tag open");                                 \
-                        pos++;                                                                                                                          \
+                const char* localPos = pos;                                                                                                             \
+                bool hasEntities = false;                                                                                                               \
+                bool end = false;                                                                                                                       \
+                while (*localPos != '<') {                                                                                                              \
+                    if (*localPos == '\0') {                                                                                                            \
+                        while (*pos != '\0') {                                                                                                          \
+                            if (validate && !isWhitespace(*pos)) throw std::invalid_argument("Invalid end after tag open");                             \
+                            pos++;                                                                                                                      \
+                        }                                                                                                                               \
+                        end = true;                                                                                                                     \
+                        break;                                                                                                                          \
                     }                                                                                                                                   \
-                    break;                                                                                                                              \
+                    if (*localPos == '&') hasEntities = true;                                                                                           \
+                    localPos++;                                                                                                                         \
                 }                                                                                                                                       \
-                pos += text.size();                                                                                                                     \
+                if (end) break;                                                                                                                         \
+                std::string_view text(pos, localPos - pos);                                                                                             \
+                pos = localPos;                                                                                                                         \
                                                                                                                                                         \
-                TEXT_ACTION(text, pos);                                                                                                                 \
+                TEXT_ACTION(text, hasEntities, pos);                                                                                                    \
                                                                                                                                                         \
                 continue;                                                                                                                               \
             }                                                                                                                                           \
@@ -132,7 +120,7 @@ namespace Templater::dynamic::parser {
                 }                                                                                                                                       \
                 pos += tagName.size();                                                                                                                  \
                 /* Invariant - after tag name */                                                                                                        \
-                if (tagName.size() == 3 && tolower(tagName[0]) == 'x' && tolower(tagName[1]) == 'm' && tolower(tagName[2]) == 'l') {        \
+                if (tagName.size() == 3 && tolower(tagName[0]) == 'x' && tolower(tagName[1]) == 'm' && tolower(tagName[2]) == 'l') {                    \
                     if (!firstTag) {                                                                                                                    \
                         throw std::invalid_argument("XML declaration is only allowed at the first position in the prologue");                           \
                     } else {                                                                                                                            \
@@ -404,11 +392,15 @@ namespace Templater::dynamic::parser {
                     pos++;                                                                                                                              \
                                                                                                                                                         \
                     /* Invariant - after attribute value opening quote */                                                                               \
-                    std::string_view attributeValue = extractAttributeValue(pos, attributeQuote);                                                       \
-                    if (validate && attributeValue.empty() && *pos != attributeQuote) {                                                                 \
-                        throw std::invalid_argument("Improperly closed attribute value");                                                               \
+                    const char* localPos = pos;                                                                                                         \
+                    bool hasEntities = false;                                                                                                           \
+                    while (*localPos != attributeQuote) {                                                                                               \
+                        if (validate && *localPos == '\0') throw std::invalid_argument("Improperly closed attribute value");                            \
+                        if (*localPos == '&') hasEntities = true;                                                                                       \
+                        localPos++;                                                                                                                     \
                     }                                                                                                                                   \
-                    pos += attributeValue.size();                                                                                                       \
+                    std::string_view attributeValue(pos, localPos - pos);                                                                               \
+                    pos = localPos;                                                                                                                     \
                                                                                                                                                         \
                     /* Invariant - pos is at closing quote */                                                                                           \
                     pos++;                                                                                                                              \
@@ -419,7 +411,7 @@ namespace Templater::dynamic::parser {
                         throw std::invalid_argument("No whitespace after attribute closing quote");                                                     \
                     }                                                                                                                                   \
                                                                                                                                                         \
-                    ATTRIBUTE_ACTION(attributeName, attributeValue, pos);                                                                               \
+                    ATTRIBUTE_ACTION(attributeName, attributeValue, hasEntities, pos);                                                                  \
                                                                                                                                                         \
                     /* Continues to either >, /> or another attribute */                                                                                \
                     pos = skipWhitespace(pos);                                                                                                          \
@@ -479,7 +471,7 @@ namespace Templater::dynamic::parser {
 
         pos = skipWhitespace(pos);
 
-        #define TEXT_ACTION(text, pos) builder.preallocate<tags::Text>();
+        #define TEXT_ACTION(text, hasEntities, pos) builder.preallocate<tags::Text>();
 
         #define COMMENT_ACTION(commentText, pos) builder.preallocate<tags::Comment>();
 
@@ -489,7 +481,7 @@ namespace Templater::dynamic::parser {
 
         #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) builder.preallocate<tags::ProcessingInstruction>();
 
-        #define ATTRIBUTE_ACTION(attributeName, attributeValue, pos) 
+        #define ATTRIBUTE_ACTION(attributeName, attributeValue, hasEntities, pos) 
 
         #define DOCTYPE_ACTION(doctypeText, pos) builder.preallocate<tags::Doctype>();
 
@@ -532,7 +524,7 @@ namespace Templater::dynamic::parser {
     ParseResult DomParser::parse(std::string_view input) {
         std::vector<Node*> stack;
         std::vector<std::string_view> attributeNames;
-        std::vector<std::string_view> attributeValues;
+        std::vector<std::pair<std::string_view, bool>> attributeValues;
 
         const char* pos = input.data();
 
@@ -544,7 +536,11 @@ namespace Templater::dynamic::parser {
 
         pos = skipWhitespace(pos);
 
-        #define TEXT_ACTION(text, pos) stack.back()->addChild(arena.allocate<tags::Text>(text::expandEntities(text)));
+        #define TEXT_ACTION(text, hasEntities, pos) stack.back()->addChild(\
+            arena.allocate<tags::Text>(\
+                hasEntities ? \
+                    text::expandEntities(text): \
+                    std::string(text)));
 
         #define COMMENT_ACTION(commentText, pos) stack.back()->addChild(arena.allocate<tags::Comment>(std::string(commentText)));
 
@@ -553,8 +549,8 @@ namespace Templater::dynamic::parser {
         #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) \
                 stack.back()->addChild(arena.allocate<tags::ProcessingInstruction>(std::string(tagName), std::string(processingInstruction)));
 
-        #define ATTRIBUTE_ACTION(attributeName, attributeValue, pos)   attributeNames.push_back(attributeName);\
-                                                                        attributeValues.push_back(attributeValue); 
+        #define ATTRIBUTE_ACTION(attributeName, attributeValue, hasEntities, pos)   attributeNames.push_back(attributeName);\
+                                                                                    attributeValues.push_back(std::make_pair(attributeValue, hasEntities)); 
                                                                         
         #define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, hasStandalone, pos) \
             stack.back()->addChild(arena.allocate<tags::XmlDeclaration>(\
@@ -567,7 +563,8 @@ namespace Templater::dynamic::parser {
                                                                                                                     \
             auto& attributes = newNode->attributes;                                                                 \
             for (int i = 0; i < attributeNames.size(); i++) {                                                       \
-                attributes.emplace_back(std::string(attributeNames[i]), text::expandEntities(attributeValues[i]));  \
+                attributes.emplace_back(std::string(attributeNames[i]),                                             \
+                    attributeValues[i].second ? text::expandEntities(attributeValues[i].first): std::string(attributeValues[i].first));  \
             }                                                                                                       \
                                                                                                                     \
             stack.back()->addChild(newNode);                                                                        \
