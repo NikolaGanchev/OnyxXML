@@ -426,11 +426,11 @@ namespace Templater::dynamic::parser {
             if (*pos == '>') {                                                                                                                          \
                 pos++;                                                                                                                                  \
             } else if (*pos == '/') {                                                                                                                   \
-                if (isClosing) {                                                                                                                        \
+                if (validate && isClosing) {                                                                                                            \
                     throw std::invalid_argument("Trying to double-close closing tag");                                                                  \
                 }                                                                                                                                       \
                 pos++;                                                                                                                                  \
-                if (*pos != '>') {                                                                                                                      \
+                if (validate && *pos != '>') {                                                                                                          \
                     throw std::invalid_argument("Invalid tag close - must have > after /");                                                             \
                 }                                                                                                                                       \
                 isSelfClosing = true;                                                                                                                   \
