@@ -56,7 +56,6 @@ TEST_CASE("DomParser works with a single attribute") {
     REQUIRE(output.deepEquals(*pr.root));
 }
 
-
 TEST_CASE("DomParser works with many attributes") {
     using namespace Templater::tags;
     using namespace Templater::parser;
@@ -66,6 +65,46 @@ TEST_CASE("DomParser works with many attributes") {
     GenericNode output{
         "html", false,
         Attribute("theme", "dark"),
+        Attribute("lang", "en"),
+        GenericNode("body", false,
+            GenericNode("div", false,
+                Text(" Hello"), GenericNode("span", false), Text("World! ")))
+    };
+
+    ParseResult pr = DomParser::parse(input);
+
+    REQUIRE(output.deepEquals(*pr.root));
+}
+
+TEST_CASE("DomParser expands entities in text") {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<html theme=\"dark\" lang='en'><body><div> 4 &#60; 5; </div></body></html>";
+    
+    GenericNode output{
+        "html", false,
+        Attribute("theme", "dark"),
+        Attribute("lang", "en"),
+        GenericNode("body", false,
+            GenericNode("div", false,
+                Text(" 4 < 5; ")))
+    };
+
+    ParseResult pr = DomParser::parse(input);
+
+    REQUIRE(output.deepEquals(*pr.root));
+}
+
+TEST_CASE("DomParser expands entities in attribute values") {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<html theme=\"dark&apos;\" lang='en'><body><div> Hello<span></span>World! </div></body></html>";
+    
+    GenericNode output{
+        "html", false,
+        Attribute("theme", "dark'"),
         Attribute("lang", "en"),
         GenericNode("body", false,
             GenericNode("div", false,

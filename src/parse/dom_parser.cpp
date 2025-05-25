@@ -8,6 +8,7 @@
 #include "../nodes/cdata_node.h"
 #include "../nodes/xml_declaration_node.h"
 #include "../nodes/doctype_node.h"
+#include "text.h"
 
 namespace Templater::dynamic::parser {
     ParseResult::ParseResult(): arena{0}, root{nullptr} {}
@@ -107,7 +108,7 @@ namespace Templater::dynamic::parser {
                 }                                                                                                                                       \
                 pos += text.size();                                                                                                                     \
                                                                                                                                                         \
-                TEXT_ACTION(text, pos)                                                                                                                  \
+                TEXT_ACTION(text, pos);                                                                                                                 \
                                                                                                                                                         \
                 continue;                                                                                                                               \
             }                                                                                                                                           \
@@ -488,7 +489,7 @@ namespace Templater::dynamic::parser {
 
         #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) builder.preallocate<tags::ProcessingInstruction>();
 
-        #define ATTRIBUTE_ACTION(tagName, processingInstruction, pos) 
+        #define ATTRIBUTE_ACTION(attributeName, attributeValue, pos) 
 
         #define DOCTYPE_ACTION(doctypeText, pos) builder.preallocate<tags::Doctype>();
 
@@ -543,7 +544,7 @@ namespace Templater::dynamic::parser {
 
         pos = skipWhitespace(pos);
 
-        #define TEXT_ACTION(text, pos) stack.back()->addChild(arena.allocate<tags::Text>(std::string(text)));
+        #define TEXT_ACTION(text, pos) stack.back()->addChild(arena.allocate<tags::Text>(text::expandEntities(text)));
 
         #define COMMENT_ACTION(commentText, pos) stack.back()->addChild(arena.allocate<tags::Comment>(std::string(commentText)));
 
@@ -552,7 +553,7 @@ namespace Templater::dynamic::parser {
         #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) \
                 stack.back()->addChild(arena.allocate<tags::ProcessingInstruction>(std::string(tagName), std::string(processingInstruction)));
 
-        #define ATTRIBUTE_ACTION(tagName, processingInstruction, pos)   attributeNames.push_back(attributeName);\
+        #define ATTRIBUTE_ACTION(attributeName, attributeValue, pos)   attributeNames.push_back(attributeName);\
                                                                         attributeValues.push_back(attributeValue); 
                                                                         
         #define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, hasStandalone, pos) \
@@ -566,7 +567,7 @@ namespace Templater::dynamic::parser {
                                                                                                                     \
             auto& attributes = newNode->attributes;                                                                 \
             for (int i = 0; i < attributeNames.size(); i++) {                                                       \
-                attributes.emplace_back(std::string(attributeNames[i]), std::string(attributeValues[i]));           \
+                attributes.emplace_back(std::string(attributeNames[i]), text::expandEntities(attributeValues[i]));  \
             }                                                                                                       \
                                                                                                                     \
             stack.back()->addChild(newNode);                                                                        \
@@ -578,12 +579,6 @@ namespace Templater::dynamic::parser {
 
         #define CLOSE_ACTION(tagName, pos)                                          \
             Node* thisNode = stack.back();                                          \
-            if (thisNode->getTagName() != tagName) {                                \
-                throw std::invalid_argument("Closing unopened tag");                \
-            }                                                                       \
-            if (stack.size() == 1) {                                                \
-                throw std::invalid_argument("Closing non-existent tags");           \
-            }                                                                       \
             stack.pop_back();
 
         PARSE_BODY(false);
