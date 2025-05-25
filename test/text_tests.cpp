@@ -150,3 +150,151 @@ TEST_CASE("Escapes unicode sequence correctly", "[escapeSequence]") {
     std::string expected = "Hello! &#x1f60a;&#x1f60a;";
     REQUIRE(escapeSequence(input, "😊😊") == input);
 }
+
+TEST_CASE("Basic replacements", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"cat", "dog"},
+        {"bat", "rat"}
+    };
+
+    std::string input = "The cat chased the bat.";
+    std::string expected = "The dog chased the rat.";
+    REQUIRE(replaceSequences(input, dict) == expected);
+}
+
+TEST_CASE("No replacements when no keys match", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"zebra", "lion"},
+        {"monkey", "ape"}
+    };
+
+    std::string input = "No matching keys here.";
+    REQUIRE(replaceSequences(input, dict) == input);
+}
+
+TEST_CASE("Empty input string returns empty string", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"hello", "hi"}
+    };
+
+    std::string input = "";
+    REQUIRE(replaceSequences(input, dict).empty());
+}
+
+TEST_CASE("Empty dictionary returns input unchanged", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict;
+
+    std::string input = "Sample text.";
+    REQUIRE(replaceSequences(input, dict) == input);
+}
+
+TEST_CASE("Single character replacements", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"a", "1"},
+        {"b", "2"}
+    };
+
+    std::string input = "abba";
+    std::string expected = "1221";
+    REQUIRE(replaceSequences(input, dict) == expected);
+}
+
+TEST_CASE("Overlapping keys - order sensitive", "[replaceSequences]") {
+    using namespace Templater::text;
+    // Order matters: first "aa" then "a"
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"aa", "X"},
+        {"a", "Y"}
+    };
+
+    std::string input = "aaaa";
+    // Replace "aa" pairs first, so "aaaa" -> "XX"
+    REQUIRE(replaceSequences(input, dict) == "XX");
+}
+
+TEST_CASE("Overlapping keys - reversed order", "[replaceSequences]") {
+    using namespace Templater::text;
+    // Now first "a", then "aa"
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"a", "Y"},
+        {"aa", "X"}
+    };
+
+    std::string input = "aaaa";
+    // Since "a" replaces first, it will replace all 'a's individually: "YYYY"
+    REQUIRE(replaceSequences(input, dict) == "YYYY");
+}
+
+TEST_CASE("Full string replacement", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"entire", "whole"}
+    };
+
+    std::string input = "entire";
+    std::string expected = "whole";
+    REQUIRE(replaceSequences(input, dict) == expected);
+}
+
+TEST_CASE("Case sensitivity check", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"Hello", "Hi"},
+        {"world", "Earth"}
+    };
+
+    std::string input = "Hello world. hello World.";
+    std::string expected = "Hi Earth. hello World.";
+    REQUIRE(replaceSequences(input, dict) == expected);
+}
+
+TEST_CASE(" Replacement strings containing keys - no recursion", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"a", "ab"},
+        {"b", "bc"}
+    };
+
+    std::string input = "ab";
+    std::string result = replaceSequences(input, dict);
+    REQUIRE(result == "abbc");
+}
+
+TEST_CASE("Key is empty string", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"", "X"}
+    };
+
+    std::string input = "abc";
+    REQUIRE(replaceSequences(input, dict) == input);
+}
+
+TEST_CASE("Replacement string empty (deletion)", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"a", ""}
+    };
+
+    std::string input = "abracadabra";
+    std::string expected = "brcdbr";
+    REQUIRE(replaceSequences(input, dict) == expected);
+}
+
+TEST_CASE("Multiple replacements in sequence", "[replaceSequences]") {
+    using namespace Templater::text;
+    std::vector<std::pair<std::string_view, std::string_view>> dict{
+        {"foo", "bar"},
+        {"bar", "baz"},
+        {"baz", "qux"}
+    };
+
+    std::string input = "foo bar baz";
+    std::string expected = "bar baz qux";
+    REQUIRE(replaceSequences(input, dict) == expected);
+}

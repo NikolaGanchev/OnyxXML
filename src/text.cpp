@@ -277,4 +277,79 @@ namespace Templater::dynamic::text {
 
         return escaped;
     }
+
+    std::string replaceSequences(const std::string& str, const std::vector<std::pair<std::string_view, std::string_view>>& dictionary) {
+        // Calculate the total size required for the escaped string.
+        // This pre-calculation helps in allocating the exact amount of memory needed.
+        size_t escapedSize = 0;
+        bool safe = true;
+
+        bool foundMatch = true;
+        for (size_t i = 0; i < str.size(); i++) {
+            for (const auto& [key, replacement] : dictionary) {
+                foundMatch = true;
+                if (key == "") continue;
+                size_t k = i;
+                for (size_t j = 0; j < key.size(); j++, k++) {
+                    if (k >= str.size() || (unsigned char)str[k] != key[j]) {   
+                        foundMatch = false;
+                        break;
+                    }
+                }   
+                if (foundMatch) {
+                    i = k - 1;
+                    safe = false;
+                    escapedSize += replacement.size();
+                    break;
+                }
+            }
+            if (!foundMatch) {
+                escapedSize++;
+            }
+        }
+
+        if (safe) return std::string(str);
+
+        // Create a new string with the computed size.
+        // Initialize with null characters as placeholders.
+        std::string escaped(escapedSize, '\0');
+
+        // Setup pointers for reading the input string and writing to the escaped string.
+        const char* read = str.data();
+        char* write = escaped.data();
+
+        // Process the input string until we reach its null terminator.
+        while (*read != '\0') {
+            for (const auto& [key, replacement] : dictionary) {
+                foundMatch = true;
+                if (key == "") continue;
+                const char* readSequenceCandidate = read;
+                for (size_t j = 0; j < key.size(); j++, readSequenceCandidate++) {
+                    if (*readSequenceCandidate == '\0' || (unsigned char) *readSequenceCandidate != key[j]) {   
+                        foundMatch = false;
+                        break;
+                    }
+                }   
+                if (foundMatch) {
+                    read = readSequenceCandidate;
+                    for (size_t i = 0; i < replacement.size(); i++) {
+                        *write = replacement[i];
+                        write++;
+                    }
+                    break;
+                }
+            }
+            if (!foundMatch) {
+                *write = *read;
+                write++;
+                read++;
+            }
+        }
+
+        // Adjust the final string size based on how many characters were written.
+        // This trims any extra null characters.
+        escaped.resize(write - escaped.data());
+
+        return escaped;
+    }
 }

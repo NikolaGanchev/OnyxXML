@@ -78,8 +78,20 @@ namespace Templater::dynamic {
          * 
          * @param str 
          * @param sequence 
+         * @param replaceSequence
          * @return std::string 
          */
         std::string replaceSequence(const std::string& str, const char* sequence, std::string_view replaceSequence);
+
+
+        /**
+         * @brief Replaces all occurrences the given sequences with the replace sequences in the whole string.
+         * Order of replacement is based on the ordering of the map.
+         * 
+         * @param str 
+         * @param dictionary 
+         * @return std::string 
+         */
+        std::string replaceSequences(const std::string& str, const std::vector<std::pair<std::string_view, std::string_view>>& dictionary);
     }
 }
