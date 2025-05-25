@@ -499,6 +499,20 @@ TEST_CASE("DomParser throws \"Invalid CDATA without ending\"") {
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid CDATA without ending");
 }
 
+TEST_CASE("DomParser throws \"Premature end of DOCTYPE section\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<!DOC";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end of DOCTYPE section");
+}
+
+TEST_CASE("DomParser throws \"Invalid DOCTYPE without ending\"") {
+    using namespace Templater::parser;
+    
+    std::string input = "<!DOCTYPE sdfsdfsdf";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid DOCTYPE without ending");
+}
+
 TEST_CASE("DomParser throws \"Tag name cannot contain '!'\"") {
     using namespace Templater::parser;
     

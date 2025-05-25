@@ -298,3 +298,48 @@ TEST_CASE("Multiple replacements in sequence", "[replaceSequences]") {
     std::string expected = "bar baz qux";
     REQUIRE(replaceSequences(input, dict) == expected);
 }
+
+TEST_CASE("No entities: returns original string", "[expandEntities]") {
+    using namespace Templater::text;
+    std::string input = "Hello, World!";
+    REQUIRE(expandEntities(input) == input);
+}
+
+TEST_CASE("Named entities: basic XML escapes", "[expandEntities]") {
+    using namespace Templater::text;
+    REQUIRE(expandEntities("&lt;&gt;&amp;&quot;&apos;") == std::string("<>&\"'"));
+}
+
+TEST_CASE("Mixed content with named entities", "[expandEntities]") {
+    using namespace Templater::text;
+    std::string input = "1 &lt; 2 &amp;&amp; 3 &gt; 2";
+    std::string expected = "1 < 2 && 3 > 2";
+    REQUIRE(expandEntities(input) == expected);
+}
+
+TEST_CASE("Decimal numeric entities", "[expandEntities]") {
+    using namespace Templater::text;
+    std::string input = "&#65;&#66;&#67;";  // A B C
+    std::string expected = "ABC";
+    REQUIRE(expandEntities(input) == expected);
+}
+
+TEST_CASE("Hex numeric entities", "[expandEntities]") {
+    using namespace Templater::text;
+    std::string input = "&#x41;&#x42;&#x43;";  // A B C
+    std::string expected = "ABC";
+    REQUIRE(expandEntities(input) == expected);
+}
+
+TEST_CASE("Mixed decimal, hex, and named entities", "[expandEntities]") {
+    using namespace Templater::text;
+    std::string input = "X &lt; &#60; &amp; # &x26;";
+    // Here, &#60; == '<', &lt; == '<', &amp; == '&', # is literal, &x26; is invalid so left unchanged
+    std::string expected = "X < < & # &x26;";
+    REQUIRE(expandEntities(input) == expected);
+}
+
+TEST_CASE("Invalid or unterminated entities are left intact", "[expandEntities]") {
+    using namespace Templater::text;
+    REQUIRE(expandEntities("&unknown; &incomplete &amp something;") == std::string("&unknown; &incomplete &amp something;"));
+}

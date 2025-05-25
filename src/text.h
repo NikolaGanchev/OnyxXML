@@ -93,5 +93,32 @@ namespace Templater::dynamic {
          * @return std::string 
          */
         std::string replaceSequences(const std::string& str, const std::vector<std::pair<std::string_view, std::string_view>>& dictionary);
+
+        
+        /**
+         * @brief Expands XML entities in a text string.
+         * 
+         * @param input 
+         * @return std::string 
+         */
+        std::string expandEntities(std::string_view input);
+
+
+        /**
+         * @brief Converts a codepoint into a multibyte string.
+         * 
+         * @param codePoint 
+         * @return std::string 
+         */
+        std::string encodeUtf8(uint32_t codePoint);
+
+
+        /**
+         * @brief Converts and XML entity into a multibyte string.
+         * 
+         * @param entity 
+         * @return std::string 
+         */
+        std::string decodeNumericEntity(const std::string& entity);
     }
 }
