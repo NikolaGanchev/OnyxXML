@@ -217,6 +217,13 @@ namespace Templater::dynamic::text {
                     p = semi + 1;
                     goto cont;
                 }
+            } else if (*p == '\r') {
+                output.push_back('\n');
+                p++;
+                if (*p == '\n') {
+                    p++;
+                }
+                goto cont;
             }
             // Normal copy
             output.push_back(*p++);

@@ -343,3 +343,15 @@ TEST_CASE("Invalid or unterminated entities are left intact", "[expandEntities]"
     using namespace Templater::text;
     REQUIRE(expandEntities("&unknown; &incomplete &amp something;") == std::string("&unknown; &incomplete &amp something;"));
 }
+
+TEST_CASE("Expands \\r to \\n", "[expandEntities]") {
+    using namespace Templater::text;
+    REQUIRE(expandEntities("Some text \r other text.") == std::string("Some text \n other text."));
+    REQUIRE(expandEntities("Some text other text.\r") == std::string("Some text other text.\n"));
+}
+
+TEST_CASE("Expands \\r\\n to \\n", "[expandEntities]") {
+    using namespace Templater::text;
+    REQUIRE(expandEntities("Some text \r\n other text.") == std::string("Some text \n other text."));
+    REQUIRE(expandEntities("Some text other text.\r\n") == std::string("Some text other text.\n"));
+}
