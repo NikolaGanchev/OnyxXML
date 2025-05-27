@@ -363,6 +363,32 @@ TEST_CASE("DomParser works with DOCTYPE") {
     REQUIRE(output.deepEquals(*pr.root));
 }
 
+TEST_CASE("DomParser parses unicode") {
+    using namespace Templater::tags;
+    using namespace Templater::parser;
+
+    std::string input = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root-тест><елемент-с-юникод>Hello, 世界! Привет! 👋</елемент-с-юникод><データ>Some mixed content: éléphant, caffè, España. 🚀</データ><属性 attr=\"値-юникод-1\" друг-attr=\"テスト値\"></属性><空要素/></root-тест>";
+    
+    EmptyNode output{
+        XmlDeclaration("1.0", "UTF-8", true, false, false, false),
+        GenericNode("root-тест", false, 
+            GenericNode("елемент-с-юникод", false,
+                Text("Hello, 世界! Привет! 👋")),
+            GenericNode("データ", false, 
+                Text("Some mixed content: éléphant, caffè, España. 🚀")),
+            GenericNode("属性", false,
+                Attribute("attr", "値-юникод-1"),
+                Attribute("друг-attr", "テスト値")),
+            GenericNode("空要素", true))
+    };
+
+    ParseResult pr = DomParser::parse(input);
+
+    INFO(output.serialize());
+    INFO(pr.root->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+}
+
 TEST_CASE("DomParser throws \"Invalid end after tag open\"") {
     using namespace Templater::parser;
 

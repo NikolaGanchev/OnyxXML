@@ -149,28 +149,28 @@ namespace Templater::dynamic::text {
                 {"apos", '\''},
                 {"quot", '"'}
             }};
-        
+
         const char* pos = input.data();
         const char* end = pos + input.size();
         const char* lastCopyPos = pos; // Pointer to the start of the current chunk of characters
-        
+
         while (pos < end) {
             if (*pos == '&') {
                 // Copy the segment of characters found before the '&'
                 if (pos > lastCopyPos) {
                     output.append(lastCopyPos, pos - lastCopyPos);
                 }
-            
+
                 const char* lookAhead = pos + 1;
                 // Max entity length: &#x10FFFF; (9 chars + x), &apos; (4 chars)
                 // Entities most probably shouldn't go for more than 12 characters
                 const char* searchLimit = std::min(end, lookAhead + 12);
                 const char* semicolonPos = std::find(lookAhead, searchLimit, ';');
-            
+
                 if (semicolonPos != searchLimit && *semicolonPos == ';') {
                     // An entity candidate was found: `&token;`
                     std::string_view token(lookAhead, semicolonPos - lookAhead);
-                
+
                     for (auto const& [name, code]: namedEntities) {
                         if (token == name) {
                             // UTF-8 encode code point 0x00--0x7F
@@ -180,7 +180,7 @@ namespace Templater::dynamic::text {
                             goto cont;
                         }
                     }
-                
+
                     // Numeric Entity
                     if (!token.empty() && token[0] == '#') {
                         bool isHex = token.length() > 1 && (token[1] == 'x' || token[1] == 'X');
@@ -188,7 +188,7 @@ namespace Templater::dynamic::text {
                         const char* numStartPtr = token.data() + (isHex ? 2 : 1);
                         const char* numEndPtr = token.data() + token.length();
                         bool validNumericFormat = true;
-                    
+
                         if (numStartPtr >= numEndPtr) { // Empty numeric part (e.g., &#; or &#x;)
                             validNumericFormat = false;
                         } else {
@@ -205,7 +205,7 @@ namespace Templater::dynamic::text {
                                     validNumericFormat = false;
                                     break;
                                 }
-                            
+
                                 // Basic overflow check
                                 // This check primarily prevents overflow if parsing garbage input
                                 // that would result in a very large number before hitting non-digit.
@@ -218,7 +218,7 @@ namespace Templater::dynamic::text {
                                 }
                             }
                         }
-                    
+
                         if (validNumericFormat) {
                             // Convert entity to unicode
                             char buf[4]; // Max 4 bytes for UTF-8
@@ -245,7 +245,7 @@ namespace Templater::dynamic::text {
                                 buf[3] = static_cast<char>(0x80 | (codepoint & 0x3F));
                                 bytesWritten = 4;
                             }
-                        
+
                             if (bytesWritten > 0) {
                                 output.append(buf, bytesWritten);
                                 pos = semicolonPos + 1; // Advance past the entity
@@ -260,10 +260,10 @@ namespace Templater::dynamic::text {
                         // There was &, but no ; was found. This is a critical mistake requiring an exception.
                         throw std::invalid_argument("& outside of entities not allowed.");
                     }
-                
+
                     // If no named or valid numeric entity was found, copy the original text including '&'
                     output.append(pos, semicolonPos + 1 - pos);
-                
+
                     // Advance past the entity
                     pos = semicolonPos + 1; 
                     lastCopyPos = pos;
@@ -287,15 +287,15 @@ namespace Templater::dynamic::text {
             }
             // If it's a normal character, just advance the pointer for later bulk copy
             pos++;
-        
+
             cont:; // Label for goto
         }
-    
+
         // After the loop, copy any remaining characters
         if (pos > lastCopyPos) {
             output.append(lastCopyPos, pos - lastCopyPos);
         }
-    
+
         return output;
     }
 
