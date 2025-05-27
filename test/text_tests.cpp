@@ -333,15 +333,14 @@ TEST_CASE("Hex numeric entities", "[expandEntities]") {
 
 TEST_CASE("Mixed decimal, hex, and named entities", "[expandEntities]") {
     using namespace Templater::text;
-    std::string input = "X &lt; &#60; &amp; # &x26;";
-    // Here, &#60; == '<', &lt; == '<', &amp; == '&', # is literal, &x26; is invalid so left unchanged
-    std::string expected = "X < < & # &x26;";
-    REQUIRE(expandEntities(input) == expected);
+    // &x26 is an invalid entity
+    REQUIRE_THROWS_WITH(expandEntities("X &lt; &#60; &amp; # &x26;"), "& outside of entities not allowed.");
 }
 
-TEST_CASE("Invalid or unterminated entities are left intact", "[expandEntities]") {
+TEST_CASE("Invalid or unterminated entities throw", "[expandEntities]") {
     using namespace Templater::text;
-    REQUIRE(expandEntities("&unknown; &incomplete &amp something;") == std::string("&unknown; &incomplete &amp something;"));
+    REQUIRE_THROWS_WITH(expandEntities("&unknown; &incomplete &amp something;"), "& outside of entities not allowed.");
+    REQUIRE_THROWS_WITH(expandEntities("&unknown; &amp &amp; something;"), "& outside of entities not allowed.");
 }
 
 TEST_CASE("Expands \\r to \\n", "[expandEntities]") {
