@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <sstream>
 #include <queue>
+#include <array>
 
 namespace Templater::dynamic::text {
 
