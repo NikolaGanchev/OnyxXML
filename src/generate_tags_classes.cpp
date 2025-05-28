@@ -1,8 +1,8 @@
+#include <filesystem>
 #include <fstream>
-#include <vector>
 #include <sstream>
 #include <string>
-#include <filesystem>
+#include <vector>
 
 struct Tag {
     std::string tagName;
@@ -19,8 +19,7 @@ void readTags(std::vector<Tag>& tags, const char* tagsFilePath) {
     // Skip first line
     std::getline(input_file, line);
 
-    while (std::getline(input_file, line))
-    {
+    while (std::getline(input_file, line)) {
         std::string tagName = line.substr(0, line.find(','));
         line.erase(0, line.find(',') + 1);
         char isVoidChar = line[0];
@@ -36,14 +35,14 @@ void readTags(std::vector<Tag>& tags, const char* tagsFilePath) {
             compileName = line;
         }
 
-        tags.emplace_back(Tag{tagName, isVoidChar != '0', dynamicName, compileName});
+        tags.emplace_back(
+            Tag{tagName, isVoidChar != '0', dynamicName, compileName});
     }
 
     input_file.close();
 }
 
 void generateDynamic(const std::vector<Tag>& tags, const char* path) {
-
     if (!std::filesystem::exists(path)) {
         std::filesystem::create_directories(path);
     }
@@ -61,41 +60,66 @@ void generateDynamic(const std::vector<Tag>& tags, const char* path) {
     cppDynamic << "#include \"tags.h\"\n\n";
     cppDynamic << "namespace Templater::dynamic::tags {\n";
 
-    for (auto& tag: tags) {
+    for (auto& tag : tags) {
         if (!tag.isVoid) {
-            headerDynamic << "    class " << tag.dynamicName << ": public Node {\n"
-            "        public:\n"
-            "            using Node::Node;\n"
-            "            bool isVoid() const override;\n"
-            "            const std::string& getTagName() const override;\n"
-            "            std::unique_ptr<Node> shallowCopy() const override;\n"
-            "    };\n";
+            headerDynamic << "class " << tag.dynamicName
+                          << ": public Node {\n"
+                             "   public:\n"
+                             "    using Node::Node;\n"
+                             "    bool isVoid() const override;\n"
+                             "    const std::string& getTagName() "
+                             "const override;\n"
+                             "    std::unique_ptr<Node> shallowCopy() "
+                             "const override;\n"
+                             "};\n";
 
-            cppDynamic << "    const std::string& " << tag.dynamicName << "::getTagName() const {\n"
-            "        static const std::string name = \"" << tag.tagName << "\";\n"
-            "        return name;\n"
-            "    }\n"
-            "    std::unique_ptr<Node> " << tag.dynamicName << "::shallowCopy() const {\n"
-            "        return std::make_unique<" << tag.dynamicName << ">(this->getAttributes(), std::vector<NodeHandle>{});\n"
-            "    }\n"
-            "    bool " << tag.dynamicName << "::isVoid() const {\n"
-            "        return " << (int) (tag.isVoid) << ";\n"
-            "    }\n";
+            cppDynamic
+                << "const std::string& " << tag.dynamicName
+                << "::getTagName() const {\n"
+                   "    static const std::string name = \""
+                << tag.tagName
+                << "\";\n"
+                   "    return name;\n"
+                   "}\n"
+                   "std::unique_ptr<Node> "
+                << tag.dynamicName
+                << "::shallowCopy() const {\n"
+                   "    return std::make_unique<"
+                << tag.dynamicName
+                << ">(this->getAttributes(), std::vector<NodeHandle>{});\n"
+                   "}\n"
+                   "bool "
+                << tag.dynamicName
+                << "::isVoid() const {\n"
+                   "    return "
+                << (int)(tag.isVoid)
+                << ";\n"
+                   "}\n";
         } else {
-            headerDynamic << "    class " << tag.dynamicName << ": public VoidNode {\n"
-            "        public:\n"
-            "            using VoidNode::VoidNode;\n"
-            "            const std::string& getTagName() const override;\n"
-            "            std::unique_ptr<Node> shallowCopy() const override;\n"
-            "    };\n";
+            headerDynamic << "class " << tag.dynamicName
+                          << ": public VoidNode {\n"
+                             "    public:\n"
+                             "    using VoidNode::VoidNode;\n"
+                             "    const std::string& getTagName() "
+                             "const override;\n"
+                             "    std::unique_ptr<Node> shallowCopy() "
+                             "const override;\n"
+                             "};\n";
 
-            cppDynamic << "    const std::string& " << tag.dynamicName << "::getTagName() const {\n"
-            "        static const std::string name = \"" << tag.tagName << "\";\n"
-            "        return name;\n"
-            "    }\n"
-            "    std::unique_ptr<Node> " << tag.dynamicName << "::shallowCopy() const {\n"
-            "        return std::make_unique<" << tag.dynamicName << ">(this->getAttributes());\n"
-            "    }\n";
+            cppDynamic << "const std::string& " << tag.dynamicName
+                       << "::getTagName() const {\n"
+                          "    static const std::string name = \""
+                       << tag.tagName
+                       << "\";\n"
+                          "    return name;\n"
+                          "}\n"
+                          "std::unique_ptr<Node> "
+                       << tag.dynamicName
+                       << "::shallowCopy() const {\n"
+                          "    return std::make_unique<"
+                       << tag.dynamicName
+                       << ">(this->getAttributes());\n"
+                          "}\n";
         }
     }
 
@@ -107,7 +131,6 @@ void generateDynamic(const std::vector<Tag>& tags, const char* path) {
 }
 
 void generateCompile(const std::vector<Tag>& tags, const char* path) {
-
     if (!std::filesystem::exists(path)) {
         std::filesystem::create_directories(path);
     }
@@ -121,24 +144,42 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
     headerCompile << "#include \"dynamic/tags.h\" \n\n";
     headerCompile << "namespace Templater::compile::ctags {\n";
 
-    for (auto& tag: tags) {
-        int serializationSize = tag.isVoid ? (tag.tagName.size() + 4): (tag.tagName.size() * 2 + 5); // if void, expect <tagName />. Else, expect <tagName></tagName>
-        headerCompile << "    template <typename... Children>\n"
-                            "    struct " << tag.compileName << " {\n"
-                                    "        static consteval size_t size() {\n"
-                                    "            size_t size = " << serializationSize << ";\n"
-                                    "            ((size += Children::size()), ...);\n"
-                                    "            return size;\n"
-                                    "        }\n"
-                                    "        static consteval std::array<char, size() + 1> serialize() {\n"
-                                    "            return DocumentUtils::" << ((tag.isVoid) ? "serializeVoidNode": "serializeNode") << "<size(), Children...>(\"" << tag.tagName << "\");\n"
-                                    "        }\n"
-                                    "        static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {\n"
-                                    "            std::unique_ptr<Templater::dynamic::tags::" << tag.dynamicName << "> node = std::make_unique<Templater::dynamic::tags::" << tag.dynamicName << ">();\n"
-                                    "            (DocumentUtils::parseChildren<Children>(node.get()), ...);\n"
-                                    "            return node;\n"
-                                    "        }\n"
-                                    "    };\n";
+    for (auto& tag : tags) {
+        int serializationSize = tag.isVoid
+                                    ? (tag.tagName.size() + 4)
+                                    : (tag.tagName.size() * 2 +
+                                       5);  // if void, expect <tagName />.
+                                            // Else, expect <tagName></tagName>
+        headerCompile
+            << "template <typename... Children>\n"
+               "struct "
+            << tag.compileName
+            << " {\n"
+               "    static consteval size_t size() {\n"
+               "        size_t size = "
+            << serializationSize
+            << ";\n"
+               "        ((size += Children::size()), ...);\n"
+               "        return size;\n"
+               "    }\n"
+               "    static consteval std::array<char, size() + 1> "
+               "serialize() {\n"
+               "        return DocumentUtils::"
+            << ((tag.isVoid) ? "serializeVoidNode" : "serializeNode")
+            << "<size(), Children...>(\"" << tag.tagName
+            << "\");\n"
+               "    }\n"
+               "    static std::unique_ptr<Templater::dynamic::Node> "
+               "dynamicTree() {\n"
+               "        std::unique_ptr<Templater::dynamic::tags::"
+            << tag.dynamicName
+            << "> node = std::make_unique<Templater::dynamic::tags::"
+            << tag.dynamicName
+            << ">();\n"
+               "        (DocumentUtils::parseChildren<Children>(node.get()), ...);\n"
+               "        return node;\n"
+               "    }\n"
+               "};\n";
     }
 
     headerCompile << "}\n\n";
@@ -146,7 +187,7 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
     headerCompile.close();
 }
 
-int main(int argc, const char *argv[]) {
+int main(int argc, const char* argv[]) {
     if (argc != 4) return 1;
     const char* tagsFilePath = argv[1];
     const char* dynamicGeneratePath = argv[2];
@@ -154,7 +195,7 @@ int main(int argc, const char *argv[]) {
 
     std::vector<Tag> tags{};
     readTags(tags, tagsFilePath);
-    
+
     generateDynamic(tags, dynamicGeneratePath);
     generateCompile(tags, compileGeneratePath);
 

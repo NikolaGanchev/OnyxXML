@@ -22,7 +22,6 @@ function(use_tags_file tags_path cross_compilation)
                 "${GENERATED_TAGS_CPP}")
 
         if (cross_compilation)
-            message(WARNING "Running python ${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.py ${tags_path} ${DYNAMIC_TAGS_DIRECTORY} ${COMPILE_TAGS_DIRECTORY}")
             add_custom_command(
                 OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
                 COMMAND "python" "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.py" "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
