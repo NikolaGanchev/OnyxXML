@@ -1,4 +1,4 @@
-#include "if_node.h"
+#include "nodes/if_node.h"
 
 namespace Templater::dynamic::tags {
 If::If() : Node{} {}

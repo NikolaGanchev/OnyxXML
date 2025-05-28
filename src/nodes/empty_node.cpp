@@ -1,4 +1,4 @@
-#include "empty_node.h"
+#include "nodes/empty_node.h"
 
 namespace Templater::dynamic::tags {
 

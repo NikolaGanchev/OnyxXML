@@ -1,4 +1,4 @@
-#include "comment_node.h"
+#include "nodes/comment_node.h"
 
 #include "text.h"
 

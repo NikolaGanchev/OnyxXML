@@ -3,6 +3,10 @@ add_library(samplelib STATIC)
 
 set_target_properties(samplelib PROPERTIES OUTPUT_NAME "sample")
 
+target_include_directories(samplelib 
+    PUBLIC
+     "../include")
+
 target_sources(
     samplelib
     PRIVATE

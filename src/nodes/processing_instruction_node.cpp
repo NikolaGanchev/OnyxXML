@@ -1,4 +1,4 @@
-#include "processing_instruction_node.h"
+#include "nodes/processing_instruction_node.h"
 
 #include "text.h"
 

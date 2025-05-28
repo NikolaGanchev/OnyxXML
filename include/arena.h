@@ -25,8 +25,8 @@ namespace Templater::dynamic {
  * Node* child = arena.allocate<Text>("hello world");
  *
  * parent->addChild(child);
- * // The nodes will be automatically released at the end of the scope
  * @{endcode}
+ * The nodes will be automatically released at the end of the scope 
  */
 class Arena {
    private:

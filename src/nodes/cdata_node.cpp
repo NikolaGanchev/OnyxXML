@@ -1,4 +1,4 @@
-#include "cdata_node.h"
+#include "nodes/cdata_node.h"
 
 #include "text.h"
 

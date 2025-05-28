@@ -1,16 +1,16 @@
-#include "dom_parser.h"
+#include "parse/dom_parser.h"
 
 #include <utility>
 #include <vector>
 
-#include "../nodes/cdata_node.h"
-#include "../nodes/comment_node.h"
-#include "../nodes/doctype_node.h"
-#include "../nodes/empty_node.h"
-#include "../nodes/generic_node.h"
-#include "../nodes/processing_instruction_node.h"
-#include "../nodes/text_node.h"
-#include "../nodes/xml_declaration_node.h"
+#include "nodes/cdata_node.h"
+#include "nodes/comment_node.h"
+#include "nodes/doctype_node.h"
+#include "nodes/empty_node.h"
+#include "nodes/generic_node.h"
+#include "nodes/processing_instruction_node.h"
+#include "nodes/text_node.h"
+#include "nodes/xml_declaration_node.h"
 #include "text.h"
 
 namespace Templater::dynamic::parser {

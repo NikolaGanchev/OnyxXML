@@ -1,4 +1,4 @@
-#include "doctype_node.h"
+#include "nodes/doctype_node.h"
 
 #include "text.h"
 

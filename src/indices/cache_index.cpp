@@ -1,4 +1,4 @@
-#include "cache_index.h"
+#include "indices/cache_index.h"
 
 namespace Templater::dynamic::index {
 CacheIndex::CacheIndex(Node* root) : Index(root), _cache{} {};

@@ -1,4 +1,4 @@
-#include "text_node.h"
+#include "nodes/text_node.h"
 
 #include "text.h"
 
