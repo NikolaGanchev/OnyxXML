@@ -229,7 +229,6 @@ TEST_CASE("DomParser parses complex html") {
     REQUIRE(output.deepEquals(*pr.root));
 
     INFO(time.count());
-    REQUIRE(time.count() < 0);
 }
 
 TEST_CASE("DomParser works with comments") {
