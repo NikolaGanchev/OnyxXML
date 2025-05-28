@@ -1,11 +1,11 @@
-# Sample static library
+cmake_minimum_required (VERSION 3.24)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 add_library(samplelib STATIC)
 
 set_target_properties(samplelib PROPERTIES OUTPUT_NAME "sample")
-
-target_include_directories(samplelib 
-    PUBLIC
-     "../include")
 
 target_sources(
     samplelib
@@ -33,23 +33,4 @@ target_sources(
         "arena.cpp"
         "nodes/xml_declaration_node.cpp"
         "nodes/doctype_node.cpp"
-)
-
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.cpp" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.cpp" COPYONLY)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/generate_tags_classes.py" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.py" COPYONLY)
-
-add_executable(application)
-
-set_target_properties(application PROPERTIES OUTPUT_NAME "html-templater")
-
-target_link_libraries(
-    application
-    PRIVATE
-        samplelib
-)
-
-target_sources(
-    application
-    PRIVATE
-        "main.cpp"
 )

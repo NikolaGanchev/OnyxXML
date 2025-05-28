@@ -1,4 +1,4 @@
-function(use_tags_file tags_path cross_compilation)
+function(use_tags_file compileTarget tags_path cross_compilation)
     if(NOT tags_path)
         message(FATAL_ERROR "A tags file path must be passed.")
     endif()
@@ -13,11 +13,11 @@ function(use_tags_file tags_path cross_compilation)
         set(GENERATED_TAGS_CPP "${DYNAMIC_TAGS_DIRECTORY}/tags.cpp")
         set(GENERATED_TAGS_COMPILE_H "${COMPILE_TAGS_DIRECTORY}/tags.h")
 
-        target_include_directories(samplelib 
+        target_include_directories("${compileTarget}" 
             PUBLIC
              "${GENERATED_TAGS_DIRECTORY}")
 
-        target_sources(samplelib
+        target_sources("${compileTarget}"
             PRIVATE
                 "${GENERATED_TAGS_CPP}")
 

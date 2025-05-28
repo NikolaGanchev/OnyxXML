@@ -111,7 +111,7 @@ endif()
 #
 
 # Add the src/ directory to the include path of all targets
-include_directories("src")
+include_directories("include")
 
 # Executable and library targets
 add_subdirectory(src)
@@ -126,3 +126,6 @@ if(ENABLE_DOCUMENTATION)
     message(STATUS "Documentation building is enabled")
     add_subdirectory("docs")
 endif()
+
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.cpp" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.cpp" COPYONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.py" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.py" COPYONLY)
