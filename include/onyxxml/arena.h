@@ -4,7 +4,7 @@
 
 #include "node.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 /**
  * @brief An Arena manages a heterogenous continuous heap-allocated array of
  * non-owning nodes. The size of the arena must be precomputed and given on
@@ -195,4 +195,4 @@ Arena::Builder& Arena::Builder::preallocate()
 
     return *this;
 }
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

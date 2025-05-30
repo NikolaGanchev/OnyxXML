@@ -14,7 +14,7 @@
 
 #define RAW_XML(...) std::string(#__VA_ARGS__)
 
-namespace Templater::compile {
+namespace onyx::compile {
 
 /**
  * @brief A struct for creating XML/HTML documents with an alternative syntax,
@@ -59,7 +59,7 @@ struct Document {
         std::array<char, size() + 1> result = {};
         size_t index = 0;
         (([&] {
-             if constexpr (Templater::compile::ctags::isAttribute<Children>) {
+             if constexpr (onyx::compile::ctags::isAttribute<Children>) {
                  throw "Cannot add attribute as root node of Document.";
              } else {
                  std::array<char, Children::size() + 1> in =
@@ -89,15 +89,15 @@ struct Document {
      *
      * @return std::string
      */
-    static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
-        std::unique_ptr<Templater::dynamic::tags::EmptyNode> obj =
-            std::make_unique<Templater::dynamic::tags::EmptyNode>();
+    static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {
+        std::unique_ptr<onyx::dynamic::tags::EmptyNode> obj =
+            std::make_unique<onyx::dynamic::tags::EmptyNode>();
 
         if constexpr (sizeof...(Children) == 0) {
             return obj;
         } else {
             (([&] {
-                 if constexpr (Templater::compile::ctags::isAttribute<
+                 if constexpr (onyx::compile::ctags::isAttribute<
                                    Children>) {
                      throw "Trying to read attribute as root node";
                  } else {
@@ -110,4 +110,4 @@ struct Document {
     }
 };
 
-}  // namespace Templater::compile
+}  // namespace onyx::compile

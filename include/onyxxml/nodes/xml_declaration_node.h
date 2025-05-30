@@ -3,7 +3,7 @@
 #include "../node.h"
 #include "processing_instruction_node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 /**
  * @brief A XmlDeclaration Node. Contains data about the XML version of the
@@ -182,4 +182,4 @@ class XmlDeclaration : public ProcessingInstruction {
     std::unique_ptr<Node> shallowCopy() const override;
     virtual bool shallowEquals(const Node& other) const override;
 };
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

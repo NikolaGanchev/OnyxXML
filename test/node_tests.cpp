@@ -1,10 +1,10 @@
 #include <chrono>
 
 #include "catch2/catch_all.hpp"
-#include "templater.h"
+#include "onyx.h"
 
 TEST_CASE("HTML is generated", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -19,7 +19,7 @@ TEST_CASE("HTML is generated", "[Node]") {
 }
 
 TEST_CASE("Attribute remove works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode obj{"html", false, Attribute("lang", "en"),
                     Attribute("theme", "dark"), GenericNode("head", false)};
@@ -30,7 +30,7 @@ TEST_CASE("Attribute remove works", "[Node]") {
 }
 
 TEST_CASE("Vector constructor works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -54,7 +54,7 @@ TEST_CASE("Vector constructor works", "[Node]") {
 }
 
 TEST_CASE("Complex test case generates pretty html", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -179,7 +179,7 @@ TEST_CASE("Complex test case generates pretty html", "[Node]") {
 }
 
 TEST_CASE("Complex test case generates non-pretty html", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -287,7 +287,7 @@ TEST_CASE("Complex test case generates non-pretty html", "[Node]") {
 }
 
 TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     REQUIRE_THROWS(GenericNode{"img", true, GenericNode{"div", false}});
 
@@ -301,7 +301,7 @@ TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
 
 TEST_CASE("Node::addChild() throws if used on a void node",
           "[Node::addChild]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode image{"img", true};
 
@@ -313,7 +313,7 @@ TEST_CASE("Node::addChild() throws if used on a void node",
 }
 
 TEST_CASE("Children return by tag name works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -341,7 +341,7 @@ TEST_CASE("Children return by tag name works", "[Node]") {
 }
 
 TEST_CASE("Children return by id works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -372,7 +372,7 @@ TEST_CASE("Children return by id works", "[Node]") {
 }
 
 TEST_CASE("Children return by name works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -412,7 +412,7 @@ TEST_CASE("Children return by name works", "[Node]") {
 }
 
 TEST_CASE("Children return by class name works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -454,7 +454,7 @@ TEST_CASE("Children return by class name works", "[Node]") {
 }
 
 TEST_CASE("Children return by attribute works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -490,7 +490,7 @@ TEST_CASE("Children return by attribute works", "[Node]") {
 }
 
 TEST_CASE("Children return by attribute name works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -526,7 +526,7 @@ TEST_CASE("Children return by attribute name works", "[Node]") {
 }
 
 TEST_CASE("Child add works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -553,7 +553,7 @@ TEST_CASE("Child add works", "[Node]") {
 }
 
 TEST_CASE("Child remove works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -587,7 +587,7 @@ TEST_CASE("Child remove works", "[Node]") {
 }
 
 TEST_CASE("Operator [] works for attribute access", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -608,7 +608,7 @@ TEST_CASE("Operator [] works for attribute access", "[Node]") {
 }
 
 TEST_CASE("Operator += works for child add", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -635,7 +635,7 @@ TEST_CASE("Operator += works for child add", "[Node]") {
 }
 
 TEST_CASE("Complex html with dynamic tags", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -725,26 +725,26 @@ TEST_CASE("Complex html with dynamic tags", "[Node]") {
 }
 
 TEST_CASE("Empty html tree has size 1", "[Node::size()]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     html root;
     REQUIRE(root.size() == 1);
 }
 
 TEST_CASE("Html tree with one child has size 2", "[Node::size()]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     html root;
     root.addChild(body());
     REQUIRE(root.size() == 2);
 }
 
 TEST_CASE("Html tree with 5 nodes has size 6", "[Node::size()]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     html root{p(), p(), p(), p(), p()};
     REQUIRE(root.size() == 6);
 }
 
 TEST_CASE("Html tree with 5001 nodes has size 5001", "[Node::size()]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     html root;
     for (int i = 0; i < 1000; i++) {
         root.addChild(section(cdiv{p(Text("Text")), p()}));
@@ -767,8 +767,8 @@ std::string generateRandomString(size_t length) {
     return result;
 }
 
-void addChildren(Templater::dynamic::Node* root, int level) {
-    using namespace Templater::tags;
+void addChildren(onyx::dynamic::Node* root, int level) {
+    using namespace onyx::tags;
 
     std::unique_ptr<section> s = std::make_unique<section>();
     if (level > 0) {
@@ -779,7 +779,7 @@ void addChildren(Templater::dynamic::Node* root, int level) {
 }
 
 TEST_CASE("3000 tags serialize in under 50ms", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     using std::chrono::duration;
     using std::chrono::duration_cast;
     using std::chrono::high_resolution_clock;
@@ -809,7 +809,7 @@ TEST_CASE("3000 tags serialize in under 50ms", "[Node]") {
 }
 
 TEST_CASE("Template html runtime api serializes correctly", "[Node]") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     std::string doc1 = Document<html<Attribute<"lang", "en">, head<>,
                                      body<Text<"Hello world!">>>>::dynamicTree()
@@ -824,7 +824,7 @@ TEST_CASE("Template html runtime api serializes correctly", "[Node]") {
 
 TEST_CASE("Template html runtime api enforces given indentation rules",
           "[Node]") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc =
         Document<html<Attribute<"theme", "light">, Attribute<"lang", "en">,
@@ -839,7 +839,7 @@ TEST_CASE("Template html runtime api enforces given indentation rules",
 
 TEST_CASE("HTML fragment using template runtime api serializes correctly",
           "[Node]") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     std::string doc3 =
         Document<li<Text<"1">>, li<Text<"2">>, li<Text<"3">>>::dynamicTree()
@@ -853,7 +853,7 @@ TEST_CASE("HTML fragment using template runtime api serializes correctly",
 }
 
 TEST_CASE("Complex templated runtime api html with constant tags", "[Node]") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     std::string doc4 = Document<html<
         Attribute<"lang", "en">,
@@ -908,7 +908,7 @@ TEST_CASE("Complex templated runtime api html with constant tags", "[Node]") {
 }
 
 TEST_CASE("HTML is correctly serialized") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc = Document<
         html<Attribute<"lang", "en">, head<>, body<Text<"Hello world!">>>>;
@@ -918,7 +918,7 @@ TEST_CASE("HTML is correctly serialized") {
 }
 
 TEST_CASE("Attributes are serialized correctly") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc = Document<html<Attribute<"theme", "dark">,
                               Attribute<"lang", "en">, head<>, body<>>>;
@@ -928,7 +928,7 @@ TEST_CASE("Attributes are serialized correctly") {
 }
 
 TEST_CASE("Text nodes are serialized correctly") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc = Document<html<head<>, body<Text<"This is a test!">>>>;
 
@@ -937,7 +937,7 @@ TEST_CASE("Text nodes are serialized correctly") {
 }
 
 TEST_CASE("Void tags are serialized correctly") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc = Document<html<head<>, body<img<Attribute<"src", "img.jpg">>>>>;
 
@@ -946,7 +946,7 @@ TEST_CASE("Void tags are serialized correctly") {
 }
 
 TEST_CASE("Comment tags are serialized correctly") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc = Document<html<head<>, Comment<"This is a comment!">,
                               body<img<Attribute<"src", "img.jpg">>>>>;
@@ -957,7 +957,7 @@ TEST_CASE("Comment tags are serialized correctly") {
 }
 
 TEST_CASE("UTF-8 text strings are cut off properly") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc = Document<html<head<>,
                               body<Text<"Grüße">>  // Contains UTF-8 ü
@@ -967,14 +967,14 @@ TEST_CASE("UTF-8 text strings are cut off properly") {
 }
 
 TEST_CASE("Empty document serializes correctly") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc = Document<>;
     CHECK(doc::toString() == "");
 }
 
 TEST_CASE("Deeply nested elements serialize correctly") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc =
         Document<html<head<>, body<cdiv<Attribute<"class", "container">,
@@ -986,7 +986,7 @@ TEST_CASE("Deeply nested elements serialize correctly") {
 }
 
 TEST_CASE("Multiple text nodes are serialized in sequence") {
-    using namespace Templater::ctags;
+    using namespace onyx::ctags;
 
     using doc = Document<html<head<>, body<Text<"Hello ">, Text<"world!">>>>;
 
@@ -995,7 +995,7 @@ TEST_CASE("Multiple text nodes are serialized in sequence") {
 }
 
 TEST_CASE("Text properly escapes html", "[dynamic::tags::Text]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     std::string textToEscape =
         "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My "
@@ -1020,7 +1020,7 @@ TEST_CASE("Text properly escapes html", "[dynamic::tags::Text]") {
 
 TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled",
           "[dynamic::tags::Text]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     std::string textToEscape =
         "<div class=\"content\"><h1>😀Welcome to <span style=\"color: "
@@ -1046,7 +1046,7 @@ TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled",
 
 TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled",
           "[dynamic::tags::Text]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     std::string textToEscape =
         "<div class=\"content\"><h1>😀Welcome to <span style=\"color: "
@@ -1070,7 +1070,7 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled",
 }
 
 TEST_CASE("XML comments are generated") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode obj{"html", false, Attribute("lang", "en"),
                     Attribute("theme", "dark"),
@@ -1084,7 +1084,7 @@ TEST_CASE("XML comments are generated") {
 }
 
 TEST_CASE("XML comments are escaped") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode obj{
         "html", false, Attribute("lang", "en"), Attribute("theme", "dark"),
@@ -1099,7 +1099,7 @@ TEST_CASE("XML comments are escaped") {
 }
 
 TEST_CASE("XML CDATA sections are generated") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode obj{
         "html", false, Attribute("lang", "en"), Attribute("theme", "dark"),
@@ -1116,7 +1116,7 @@ TEST_CASE("XML CDATA sections are generated") {
 }
 
 TEST_CASE("XML CDATA sections are escaped") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode obj{
         "html", false, Attribute("lang", "en"), Attribute("theme", "dark"),
@@ -1133,7 +1133,7 @@ TEST_CASE("XML CDATA sections are escaped") {
 }
 
 TEST_CASE("XML processing instructions are generated") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode obj{
         "root", false, Attribute("lang", "en"),
@@ -1147,7 +1147,7 @@ TEST_CASE("XML processing instructions are generated") {
 }
 
 TEST_CASE("XML processing instructions are escaped") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode obj{"root", false, Attribute("lang", "en"),
                     ProcessingInstruction(
@@ -1161,7 +1161,7 @@ TEST_CASE("XML processing instructions are escaped") {
 }
 
 TEST_CASE("DOCTYPEs are generated") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     EmptyNode obj{Doctype("some_list SYSTEM \"example.dtd\""),
                   GenericNode("html", false, Attribute("lang", "en"),
@@ -1177,7 +1177,7 @@ TEST_CASE("DOCTYPEs are generated") {
 TEST_CASE(
     "XmlDeclaration constructor with version, encoding, standalone "
     "(hadEncoding=true, hadStandalone=true)") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     XmlDeclaration decl("1.0", "ISO-8859-1", true);
     REQUIRE(decl.getVersionInfo() == "1.0");
@@ -1188,7 +1188,7 @@ TEST_CASE(
 TEST_CASE(
     "XmlDeclaration constructor with only version (defaults encoding and "
     "standalone)") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     XmlDeclaration decl("1.1");
     REQUIRE(decl.getVersionInfo() == "1.1");
@@ -1199,7 +1199,7 @@ TEST_CASE(
 TEST_CASE(
     "XmlDeclaration constructor with version, encoding, hasEncoding, "
     "standalone, hasStandalone") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     XmlDeclaration decl("1.0", "UTF-16", false, true, false);
     REQUIRE(decl.getVersionInfo() == "1.0");
@@ -1208,7 +1208,7 @@ TEST_CASE(
 }
 
 TEST_CASE("XmlDeclaration copy constructor duplicates values") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     XmlDeclaration original("1.0", "UTF-8", true);
     XmlDeclaration copy(original);
@@ -1218,7 +1218,7 @@ TEST_CASE("XmlDeclaration copy constructor duplicates values") {
 }
 
 TEST_CASE("XmlDeclaration move constructor transfers values") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     XmlDeclaration original("1.0", "ISO-8859-1", true);
     XmlDeclaration moved(std::move(original));
@@ -1228,7 +1228,7 @@ TEST_CASE("XmlDeclaration move constructor transfers values") {
 }
 
 TEST_CASE("XmlDeclaration move assignment operator transfers values") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     XmlDeclaration original("1.0", "ISO-8859-1", true);
     XmlDeclaration target("1.1");
@@ -1239,7 +1239,7 @@ TEST_CASE("XmlDeclaration move assignment operator transfers values") {
 }
 
 TEST_CASE("XmlDeclaration serialize with encoding and standalone attributes") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     XmlDeclaration decl("1.0", "ISO-8859-1", true);
     std::string serialized = decl.serialize();
@@ -1250,7 +1250,7 @@ TEST_CASE("XmlDeclaration serialize with encoding and standalone attributes") {
 
 TEST_CASE(
     "XmlDeclaration serialize with no encoding and no standalone (defaults)") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     XmlDeclaration decl("1.0");
     std::string serialized = decl.serialize();
@@ -1258,7 +1258,7 @@ TEST_CASE(
 }
 
 TEST_CASE("XmlDeclaration serialize with encoding but standalone false") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     XmlDeclaration decl("1.0", "UTF-8", false);
     std::string serialized = decl.serialize();
@@ -1269,7 +1269,7 @@ TEST_CASE("XmlDeclaration serialize with encoding but standalone false") {
 TEST_CASE(
     "XmlDeclaration special serialize with encoding and standalone "
     "attributes") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     EmptyNode root(XmlDeclaration("1.0", "ISO-8859-1", true),
                    GenericNode("node", true));
@@ -1282,7 +1282,7 @@ TEST_CASE(
 TEST_CASE(
     "XmlDeclaration special serialize with no encoding and no standalone "
     "(defaults)") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     EmptyNode root(XmlDeclaration("1.0"), GenericNode("node", true));
     std::string serialized = root.serialize();
@@ -1291,7 +1291,7 @@ TEST_CASE(
 
 TEST_CASE(
     "XmlDeclaration special serialize with encoding but standalone false") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     EmptyNode root(XmlDeclaration("1.0", "UTF-8", false),
                    GenericNode("node", true));
@@ -1302,7 +1302,7 @@ TEST_CASE(
 }
 
 TEST_CASE("__DangerousRawText works", "[DangerousRawText]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode obj{
         "html", false, Attribute("lang", "en"), Attribute("theme", "dark"),
@@ -1317,7 +1317,7 @@ TEST_CASE("__DangerousRawText works", "[DangerousRawText]") {
 }
 
 TEST_CASE("Node deepCopy() works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     html obj{
         Attribute("lang", "en"), Attribute("theme", "dark"),
@@ -1370,7 +1370,7 @@ TEST_CASE("Node deepCopy() works", "[Node]") {
 
 TEST_CASE("Node deepCopy creates a new instance with identical attributes",
           "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode obj{"html", false, Attribute("class", "test"),
                     Attribute("id", "1"), html(Attribute("class", "test"))};
@@ -1393,7 +1393,7 @@ TEST_CASE("Node deepCopy creates a new instance with identical attributes",
 }
 
 TEST_CASE("Node deepCopy with empty node", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     p obj{};
 
@@ -1405,7 +1405,7 @@ TEST_CASE("Node deepCopy with empty node", "[Node]") {
 }
 
 TEST_CASE("Node deepCopy does not share internal state", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     html obj{Attribute("class", "testNode"), p(Attribute("id", "child1"))};
 
@@ -1417,7 +1417,7 @@ TEST_CASE("Node deepCopy does not share internal state", "[Node]") {
 }
 
 TEST_CASE("Node deepEquals() works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     html obj{
         Attribute("lang", "en"), Attribute("theme", "dark"),
@@ -1472,21 +1472,21 @@ TEST_CASE("Node deepEquals() works", "[Node]") {
 }
 
 TEST_CASE("Single Node has depth 0", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     cdiv root;
     REQUIRE(root.depth() == 0);
 }
 
 TEST_CASE("One level of children increases depth", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     cdiv root{p()};
     REQUIRE(root.depth() == 1);
 }
 
 TEST_CASE("Nested children increase depth", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     body root{cdiv(section(article()))};
 
@@ -1495,7 +1495,7 @@ TEST_CASE("Nested children increase depth", "[Node]") {
 
 TEST_CASE("Deepest of multiple branches determines the depth of a tree",
           "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     main root{nav(), section(article(p()))};
 
@@ -1503,7 +1503,7 @@ TEST_CASE("Deepest of multiple branches determines the depth of a tree",
 }
 
 TEST_CASE("leafCount() works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     main root{nav(), cdiv(),
               section(article(p(), p(), span(), p(), span(), img()))};
@@ -1512,7 +1512,7 @@ TEST_CASE("leafCount() works", "[Node]") {
 }
 
 TEST_CASE("leafCount() returns 1 on empty tree", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     main root{};
 
@@ -1520,8 +1520,8 @@ TEST_CASE("leafCount() returns 1 on empty tree", "[Node]") {
 }
 
 TEST_CASE("Node move properly handle indices", "[Node]") {
-    using namespace Templater;
-    using namespace Templater::tags;
+    using namespace onyx;
+    using namespace onyx::tags;
 
     GenericNode obj{
         "html", false,
@@ -1549,8 +1549,8 @@ TEST_CASE("Node move properly handle indices", "[Node]") {
 
 TEST_CASE("Nodes get removed from indices upon destruction in non-owning trees",
           "[Node]") {
-    using namespace Templater;
-    using namespace Templater::tags;
+    using namespace onyx;
+    using namespace onyx::tags;
 
     GenericNode obj{NonOwning, "html", false};
 
@@ -1573,8 +1573,8 @@ TEST_CASE("Nodes get removed from indices upon destruction in non-owning trees",
 
 TEST_CASE("Nodes get removed from parents upon destruction in non-owning trees",
           "[Node]") {
-    using namespace Templater;
-    using namespace Templater::tags;
+    using namespace onyx;
+    using namespace onyx::tags;
 
     GenericNode obj{NonOwning, "html", false};
 
@@ -1591,8 +1591,8 @@ TEST_CASE("Nodes get removed from parents upon destruction in non-owning trees",
 }
 
 TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
-    using namespace Templater;
-    using namespace Templater::tags;
+    using namespace onyx;
+    using namespace onyx::tags;
 
     GenericNode obj{
         "html", false,
@@ -1616,7 +1616,7 @@ TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
 }
 
 TEST_CASE("ForEach Node unique_ptr constructor works") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     ul normalConstructed{li(Text("1")), li(Text("2")), li(Text("3")),
                          li(Text("4")), li(Text("5"))};
@@ -1631,7 +1631,7 @@ TEST_CASE("ForEach Node unique_ptr constructor works") {
 }
 
 TEST_CASE("ForEach Node unique_ptr constructor works with different types") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     cdiv normalConstructed{section(Text("1")), cdiv(Text("2")),
                            section(Text("3")), cdiv(Text("4")),
@@ -1654,7 +1654,7 @@ TEST_CASE("ForEach Node unique_ptr constructor works with different types") {
 }
 
 TEST_CASE("ForEach Node type-locked constructor works") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     ul normalConstructed{li(Text("1")), li(Text("2")), li(Text("3")),
                          li(Text("4")), li(Text("5"))};
@@ -1669,7 +1669,7 @@ TEST_CASE("ForEach Node type-locked constructor works") {
 }
 
 TEST_CASE("ForEach Node works with strings") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     cdiv obscured{
         span(Text("o")), span(Text("b")), span(Text("s")), span(Text("c")),
@@ -1685,7 +1685,7 @@ TEST_CASE("ForEach Node works with strings") {
 }
 
 TEST_CASE("ForEach Node iterator constructor works") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     std::vector<std::string> text = {"Text 1", "Text 2", "Text 3", "Text 4",
                                      "Text 5"};
@@ -1702,7 +1702,7 @@ TEST_CASE("ForEach Node iterator constructor works") {
 }
 
 TEST_CASE("ForEach Node no step range constructor works") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     ul normalConstructed{li(Text("1")), li(Text("2")), li(Text("3")),
                          li(Text("4")), li(Text("5"))};
@@ -1714,7 +1714,7 @@ TEST_CASE("ForEach Node no step range constructor works") {
 }
 
 TEST_CASE("ForEach Node step range constructor works") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     ul normalConstructed{li(Text("1")), li(Text("3")), li(Text("5"))};
 
@@ -1725,7 +1725,7 @@ TEST_CASE("ForEach Node step range constructor works") {
 }
 
 TEST_CASE("If Node chooses correctly") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     cdiv nodeTrue{If(5 > 2, Text("True"), Text("False"))};
 
@@ -1736,7 +1736,7 @@ TEST_CASE("If Node chooses correctly") {
 }
 
 TEST_CASE("If Node works with different Node argument types") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     std::string expected = "<div>True</div>";
 
@@ -1767,7 +1767,7 @@ TEST_CASE("If Node works with different Node argument types") {
 }
 
 TEST_CASE("Child replace works", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     std::unique_ptr<Node> child =
         std::make_unique<GenericNode>("div", false, Attribute("id", "1"));
@@ -1807,8 +1807,8 @@ TEST_CASE("Child replace works", "[Node]") {
 }
 
 TEST_CASE("Compile api dynamic bindings work") {
-    using namespace Templater;
-    using namespace Templater::ctags;
+    using namespace onyx;
+    using namespace onyx::ctags;
 
     tags::cdiv cd{tags::Text{"Hello!"}};
 
@@ -1838,7 +1838,7 @@ TEST_CASE("Compile api dynamic bindings work") {
 
 TEST_CASE("Owning NodeHandle reports owning and retains pointer",
           "[NodeHandle]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     auto up = std::make_unique<GenericNode>("div", false);
     Node* raw = up.get();
@@ -1850,7 +1850,7 @@ TEST_CASE("Owning NodeHandle reports owning and retains pointer",
 }
 
 TEST_CASE("Can construct owning NodeHandle with raw pointer", "[NodeHandle]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode* node = new GenericNode("span", false);
 
@@ -1862,7 +1862,7 @@ TEST_CASE("Can construct owning NodeHandle with raw pointer", "[NodeHandle]") {
 
 TEST_CASE("Non-owning NodeHandle reports non-owning and retains pointer",
           "[NodeHandle]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode* node = new GenericNode("span", false);
 
@@ -1876,7 +1876,7 @@ TEST_CASE("Non-owning NodeHandle reports non-owning and retains pointer",
 }
 
 TEST_CASE("releaseRaw transfers pointer and resets handle", "[NodeHandle]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     auto up = std::make_unique<GenericNode>("p", false);
     Node* raw = up.get();
 
@@ -1895,7 +1895,7 @@ TEST_CASE("releaseRaw transfers pointer and resets handle", "[NodeHandle]") {
 
 TEST_CASE("toUnique on owning handle yields unique_ptr and becomes non-owning",
           "[NodeHandle]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     auto up = std::make_unique<GenericNode>("section", false);
     Node* raw = up.get();
@@ -1910,7 +1910,7 @@ TEST_CASE("toUnique on owning handle yields unique_ptr and becomes non-owning",
 }
 
 TEST_CASE("toUnique on non-owning handle throws logic_error", "[NodeHandle]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     GenericNode* node = new GenericNode("header", false);
 
     NodeHandle h(node, false);
@@ -1922,7 +1922,7 @@ TEST_CASE("toUnique on non-owning handle throws logic_error", "[NodeHandle]") {
 }
 
 TEST_CASE("Move constructor transfers pointer and ownership", "[NodeHandle]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     auto up = std::make_unique<GenericNode>("footer", false);
     Node* raw = up.get();
 
@@ -1937,7 +1937,7 @@ TEST_CASE("Move constructor transfers pointer and ownership", "[NodeHandle]") {
 }
 
 TEST_CASE("Move assignment transfers pointer and ownership", "[NodeHandle]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     auto up1 = std::make_unique<GenericNode>("article", false);
     Node* raw = up1.get();
 
@@ -1957,7 +1957,7 @@ TEST_CASE("Move assignment transfers pointer and ownership", "[NodeHandle]") {
 }
 
 TEST_CASE("Non-owning Node does not destroy its children") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node* body = new GenericNode(NonOwning, "body", false);
     {
@@ -1974,7 +1974,7 @@ TEST_CASE("Non-owning Node does not destroy its children") {
 TEST_CASE(
     "Mixing owning and non-owning Nodes with move constructor causes "
     "exception") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     // This will leak unless move constructor properly cleans up memory
     REQUIRE_THROWS(GenericNode("html", false, GenericNode("body", false),
@@ -1982,7 +1982,7 @@ TEST_CASE(
 }
 
 TEST_CASE("Mixing owning and non-owning Nodes causes exception") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     GenericNode root("html", false);
     Node* body = new GenericNode(NonOwning, "body", false);
@@ -1992,7 +1992,7 @@ TEST_CASE("Mixing owning and non-owning Nodes causes exception") {
 }
 
 TEST_CASE("Vector constructor throws when mixing ownership modes", "[Node]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
@@ -2015,7 +2015,7 @@ TEST_CASE("Vector constructor throws when mixing ownership modes", "[Node]") {
 }
 
 TEST_CASE("Arena allocates and constructs nodes", "[Arena]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     Arena::Builder builder;
     builder.preallocate<GenericNode>().preallocate<Text>();
 
@@ -2036,7 +2036,7 @@ TEST_CASE("Arena allocates and constructs nodes", "[Arena]") {
 }
 
 TEST_CASE("Arena cleans up memory", "[Arena]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
     Arena::Builder builder;
     builder.preallocate<GenericNode>();
     for (int i = 0; i < 5; ++i) {
@@ -2059,7 +2059,7 @@ TEST_CASE("Arena cleans up memory", "[Arena]") {
 }
 
 TEST_CASE("Arena throws on over allocation", "[Arena]") {
-    using namespace Templater::tags;
+    using namespace onyx::tags;
 
     Arena arena(2);
 

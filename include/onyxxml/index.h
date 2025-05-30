@@ -7,7 +7,7 @@
 
 #include "node.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 
 namespace index {
 /**
@@ -65,18 +65,18 @@ std::shared_ptr<T> createIndexSharedPointer(Args&&... args)
 
 #define BEFRIEND_INDEX_CREATOR_FUNCTIONS                                    \
     template <typename T, typename... Args>                                 \
-    friend T Templater::dynamic::index::createIndex(Args&&... args)         \
+    friend T onyx::dynamic::index::createIndex(Args&&... args)         \
         requires(isIndex<T>);                                               \
     template <typename T, typename... Args>                                 \
-    friend T* Templater::dynamic::index::createIndexPointer(Args&&... args) \
+    friend T* onyx::dynamic::index::createIndexPointer(Args&&... args) \
         requires(isIndex<T>);                                               \
     template <typename T, typename... Args>                                 \
     friend std::unique_ptr<T>                                               \
-    Templater::dynamic::index::createIndexUniquePointer(Args&&... args)     \
+    onyx::dynamic::index::createIndexUniquePointer(Args&&... args)     \
         requires(isIndex<T>);                                               \
     template <typename T, typename... Args>                                 \
     friend std::shared_ptr<T>                                               \
-    Templater::dynamic::index::createIndexSharedPointer(Args&&... args)     \
+    onyx::dynamic::index::createIndexSharedPointer(Args&&... args)     \
         requires(isIndex<T>);
 
 #define DELETE_INDEX_COPY_OPERATIONS(ClassName) \
@@ -288,10 +288,10 @@ class Node::Index {
     Index& operator=(const Index&) = delete;
     Index& operator=(const Index&&) = delete;
 };
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic
 
 template <typename T, typename... Args>
-T Templater::dynamic::index::createIndex(Args&&... args)
+T onyx::dynamic::index::createIndex(Args&&... args)
     requires(isIndex<T>)
 {
     T index(std::forward<Args>(args)...);
@@ -301,7 +301,7 @@ T Templater::dynamic::index::createIndex(Args&&... args)
 }
 
 template <typename T, typename... Args>
-T* Templater::dynamic::index::createIndexPointer(Args&&... args)
+T* onyx::dynamic::index::createIndexPointer(Args&&... args)
     requires(isIndex<T>)
 {
     T* index = new T(std::forward<Args>(args)...);
@@ -311,7 +311,7 @@ T* Templater::dynamic::index::createIndexPointer(Args&&... args)
 }
 
 template <typename T, typename... Args>
-std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(
+std::unique_ptr<T> onyx::dynamic::index::createIndexUniquePointer(
     Args&&... args)
     requires(isIndex<T>)
 {
@@ -322,7 +322,7 @@ std::unique_ptr<T> Templater::dynamic::index::createIndexUniquePointer(
 }
 
 template <typename T, typename... Args>
-std::shared_ptr<T> Templater::dynamic::index::createIndexSharedPointer(
+std::shared_ptr<T> onyx::dynamic::index::createIndexSharedPointer(
     Args&&... args)
     requires(isIndex<T>)
 {

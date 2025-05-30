@@ -2,7 +2,7 @@
 
 #include "text.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 const std::string& Comment::getTagName() const {
     static const std::string name = ".comment";
     return name;
@@ -46,4 +46,4 @@ void Comment::specialSerializePretty(
            << "-->\n";
     stack.pop_back();
 }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

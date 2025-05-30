@@ -2,7 +2,7 @@
 
 #include "text.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 XmlDeclaration::XmlDeclaration(std::string versionInfo, std::string encoding,
                                bool standalone, bool escapeMultiByte)
@@ -184,4 +184,4 @@ bool XmlDeclaration::shallowEquals(const Node& _other) const {
            this->versionInfo == other->versionInfo &&
            this->encoding == other->encoding;
 }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

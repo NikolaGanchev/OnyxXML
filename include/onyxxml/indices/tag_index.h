@@ -4,7 +4,7 @@
 
 #include "../index.h"
 
-namespace Templater::dynamic::index {
+namespace onyx::dynamic::index {
 
 /**
  * @brief An Index which indexes all Nodes in a tree by their tag name and
@@ -58,4 +58,4 @@ class TagIndex : public Node::Index {
 
     BEFRIEND_INDEX_CREATOR_FUNCTIONS;
 };
-}  // namespace Templater::dynamic::index
+}  // namespace onyx::dynamic::index

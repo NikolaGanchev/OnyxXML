@@ -2,7 +2,7 @@
 
 #include "../node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 /**
  * @brief A raw text Node. Susceptible to XML injections. Only use if needed
  * explicitly.
@@ -88,4 +88,4 @@ class __DangerousRawText : public Node, public Node::SpecialSerializable {
     std::unique_ptr<Node> shallowCopy() const override;
     virtual bool shallowEquals(const Node& other) const override;
 };
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

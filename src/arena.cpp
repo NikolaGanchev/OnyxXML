@@ -1,6 +1,6 @@
 #include "arena.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 
 Arena::Arena(size_t capacity) : capacity{capacity}, allocations{} {
     this->buffer = new char[capacity];
@@ -40,4 +40,4 @@ Arena::Builder::Builder() : size(0) {};
 size_t Arena::Builder::totalSize() const { return this->size; }
 
 Arena Arena::Builder::build() const { return Arena(this->size); }
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

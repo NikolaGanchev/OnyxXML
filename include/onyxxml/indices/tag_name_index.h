@@ -4,7 +4,7 @@
 
 #include "../index.h"
 
-namespace Templater::dynamic::index {
+namespace onyx::dynamic::index {
 /**
  * @brief An Index which keeps track of all nodes with a specific tag name. The
  * underlying index structure is an std::vector.
@@ -72,4 +72,4 @@ class TagNameIndex : public Node::Index {
 
     BEFRIEND_INDEX_CREATOR_FUNCTIONS;
 };
-}  // namespace Templater::dynamic::index
+}  // namespace onyx::dynamic::index

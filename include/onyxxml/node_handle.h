@@ -2,7 +2,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 class Node;
 
 /**
@@ -133,4 +133,4 @@ class NodeHandle {
      */
     operator bool() const;
 };
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

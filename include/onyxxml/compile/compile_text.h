@@ -8,7 +8,7 @@
 #include "compile_string.h"
 #include "compile_string_utils.h"
 
-namespace Templater::compile::ctags {
+namespace onyx::compile::ctags {
 /**
  * @brief A compile time Text struct.
  *
@@ -43,10 +43,10 @@ struct Text {
     /**
      * @brief Construct a dynamic Text Node from a compile time Text struct.
      *
-     * @return std::unique_ptr<Templater::dynamic::Node>
+     * @return std::unique_ptr<onyx::dynamic::Node>
      */
-    static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
-        return std::make_unique<Templater::dynamic::tags::Text>(Str);
+    static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {
+        return std::make_unique<onyx::dynamic::tags::Text>(Str);
     }
 };
-}  // namespace Templater::compile::ctags
+}  // namespace onyx::compile::ctags

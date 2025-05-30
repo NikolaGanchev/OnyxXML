@@ -5,7 +5,7 @@
 #include "../arena.h"
 #include "../node.h"
 
-namespace Templater::dynamic::parser {
+namespace onyx::dynamic::parser {
 class DomParser;
 
 class ParseResult {
@@ -35,4 +35,4 @@ class DomParser {
    public:
     static ParseResult parse(std::string_view input);
 };
-}  // namespace Templater::dynamic::parser
+}  // namespace onyx::dynamic::parser

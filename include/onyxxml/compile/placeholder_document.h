@@ -3,7 +3,7 @@
 #include "../document.h"
 #include "compile_placeholder.h"
 
-namespace Templater::compile {
+namespace onyx::compile {
 
 /**
  * @brief Document struct adapted for dealing with template XML with
@@ -72,7 +72,7 @@ struct PlaceholderDocument {
      */
     template <typename... Rest>
     static std::string serializeWithPlaceholders(
-        const char* name, const Templater::dynamic::Node& node, Rest&... rest) {
+        const char* name, const onyx::dynamic::Node& node, Rest&... rest) {
         static_assert(sizeof...(Rest) % 2 == 0,
                       "Arguments must be in key-value pairs.");
         std::string serialized = std::string(doc::serialize().data());
@@ -91,19 +91,19 @@ struct PlaceholderDocument {
      * @param name Placeholder name
      * @param node The Node to insert in the tree
      * @param rest
-     * @return std::unique_ptr<Templater::dynamic::Node>
+     * @return std::unique_ptr<onyx::dynamic::Node>
      */
     template <typename T, typename... Rest>
-    static std::unique_ptr<Templater::dynamic::Node>
+    static std::unique_ptr<onyx::dynamic::Node>
     dynamicTreeWithPlaceholders(const char* name, T&& node, Rest&&... rest)
-        requires(Templater::dynamic::isValidNodeChild<T>)
+        requires(onyx::dynamic::isValidNodeChild<T>)
     {
-        std::unique_ptr<Templater::dynamic::Node> obj = doc::dynamicTree();
+        std::unique_ptr<onyx::dynamic::Node> obj = doc::dynamicTree();
 
         auto placeholderNodes =
             obj->getChildrenByTagName(ctags::Placeholder<"">::TAG_NAME);
 
-        std::unordered_map<std::string, Templater::dynamic::Node*>
+        std::unordered_map<std::string, onyx::dynamic::Node*>
             placeholdersMap;
 
         for (auto& node : placeholderNodes) {
@@ -124,11 +124,11 @@ struct PlaceholderDocument {
      */
     template <typename T, typename... Rest>
     static void evaluateDynamicTreeRec(
-        Templater::dynamic::Node* result,
-        std::unordered_map<std::string, Templater::dynamic::Node*>&
+        onyx::dynamic::Node* result,
+        std::unordered_map<std::string, onyx::dynamic::Node*>&
             placeholders,
         const char* name, T&& node, Rest&&... rest)
-        requires(Templater::dynamic::isValidNodeChild<T>)
+        requires(onyx::dynamic::isValidNodeChild<T>)
     {
         evaluateDynamicTreePlaceholder(result, placeholders, name, node);
 
@@ -142,8 +142,8 @@ struct PlaceholderDocument {
      * @param placeholders
      */
     static void evaluateDynamicTreeRec(
-        Templater::dynamic::Node* result,
-        std::unordered_map<std::string, Templater::dynamic::Node*>&
+        onyx::dynamic::Node* result,
+        std::unordered_map<std::string, onyx::dynamic::Node*>&
             placeholders) {
         return;
     }
@@ -155,11 +155,11 @@ struct PlaceholderDocument {
      */
     template <typename T>
     static void evaluateDynamicTreePlaceholder(
-        Templater::dynamic::Node* result,
-        std::unordered_map<std::string, Templater::dynamic::Node*>&
+        onyx::dynamic::Node* result,
+        std::unordered_map<std::string, onyx::dynamic::Node*>&
             placeholders,
         const char* name, T&& node)
-        requires(Templater::dynamic::isValidNodeChild<T>)
+        requires(onyx::dynamic::isValidNodeChild<T>)
     {
         if (placeholders.find(name) != placeholders.end()) {
             result->replaceChild(placeholders[name], std::move(node));
@@ -184,7 +184,7 @@ struct PlaceholderDocument {
      */
     template <typename... Rest>
     static void evaluatePlaceholdersRec(std::string& result, const char* name,
-                                        const Templater::dynamic::Node& node,
+                                        const onyx::dynamic::Node& node,
                                         Rest&... rest) {
         evaluatePlaceholder(result, name, node);
 
@@ -207,7 +207,7 @@ struct PlaceholderDocument {
      * @param node
      */
     static void evaluatePlaceholder(std::string& result, const char* name,
-                                    const Templater::dynamic::Node& node) {
+                                    const onyx::dynamic::Node& node) {
         std::string search = std::string("<") +
                              ctags::Placeholder<"">::TAG_NAME + " name=\"" +
                              name + "\" />";
@@ -219,4 +219,4 @@ struct PlaceholderDocument {
         result.replace(pos, search.size(), node.serialize());
     }
 };
-}  // namespace Templater::compile
+}  // namespace onyx::compile

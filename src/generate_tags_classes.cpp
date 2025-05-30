@@ -55,10 +55,10 @@ void generateDynamic(const std::vector<Tag>& tags, const char* path) {
     headerDynamic << "#pragma once\n";
     headerDynamic << "#include \"onyxxml/node.h\" \n";
     headerDynamic << "#include \"onyxxml/void_node.h\" \n\n";
-    headerDynamic << "namespace Templater::dynamic::tags {\n";
+    headerDynamic << "namespace onyx::dynamic::tags {\n";
 
     cppDynamic << "#include \"tags.h\"\n\n";
-    cppDynamic << "namespace Templater::dynamic::tags {\n";
+    cppDynamic << "namespace onyx::dynamic::tags {\n";
 
     for (auto& tag : tags) {
         if (!tag.isVoid) {
@@ -142,7 +142,7 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
     headerCompile << "#pragma once\n";
     headerCompile << "#include \"onyxxml/compile/document_utils.h\" \n";
     headerCompile << "#include \"dynamic/tags.h\" \n\n";
-    headerCompile << "namespace Templater::compile::ctags {\n";
+    headerCompile << "namespace onyx::compile::ctags {\n";
 
     for (auto& tag : tags) {
         int serializationSize = tag.isVoid
@@ -169,11 +169,11 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
             << "<size(), Children...>(\"" << tag.tagName
             << "\");\n"
                "    }\n"
-               "    static std::unique_ptr<Templater::dynamic::Node> "
+               "    static std::unique_ptr<onyx::dynamic::Node> "
                "dynamicTree() {\n"
-               "        std::unique_ptr<Templater::dynamic::tags::"
+               "        std::unique_ptr<onyx::dynamic::tags::"
             << tag.dynamicName
-            << "> node = std::make_unique<Templater::dynamic::tags::"
+            << "> node = std::make_unique<onyx::dynamic::tags::"
             << tag.dynamicName
             << ">();\n"
                "        (DocumentUtils::parseChildren<Children>(node.get()), ...);\n"

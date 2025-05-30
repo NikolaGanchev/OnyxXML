@@ -1,6 +1,6 @@
 #include "nodes/generic_node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 GenericNode::GenericNode(std::string tagName, bool isVoid)
     : tag{std::move(tagName)}, _isVoid{isVoid}, Node() {}
@@ -55,4 +55,4 @@ std::unique_ptr<Node> GenericNode::shallowCopy() const {
                                          this->getAttributes(),
                                          std::vector<NodeHandle>{});
 }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

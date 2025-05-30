@@ -1,6 +1,6 @@
 #include "nodes/_dangerous_raw_text_node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 __DangerousRawText::__DangerousRawText(std::string text) : text(text), Node{} {}
 __DangerousRawText::__DangerousRawText(NonOwningNodeTag, std::string text)
@@ -64,4 +64,4 @@ void __DangerousRawText::specialSerializePretty(
     result << indentation << this->text << "\n";
     stack.pop_back();
 }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

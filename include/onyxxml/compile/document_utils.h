@@ -8,7 +8,7 @@
 #include "compile_string.h"
 #include "compile_string_utils.h"
 
-namespace Templater::compile {
+namespace onyx::compile {
 
 /**
  * @brief Utilities for the compile Document api.
@@ -38,7 +38,7 @@ struct DocumentUtils {
         } else {
             (
                 ([&] {
-                    if constexpr (Templater::compile::ctags::isAttribute<
+                    if constexpr (onyx::compile::ctags::isAttribute<
                                       Children>) {
                         if (passedAttr) {
                             throw "Cannot add attribute after first child of node.";
@@ -85,7 +85,7 @@ struct DocumentUtils {
         index = CompileStringUtils::placeStringInArray(result, tagName, index);
         if constexpr (sizeof...(Children) != 0) {
             (([&] {
-                 if constexpr (!Templater::compile::ctags::isAttribute<
+                 if constexpr (!onyx::compile::ctags::isAttribute<
                                    Children>) {
                      throw "Cannot add non-attribute child for void node.";
                  }
@@ -115,9 +115,9 @@ struct DocumentUtils {
      * @param node
      */
     template <typename Child>
-    static void parseChildren(Templater::dynamic::Node* node) {
-        if constexpr (Templater::compile::ctags::isAttribute<Child>) {
-            std::unique_ptr<Templater::dynamic::Attribute> attr =
+    static void parseChildren(onyx::dynamic::Node* node) {
+        if constexpr (onyx::compile::ctags::isAttribute<Child>) {
+            std::unique_ptr<onyx::dynamic::Attribute> attr =
                 Child::dynamicAttribute();
             node->operator[](attr->getName()) = attr->getValue();
         } else {
@@ -125,4 +125,4 @@ struct DocumentUtils {
         }
     }
 };
-}  // namespace Templater::compile
+}  // namespace onyx::compile

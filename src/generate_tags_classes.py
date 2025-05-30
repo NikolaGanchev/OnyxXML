@@ -52,10 +52,10 @@ def generate_dynamic(tags, output_path):
     header_content.write('#pragma once\n')
     header_content.write('#include "onyxxml/node.h"\n')
     header_content.write('#include "onyxxml/void_node.h"\n\n')
-    header_content.write('namespace Templater::dynamic::tags {\n')
+    header_content.write('namespace onyx::dynamic::tags {\n')
     
     cpp_content.write('#include "tags.h"\n\n')
-    cpp_content.write('namespace Templater::dynamic::tags {\n')
+    cpp_content.write('namespace onyx::dynamic::tags {\n')
     
     for tag in tags:
         if not tag.isVoid:
@@ -117,7 +117,7 @@ def generate_compile(tags, output_path):
     header_content.write('#pragma once\n')
     header_content.write('#include "onyxxml/compile/document_utils.h"\n')
     header_content.write('#include "dynamic/tags.h"\n\n')
-    header_content.write('namespace Templater::compile::ctags {\n\n')
+    header_content.write('namespace onyx::compile::ctags {\n\n')
     
     for tag in tags:
         serialization_size = (len(tag.tagName) + 4) if tag.isVoid else (2 * len(tag.tagName) + 5)
@@ -135,8 +135,8 @@ def generate_compile(tags, output_path):
         header_content.write(f'        return DocumentUtils::{serialize_method}<size(), Children...>("{tag.tagName}");\n')
         header_content.write('    }\n')
         
-        header_content.write('    static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {\n')
-        header_content.write(f'        std::unique_ptr<Templater::dynamic::tags::{tag.dynamicName}> node = std::make_unique<Templater::dynamic::tags::{tag.dynamicName}>();\n')
+        header_content.write('    static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {\n')
+        header_content.write(f'        std::unique_ptr<onyx::dynamic::tags::{tag.dynamicName}> node = std::make_unique<onyx::dynamic::tags::{tag.dynamicName}>();\n')
         header_content.write('        (DocumentUtils::parseChildren<Children>(node.get()), ...);\n')
         header_content.write('        return node;\n')
         header_content.write('    }\n    };\n')

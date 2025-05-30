@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace Templater::compile {
+namespace onyx::compile {
 
 /**
  * @brief A compile time string.
@@ -43,4 +43,4 @@ struct CompileString {
      */
     constexpr operator std::string() const { return to_string(); }
 };
-}  // namespace Templater::compile
+}  // namespace onyx::compile

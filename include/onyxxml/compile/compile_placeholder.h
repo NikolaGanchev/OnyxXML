@@ -11,7 +11,7 @@
 #include "compile_string_utils.h"
 #include "document_utils.h"
 
-namespace Templater::compile::ctags {
+namespace onyx::compile::ctags {
 
 /**
  * @brief A compile time Placeholder struct.
@@ -71,12 +71,12 @@ struct Placeholder {
      * Placeholder struct.\ Generates a void GenericNode with TAG_NAME and the
      * Attribute name="<string>".
      *
-     * @return std::unique_ptr<Templater::dynamic::Node>
+     * @return std::unique_ptr<onyx::dynamic::Node>
      */
-    static std::unique_ptr<Templater::dynamic::Node> dynamicTree() {
-        return std::make_unique<Templater::dynamic::tags::GenericNode>(
+    static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {
+        return std::make_unique<onyx::dynamic::tags::GenericNode>(
             TAG_NAME, true,
-            Templater::dynamic::Attribute("name", std::string(Str)));
+            onyx::dynamic::Attribute("name", std::string(Str)));
     }
 };
-}  // namespace Templater::compile::ctags
+}  // namespace onyx::compile::ctags

@@ -3,7 +3,7 @@
 #include "../node.h"
 #include "text_node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 /**
  * @brief A DOCTYPE node. Holds the literal text of the DOCTYPE.
@@ -38,4 +38,4 @@ class Doctype : public Text {
     bool hasSpecialSerialization() const override;
     std::unique_ptr<Node> shallowCopy() const override;
 };
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

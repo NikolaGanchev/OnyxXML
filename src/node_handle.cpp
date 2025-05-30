@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 
 void NodeHandle::reset() {
     if (this->isOwning && this->pointer) delete this->pointer;
@@ -56,4 +56,4 @@ Node* NodeHandle::release() {
 bool NodeHandle::owning() { return this->isOwning; }
 
 NodeHandle::operator bool() const { return this->pointer != nullptr; }
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

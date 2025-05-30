@@ -1,6 +1,6 @@
 #include "index.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 
 Node::Index::Index(Node* root) : root{root} {}
 
@@ -48,4 +48,4 @@ void Node::Index::_assign_index_base(Node::Index&& other) {
 Node::Index::Index(Node::Index&& other) noexcept {
     this->_move_index_base(std::move(other));
 }
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

@@ -2,7 +2,7 @@
 
 #include "../node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 /**
  * @brief A node which provides no serialization structure. Used as a root to
@@ -35,4 +35,4 @@ class EmptyNode : public Node, public Node::SpecialSerializable {
     bool hasSpecialSerialization() const override;
     std::unique_ptr<Node> shallowCopy() const override;
 };
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

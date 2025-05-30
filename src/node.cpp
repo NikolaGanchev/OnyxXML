@@ -8,7 +8,7 @@
 #include "index.h"
 #include "text.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 Node::Node()
     : attributes{}, children{}, indices{}, parent{nullptr}, _isOwning(true) {}
 
@@ -822,4 +822,4 @@ bool Node::getSortAttributes() { return sortAttributes; }
 const std::vector<Node*>& Node::getChildrenLive() const {
     return this->children;
 }
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

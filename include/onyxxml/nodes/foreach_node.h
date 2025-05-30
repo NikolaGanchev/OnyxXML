@@ -3,7 +3,7 @@
 
 #include "../node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 /**
  * @brief Checks if the type T is index iterable. An index iterable type is a
@@ -268,4 +268,4 @@ ForEach::ForEach(int begin, int end, int step, Func producer) {
 template <typename Func>
 ForEach::ForEach(int begin, int end, Func producer)
     : ForEach(begin, end, 1, std::forward<Func>(producer)) {}
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

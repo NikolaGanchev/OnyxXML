@@ -4,7 +4,7 @@
 
 #include "../index.h"
 
-namespace Templater::dynamic::index {
+namespace onyx::dynamic::index {
 
 /**
  * @brief An Index which keeps track of all nodes which have specific attribute
@@ -68,4 +68,4 @@ class AttributeNameIndex : public Node::Index {
 
     BEFRIEND_INDEX_CREATOR_FUNCTIONS;
 };
-}  // namespace Templater::dynamic::index
+}  // namespace onyx::dynamic::index

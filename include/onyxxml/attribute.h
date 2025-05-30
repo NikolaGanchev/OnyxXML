@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 class Node;
 
 /**
@@ -109,4 +109,4 @@ class Attribute {
      */
     bool operator!=(const Attribute& other) const;
 };
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

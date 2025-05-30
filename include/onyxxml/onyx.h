@@ -36,7 +36,7 @@
 #include "compile/tags.h"
 #endif
 
-namespace Templater {
+namespace onyx {
 namespace tags = dynamic::tags;
 namespace ctags = compile::ctags;
 namespace index = dynamic::index;
@@ -44,15 +44,15 @@ namespace text = dynamic::text;
 namespace parser = dynamic::parser;
 
 namespace dynamic::tags {
-using Templater::dynamic::Arena;
-using Templater::dynamic::Attribute;
-using Templater::dynamic::Node;
-using Templater::dynamic::NodeHandle;
-using Templater::dynamic::NonOwning;
+using onyx::dynamic::Arena;
+using onyx::dynamic::Attribute;
+using onyx::dynamic::Node;
+using onyx::dynamic::NodeHandle;
+using onyx::dynamic::NonOwning;
 }  // namespace dynamic::tags
 
 namespace compile::ctags {
-using Templater::compile::Document;
-using Templater::compile::PlaceholderDocument;
+using onyx::compile::Document;
+using onyx::compile::PlaceholderDocument;
 }  // namespace compile::ctags
-}  // namespace Templater
+}  // namespace onyx

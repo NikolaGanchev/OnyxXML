@@ -2,7 +2,7 @@
 
 #include "../node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 /**
  * @brief A Node which can is given its tag name and whether it is void or not
@@ -106,4 +106,4 @@ GenericNode::GenericNode(std::string tagName, bool isVoid, Args&&... args)
                                  " cannot have children.");
     }
 }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

@@ -1,6 +1,6 @@
 #include "indices/tag_name_index.h"
 
-namespace Templater::dynamic::index {
+namespace onyx::dynamic::index {
 
 TagNameIndex::TagNameIndex(Node* root, std::string& tagName)
     : tagName(tagName), Index(root), index{} {};
@@ -56,4 +56,4 @@ const std::vector<Node*> TagNameIndex::get() {
 
     return this->index;
 }
-}  // namespace Templater::dynamic::index
+}  // namespace onyx::dynamic::index

@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 
 /**
  * @brief A Node which is void by default. Provides constructors that don't
@@ -57,4 +57,4 @@ template <typename... Args>
 VoidNode::VoidNode(NonOwningNodeTag, Args&&... args)
     requires(isAttribute<Args> && ...)
     : Node(NonOwning, std::forward<Args>(args)...) {}
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

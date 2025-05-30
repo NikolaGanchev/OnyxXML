@@ -3,7 +3,7 @@
 #include <array>
 #include <string_view>
 
-namespace Templater::compile {
+namespace onyx::compile {
 
 /**
  * @brief Utilities for dealing with compile strings.
@@ -30,4 +30,4 @@ struct CompileStringUtils {
         return index + std::string_view(str).size();
     }
 };
-}  // namespace Templater::compile
+}  // namespace onyx::compile

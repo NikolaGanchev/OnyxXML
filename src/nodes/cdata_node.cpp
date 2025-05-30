@@ -2,7 +2,7 @@
 
 #include "text.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 const std::string& CData::getTagName() const {
     static const std::string name = ".cdata";
     return name;
@@ -49,4 +49,4 @@ void CData::specialSerializePretty(std::vector<Node::SerializationNode>& stack,
            << "]]>\n";
     stack.pop_back();
 }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

@@ -3,7 +3,7 @@
 #include "../node.h"
 #include "text_node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 /**
  * @brief A ProcessingInstruction Node. Automatically escapes the invalid string
@@ -98,4 +98,4 @@ class ProcessingInstruction : public Text {
     std::unique_ptr<Node> shallowCopy() const override;
     virtual bool shallowEquals(const Node& other) const override;
 };
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

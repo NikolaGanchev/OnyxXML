@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 namespace text {
 /**
  * @brief Escape a string from XML injection causing elements.
@@ -109,4 +109,4 @@ std::string replaceSequences(
  */
 std::string expandEntities(std::string_view input);
 }  // namespace text
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

@@ -3,7 +3,7 @@
 
 #include "../node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 /**
  * @brief A Node that upon a condition decides which of two given Nodes to add
  * as a child. The child can be passed as either a move or an
@@ -97,4 +97,4 @@ If::If(bool condition, T&& nodeTrue, K&& nodeFalse)
     }
 }
 
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

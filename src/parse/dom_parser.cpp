@@ -13,7 +13,7 @@
 #include "nodes/xml_declaration_node.h"
 #include "text.h"
 
-namespace Templater::dynamic::parser {
+namespace onyx::dynamic::parser {
 ParseResult::ParseResult() : arena{0}, root{nullptr} {}
 
 ParseResult::ParseResult(Arena arena, Node* root)
@@ -737,6 +737,6 @@ ParseResult DomParser::parse(std::string_view input) {
 
     return ParseResult{std::move(arena), root};
 }
-}  // namespace Templater::dynamic::parser
+}  // namespace onyx::dynamic::parser
 
 #undef INCREMENT_POS_IF_EQUALS_OR_THROW

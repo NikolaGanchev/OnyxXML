@@ -1,6 +1,6 @@
 #include "nodes/if_node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 If::If() : Node{} {}
 
 const std::string& If::getTagName() const {
@@ -30,4 +30,4 @@ void If::specialSerializePretty(std::vector<Node::SerializationNode>& stack,
 }
 
 bool If::hasSpecialSerialization() const { return true; }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

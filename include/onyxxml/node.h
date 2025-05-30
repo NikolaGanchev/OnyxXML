@@ -11,7 +11,7 @@
 #include "attribute.h"
 #include "node_handle.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 class Node;
 class NodeHandle;
 namespace index {
@@ -857,17 +857,17 @@ class Node {
      */
     static bool getSortAttributes();
 };
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic
 
 template <typename... Args>
-Templater::dynamic::Node::Node(Args&&... args)
-    requires(Templater::dynamic::isValidNodeConstructorType<Args> && ...)
+onyx::dynamic::Node::Node(Args&&... args)
+    requires(onyx::dynamic::isValidNodeConstructorType<Args> && ...)
     : attributes{}, children{}, parent{nullptr}, indices{}, _isOwning(true) {
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
 template <typename T>
-void Templater::dynamic::Node::processConstructorArgs(T&& arg) {
+void onyx::dynamic::Node::processConstructorArgs(T&& arg) {
     if constexpr (std::is_base_of_v<Node, std::decay_t<T>>) {
         processConstructorObjectMove(std::forward<T>(arg));
     } else {
@@ -876,7 +876,7 @@ void Templater::dynamic::Node::processConstructorArgs(T&& arg) {
 }
 
 template <typename T>
-Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild)
+onyx::dynamic::Node* onyx::dynamic::Node::addChild(T&& newChild)
     requires(isNode<T>)
 {
     if (isVoid()) {
@@ -906,7 +906,7 @@ Templater::dynamic::Node* Templater::dynamic::Node::addChild(T&& newChild)
 }
 
 template <typename T>
-void Templater::dynamic::Node::processConstructorObjectMove(T&& child)
+void onyx::dynamic::Node::processConstructorObjectMove(T&& child)
     requires(isNode<T>)
 {
     if (child.isInTree()) {
@@ -928,7 +928,7 @@ void Templater::dynamic::Node::processConstructorObjectMove(T&& child)
 }
 
 template <typename T>
-Templater::dynamic::Node& Templater::dynamic::Node::operator+=(T&& right)
+onyx::dynamic::Node& onyx::dynamic::Node::operator+=(T&& right)
     requires(isNode<T>)
 {
     addChild(std::forward<T>(right));
@@ -936,7 +936,7 @@ Templater::dynamic::Node& Templater::dynamic::Node::operator+=(T&& right)
 }
 
 template <typename T>
-Templater::dynamic::NodeHandle Templater::dynamic::Node::replaceChild(
+onyx::dynamic::NodeHandle onyx::dynamic::Node::replaceChild(
     Node* childToReplace, T&& newChild)
     requires(isValidNodeChild<T>)
 {

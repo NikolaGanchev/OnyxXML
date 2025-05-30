@@ -2,7 +2,7 @@
 
 #include "text.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 const std::string& Doctype::getTagName() const {
     static const std::string name = ".doctype";
     return name;
@@ -46,4 +46,4 @@ void Doctype::specialSerializePretty(
            << ">\n";
     stack.pop_back();
 }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

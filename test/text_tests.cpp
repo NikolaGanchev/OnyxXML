@@ -1,10 +1,10 @@
 #include <chrono>
 
 #include "catch2/catch_all.hpp"
-#include "templater.h"
+#include "onyx.h"
 
 TEST_CASE("Escapes complex html", "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
 
     std::string textToEscape =
         "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My "
@@ -26,21 +26,21 @@ TEST_CASE("Escapes complex html", "[escape]") {
 }
 
 TEST_CASE("Empty string remains unchanged", "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "";
     std::string expected = "";
     REQUIRE(escape(input, true) == expected);
 }
 
 TEST_CASE("Reserved HTML characters are properly escaped", "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "&<>\"'";
     std::string expected = "&amp;&lt;&gt;&quot;&#39;";
     REQUIRE(escape(input) == expected);
 }
 
 TEST_CASE("Non-escaping ASCII characters remain unchanged", "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "Hello, World!";
     std::string expected = "Hello, World!";
     REQUIRE(escape(input) == expected);
@@ -50,7 +50,7 @@ TEST_CASE(
     "Single non-ASCII character is converted to a numeric entity when "
     "multi-byte escaping is enabled",
     "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "café";
     std::string expected = "caf&#xe9;";
     REQUIRE(escape(input, true) == expected);
@@ -60,7 +60,7 @@ TEST_CASE(
     "Single non-ASCII character is not converted to a numeric entity when "
     "multi-byte escaping is disabled",
     "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "café";
     std::string expected = "café";
     REQUIRE(escape(input, false) == expected);
@@ -68,7 +68,7 @@ TEST_CASE(
 
 TEST_CASE("Emoji (4-byte sequence) is converted to a numeric entity",
           "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "😊";
     std::string expected = "&#x1f60a;";
     REQUIRE(escape(input, true) == expected);
@@ -77,14 +77,14 @@ TEST_CASE("Emoji (4-byte sequence) is converted to a numeric entity",
 TEST_CASE(
     "Mixed content with ASCII, reserved characters, and multi-byte sequences",
     "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "Hello <world> & café 😊";
     std::string expected = "Hello &lt;world&gt; &amp; caf&#xe9; &#x1f60a;";
     REQUIRE(escape(input, true) == expected);
 }
 
 TEST_CASE("Escapes 1 million characters in under 150ms", "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     using std::chrono::duration;
     using std::chrono::duration_cast;
     using std::chrono::high_resolution_clock;
@@ -113,7 +113,7 @@ TEST_CASE("Escapes 1 million characters in under 150ms", "[escape]") {
 }
 
 TEST_CASE("Escape 1 million character safe string in under 100ms", "[escape]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     using std::chrono::duration;
     using std::chrono::duration_cast;
     using std::chrono::high_resolution_clock;
@@ -133,7 +133,7 @@ TEST_CASE("Escape 1 million character safe string in under 100ms", "[escape]") {
 }
 
 TEST_CASE("Escapes random sequence correctly", "[escapeSequence]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input =
         "This is an ill--formatted html comment with two -- inside!";
     std::string expected =
@@ -143,7 +143,7 @@ TEST_CASE("Escapes random sequence correctly", "[escapeSequence]") {
 }
 
 TEST_CASE("Escapes random sequence correctly", "[replaceSequence]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input =
         "This is an ill--formatted html comment with two -- inside!";
     std::string expected =
@@ -152,33 +152,33 @@ TEST_CASE("Escapes random sequence correctly", "[replaceSequence]") {
 }
 
 TEST_CASE("Escapes empty sequence correctly", "[escapeSequence]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "This is a good sequence!";
     REQUIRE(escapeSequence(input, "") == input);
 }
 
 TEST_CASE("Does not escape sequence when not in string", "[replaceSequence]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "This is a good sequence!";
     REQUIRE(replaceSequence(input, "--", "- -") == input);
 }
 
 TEST_CASE("Escapes single sequence correctly", "[escapeSequence]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "-";
     std::string expected = "&#x2d;";
     REQUIRE(escapeSequence(input, "-") == expected);
 }
 
 TEST_CASE("Escapes unicode sequence correctly", "[escapeSequence]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "Hello! 😊😊";
     std::string expected = "Hello! &#x1f60a;&#x1f60a;";
     REQUIRE(escapeSequence(input, "😊😊") == input);
 }
 
 TEST_CASE("Basic replacements", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{
         {"cat", "dog"}, {"bat", "rat"}};
 
@@ -188,7 +188,7 @@ TEST_CASE("Basic replacements", "[replaceSequences]") {
 }
 
 TEST_CASE("No replacements when no keys match", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{
         {"zebra", "lion"}, {"monkey", "ape"}};
 
@@ -197,7 +197,7 @@ TEST_CASE("No replacements when no keys match", "[replaceSequences]") {
 }
 
 TEST_CASE("Empty input string returns empty string", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{
         {"hello", "hi"}};
 
@@ -206,7 +206,7 @@ TEST_CASE("Empty input string returns empty string", "[replaceSequences]") {
 }
 
 TEST_CASE("Empty dictionary returns input unchanged", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict;
 
     std::string input = "Sample text.";
@@ -214,7 +214,7 @@ TEST_CASE("Empty dictionary returns input unchanged", "[replaceSequences]") {
 }
 
 TEST_CASE("Single character replacements", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{{"a", "1"},
                                                                     {"b", "2"}};
 
@@ -224,7 +224,7 @@ TEST_CASE("Single character replacements", "[replaceSequences]") {
 }
 
 TEST_CASE("Overlapping keys - order sensitive", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     // Order matters: first "aa" then "a"
     std::vector<std::pair<std::string_view, std::string_view>> dict{{"aa", "X"},
                                                                     {"a", "Y"}};
@@ -235,7 +235,7 @@ TEST_CASE("Overlapping keys - order sensitive", "[replaceSequences]") {
 }
 
 TEST_CASE("Overlapping keys - reversed order", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     // Now first "a", then "aa"
     std::vector<std::pair<std::string_view, std::string_view>> dict{
         {"a", "Y"}, {"aa", "X"}};
@@ -246,7 +246,7 @@ TEST_CASE("Overlapping keys - reversed order", "[replaceSequences]") {
 }
 
 TEST_CASE("Full string replacement", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{
         {"entire", "whole"}};
 
@@ -256,7 +256,7 @@ TEST_CASE("Full string replacement", "[replaceSequences]") {
 }
 
 TEST_CASE("Case sensitivity check", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{
         {"Hello", "Hi"}, {"world", "Earth"}};
 
@@ -267,7 +267,7 @@ TEST_CASE("Case sensitivity check", "[replaceSequences]") {
 
 TEST_CASE(" Replacement strings containing keys - no recursion",
           "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{
         {"a", "ab"}, {"b", "bc"}};
 
@@ -277,7 +277,7 @@ TEST_CASE(" Replacement strings containing keys - no recursion",
 }
 
 TEST_CASE("Key is empty string", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{{"", "X"}};
 
     std::string input = "abc";
@@ -285,7 +285,7 @@ TEST_CASE("Key is empty string", "[replaceSequences]") {
 }
 
 TEST_CASE("Replacement string empty (deletion)", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{{"a", ""}};
 
     std::string input = "abracadabra";
@@ -294,7 +294,7 @@ TEST_CASE("Replacement string empty (deletion)", "[replaceSequences]") {
 }
 
 TEST_CASE("Multiple replacements in sequence", "[replaceSequences]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::vector<std::pair<std::string_view, std::string_view>> dict{
         {"foo", "bar"}, {"bar", "baz"}, {"baz", "qux"}};
 
@@ -304,47 +304,47 @@ TEST_CASE("Multiple replacements in sequence", "[replaceSequences]") {
 }
 
 TEST_CASE("No entities: returns original string", "[expandEntities]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "Hello, World!";
     REQUIRE(expandEntities(input) == input);
 }
 
 TEST_CASE("Named entities: basic XML escapes", "[expandEntities]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     REQUIRE(expandEntities("&lt;&gt;&amp;&quot;&apos;") ==
             std::string("<>&\"'"));
 }
 
 TEST_CASE("Mixed content with named entities", "[expandEntities]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "1 &lt; 2 &amp;&amp; 3 &gt; 2";
     std::string expected = "1 < 2 && 3 > 2";
     REQUIRE(expandEntities(input) == expected);
 }
 
 TEST_CASE("Decimal numeric entities", "[expandEntities]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "&#65;&#66;&#67;";  // A B C
     std::string expected = "ABC";
     REQUIRE(expandEntities(input) == expected);
 }
 
 TEST_CASE("Hex numeric entities", "[expandEntities]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     std::string input = "&#x41;&#x42;&#x43;";  // A B C
     std::string expected = "ABC";
     REQUIRE(expandEntities(input) == expected);
 }
 
 TEST_CASE("Mixed decimal, hex, and named entities", "[expandEntities]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     // &x26 is an invalid entity
     REQUIRE_THROWS_WITH(expandEntities("X &lt; &#60; &amp; # &x26;"),
                         "& outside of entities not allowed.");
 }
 
 TEST_CASE("Invalid or unterminated entities throw", "[expandEntities]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     REQUIRE_THROWS_WITH(expandEntities("&unknown; &incomplete &amp something;"),
                         "& outside of entities not allowed.");
     REQUIRE_THROWS_WITH(expandEntities("&unknown; &amp &amp; something;"),
@@ -352,7 +352,7 @@ TEST_CASE("Invalid or unterminated entities throw", "[expandEntities]") {
 }
 
 TEST_CASE("Expands \\r to \\n", "[expandEntities]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     REQUIRE(expandEntities("Some text \r other text.") ==
             std::string("Some text \n other text."));
     REQUIRE(expandEntities("Some text other text.\r") ==
@@ -360,7 +360,7 @@ TEST_CASE("Expands \\r to \\n", "[expandEntities]") {
 }
 
 TEST_CASE("Expands \\r\\n to \\n", "[expandEntities]") {
-    using namespace Templater::text;
+    using namespace onyx::text;
     REQUIRE(expandEntities("Some text \r\n other text.") ==
             std::string("Some text \n other text."));
     REQUIRE(expandEntities("Some text other text.\r\n") ==

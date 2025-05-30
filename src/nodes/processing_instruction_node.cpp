@@ -2,7 +2,7 @@
 
 #include "text.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 ProcessingInstruction::ProcessingInstruction(std::string target,
                                              std::string text,
@@ -85,4 +85,4 @@ bool ProcessingInstruction::shallowEquals(const Node& _other) const {
 
     return this->target == other->target;
 }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

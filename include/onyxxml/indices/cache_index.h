@@ -2,7 +2,7 @@
 
 #include "../index.h"
 
-namespace Templater::dynamic::index {
+namespace onyx::dynamic::index {
 
 /**
  * @brief An index which tracks whether the tree it has been given has been
@@ -72,8 +72,8 @@ class CacheIndex : public Node::Index {
      *
      * For example:
      * @code{.cpp}
-     *  using namespace Templater::dynamic::tags;
-     *  using namespace Templater::dynamic;
+     *  using namespace onyx::dynamic::tags;
+     *  using namespace onyx::dynamic;
      *
      *  GenericNode obj{
      *      "html", false,
@@ -190,4 +190,4 @@ bool CacheIndex::isCached(Function f, Args&&... args) {
 
     return this->_cache.find(hashKey) != this->_cache.end();
 }
-}  // namespace Templater::dynamic::index
+}  // namespace onyx::dynamic::index

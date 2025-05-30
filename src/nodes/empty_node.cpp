@@ -1,6 +1,6 @@
 #include "nodes/empty_node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 const std::string& EmptyNode::getTagName() const {
     static const std::string name = ".empty";
@@ -31,4 +31,4 @@ void EmptyNode::specialSerializePretty(
 }
 
 bool EmptyNode::hasSpecialSerialization() const { return true; }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

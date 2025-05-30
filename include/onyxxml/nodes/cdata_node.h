@@ -3,7 +3,7 @@
 #include "../node.h"
 #include "text_node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 /**
  * @brief A CDATA Node. Automatically escapes the invalid string "]]>" into
@@ -36,4 +36,4 @@ class CData : public Text {
     bool hasSpecialSerialization() const override;
     std::unique_ptr<Node> shallowCopy() const override;
 };
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

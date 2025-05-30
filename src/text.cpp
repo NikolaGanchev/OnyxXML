@@ -5,7 +5,7 @@
 #include <sstream>
 #include <unordered_map>
 
-namespace Templater::dynamic::text {
+namespace onyx::dynamic::text {
 
 // Escapes a given string so that it is safe for use in HTML contexts.
 // This function replaces reserved HTML characters with their corresponding
@@ -560,4 +560,4 @@ std::string replaceSequences(
 
     return escaped;
 }
-}  // namespace Templater::dynamic::text
+}  // namespace onyx::dynamic::text

@@ -2,7 +2,7 @@
 
 #include "../node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 
 /**
  * @brief A text Node
@@ -111,4 +111,4 @@ class Text : public Node, public Node::SpecialSerializable {
     std::unique_ptr<Node> shallowCopy() const override;
     virtual bool shallowEquals(const Node& other) const override;
 };
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

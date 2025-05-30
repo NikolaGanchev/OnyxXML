@@ -1,6 +1,6 @@
 #include "void_node.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 bool VoidNode::isVoid() const { return true; }
 
 VoidNode::VoidNode(std::vector<Attribute> attributes)
@@ -8,4 +8,4 @@ VoidNode::VoidNode(std::vector<Attribute> attributes)
 
 VoidNode::VoidNode(NonOwningNodeTag, std::vector<Attribute> attributes)
     : Node(NonOwning, std::move(attributes), {}) {}
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

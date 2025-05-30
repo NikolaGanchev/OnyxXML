@@ -1,6 +1,6 @@
 #include "attribute.h"
 
-namespace Templater::dynamic {
+namespace onyx::dynamic {
 Attribute::Attribute(std::string name, std::string value, bool shouldEscape)
     : name(std::move(name)),
       value(std::move(value)),
@@ -28,4 +28,4 @@ bool Attribute::operator==(const Attribute& other) const {
 bool Attribute::operator!=(const Attribute& other) const {
     return !(*this == other);
 }
-}  // namespace Templater::dynamic
+}  // namespace onyx::dynamic

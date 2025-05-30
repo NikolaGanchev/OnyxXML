@@ -2,7 +2,7 @@
 
 #include "text.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 Text::Text(std::string text, bool escapeMultiByte)
     : text(text), escapeMultiByte(escapeMultiByte), Node{} {}
 Text::Text(NonOwningNodeTag, std::string text, bool escapeMultiByte)
@@ -73,4 +73,4 @@ bool Text::shallowEquals(const Node& _other) const {
 
     return this->text == other->text;
 }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

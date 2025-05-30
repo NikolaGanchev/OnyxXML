@@ -1,6 +1,6 @@
 #include "indices/attribute_name_index.h"
 
-namespace Templater::dynamic::index {
+namespace onyx::dynamic::index {
 
 AttributeNameIndex::AttributeNameIndex(Node* root, std::string& attributeName)
     : attributeName(attributeName), Index(root), index{} {};
@@ -62,4 +62,4 @@ const std::vector<Node*> AttributeNameIndex::getByValue(
 
     return this->index[value];
 }
-}  // namespace Templater::dynamic::index
+}  // namespace onyx::dynamic::index

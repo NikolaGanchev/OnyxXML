@@ -1,6 +1,6 @@
 #include "nodes/foreach_node.h"
 
-namespace Templater::dynamic::tags {
+namespace onyx::dynamic::tags {
 ForEach::ForEach() : Node{} {}
 
 const std::string& ForEach::getTagName() const {
@@ -31,4 +31,4 @@ void ForEach::specialSerializePretty(
 }
 
 bool ForEach::hasSpecialSerialization() const { return true; }
-}  // namespace Templater::dynamic::tags
+}  // namespace onyx::dynamic::tags

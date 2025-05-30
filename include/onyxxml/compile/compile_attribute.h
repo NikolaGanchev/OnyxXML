@@ -8,7 +8,7 @@
 #include "compile_string.h"
 #include "compile_string_utils.h"
 
-namespace Templater::compile::ctags {
+namespace onyx::compile::ctags {
 /**
  * @brief A compile time Attribute struct which has a Name and a Value.
  *
@@ -51,10 +51,10 @@ struct Attribute {
     /**
      * @brief Construct a dynamic Attribute from a compile time Attribute.
      *
-     * @return std::unique_ptr<Templater::dynamic::Attribute>
+     * @return std::unique_ptr<onyx::dynamic::Attribute>
      */
-    static std::unique_ptr<Templater::dynamic::Attribute> dynamicAttribute() {
-        return std::make_unique<Templater::dynamic::Attribute>(Name, Value);
+    static std::unique_ptr<onyx::dynamic::Attribute> dynamicAttribute() {
+        return std::make_unique<onyx::dynamic::Attribute>(Name, Value);
     }
 };
 
@@ -70,6 +70,6 @@ template <typename T>
 concept isAttribute = requires(T) {
     {
         T::dynamicAttribute()
-    } -> std::same_as<std::unique_ptr<Templater::dynamic::Attribute>>;
+    } -> std::same_as<std::unique_ptr<onyx::dynamic::Attribute>>;
 };
-}  // namespace Templater::compile::ctags
+}  // namespace onyx::compile::ctags

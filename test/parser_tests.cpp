@@ -1,11 +1,11 @@
 #include <chrono>
 
 #include "catch2/catch_all.hpp"
-#include "templater.h"
+#include "onyx.h"
 
 TEST_CASE("DomParser works") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input = "<html><head></head></html>";
 
@@ -17,8 +17,8 @@ TEST_CASE("DomParser works") {
 }
 
 TEST_CASE("DomParser works with text") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<html><body><div> Hello<span></span>World! </div></body></html>";
@@ -35,8 +35,8 @@ TEST_CASE("DomParser works with text") {
 }
 
 TEST_CASE("DomParser works with a single attribute") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<html theme=\"dark\"><body><div> Hello<span></span>World! "
@@ -54,8 +54,8 @@ TEST_CASE("DomParser works with a single attribute") {
 }
 
 TEST_CASE("DomParser works with many attributes") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<html theme=\"dark\" lang='en'><body><div> Hello<span></span>World! "
@@ -73,8 +73,8 @@ TEST_CASE("DomParser works with many attributes") {
 }
 
 TEST_CASE("DomParser expands entities in text") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<html theme=\"dark\" lang='en'><body><div> 4 &#60; 5; "
@@ -91,8 +91,8 @@ TEST_CASE("DomParser expands entities in text") {
 }
 
 TEST_CASE("DomParser expands entities in attribute values") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<html theme=\"dark&apos;\" lang='en'><body><div> "
@@ -110,8 +110,8 @@ TEST_CASE("DomParser expands entities in attribute values") {
 }
 
 TEST_CASE("DomParser parses complex html") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
     using std::chrono::duration;
     using std::chrono::duration_cast;
     using std::chrono::high_resolution_clock;
@@ -230,8 +230,8 @@ TEST_CASE("DomParser parses complex html") {
 }
 
 TEST_CASE("DomParser works with comments") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<html theme=\"dark\"><!--This is a comment!--><body><div> "
@@ -252,8 +252,8 @@ TEST_CASE("DomParser works with comments") {
 }
 
 TEST_CASE("DomParser works with processing instructions") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<root lang=\"en\"><?templater doSomething 5 > 4 "
@@ -271,8 +271,8 @@ TEST_CASE("DomParser works with processing instructions") {
 }
 
 TEST_CASE("DomParser works with CDATA") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<root lang=\"en\"><![CDATA[<someElement> This is some literal text, "
@@ -290,8 +290,8 @@ TEST_CASE("DomParser works with CDATA") {
 }
 
 TEST_CASE("DomParser works with XML declarations") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input = "<?xml version=\"1.0\"?>";
 
@@ -307,8 +307,8 @@ TEST_CASE("DomParser works with XML declarations") {
 }
 
 TEST_CASE("DomParser works with XML declarations with encoding") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input = "<?xml version=\"1.1\" encoding=\"ISO-8859-1\"?>";
 
@@ -322,8 +322,8 @@ TEST_CASE("DomParser works with XML declarations with encoding") {
 }
 
 TEST_CASE("DomParser works with XML declarations with standalone") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input = "<?xml version=\"1.0\" standalone=\"yes\"?>";
 
@@ -337,8 +337,8 @@ TEST_CASE("DomParser works with XML declarations with standalone") {
 }
 
 TEST_CASE("DomParser works with DOCTYPE") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<!DOCTYPE html><html theme=\"dark\"><body><div> "
@@ -360,8 +360,8 @@ TEST_CASE("DomParser works with DOCTYPE") {
 }
 
 TEST_CASE("DomParser parses unicode") {
-    using namespace Templater::tags;
-    using namespace Templater::parser;
+    using namespace onyx::tags;
+    using namespace onyx::parser;
 
     std::string input =
         "<?xml version=\"1.0\" "
@@ -391,28 +391,28 @@ TEST_CASE("DomParser parses unicode") {
 }
 
 TEST_CASE("DomParser throws \"Invalid end after tag open\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag>   \n\t   ";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Unclosed tags left");
 }
 
 TEST_CASE("DomParser throws \"Premature end of document after <\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end of document");
 }
 
 TEST_CASE("DomParser throws \"Premature end in processing instruction\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<?";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end of document");
 }
 
 TEST_CASE("DomParser throws \"Empty processing instruction tag name\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<? >";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid tag name");
@@ -421,7 +421,7 @@ TEST_CASE("DomParser throws \"Empty processing instruction tag name\"") {
 TEST_CASE(
     "DomParser throws \"XML declaration is only allowed at the first position "
     "in the prologue\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag></tag><?xml ?>";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -430,7 +430,7 @@ TEST_CASE(
 }
 
 TEST_CASE("DomParser throws \"Missing space after PI target\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<?pi?>";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -439,7 +439,7 @@ TEST_CASE("DomParser throws \"Missing space after PI target\"") {
 }
 
 TEST_CASE("DomParser throws \"Unterminated processing instruction\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<?pi content";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -447,7 +447,7 @@ TEST_CASE("DomParser throws \"Unterminated processing instruction\"") {
 }
 
 TEST_CASE("DomParser throws \"Unterminated comment\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<!-- comment";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -455,7 +455,7 @@ TEST_CASE("DomParser throws \"Unterminated comment\"") {
 }
 
 TEST_CASE("DomParser throws \"-- inside comment\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<!-- comment-- ->";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -463,35 +463,35 @@ TEST_CASE("DomParser throws \"-- inside comment\"") {
 }
 
 TEST_CASE("DomParser throws \"Empty tag name\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<>";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid tag name");
 }
 
 TEST_CASE("DomParser throws \"Invalid attribute name\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag =\"value\">";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid non-closing tag");
 }
 
 TEST_CASE("DomParser throws \"No equals after attribute name\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag attr>";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "No = after attribute");
 }
 
 TEST_CASE("DomParser throws \"Premature end at attribute\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag attr=";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end at attribute");
 }
 
 TEST_CASE("DomParser throws \"No quote after attribute equals\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag attr=value>";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -499,7 +499,7 @@ TEST_CASE("DomParser throws \"No quote after attribute equals\"") {
 }
 
 TEST_CASE("DomParser throws \"Improperly closed attribute value\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag attr=\"";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -507,7 +507,7 @@ TEST_CASE("DomParser throws \"Improperly closed attribute value\"") {
 }
 
 TEST_CASE("DomParser throws \"No whitespace after closing attribute quote\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag attr=\"val\"x>";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -515,7 +515,7 @@ TEST_CASE("DomParser throws \"No whitespace after closing attribute quote\"") {
 }
 
 TEST_CASE("DomParser throws \"Premature end after attribute\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag attr=\"val\"";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -523,7 +523,7 @@ TEST_CASE("DomParser throws \"Premature end after attribute\"") {
 }
 
 TEST_CASE("DomParser throws \"Double closing tag\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "</tag/>";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -531,7 +531,7 @@ TEST_CASE("DomParser throws \"Double closing tag\"") {
 }
 
 TEST_CASE("DomParser throws \"Invalid tag close after /\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag/ ";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -539,35 +539,35 @@ TEST_CASE("DomParser throws \"Invalid tag close after /\"") {
 }
 
 TEST_CASE("DomParser throws \"No tag close\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<tag attr=\"val\" x";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "No = after attribute");
 }
 
 TEST_CASE("DomParser throws \"Closing unopened tag\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<a></b>";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Closing unopened tag");
 }
 
 TEST_CASE("DomParser throws \"Closing non-existent tags\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "</a>";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Closing unopened tag");
 }
 
 TEST_CASE("DomParser throws \"Unclosed tags left\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<a><b></b>";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Unclosed tags left");
 }
 
 TEST_CASE("DomParser throws \"Premature end of CDATA section\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<![CD";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -575,7 +575,7 @@ TEST_CASE("DomParser throws \"Premature end of CDATA section\"") {
 }
 
 TEST_CASE("DomParser throws \"Invalid CDATA without ending\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<![CDATA[asdfasfasfasfasfasfasda";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -583,7 +583,7 @@ TEST_CASE("DomParser throws \"Invalid CDATA without ending\"") {
 }
 
 TEST_CASE("DomParser throws \"Premature end of DOCTYPE section\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<!DOC";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -591,7 +591,7 @@ TEST_CASE("DomParser throws \"Premature end of DOCTYPE section\"") {
 }
 
 TEST_CASE("DomParser throws \"Invalid DOCTYPE without ending\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<!DOCTYPE sdfsdfsdf";
     REQUIRE_THROWS_WITH(DomParser::parse(input),
@@ -599,14 +599,14 @@ TEST_CASE("DomParser throws \"Invalid DOCTYPE without ending\"") {
 }
 
 TEST_CASE("DomParser throws \"Tag name cannot contain '!'\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string input = "<!as";
     REQUIRE_THROWS_WITH(DomParser::parse(input), "Tag name cannot contain '!'");
 }
 
 TEST_CASE("DomParser throws \"XML declaration must include version\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string xml = "<?xml encoding=\"UTF-8\"?>";
     REQUIRE_THROWS_WITH(DomParser::parse(xml),
@@ -615,7 +615,7 @@ TEST_CASE("DomParser throws \"XML declaration must include version\"") {
 
 TEST_CASE(
     "DomParser throws \"Unsupported XML version, must be '1.0' or '1.1'\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"2.0\"?>";
     REQUIRE_THROWS_WITH(DomParser::parse(xml),
@@ -623,7 +623,7 @@ TEST_CASE(
 }
 
 TEST_CASE("DomParser throws \"No '=' after XML declaration attribute name\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string xml = "<?xml version \"1.0\"?>";
     REQUIRE_THROWS_WITH(DomParser::parse(xml),
@@ -631,7 +631,7 @@ TEST_CASE("DomParser throws \"No '=' after XML declaration attribute name\"") {
 }
 
 TEST_CASE("DomParser throws \"XML declaration attribute value not quoted\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string xml = "<?xml version=1.0?>";
     REQUIRE_THROWS_WITH(DomParser::parse(xml),
@@ -639,7 +639,7 @@ TEST_CASE("DomParser throws \"XML declaration attribute value not quoted\"") {
 }
 
 TEST_CASE("DomParser throws \"Unterminated XML declaration attribute value\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"1.0?>";
     REQUIRE_THROWS_WITH(DomParser::parse(xml),
@@ -647,7 +647,7 @@ TEST_CASE("DomParser throws \"Unterminated XML declaration attribute value\"") {
 }
 
 TEST_CASE("DomParser throws \"Invalid encoding in XML declaration\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"1.0\" encoding=\"123-UTF\"?>";
     REQUIRE_THROWS_WITH(DomParser::parse(xml),
@@ -656,7 +656,7 @@ TEST_CASE("DomParser throws \"Invalid encoding in XML declaration\"") {
 
 TEST_CASE(
     "DomParser throws \"Invalid standalone value, must be 'yes' or 'no'\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"1.0\" standalone=\"maybe\"?>";
     REQUIRE_THROWS_WITH(DomParser::parse(xml),
@@ -664,7 +664,7 @@ TEST_CASE(
 }
 
 TEST_CASE("DomParser throws \"Invalid XML declaration attribute 'extra'\"") {
-    using namespace Templater::parser;
+    using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"1.0\" extra=\"oops\"?>";
     REQUIRE_THROWS_WITH(DomParser::parse(xml),

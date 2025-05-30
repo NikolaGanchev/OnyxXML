@@ -1,6 +1,6 @@
 #include "indices/cache_index.h"
 
-namespace Templater::dynamic::index {
+namespace onyx::dynamic::index {
 CacheIndex::CacheIndex(Node* root) : Index(root), _cache{} {};
 
 bool CacheIndex::putIfNeeded(Node* node) {
@@ -17,4 +17,4 @@ bool CacheIndex::update(Node* node) {
     _cache.clear();
     return true;
 }
-}  // namespace Templater::dynamic::index
+}  // namespace onyx::dynamic::index
