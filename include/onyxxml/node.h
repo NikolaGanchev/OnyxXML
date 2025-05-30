@@ -74,7 +74,7 @@ inline constexpr NonOwningNodeTag NonOwning{};
 
 /**
  * @brief An abstract class representing an XML Node. Any Node is a tree by
- * itself. Node objects are not aware who its parent is, only if they have one.
+ * itself. Node objects are aware of their parent.
  * The Node owns and manages its children by default. By passing the NonOwning
  * tag to constructors, a non-owning Node can be created. Non-owning and owning
  * nodes cannot be mixed. Nodes cannot be copied or copy assigned. Moves are

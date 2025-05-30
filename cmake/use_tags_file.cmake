@@ -36,7 +36,7 @@ function(use_tags_file compileTarget tags_path cross_compilation)
                 COMMENT "Ensuring generated files are up-to-date"
             )
     
-            add_dependencies(samplelib generate_files)
+            add_dependencies(OnyxXML generate_files)
         else()
             add_executable(generate "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.cpp")
 
@@ -54,7 +54,7 @@ function(use_tags_file compileTarget tags_path cross_compilation)
                 COMMENT "Ensuring generated files are up-to-date"
             )
     
-            add_dependencies(samplelib generate_files)
+            add_dependencies(OnyxXML generate_files)
     
             add_dependencies(generate_files generate)
         endif()

@@ -4,7 +4,7 @@ add_executable(unit-tests)
 target_link_libraries(
     unit-tests
     PRIVATE
-        samplelib
+        OnyxXML
         Catch2::Catch2WithMain
 )
 

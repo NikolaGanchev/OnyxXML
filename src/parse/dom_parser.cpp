@@ -642,8 +642,7 @@ Arena DomParser::parseDryRun(std::string_view input) {
         throw std::invalid_argument("Unclosed tags left");
     }
 
-    return builder.build();  // first argument is temporarily nullptr until
-                             // further improvements
+    return builder.build();
 }
 
 ParseResult DomParser::parse(std::string_view input) {

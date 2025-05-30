@@ -3,12 +3,12 @@ cmake_minimum_required (VERSION 3.24)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(samplelib STATIC)
+add_library(OnyxXML STATIC)
 
-set_target_properties(samplelib PROPERTIES OUTPUT_NAME "sample")
+set_target_properties(OnyxXML PROPERTIES OUTPUT_NAME "OnyxXML")
 
 target_sources(
-    samplelib
+    OnyxXML
     PRIVATE
         "attribute.cpp"
         "node.cpp"
