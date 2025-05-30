@@ -6,6 +6,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project documentation" ON)
 
+
+set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.cpp")
+
+set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.py")
+
 #
 # Tell MSVC to build using multiple processes.
 # This may speed up compilation time significantly.
@@ -112,6 +117,7 @@ endif()
 
 # Add the src/ directory to the include path of all targets
 include_directories("include/onyxxml")
+include_directories("include/")
 
 # Executable and library targets
 add_subdirectory(src)
@@ -127,5 +133,40 @@ if(ENABLE_DOCUMENTATION)
     add_subdirectory("docs")
 endif()
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.cpp" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.cpp" COPYONLY)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.py" "${CMAKE_BINARY_DIR}/generated_tags/generate_tags_classes.py" COPYONLY)
+target_include_directories(OnyxXML
+    PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+
+install(TARGETS OnyxXML
+    EXPORT OnyxXMLTargets
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    PUBLIC_HEADER DESTINATION include/onyxxml
+)
+
+install(DIRECTORY include/ DESTINATION include)
+
+install(EXPORT OnyxXMLTargets
+    FILE OnyxXMLTargets.cmake
+    NAMESPACE OnyxXML::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OnyxXML
+)
+
+install(FILES
+    cmake/use_tags_file.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OnyxXML
+)
+
+install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.py
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OnyxXML/scripts
+)
+
+# Install the generated MyLibraryConfig.cmake
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/OnyxXMLConfig.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OnyxXML
+)

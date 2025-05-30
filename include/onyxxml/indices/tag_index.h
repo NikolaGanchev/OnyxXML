@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-#include "index.h"
+#include "../index.h"
 
 namespace Templater::dynamic::index {
 

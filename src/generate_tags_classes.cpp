@@ -53,8 +53,8 @@ void generateDynamic(const std::vector<Tag>& tags, const char* path) {
     std::ofstream cppDynamic(fullPath / "tags.cpp");
 
     headerDynamic << "#pragma once\n";
-    headerDynamic << "#include \"node.h\" \n";
-    headerDynamic << "#include \"void_node.h\" \n\n";
+    headerDynamic << "#include \"onyxxml/node.h\" \n";
+    headerDynamic << "#include \"onyxxml/void_node.h\" \n\n";
     headerDynamic << "namespace Templater::dynamic::tags {\n";
 
     cppDynamic << "#include \"tags.h\"\n\n";
@@ -140,7 +140,7 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
     std::ofstream headerCompile(fullPath / "tags.h");
 
     headerCompile << "#pragma once\n";
-    headerCompile << "#include \"compile/document_utils.h\" \n";
+    headerCompile << "#include \"onyxxml/compile/document_utils.h\" \n";
     headerCompile << "#include \"dynamic/tags.h\" \n\n";
     headerCompile << "namespace Templater::compile::ctags {\n";
 

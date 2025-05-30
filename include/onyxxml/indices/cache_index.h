@@ -1,4 +1,6 @@
-#include "index.h"
+#pragma once
+
+#include "../index.h"
 
 namespace Templater::dynamic::index {
 

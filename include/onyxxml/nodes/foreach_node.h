@@ -1,7 +1,7 @@
 #include <concepts>
 #include <cstddef>
 
-#include "node.h"
+#include "../node.h"
 
 namespace Templater::dynamic::tags {
 

@@ -22,11 +22,15 @@ function(use_tags_file compileTarget tags_path cross_compilation)
                 "${GENERATED_TAGS_CPP}")
 
         if (cross_compilation)
+            if(NOT DEFINED OnyxXML_XML_PYTHON_CODEGEN_SCRIPT OR NOT EXISTS "${OnyxXML_XML_PYTHON_CODEGEN_SCRIPT}")
+                message(FATAL_ERROR "OnyxXML: Python codegen script not found at '${OnyxXML_XML_PYTHON_CODEGEN_SCRIPT}'. Ensure OnyxXML is installed correctly.")
+            endif()
+
             add_custom_command(
                 OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
-                COMMAND "python" "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.py" "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
-                DEPENDS "${tags_path}" "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.py"
-                COMMENT "Running the generate executable to generate the html tags files"
+                COMMAND "python" "${OnyxXML_XML_PYTHON_CODEGEN_SCRIPT}" "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
+                DEPENDS "${tags_path}" "${OnyxXML_XML_PYTHON_CODEGEN_SCRIPT}"
+                COMMENT "Running the generate executable to generate the xml tags files"
                 VERBATIM
             )
 
@@ -36,15 +40,18 @@ function(use_tags_file compileTarget tags_path cross_compilation)
                 COMMENT "Ensuring generated files are up-to-date"
             )
     
-            add_dependencies(OnyxXML generate_files)
+            add_dependencies("${compileTarget}" generate_files)
         else()
-            add_executable(generate "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.cpp")
+            if(NOT DEFINED OnyxXML_XML_CPP_CODEGEN_SOURCE OR NOT EXISTS "${OnyxXML_XML_CPP_CODEGEN_SOURCE}")
+                message(FATAL_ERROR "OnyxXML: C++ codegen script not found at '${OnyxXML_XML_CPP_CODEGEN_SOURCE}'. Ensure OnyxXML is installed correctly.")
+            endif()
+            add_executable(generate "${OnyxXML_XML_CPP_CODEGEN_SOURCE}")
 
             add_custom_command(
                 OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
                 COMMAND generate "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
-                DEPENDS generate "${tags_path}" "${GENERATED_TAGS_DIRECTORY_ROOT}/generate_tags_classes.cpp"
-                COMMENT "Running the generate executable to generate the html tags files"
+                DEPENDS generate "${tags_path}" "${OnyxXML_XML_CPP_CODEGEN_SOURCE}"
+                COMMENT "Running the generate executable to generate the xml tags files"
                 VERBATIM
             )
 
@@ -54,7 +61,7 @@ function(use_tags_file compileTarget tags_path cross_compilation)
                 COMMENT "Ensuring generated files are up-to-date"
             )
     
-            add_dependencies(OnyxXML generate_files)
+            add_dependencies("${compileTarget}" generate_files)
     
             add_dependencies(generate_files generate)
         endif()

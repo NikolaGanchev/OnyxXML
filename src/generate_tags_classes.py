@@ -50,8 +50,8 @@ def generate_dynamic(tags, output_path):
     cpp_content = io.StringIO()
     
     header_content.write('#pragma once\n')
-    header_content.write('#include "node.h"\n')
-    header_content.write('#include "void_node.h"\n\n')
+    header_content.write('#include "onyxxml/node.h"\n')
+    header_content.write('#include "onyxxml/void_node.h"\n\n')
     header_content.write('namespace Templater::dynamic::tags {\n')
     
     cpp_content.write('#include "tags.h"\n\n')
@@ -115,7 +115,7 @@ def generate_compile(tags, output_path):
     
     header_content = io.StringIO()
     header_content.write('#pragma once\n')
-    header_content.write('#include "compile/document_utils.h"\n')
+    header_content.write('#include "onyxxml/compile/document_utils.h"\n')
     header_content.write('#include "dynamic/tags.h"\n\n')
     header_content.write('namespace Templater::compile::ctags {\n\n')
     
