@@ -8,9 +8,9 @@ option(OnyxXML_ENABLE_DOCUMENTATION "Specifies whether to enable building the pr
 
 option(OnyxXML_BUILD_TESTS "Build unit tests for OnyxXML" ON)
 
-set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.cpp")
+set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.cpp")
 
-set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/generate_tags_classes.py")
+set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.py")
 
 #
 # Tell MSVC to build using multiple processes.
