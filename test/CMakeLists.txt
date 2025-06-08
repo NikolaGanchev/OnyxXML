@@ -17,7 +17,7 @@ target_sources(
         "parser_tests.cpp"
 )
 
-include(../cmake/use_tags_file.cmake)
+include(../cmake/functions/use_tags_file.cmake)
 
 use_tags_file(unit-tests "${CMAKE_CURRENT_SOURCE_DIR}/tags.txt" OFF)
 

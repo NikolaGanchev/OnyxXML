@@ -8,10 +8,14 @@ option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project do
 
 
 if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    # Has parent
     if (NOT OnyxXML_BUILD_TESTING) 
         set(BUILD_TESTING OFF)
     endif()
-    # Has parent
+    if (DEFINED OnyxXML_SOURCE_DIR)
+        list(APPEND CMAKE_MODULE_PATH "${OnyxXML_SOURCE_DIR}/cmake")
+        set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
+    endif()
     set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.cpp" PARENT_SCOPE)
     set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.py" PARENT_SCOPE)
 else()
@@ -176,7 +180,7 @@ install(EXPORT OnyxXMLTargets
 )
 
 install(FILES
-    cmake/use_tags_file.cmake
+    cmake/functions/use_tags_file.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OnyxXML
 )
 
