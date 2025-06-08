@@ -8,6 +8,9 @@ option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project do
 
 
 if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    if (NOT OnyxXML_BUILD_TESTING) 
+        set(BUILD_TESTING OFF)
+    endif()
     # Has parent
     set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.cpp" PARENT_SCOPE)
     set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.py" PARENT_SCOPE)
