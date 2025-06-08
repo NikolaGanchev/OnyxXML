@@ -4,9 +4,8 @@ project ("OnyxXML" VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-option(OnyxXML_ENABLE_DOCUMENTATION "Specifies whether to enable building the project documentation" ON)
+option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project documentation" ON)
 
-option(OnyxXML_BUILD_TESTS "Build unit tests for OnyxXML" ON)
 
 set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.cpp")
 
@@ -46,13 +45,11 @@ cmake_print_variables(CMAKE_PREFIX_PATH)
 #   https://cmake.org/cmake/help/latest/module/CTest.html
 #   https://cmake.org/cmake/help/latest/command/enable_testing.html
 #   https://cmake.org/cmake/help/latest/manual/ctest.1.html
-if(OnyxXML_BUILD_TESTS)
-  include(CTest)
-endif()
+include(CTest)
 
 
 # Make Catch2 available
-if(OnyxXML_BUILD_TESTS)
+if(BUILD_TESTING)
 
   message(STATUS "Make Catch2 available...")
 
@@ -126,12 +123,12 @@ include_directories("include/")
 add_subdirectory(src)
 
 # Unit testing
-if(OnyxXML_BUILD_TESTS)
+if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
 
-if(OnyxXML_ENABLE_DOCUMENTATION)
+if(ENABLE_DOCUMENTATION)
     message(STATUS "Documentation building is enabled")
     add_subdirectory("docs")
 endif()
