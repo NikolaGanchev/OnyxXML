@@ -7,9 +7,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project documentation" ON)
 
 
-set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.cpp")
-
-set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.py")
+if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    # Has parent
+    set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.cpp" PARENT_SCOPE)
+    set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.py" PARENT_SCOPE)
+else()
+    set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.cpp")
+    set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.py")
+endif()
 
 #
 # Tell MSVC to build using multiple processes.
