@@ -11,12 +11,11 @@ if (DOXYGEN_FOUND)
     # Later on, we use configure_file to copy the file to the build directory
     # and replace all such occurrances with the corresponding variable values.
     set(DOXYFILE_PATH "${DOCUMENTATION_OUTPUT_PATH}/Doxyfile")
+    set(DOXYGEN_AWESOME_CSS_PATH "${DOCUMENTATION_OUTPUT_PATH}/doxygen-awesome.css")
 
     get_filename_component(TAGS_CLASSES_GENERATOR_PATH
                            "../src/generate_tags_classes.cpp"
                            ABSOLUTE)
-    
-    
 
     message(DEBUG "Documentation output path is \"${DOCUMENTATION_OUTPUT_PATH}\"")
     message(DEBUG "Doxyfile will be copied to \"${DOXYFILE_PATH}\"")
@@ -25,6 +24,12 @@ if (DOXYGEN_FOUND)
         "Doxyfile.in"
         "${DOXYFILE_PATH}"
         @ONLY
+    )
+
+    configure_file(
+        "./doxygen-awesome.css"
+        "${DOXYGEN_AWESOME_CSS_PATH}"
+        COPYONLY
     )
 
     # For more information on add_custom_target() check:
