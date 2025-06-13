@@ -366,12 +366,11 @@ The `Text` node escapes XML-sensitive characters by default. It has an optional 
 ```cpp
 using namespace onyx::dynamic;
 
-GenericNode custom("div", false,
+GenericNode cdiv("div", false,
     Text("😊", true) // escapeMultiByte is true
 );
 
-std::string output = custom.serialize();
-REQUIRE(output == "<div>&#x1f60a;</div>");
+REQUIRE(cdiv.serialize() == "<div>&#x1f60a;</div>");
 ```
 
 ## License
