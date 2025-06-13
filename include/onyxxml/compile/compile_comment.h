@@ -18,7 +18,7 @@ template <CompileString Str>
 struct Comment {
     /**
      * @brief The compile-time size of the Comment string. Does not account for
-     * '\0';
+     * '\0'
      *
      * @return size_t
      */

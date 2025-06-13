@@ -3,6 +3,7 @@
 #include "arena.h"
 #include "compile/compile_attribute.h"
 #include "compile/compile_comment.h"
+#include "compile/compile_generic_node.h"
 #include "compile/compile_placeholder.h"
 #include "compile/compile_text.h"
 #include "compile/placeholder_document.h"

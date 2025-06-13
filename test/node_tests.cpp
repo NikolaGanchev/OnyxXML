@@ -852,6 +852,24 @@ TEST_CASE("HTML fragment using template runtime api serializes correctly",
     CHECK(doc3 == expected);
 }
 
+TEST_CASE(
+    "GenericNode fragment using template runtime api serializes correctly",
+    "[Node]") {
+    using namespace onyx::ctags;
+
+    std::string doc3 =
+        Document<GenericNode<"li", false, Text<"1">>,
+                 GenericNode<"li", false, Text<"2">>,
+                 GenericNode<"li", false, Text<"3">>>::dynamicTree()
+            ->serializePretty("\t", true);
+    ;
+
+    std::string expected =
+        "<li>\n\t1\n</li>\n<li>\n\t2\n</li>\n<li>\n\t3\n</li>";
+
+    CHECK(doc3 == expected);
+}
+
 TEST_CASE("Complex templated runtime api html with constant tags", "[Node]") {
     using namespace onyx::ctags;
 
@@ -954,6 +972,26 @@ TEST_CASE("Comment tags are serialized correctly") {
     CHECK(doc::toString() ==
           "<html><head></head><!--This is a comment!--><body><img "
           "src=\"img.jpg\" /></body></html>");
+}
+
+TEST_CASE("GenericNode non-void compile tag is serialized correctly") {
+    using namespace onyx::ctags;
+
+    using doc = Document<html<
+        head<>, GenericNode<"body", false, img<Attribute<"src", "img.jpg">>>>>;
+
+    CHECK(doc::toString() ==
+          "<html><head></head><body><img src=\"img.jpg\" /></body></html>");
+}
+
+TEST_CASE("GenericNode void compile tag is serialized correctly") {
+    using namespace onyx::ctags;
+
+    using doc = Document<html<
+        head<>, body<GenericNode<"img", true, Attribute<"src", "img.jpg">>>>>;
+
+    CHECK(doc::toString() ==
+          "<html><head></head><body><img src=\"img.jpg\" /></body></html>");
 }
 
 TEST_CASE("UTF-8 text strings are cut off properly") {
