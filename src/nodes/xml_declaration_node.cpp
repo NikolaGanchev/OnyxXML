@@ -159,7 +159,7 @@ void XmlDeclaration::specialSerializePretty(
     bool sortAttributes) const {
     result << "<?xml version=\""
            << text::escape(this->versionInfo, this->shouldEscapeMultiByte())
-           << "\" "
+           << "\""
            << (this->hadEncoding
                    ? (" encoding=\"" +
                       text::escape(this->encoding,

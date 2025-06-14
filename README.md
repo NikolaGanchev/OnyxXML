@@ -388,8 +388,8 @@ It is also important to note that the compile-time `Text` and `Attribute` struct
 
 ### Other Provided Nodes
 
-Nodes are provided for some special XML constructs - `CDATA`, `DOCTYPE`, processing instructions, XML declaration, comments. 
-`EmptyNode` is also provided. It acts as a dummy root for fragments that have multiple sibling roots.
+Nodes are provided for some special XML constructs - `CDATA`, `DOCTYPE`, processing instructions, XML declaration, comments. Equivalents are also available for the Compile API. 
+`EmptyNode` is also provided for the Dynamic API. It acts as a dummy root for fragments that have multiple sibling roots. This role is served by `Document` in the Compile API.
 
 ## License
 

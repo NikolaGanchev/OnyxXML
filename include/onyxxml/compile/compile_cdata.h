@@ -4,31 +4,31 @@
 #include <string>
 #include <string_view>
 
-#include "../nodes/comment_node.h"
+#include "../nodes/cdata_node.h"
 #include "compile_string.h"
 #include "compile_string_utils.h"
 
 namespace onyx::compile::ctags {
 /**
- * @brief A compile time Comment struct.
+ * @brief A compile time CDATA struct.
  *
  * @tparam Str
  */
 template <CompileString Str>
-struct Comment {
+struct CDATA {
     /**
-     * @brief The compile-time size of the Comment string. Does not account for
+     * @brief The compile-time size of the CDATA string. Does not account for
      * '\0'
      *
      * @return size_t
      */
     static consteval size_t size() {
-        return std::string_view(Str.value).size() + 4 +
-               3;  // added size for <!-- (4) and --> (3)
+        return std::string_view(Str.value).size() + 9 +
+               3;  // added size for <![CDATA[ (9) and ]]> (3)
     }
 
     /**
-     * @brief The Comment string; evaluated at compile-time. Does not do any
+     * @brief The CData string; evaluated at compile-time. Does not do any
      * escaping.
      *
      * @return std::array<char, size() + 1>
@@ -36,22 +36,22 @@ struct Comment {
     static consteval std::array<char, size() + 1> serialize() {
         std::array<char, size() + 1> result = {};
         size_t index =
-            CompileStringUtils::placeStringInArray(result, "<!--", 0);
+            CompileStringUtils::placeStringInArray(result, "<![CDATA[", 0);
         index =
             CompileStringUtils::placeStringInArray(result, Str.value, index);
-        index = CompileStringUtils::placeStringInArray(result, "-->", index);
+        index = CompileStringUtils::placeStringInArray(result, "]]>", index);
         index = CompileStringUtils::placeStringInArray(result, "\0", index);
         return result;
     }
 
     /**
-     * @brief Construct a dynamic Comment Node from a compile-time Comment
+     * @brief Construct a dynamic CData Node from a compile-time CDATA
      * struct.
      *
      * @return std::unique_ptr<onyx::dynamic::Node>
      */
     static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {
-        return std::make_unique<onyx::dynamic::tags::Comment>(Str);
+        return std::make_unique<onyx::dynamic::tags::CData>(Str);
     }
 };
 }  // namespace onyx::compile::ctags
