@@ -368,7 +368,7 @@ using MyDoc = Document<
 ```
 
 ### Text Handling
-The `Text` node escapes XML-sensitive characters by default. It has an optional second boolean argument (`escapeMultiByte`), which, when set to `true`, converts Unicode characters (e.g., emojis) into their numeric entity references; by default (`false`), original Unicode is preserved. This is included for legacy systems, where Unicode may cause security vulnerabilities. The `Attribute` class also escapes attribute values by default upon serialization.
+The `Text` node escapes XML-sensitive characters by default. It has an optional second boolean argument (`escapeMultiByte`), which, when set to `true`, converts Unicode characters (e.g., emojis) into their numeric entity references; by default (`false`), original Unicode is preserved. This is included for legacy systems, where Unicode may cause security vulnerabilities. The `Attribute` class escapes by default, which can be turned off using a constructor parameter and has the same Unicode escaping functionality which is false by default and can be turned on using a second constructor parameter.
 
 ```cpp
 using namespace onyx::dynamic;
@@ -380,7 +380,9 @@ GenericNode cdiv("div", false,
 REQUIRE(cdiv.serialize() == "<div>&#x1f60a;</div>");
 ```
 
-However, it is important to note that the compile-time `Text` and `Attribute` structs do not provide any escaping. What you write is what you get.
+If you need raw text, you may use the `__DangerousRawText` Node.
+
+It is also important to note that the compile-time `Text` and `Attribute` structs do not provide any escaping. What you write is what you get.
 
 ## License
 

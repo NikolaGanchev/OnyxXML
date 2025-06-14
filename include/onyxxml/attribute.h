@@ -29,6 +29,11 @@ class Attribute {
      */
     bool _shouldEscape;
     /**
+     * @brief Whether unicode sequences should be escaped. Set at construction.
+     *
+     */
+    bool _shouldEscapeMultiByte;
+    /**
      * @brief Set the Value string
      *
      */
@@ -51,9 +56,11 @@ class Attribute {
      * shouldEscape is used by consumers of the class to decide whether the
      * value should be escaped and Has no effect on the constructed object's
      * behaviour.
+     * @param shouldEscapeMultiByte Signifies if multi-byte sequences should be escaped. For use with legacy systems. False by default. Even if true, no escaping is to be done unless shouldEscape is also true.
      */
     explicit Attribute(std::string name, std::string value,
-                       bool shouldEscape = true);
+                       bool shouldEscape = true,
+                        bool shouldEscapeMultiByte = false);
 
     /**
      * @brief Construct a new Attribute object with an empty value.
@@ -61,8 +68,8 @@ class Attribute {
      * shouldEscape() will return true. This is due to the possibility that the
      * object is later modified. If an Attribute object is needed which has an
      * empty value and which is marked as safe,
-     * @ref Attribute(std::string, std::string, bool shouldEscape)
-     * "Attribute(std::string name, \"\", bool shouldEscape = true)" should be
+     * @ref Attribute(std::string, std::string, bool shouldEscape, bool shouldEscapeMultiByte)
+     * "Attribute(std::string name, \"\", bool shouldEscape = false, bool shouldEscapeMultiByte = false)" should be
      * used instead.
      *
      * @param name The name of the attribute
@@ -90,6 +97,14 @@ class Attribute {
      * @return false The value is safe and should not be escaped
      */
     bool shouldEscape() const;
+
+    /**
+     * @brief Get whether multi-byte sequences should be escaped
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool shouldEscapeMultiByte() const;
 
     /**
      * @brief Compares two Attributes by their name and value

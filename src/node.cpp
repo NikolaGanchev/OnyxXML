@@ -94,7 +94,14 @@ void Node::takeOverIndices(Node& other) {
 }
 
 void Node::processConstructorAttribute(Attribute&& attribute) {
-    this->operator[](attribute.getName()) = attribute.getValue();
+    for (auto& attr : this->attributes) {
+        if (attr.getName() == attribute.getName()) {
+            processConstructorObjectMoveCleanup();
+            throw std::invalid_argument("Adding duplicate Attribute");
+        }
+    }
+
+    this->attributes.push_back(attribute);
 }
 
 void Node::processConstructorObjectMoveCleanup() {
@@ -622,7 +629,7 @@ std::string Node::serialize() const {
 
         for (const auto& attr : attributes) {
             result << " " << attr->getName() << "=\""
-                   << (attr->shouldEscape() ? text::escape(attr->getValue())
+                   << (attr->shouldEscape() ? text::escape(attr->getValue(), attr->shouldEscapeMultiByte())
                                             : attr->getValue())
                    << "\"";
         }
@@ -711,7 +718,7 @@ std::string Node::serializePretty(const std::string& indentationSequence,
 
         for (const auto& attr : attributes) {
             result << " " << attr->getName() << "=\""
-                   << (attr->shouldEscape() ? text::escape(attr->getValue())
+                   << (attr->shouldEscape() ? text::escape(attr->getValue(), attr->shouldEscapeMultiByte())
                                             : attr->getValue())
                    << "\"";
         }

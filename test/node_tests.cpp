@@ -29,6 +29,12 @@ TEST_CASE("Attribute remove works", "[Node]") {
     CHECK(!obj.hasAttribute("lang"));
 }
 
+TEST_CASE("Constructor throws on Attribute repetition", "[Node]") {
+    using namespace onyx::tags;
+
+    REQUIRE_THROWS_WITH(GenericNode("div", false, Attribute("name", "1"), Attribute("name", "2")), "Adding duplicate Attribute");
+}
+
 TEST_CASE("Vector constructor works", "[Node]") {
     using namespace onyx::tags;
 
@@ -1054,6 +1060,53 @@ TEST_CASE("Text properly escapes html", "[dynamic::tags::Text]") {
         "Awesome Website&lt;/p&gt;&lt;/div&gt;\n</div>";
 
     CHECK(d.serializePretty("\t", true) == expected);
+}
+
+TEST_CASE("Attribute properly escapes html", "[dynamic::Attribute]") {
+    using namespace onyx::tags;
+
+    std::string textToEscape =
+        "<div class=\"content\"><h1>Welcome to <span style=\"color: red;\">My "
+        "Awesome Website</span></h1><p>Today's date is: "
+        "<script>alert('Hacked!');</script></p><a "
+        "href=\"https://example.com?param=<script>evil()</script>\">Click "
+        "here</a><p>&copy; 2025 My Awesome Website</p></div>";
+
+    cdiv d{Attribute("textToEscape", textToEscape, true)};
+
+    std::string expected =
+        "<div textToEscape=\"&lt;div "
+        "class=&quot;content&quot;&gt;&lt;h1&gt;Welcome to &lt;span "
+        "style=&quot;color: red;&quot;&gt;My Awesome "
+        "Website&lt;/span&gt;&lt;/h1&gt;&lt;p&gt;Today&#39;s date is: "
+        "&lt;script&gt;alert(&#39;Hacked!&#39;);&lt;/script&gt;&lt;/p&gt;&lt;a "
+        "href=&quot;https://example.com?param=&lt;script&gt;evil()&lt;/"
+        "script&gt;&quot;&gt;Click here&lt;/a&gt;&lt;p&gt;&amp;copy; 2025 My "
+        "Awesome Website&lt;/p&gt;&lt;/div&gt;\"></div>";
+
+    CHECK(d.serialize() == expected);
+}
+
+TEST_CASE("Attribute properly escapes multi-byte", "[dynamic::Attribute]") {
+    using namespace onyx::tags;
+
+    cdiv d{Attribute("textToEscape", "😊", true, true)};
+
+    std::string expected =
+        "<div textToEscape=\"&#x1f60a;\"></div>";
+
+    CHECK(d.serialize() == expected);
+}
+
+TEST_CASE("Attribute does not escape values when shouldEscape() is false", "[dynamic::Attribute]") {
+    using namespace onyx::tags;
+
+    cdiv d{Attribute("textToEscape", "\"", false)};
+
+    std::string expected =
+        "<div textToEscape=\"\"\"></div>";
+
+    CHECK(d.serialize() == expected);
 }
 
 TEST_CASE("Text properly escapes unicode when multi-byte escaping is enabled",
