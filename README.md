@@ -22,6 +22,7 @@ OnyxXML is a C++ library designed to streamline XML document construction, parsi
    - [DOM Parser](#dom-parser)
    - [GenericNode API](#genericnode-api)
    - [Text Handling](#text-handling)
+   - [Other Provided Nodes](#other-provided-nodes)
 6. [License](#license)
 7. [Roadmap](#roadmap)
 
@@ -383,6 +384,12 @@ REQUIRE(cdiv.serialize() == "<div>&#x1f60a;</div>");
 If you need raw text, you may use the `__DangerousRawText` Node.
 
 It is also important to note that the compile-time `Text` and `Attribute` structs do not provide any escaping. What you write is what you get.
+
+
+### Other Provided Nodes
+
+Nodes are provided for some special XML constructs - `CDATA`, `DOCTYPE`, processing instructions, XML declaration, comments. 
+`EmptyNode` is also provided. It acts as a dummy root for fragments that have multiple sibling roots.
 
 ## License
 
