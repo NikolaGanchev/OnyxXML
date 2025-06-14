@@ -37,7 +37,7 @@ if (DOXYGEN_FOUND)
     # Here is what the ALL option does:
     #   "Indicate that this target should be added to the default build target so that it will be run every time"
     add_custom_target(
-        documentation_target
+        OnyxXML_documentation_target
         ALL
         COMMAND "${DOXYGEN_EXECUTABLE}" "${DOXYFILE_PATH}"
         WORKING_DIRECTORY "${DOCUMENTATION_OUTPUT_PATH}"

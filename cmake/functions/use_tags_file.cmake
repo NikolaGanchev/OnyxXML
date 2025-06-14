@@ -35,35 +35,35 @@ function(use_tags_file compileTarget tags_path cross_compilation)
             )
 
             add_custom_target(
-                generate_files ALL
+                OnyxXML_generate_files ALL
                 DEPENDS "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
                 COMMENT "Ensuring generated files are up-to-date"
             )
     
-            add_dependencies("${compileTarget}" generate_files)
+            add_dependencies("${compileTarget}" OnyxXML_generate_files)
         else()
             if(NOT DEFINED OnyxXML_XML_CPP_CODEGEN_SOURCE OR NOT EXISTS "${OnyxXML_XML_CPP_CODEGEN_SOURCE}")
                 message(FATAL_ERROR "OnyxXML: C++ codegen script not found at '${OnyxXML_XML_CPP_CODEGEN_SOURCE}'. Ensure OnyxXML is installed correctly.")
             endif()
-            add_executable(generate "${OnyxXML_XML_CPP_CODEGEN_SOURCE}")
+            add_executable(OnyxXML_generate "${OnyxXML_XML_CPP_CODEGEN_SOURCE}")
 
             add_custom_command(
                 OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
-                COMMAND generate "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
-                DEPENDS generate "${tags_path}" "${OnyxXML_XML_CPP_CODEGEN_SOURCE}"
+                COMMAND OnyxXML_generate "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
+                DEPENDS OnyxXML_generate "${tags_path}" "${OnyxXML_XML_CPP_CODEGEN_SOURCE}"
                 COMMENT "Running the generate executable to generate the xml tags files"
                 VERBATIM
             )
 
             add_custom_target(
-                generate_files ALL
+                OnyxXML_generate_files ALL
                 DEPENDS "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
                 COMMENT "Ensuring generated files are up-to-date"
             )
     
-            add_dependencies("${compileTarget}" generate_files)
+            add_dependencies("${compileTarget}" OnyxXML_generate_files)
     
-            add_dependencies(generate_files generate)
+            add_dependencies(OnyxXML_generate_files OnyxXML_generate)
         endif()
         
     else()
