@@ -103,7 +103,7 @@ auto,0,dauto,cauto
 ```
 
 ## Documentation
-The library is documented via Doxygen comments. The HTML documentation is built upon building the library. If the library is built independently (which also happens when added via `FetchContent`), the docs are in `<build-folder>/docs/html`. If the library is installed, they will be in `<install-folder>/share/doc/OnyxXML`.
+The library is documented via Doxygen comments. The HTML documentation is built upon building the library, but requires that Doxygen is installed on the system. If the library is built independently (which also happens when added via `FetchContent`), the docs are in `<build-folder>/docs/html`. If the library is installed, they will be in `<install-folder>/share/doc/OnyxXML`.
 
 ## Usage Examples
 
