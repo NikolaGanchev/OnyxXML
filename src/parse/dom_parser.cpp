@@ -168,5 +168,3 @@ ParseResult DomParser::parse(std::string_view input) {
     return ParseResult{std::move(arena), root};
 }
 }  // namespace onyx::dynamic::parser
-
-#undef INCREMENT_POS_IF_EQUALS_OR_THROW
