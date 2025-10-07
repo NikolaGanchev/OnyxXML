@@ -10,6 +10,9 @@ if (DOXYGEN_FOUND)
     # you can specify the path to the sources as @CMAKE_SOURCE_DIR@/src
     # Later on, we use configure_file to copy the file to the build directory
     # and replace all such occurrances with the corresponding variable values.
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        set(DOCUMENTATION_OUTPUT_PATH "${CMAKE_BINARY_DIR}/docs")
+    endif()
     set(DOXYFILE_PATH "${DOCUMENTATION_OUTPUT_PATH}/Doxyfile")
     set(DOXYGEN_AWESOME_CSS_PATH "${DOCUMENTATION_OUTPUT_PATH}/doxygen-awesome.css")
 
