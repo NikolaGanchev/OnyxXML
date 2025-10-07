@@ -2,6 +2,24 @@
 #include "parse/_parse_macro.h"
 
 namespace onyx::dynamic::parser {
+ParseResult::ParseResult() : arena{0}, root{nullptr} {}
+
+ParseResult::ParseResult(Arena arena, Node* root)
+    : arena{std::move(arena)}, root{root} {}
+
+ParseResult::ParseResult(ParseResult&& other) : arena{std::move(other.arena)} {
+    this->root = other.root;
+    other.root = nullptr;
+}
+
+ParseResult& ParseResult::operator=(ParseResult&& other) {
+    this->arena = std::move(other.arena);
+    this->root = other.root;
+    other.root = nullptr;
+
+    return *this;
+}
+
 Arena DomParser::parseDryRun(std::string_view input) {
     std::vector<size_t> stack;
 

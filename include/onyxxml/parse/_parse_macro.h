@@ -12,24 +12,6 @@
 #include "text.h"
 
 namespace onyx::dynamic::parser {
-ParseResult::ParseResult() : arena{0}, root{nullptr} {}
-
-ParseResult::ParseResult(Arena arena, Node* root)
-    : arena{std::move(arena)}, root{root} {}
-
-ParseResult::ParseResult(ParseResult&& other) : arena{std::move(other.arena)} {
-    this->root = other.root;
-    other.root = nullptr;
-}
-
-ParseResult& ParseResult::operator=(ParseResult&& other) {
-    this->arena = std::move(other.arena);
-    this->root = other.root;
-    other.root = nullptr;
-
-    return *this;
-}
-
 bool isWhitespace(const char pos) {
     return (pos == ' ' || pos == '\t' || pos == '\r' || pos == '\n');
 }
