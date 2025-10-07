@@ -6,3 +6,4 @@ CMakeUserPresets.json
 .idea/
 cmake-build-debug
 .DS_Store
+.cache/
