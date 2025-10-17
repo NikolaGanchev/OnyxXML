@@ -29,6 +29,7 @@ target_sources(
         "nodes/foreach_node.cpp"
         "nodes/if_node.cpp"
         "parse/dom_parser.cpp"
+        "parse/sax_parser.cpp"
         "node_handle.cpp"
         "arena.cpp"
         "nodes/xml_declaration_node.cpp"

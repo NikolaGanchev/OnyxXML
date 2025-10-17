@@ -1,3 +1,5 @@
+#pragma once
+
 #include <utility>
 #include <vector>
 
@@ -12,11 +14,11 @@
 #include "text.h"
 
 namespace onyx::dynamic::parser {
-bool isWhitespace(const char pos) {
+bool inline isWhitespace(const char pos) {
     return (pos == ' ' || pos == '\t' || pos == '\r' || pos == '\n');
 }
 
-const char* skipWhitespace(const char* pos) {
+const inline char* skipWhitespace(const char* pos) {
     while (isWhitespace(*pos)) {
         pos++;
     }
@@ -24,7 +26,7 @@ const char* skipWhitespace(const char* pos) {
     return pos;
 }
 
-uint32_t handleUnicodeChar(const char*& ch) {
+uint32_t inline handleUnicodeChar(const char*& ch) {
     uint32_t codepoint = text::getUnicodeCodepoint(ch);
     if (((unsigned char)*ch >> 5) == 0x6) {  // 2-byte sequence
         if (*(ch + 1) != '\0') {
@@ -44,7 +46,7 @@ uint32_t handleUnicodeChar(const char*& ch) {
     return codepoint;
 }
 
-bool isNameStartChar(const char*& ch) {
+bool inline isNameStartChar(const char*& ch) {
     if ((unsigned char)*ch < 128) [[likely]] {
         return (*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z') ||
                *ch == '_' || *ch == ':';
@@ -64,7 +66,7 @@ bool isNameStartChar(const char*& ch) {
            (codepoint >= 0x10000 && codepoint <= 0xEFFFF);
 }
 
-bool isNameChar(const char*& ch) {
+bool inline isNameChar(const char*& ch) {
     if ((unsigned char)*ch < 128) [[likely]] {
         return (*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z') ||
                (*ch >= '0' && *ch <= '9') || *ch == '_' || *ch == ':' ||
@@ -87,7 +89,7 @@ bool isNameChar(const char*& ch) {
            (codepoint >= 0x203F && codepoint <= 0x2040);
 }
 
-std::string_view readName(const char* pos) {
+std::string_view inline readName(const char* pos) {
     const char* localPos = pos;
     if (!isNameStartChar(localPos)) return std::string_view();
     localPos++;

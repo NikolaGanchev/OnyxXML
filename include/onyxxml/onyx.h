@@ -30,6 +30,7 @@
 #include "nodes/text_node.h"
 #include "nodes/xml_declaration_node.h"
 #include "parse/dom_parser.h"
+#include "parse/sax_parser.h"
 #include "text.h"
 #include "void_node.h"
 

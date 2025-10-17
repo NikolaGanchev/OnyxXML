@@ -670,3 +670,111 @@ TEST_CASE("DomParser throws \"Invalid XML declaration attribute 'extra'\"") {
     REQUIRE_THROWS_WITH(DomParser::parse(xml),
                         "Invalid XML declaration attribute 'extra'");
 }
+
+#include <iostream>
+
+class SaxListenerLogger : public virtual onyx::parser::SaxListener {
+   private:
+    int eventCount = 0;
+
+   public:
+    void onStart() override {
+        std::cout << "Start\n";
+        eventCount++;
+    }
+
+    void onText(std::string text) override {
+        std::cout << "Text: " << text << "\n";
+        eventCount++;
+    }
+
+    void onComment(std::string text) override {
+        std::cout << "Comment: " << text << "\n";
+        eventCount++;
+    }
+
+    void onCData(std::string text) override {
+        std::cout << "CData: " << text << "\n";
+        eventCount++;
+    }
+
+    void onInstruction(std::string tag, std::string instruction) override {
+        std::cout << "Instruction Tag: " << tag
+                  << "\n\tInstruction: " << instruction << "\n";
+        eventCount++;
+    }
+
+    void onTagOpen(std::string name, bool isSelfClosing,
+                   std::vector<onyx::dynamic::Attribute> attributes) override {
+        std::cout << "Tag open: " << name
+                  << "\n\tisSelfClosing: " << isSelfClosing << "\n";
+        for (size_t i = 0; i < attributes.size(); i++) {
+            std::cout << "\tAttribute Name: " << attributes[i].getName()
+                      << " | Attribute Value: " << attributes[i].getValue()
+                      << "\n";
+        }
+
+        eventCount++;
+    }
+
+    void onTagClose(std::string name) override {
+        std::cout << "Tag close: " << name << "\n";
+
+        eventCount++;
+    }
+
+    void onXMLDeclaration(std::string version, std::string encoding,
+                          bool hasEncoding, bool isStandalone,
+                          bool hasStandalone) override {
+        std::cout << "XML Declaration: \t" << "\tVersion: " << version
+                  << "\n\tEncoding: " << encoding
+                  << "\n\tisStandalone: " << isStandalone << "\n";
+        eventCount++;
+    }
+
+    void onDoctype(std::string text) override {
+        std::cout << "Doctype: " << text << "\n";
+        eventCount++;
+    }
+
+    void onException(std::exception& e) override {
+        std::cout << "Exception: " << e.what() << "\n";
+        eventCount++;
+    }
+
+    void onEnd() override { eventCount++; }
+
+    int getEventCount() { return eventCount; }
+};
+
+TEST_CASE("SAXParser parses complex XML") {
+    using namespace onyx::parser;
+
+    std::string input =
+        "<html lang=\"en\" theme=\"dark\"><head><meta charset=\"UTF-8\"/><meta "
+        "name=\"viewport\" content=\"width=device-width, "
+        "initial-scale=1.0\"/><title>Complex Test Page</title><link "
+        "rel=\"stylesheet\" "
+        "href=\"/styles/main.css\"/></head><body><header><nav><ul><li><a "
+        "href=\"#home\">Home</a></li><li><a href=\"#about\">About "
+        "Us</a></li></ul></nav></header><main><section "
+        "id=\"introduction\"><h1>Introduction</h1><p>Welcome to the complex "
+        "HTML structure test case.</p><p>This test includes various nested "
+        "elements, attributes, and content.</p><form "
+        "name=\"contact-form\"><label for=\"name\">Your Name:</label><input "
+        "type=\"text\" id=\"name\" name=\"name\"/><label for=\"email\">Your "
+        "Email:</label><input type=\"email\" id=\"email\" "
+        "name=\"email\"/><button "
+        "type=\"submit\">Submit</button></form></section><section "
+        "id=\"features\"><h2>Features</h2><ul><li>Feature 1</li><li>Feature "
+        "2</li><li>Feature 3</li></ul><p>These are the key features of the "
+        "application.</p></section></main><footer><p>© 2025 Complex HTML Test "
+        "Page</p><a href=\"https://www.example.com\">Privacy "
+        "Policy</a></footer></body></html>";
+
+    SaxListenerLogger listener;
+    SaxParser parser(listener);
+
+    parser.parse(input);
+    REQUIRE(listener.getEventCount() == 0);
+}
