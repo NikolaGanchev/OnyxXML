@@ -30,6 +30,7 @@ target_sources(
         "nodes/if_node.cpp"
         "parse/dom_parser.cpp"
         "parse/sax_parser.cpp"
+        "parse/helpers.cpp"
         "node_handle.cpp"
         "arena.cpp"
         "nodes/xml_declaration_node.cpp"
