@@ -676,40 +676,43 @@ TEST_CASE("DomParser throws \"Invalid XML declaration attribute 'extra'\"") {
 class SaxListenerLogger : public virtual onyx::parser::SaxListener {
    private:
     int eventCount = 0;
+    std::ostream& os;
 
    public:
+    SaxListenerLogger(std::ostream& os): os(os) {}
+
     void onStart() override {
-        std::cout << "Start\n";
+        os << "Start\n";
         eventCount++;
     }
 
     void onText(std::string text) override {
-        std::cout << "Text: " << text << "\n";
+        os << "Text: " << text << "\n";
         eventCount++;
     }
 
     void onComment(std::string text) override {
-        std::cout << "Comment: " << text << "\n";
+        os << "Comment: " << text << "\n";
         eventCount++;
     }
 
     void onCData(std::string text) override {
-        std::cout << "CData: " << text << "\n";
+        os << "CData: " << text << "\n";
         eventCount++;
     }
 
     void onInstruction(std::string tag, std::string instruction) override {
-        std::cout << "Instruction Tag: " << tag
+        os << "Instruction Tag: " << tag
                   << "\n\tInstruction: " << instruction << "\n";
         eventCount++;
     }
 
     void onTagOpen(std::string name, bool isSelfClosing,
                    std::vector<onyx::dynamic::Attribute> attributes) override {
-        std::cout << "Tag open: " << name
+        os << "Tag open: " << name
                   << "\n\tisSelfClosing: " << isSelfClosing << "\n";
         for (size_t i = 0; i < attributes.size(); i++) {
-            std::cout << "\tAttribute Name: " << attributes[i].getName()
+            os << "\tAttribute Name: " << attributes[i].getName()
                       << " | Attribute Value: " << attributes[i].getValue()
                       << "\n";
         }
@@ -718,7 +721,7 @@ class SaxListenerLogger : public virtual onyx::parser::SaxListener {
     }
 
     void onTagClose(std::string name) override {
-        std::cout << "Tag close: " << name << "\n";
+        os << "Tag close: " << name << "\n";
 
         eventCount++;
     }
@@ -726,19 +729,19 @@ class SaxListenerLogger : public virtual onyx::parser::SaxListener {
     void onXMLDeclaration(std::string version, std::string encoding,
                           bool hasEncoding, bool isStandalone,
                           bool hasStandalone) override {
-        std::cout << "XML Declaration: \t" << "\tVersion: " << version
+        os << "XML Declaration: \t" << "\tVersion: " << version
                   << "\n\tEncoding: " << encoding
                   << "\n\tisStandalone: " << isStandalone << "\n";
         eventCount++;
     }
 
     void onDoctype(std::string text) override {
-        std::cout << "Doctype: " << text << "\n";
+        os << "Doctype: " << text << "\n";
         eventCount++;
     }
 
     void onException(std::exception& e) override {
-        std::cout << "Exception: " << e.what() << "\n";
+        os << "Exception: " << e.what() << "\n";
         eventCount++;
     }
 
@@ -772,9 +775,10 @@ TEST_CASE("SAXParser parses complex XML") {
         "Page</p><a href=\"https://www.example.com\">Privacy "
         "Policy</a></footer></body></html>";
 
-    SaxListenerLogger listener;
+    std::stringstream str;
+    SaxListenerLogger listener(str);
     SaxParser parser(listener);
 
     parser.parse(input);
-    REQUIRE(listener.getEventCount() == 0);
+    REQUIRE(listener.getEventCount() == 53);
 }
