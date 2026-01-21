@@ -342,7 +342,6 @@ TEST_CASE("Index is invalidated correctly", "[Index]") {
 
         ptr = index::createIndexSharedPointer<index::AttributeNameIndex>(&obj,
                                                                          "id");
-        ;
     }
 
     auto result = ptr->getByValue("3");

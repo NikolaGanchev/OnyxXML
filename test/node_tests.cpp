@@ -32,7 +32,9 @@ TEST_CASE("Attribute remove works", "[Node]") {
 TEST_CASE("Constructor throws on Attribute repetition", "[Node]") {
     using namespace onyx::tags;
 
-    REQUIRE_THROWS_WITH(GenericNode("div", false, Attribute("name", "1"), Attribute("name", "2")), "Adding duplicate Attribute");
+    REQUIRE_THROWS_WITH(GenericNode("div", false, Attribute("name", "1"),
+                                    Attribute("name", "2")),
+                        "Adding duplicate Attribute");
 }
 
 TEST_CASE("Vector constructor works", "[Node]") {
@@ -876,26 +878,40 @@ TEST_CASE(
     CHECK(doc3 == expected);
 }
 
-
 TEST_CASE("Special templated runtime api tags are serialized correctly") {
     using namespace onyx::ctags;
-    std::string doc = Document<
-        XmlDeclaration<"1.0", "UTF-8", "no">,
-        ProcessingInstruction<"xml-stylesheet", "type=\"text/xsl\" href=\"style.xsl\"">,
-        DOCTYPE<"library SYSTEM \"library.dtd\"">,
-        GenericNode<"library", false,
-            GenericNode<"book", false, Attribute<"id","bk101">,
-                GenericNode<"title", false, Text<"The Great Adventure">>,
-                GenericNode<"author", false, Text<"John Doe">>,
-                GenericNode<"genre", false, CDATA<"Fantasy & Adventure">>,
-                ProcessingInstruction<"editor", "instructions=\"Review for historical accuracy\"">,
-                GenericNode<"publication_year", false, Text<"2023">>
-            >
-        >
-    >::dynamicTree()->serializePretty("\t", false);
+    std::string doc =
+        Document<
+            XmlDeclaration<"1.0", "UTF-8", "no">,
+            ProcessingInstruction<"xml-stylesheet",
+                                  "type=\"text/xsl\" href=\"style.xsl\"">,
+            DOCTYPE<"library SYSTEM \"library.dtd\"">,
+            GenericNode<
+                "library", false,
+                GenericNode<
+                    "book", false, Attribute<"id", "bk101">,
+                    GenericNode<"title", false, Text<"The Great Adventure">>,
+                    GenericNode<"author", false, Text<"John Doe">>,
+                    GenericNode<"genre", false, CDATA<"Fantasy & Adventure">>,
+                    ProcessingInstruction<"editor",
+                                          "instructions=\"Review for "
+                                          "historical accuracy\"">,
+                    GenericNode<"publication_year", false, Text<"2023">>>>>::
+            dynamicTree()
+                ->serializePretty("\t", false);
 
     CHECK(doc ==
-          "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?>\n<!DOCTYPE library SYSTEM \"library.dtd\">\n<library>\n\t<book id=\"bk101\">\n\t\t<title>\n\t\t\tThe Great Adventure\n\t\t</title>\n\t\t<author>\n\t\t\tJohn Doe\n\t\t</author>\n\t\t<genre>\n\t\t\t<![CDATA[Fantasy & Adventure]]>\n\t\t</genre>\n\t\t<?editor instructions=\"Review for historical accuracy\"?>\n\t\t<publication_year>\n\t\t\t2023\n\t\t</publication_year>\n\t</book>\n</library>");
+          "<?xml version=\"1.0\" encoding=\"UTF-8\" "
+          "standalone=\"no\"?>\n<?xml-stylesheet type=\"text/xsl\" "
+          "href=\"style.xsl\"?>\n<!DOCTYPE library SYSTEM "
+          "\"library.dtd\">\n<library>\n\t<book "
+          "id=\"bk101\">\n\t\t<title>\n\t\t\tThe Great "
+          "Adventure\n\t\t</title>\n\t\t<author>\n\t\t\tJohn "
+          "Doe\n\t\t</author>\n\t\t<genre>\n\t\t\t<![CDATA[Fantasy & "
+          "Adventure]]>\n\t\t</genre>\n\t\t<?editor instructions=\"Review for "
+          "historical "
+          "accuracy\"?>\n\t\t<publication_year>\n\t\t\t2023\n\t\t</"
+          "publication_year>\n\t</book>\n</library>");
 }
 
 TEST_CASE("Complex templated runtime api html with constant tags", "[Node]") {
@@ -1026,21 +1042,30 @@ TEST_CASE("Special compile-time tags are serialized correctly") {
     using namespace onyx::ctags;
     using doc = Document<
         XmlDeclaration<"1.0", "UTF-8", "no">,
-        ProcessingInstruction<"xml-stylesheet", "type=\"text/xsl\" href=\"style.xsl\"">,
+        ProcessingInstruction<"xml-stylesheet",
+                              "type=\"text/xsl\" href=\"style.xsl\"">,
         DOCTYPE<"library SYSTEM \"library.dtd\"">,
-        GenericNode<"library", false,
-            GenericNode<"book", false, Attribute<"id","bk101">,
+        GenericNode<
+            "library", false,
+            GenericNode<
+                "book", false, Attribute<"id", "bk101">,
                 GenericNode<"title", false, Text<"The Great Adventure">>,
                 GenericNode<"author", false, Text<"John Doe">>,
                 GenericNode<"genre", false, CDATA<"Fantasy & Adventure">>,
-                ProcessingInstruction<"editor", "instructions=\"Review for historical accuracy\"">,
-                GenericNode<"publication_year", false, Text<"2023">>
-            >
-        >
-    >;
+                ProcessingInstruction<"editor",
+                                      "instructions=\"Review for historical "
+                                      "accuracy\"">,
+                GenericNode<"publication_year", false, Text<"2023">>>>>;
 
     CHECK(doc::toString() ==
-          "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?><!DOCTYPE library SYSTEM \"library.dtd\"><library><book id=\"bk101\"><title>The Great Adventure</title><author>John Doe</author><genre><![CDATA[Fantasy & Adventure]]></genre><?editor instructions=\"Review for historical accuracy\"?><publication_year>2023</publication_year></book></library>");
+          "<?xml version=\"1.0\" encoding=\"UTF-8\" "
+          "standalone=\"no\"?><?xml-stylesheet type=\"text/xsl\" "
+          "href=\"style.xsl\"?><!DOCTYPE library SYSTEM "
+          "\"library.dtd\"><library><book id=\"bk101\"><title>The Great "
+          "Adventure</title><author>John Doe</author><genre><![CDATA[Fantasy & "
+          "Adventure]]></genre><?editor instructions=\"Review for historical "
+          "accuracy\"?><publication_year>2023</publication_year></book></"
+          "library>");
 }
 
 TEST_CASE("UTF-8 text strings are cut off properly") {
@@ -1135,19 +1160,18 @@ TEST_CASE("Attribute properly escapes multi-byte", "[dynamic::Attribute]") {
 
     cdiv d{Attribute("textToEscape", "😊", true, true)};
 
-    std::string expected =
-        "<div textToEscape=\"&#x1f60a;\"></div>";
+    std::string expected = "<div textToEscape=\"&#x1f60a;\"></div>";
 
     CHECK(d.serialize() == expected);
 }
 
-TEST_CASE("Attribute does not escape values when shouldEscape() is false", "[dynamic::Attribute]") {
+TEST_CASE("Attribute does not escape values when shouldEscape() is false",
+          "[dynamic::Attribute]") {
     using namespace onyx::tags;
 
     cdiv d{Attribute("textToEscape", "\"", false)};
 
-    std::string expected =
-        "<div textToEscape=\"\"\"></div>";
+    std::string expected = "<div textToEscape=\"\"\"></div>";
 
     CHECK(d.serialize() == expected);
 }
@@ -1696,9 +1720,13 @@ TEST_CASE("Nodes get removed from indices upon destruction in non-owning trees",
     Node* child = new GenericNode(NonOwning, "div", false);
     child->setAttributeValue("class", "item");
 
-    obj.addChild(child);
+    Node* child1 = new GenericNode(NonOwning, "div", false);
+    child1->setAttributeValue("class", "item");
 
-    REQUIRE(index.getByValue("item").size() == 1);
+    obj.addChild(child);
+    child->addChild(child1);
+
+    REQUIRE(index.getByValue("item").size() == 2);
 
     delete child;
 

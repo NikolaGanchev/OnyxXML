@@ -111,31 +111,27 @@ void Node::processConstructorObjectMoveCleanup() {
 }
 
 void Node::destroy() {
-    for (auto& child : this->children) {
-        child->parent = nullptr;
-
-        this->indexParse([this, &child](Node::Index* id) -> void {
-            if (id->getRoot() == this) {
-                child->removeIndex(id);
-            }
+    // In owning trees, a Node can only leave the tree using removeChild()
+    // removeChild() of course removes the Node from all indices
+    // Upon destruction of an owning tree, it is surely known that any
+    // indices applied on the tree will be invalidated In turn meaning that
+    // the Node does not need to be removed (which is not guaranteed to be a
+    // cheap operation)
+    // In non-owning trees this is not guaranteed, as the
+    // destructor of a Node in the tree can be called arbitrarily
+    if (this->parent && !this->parent->_isOwning) {
+        this->iterativeProcessor([this](Node* obj) -> void {
+            this->propagateIndexUpdateUp(obj, IndexPropagationMessage::REMOVE);
         });
     }
 
-    this->indexParse([this](Node::Index* id) -> void {
-        // In owning trees, a Node can only leave the tree using removeChild()
-        // removeChild() of course removes the Node from all indices
-        // Upon destruction of an owning tree, it is surely known that any
-        // indices applied on the tree will be invalidated In turn meaning that
-        // the Node does not need to be removed (which is not guaranteed to be a
-        // cheap operation) In non-owning trees this is not guaranteed, as the
-        // destructor of a Node in the tree can be called arbitrarily
-        if (this->parent && !this->parent->_isOwning) {
-            id->removeIfNeeded(this);
-        }
-        if (id->getRoot() == this) {
-            id->invalidate();
-        }
-    });
+    for (auto index : this->indices) {
+        index->invalidate();
+    };
+
+    for (auto& child : this->children) {
+        child->parent = nullptr;
+    }
 
     if (this->_isOwning) {
         for (auto& child : this->children) {
@@ -173,8 +169,10 @@ Node* Node::addChild(NodeHandle newChild) {
     }
 
     newChild->parent = this;
-    this->indexParse(
-        [&newChild](Node::Index* id) -> void { newChild->addIndex(id); });
+
+    newChild->iterativeProcessor([&newChild](Node* current) -> void {
+        newChild->propagateIndexUpdateUp(current, IndexPropagationMessage::PUT);
+    });
 
     Node* newChildRef = newChild.get();
 
@@ -195,47 +193,74 @@ std::vector<Node*> Node::getChildren() const {
 
 size_t Node::getChildrenCount() const { return this->children.size(); }
 
-void Node::indexParse(const std::function<void(Node::Index*)>& callback) {
-    for (auto index : this->indices) {
-        callback(index);
-        index++;
-    }
-}
-
-// Iteratively adds the index to this node and all its children
 void Node::addIndex(Node::Index* index) {
-    iterativeProcessor([&index](Node* obj) -> void {
-        obj->indices.push_front(index);
-        index->putIfNeeded(obj);
-    });
+    iterativeProcessor(
+        [&index](Node* obj) -> void { index->putIfNeeded(obj); });
 }
 
 void Node::removeIndex(Node::Index* indexToRemove) {
     iterativeProcessor([&indexToRemove](Node* obj) -> void {
-        for (std::forward_list<Index*>::iterator prev = obj->indices.before_begin(), index = obj->indices.begin(); index != obj->indices.end();) {
-            if (indexToRemove == *index) {
-                obj->indices.erase_after(prev);
-                indexToRemove->removeIfNeeded(obj);
-                break;
-            } else {
-                index++;
-                prev++;
-            }
-        }
+        indexToRemove->removeIfNeeded(obj);
     });
+    for (std::forward_list<Index*>::iterator
+             prev = this->indices.before_begin(),
+             index = this->indices.begin();
+         index != this->indices.end();) {
+        if (indexToRemove == *index) {
+            this->indices.erase_after(prev);
+            break;
+        } else {
+            index++;
+            prev++;
+        }
+    }
 }
 
 void Node::replaceIndex(Node::Index* oldIndex, Node::Index* newIndex) {
-    iterativeProcessor([&oldIndex, &newIndex](Node* obj) -> void {
-        for (auto index = obj->indices.begin(); index != obj->indices.end();) {
-            if (oldIndex == *index) {
-                *index = newIndex;
+    for (auto index = this->indices.begin(); index != this->indices.end();) {
+        if (oldIndex == *index) {
+            *index = newIndex;
+            break;
+        } else {
+            index++;
+        }
+    }
+}
+
+void Node::indexUpdate(Node* updated, IndexPropagationMessage message) {
+    for (auto index : this->indices) {
+        switch (message) {
+            case IndexPropagationMessage::PUT: {
+                index->putIfNeeded(updated);
                 break;
-            } else {
-                index++;
+            }
+            case IndexPropagationMessage::UPDATE: {
+                index->update(updated);
+                break;
+            }
+            case IndexPropagationMessage::REMOVE: {
+                index->removeIfNeeded(updated);
+                break;
+            }
+            default: {
+                throw std::runtime_error("Unhandled message type");
             }
         }
-    });
+    }
+}
+
+void Node::propagateIndexUpdateUp(Node* updated,
+                                  IndexPropagationMessage message) {
+    Node* parent = this->parent;
+    while (parent) {
+        parent->indexUpdate(updated, message);
+        parent = parent->parent;
+    }
+}
+
+void Node::updateAndPropagateUp(IndexPropagationMessage message) {
+    this->indexUpdate(this, message);
+    this->propagateIndexUpdateUp(this, message);
 }
 
 void Node::iterativeProcessor(const std::function<void(Node*)>& process) {
@@ -338,11 +363,10 @@ NodeHandle Node::removeChild(Node* childToRemove) {
 
         for (size_t i = 0; i < children->size(); i++) {
             if (children->at(i) == childToRemove) {
-                this->indexParse(
-                    [&childToRemove, this](Node::Index* id) -> void {
-                        if (id->getRoot() == this) {
-                            childToRemove->removeIndex(id);
-                        }
+                childToRemove->iterativeProcessor(
+                    [this, &childToRemove](Node* obj) -> void {
+                        childToRemove->propagateIndexUpdateUp(
+                            obj, IndexPropagationMessage::REMOVE);
                     });
 
                 NodeHandle ref(childToRemove, childToRemove->parent->_isOwning);
@@ -559,14 +583,13 @@ void Node::setAttributeValue(const std::string& name,
         if (attr.getName() == name) {
             attr.setValue(newValue);
 
-            this->indexParse(
-                [this](Node::Index* id) -> void { id->update(this); });
+            updateAndPropagateUp(IndexPropagationMessage::UPDATE);
             return;
         }
     }
 
     this->attributes.emplace_back(name, newValue);
-    this->indexParse([this](Node::Index* id) -> void { id->update(this); });
+    updateAndPropagateUp(IndexPropagationMessage::UPDATE);
 }
 
 void Node::removeAttribute(const std::string& name) {
@@ -575,8 +598,7 @@ void Node::removeAttribute(const std::string& name) {
         if (index->getName() == name) {
             this->attributes.erase(index);
 
-            this->indexParse(
-                [this](Node::Index* id) -> void { id->update(this); });
+            updateAndPropagateUp(IndexPropagationMessage::UPDATE);
 
             return;
         }
@@ -630,8 +652,10 @@ std::string Node::serialize() const {
 
         for (const auto& attr : attributes) {
             result << " " << attr->getName() << "=\""
-                   << (attr->shouldEscape() ? text::escape(attr->getValue(), attr->shouldEscapeMultiByte())
-                                            : attr->getValue())
+                   << (attr->shouldEscape()
+                           ? text::escape(attr->getValue(),
+                                          attr->shouldEscapeMultiByte())
+                           : attr->getValue())
                    << "\"";
         }
 
@@ -719,8 +743,10 @@ std::string Node::serializePretty(const std::string& indentationSequence,
 
         for (const auto& attr : attributes) {
             result << " " << attr->getName() << "=\""
-                   << (attr->shouldEscape() ? text::escape(attr->getValue(), attr->shouldEscapeMultiByte())
-                                            : attr->getValue())
+                   << (attr->shouldEscape()
+                           ? text::escape(attr->getValue(),
+                                          attr->shouldEscapeMultiByte())
+                           : attr->getValue())
                    << "\"";
         }
 
@@ -795,8 +821,7 @@ Node::ObservableStringRef Node::operator[](const std::string& name) {
     for (auto& attr : this->attributes) {
         if (attr.getName() == name) {
             return ObservableStringRef(&(attr.getValueMutable()), [this]() {
-                this->indexParse(
-                    [this](Node::Index* id) -> void { id->update(this); });
+                this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
             });
         }
     }

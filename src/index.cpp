@@ -10,22 +10,24 @@ bool Node::Index::isValid() const { return this->root != nullptr; }
 
 void Node::Index::invalidate() { this->root = nullptr; }
 
-void Node::Index::init() { this->root->addIndex(this); }
+void Node::Index::init() { 
+    this->root->indices.push_front(this);
+    this->root->addIndex(this); 
+}
 
 void Node::Index::destroy() {
     if (this->isValid() && this->root) {
-        this->root->iterativeProcessor([this](Node* obj) -> void {
-            for (std::forward_list<Index*>::iterator prev = obj->indices.before_begin(), index = obj->indices.begin();
-                 index != obj->indices.end();) {
-                if (this == *index) {
-                    obj->indices.erase_after(prev);
-                    break;
-                } else {
-                    index++;
-                    prev++;
-                }
+        for (std::forward_list<Index*>::iterator prev = this->root->indices.before_begin(), 
+            index = this->root->indices.begin();
+                 index != this->root->indices.end();) {
+            if (this == *index) {
+                this->root->indices.erase_after(prev);
+                break;
+            } else {
+                index++;
+                prev++;
             }
-        });
+        }
     }
 }
 

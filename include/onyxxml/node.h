@@ -1,5 +1,6 @@
 #pragma once
 #include <cstring>
+#include <forward_list>
 #include <functional>
 #include <memory>
 #include <sstream>
@@ -7,7 +8,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <forward_list>
 
 #include "attribute.h"
 #include "node_handle.h"
@@ -90,6 +90,7 @@ class Node {
     using Handle = NodeHandle;
 
    private:
+    enum IndexPropagationMessage : uint8_t { UPDATE, PUT, REMOVE };
     /**
      * @brief An observable constant std::string reference.
      * Behaves as a pointer, but the assignment operator is overriden to invoke
@@ -260,17 +261,16 @@ class Node {
 
     /**
      * @brief Adds an index.
-     * Works by adding the index to the current object's indices and then adding
-     * it to all children. Calls Index::putIfNeeded() for every Node in the
-     * tree.
+     * Works by adding the index to the current object's indices.
+     * Calls Index::putIfNeeded() for every Node in the tree.
      *
      * @param index
      */
     void addIndex(Node::Index* index);
 
     /**
-     * @brief Removes an index from the current object's indices and from all
-     * its children. Calls Index::removeIfNeeded() for every Node in the tree.
+     * @brief Removes an index from the current object's indices.
+     * Calls Index::removeIfNeeded() for every Node in the tree.
      *
      * @param index
      */
@@ -284,13 +284,6 @@ class Node {
      * @param newIndex
      */
     void replaceIndex(Node::Index* oldIndex, Node::Index* newIndex);
-
-    /**
-     * @brief Safely iterates over indices
-     *
-     * @param callback Runs for every index of the current object
-     */
-    void indexParse(const std::function<void(Node::Index*)>& callback);
 
     /**
      * @brief The static global indentation string to be used for indenting
@@ -318,11 +311,27 @@ class Node {
     void takeOverIndices(Node& other);
 
     /**
-     * @brief When called, updates all indices of the Node with the provided Node
-     * 
+     * @brief Updates all indices of the Node with the provided Node
+     *
      * @param updated The Node that has been updated
+     * @param message The type of update to the index to apply
      */
-    void propagateIndexUpdate(Node* updated);
+    void indexUpdate(Node* updated, IndexPropagationMessage message);
+
+    /**
+     * @brief Propagates up an update
+     *
+     * @param message The type of update to the index to apply
+     */
+    void propagateIndexUpdateUp(Node* updated, IndexPropagationMessage message);
+
+    /**
+     * @brief Updates all indices of the Node with the provided Node and
+     * propagates up the update
+     *
+     * @param message The type of update to the index to apply
+     */
+    void updateAndPropagateUp(IndexPropagationMessage message);
 
    protected:
     /**
@@ -902,10 +911,11 @@ onyx::dynamic::Node* onyx::dynamic::Node::addChild(T&& newChild)
     }
 
     T* obj = new std::decay_t<T>(std::forward<T>(newChild));
-    (dynamic_cast<Node*>(obj))->parent = this;
+    Node* obj1 = (dynamic_cast<Node*>(obj));
+    obj1->parent = this;
 
-    this->indexParse([&obj](Node::Index* id) -> void {
-        (dynamic_cast<Node*>(obj))->addIndex(id);
+    obj1->iterativeProcessor([obj1](Node* current) -> void {
+        obj1->propagateIndexUpdateUp(current, IndexPropagationMessage::PUT);
     });
 
     children.push_back(obj);
