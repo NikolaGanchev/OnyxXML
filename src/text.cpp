@@ -4,6 +4,7 @@
 #include <queue>
 #include <sstream>
 #include <unordered_map>
+#include <algorithm>
 
 namespace onyx::dynamic::text {
 

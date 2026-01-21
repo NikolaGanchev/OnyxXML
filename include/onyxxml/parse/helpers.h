@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <string_view>
+#include <cstdint>
 
 namespace onyx::dynamic::parser {
 bool isWhitespace(const char pos);
