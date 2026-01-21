@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <forward_list>
 
 #include "attribute.h"
 #include "node_handle.h"
@@ -203,10 +204,10 @@ class Node {
     std::vector<Node*> children;
 
     /**
-     * @brief A vector holding raw pointers to the indices of this node
+     * @brief A linked list holding raw pointers to the indices of this node
      *
      */
-    std::vector<Node::Index*> indices;
+    std::forward_list<Index*> indices;
 
     /**
      * @brief The parent of this Node. nullptr if no parent exists.
@@ -315,6 +316,13 @@ class Node {
      *
      */
     void takeOverIndices(Node& other);
+
+    /**
+     * @brief When called, updates all indices of the Node with the provided Node
+     * 
+     * @param updated The Node that has been updated
+     */
+    void propagateIndexUpdate(Node* updated);
 
    protected:
     /**

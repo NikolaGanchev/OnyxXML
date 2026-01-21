@@ -205,20 +205,21 @@ void Node::indexParse(const std::function<void(Node::Index*)>& callback) {
 // Iteratively adds the index to this node and all its children
 void Node::addIndex(Node::Index* index) {
     iterativeProcessor([&index](Node* obj) -> void {
-        obj->indices.push_back(index);
+        obj->indices.push_front(index);
         index->putIfNeeded(obj);
     });
 }
 
 void Node::removeIndex(Node::Index* indexToRemove) {
     iterativeProcessor([&indexToRemove](Node* obj) -> void {
-        for (auto index = obj->indices.begin(); index != obj->indices.end();) {
+        for (std::forward_list<Index*>::iterator prev = obj->indices.before_begin(), index = obj->indices.begin(); index != obj->indices.end();) {
             if (indexToRemove == *index) {
-                obj->indices.erase(index);
+                obj->indices.erase_after(prev);
                 indexToRemove->removeIfNeeded(obj);
                 break;
             } else {
                 index++;
+                prev++;
             }
         }
     });

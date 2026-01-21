@@ -15,13 +15,14 @@ void Node::Index::init() { this->root->addIndex(this); }
 void Node::Index::destroy() {
     if (this->isValid() && this->root) {
         this->root->iterativeProcessor([this](Node* obj) -> void {
-            for (auto index = obj->indices.begin();
+            for (std::forward_list<Index*>::iterator prev = obj->indices.before_begin(), index = obj->indices.begin();
                  index != obj->indices.end();) {
                 if (this == *index) {
-                    obj->indices.erase(index);
+                    obj->indices.erase_after(prev);
                     break;
                 } else {
                     index++;
+                    prev++;
                 }
             }
         });
