@@ -31,6 +31,8 @@ target_sources(
         "parse/dom_parser.cpp"
         "parse/sax_parser.cpp"
         "parse/helpers.cpp"
+        "parse/stream_cursor.cpp"
+        "parse/string_cursor.cpp"
         "node_handle.cpp"
         "arena.cpp"
         "nodes/xml_declaration_node.cpp"
