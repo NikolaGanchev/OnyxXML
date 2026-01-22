@@ -81,6 +81,12 @@ class Arena {
          */
         size_t size;
 
+        /**
+         * @brief Current node count
+         * 
+         */
+        size_t nodeCount;
+
        public:
         /**
          * @brief Construct a new Builder object.
@@ -116,11 +122,12 @@ class Arena {
     };
 
     /**
-     * @brief Construct a new Arena object via precomputed capacity.
+     * @brief Construct a new Arena object via precomputed capacity and node count
      *
      * @param capacity
+     * @param nodeCount 
      */
-    Arena(size_t capacity);
+    Arena(size_t capacity, size_t nodeCount = 0);
 
     /**
      * @brief Construct a new Arena object via move.
@@ -192,6 +199,8 @@ Arena::Builder& Arena::Builder::preallocate()
     this->size = (this->size + alignment - 1) & ~(alignment - 1);
 
     this->size += size;
+
+    this->nodeCount++;
 
     return *this;
 }

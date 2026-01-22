@@ -2,9 +2,10 @@
 
 namespace onyx::dynamic {
 
-Arena::Arena(size_t capacity) : capacity{capacity}, allocations{} {
+Arena::Arena(size_t capacity, size_t nodeCount) : capacity{capacity}, allocations{} {
     this->buffer = new char[capacity];
     this->position = 0;
+    this->allocations.reserve(nodeCount);
 }
 
 Arena::Arena(Arena&& other) { move(std::move(other)); }
@@ -35,9 +36,9 @@ void Arena::move(Arena&& other) {
     this->allocations = std::move(other.allocations);
 }
 
-Arena::Builder::Builder() : size(0) {};
+Arena::Builder::Builder() : size(0), nodeCount(0) {};
 
 size_t Arena::Builder::totalSize() const { return this->size; }
 
-Arena Arena::Builder::build() const { return Arena(this->size); }
+Arena Arena::Builder::build() const { return Arena(this->size, this->nodeCount); }
 }  // namespace onyx::dynamic
