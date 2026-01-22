@@ -2,21 +2,14 @@
 
 #include <concepts>
 
+namespace onyx::dynamic::parser {
 template <typename T>
 concept isCursor = requires(T t, int i) {
     typename T::StringType;
-    { 
-        t.peek(i) 
-    } -> std::same_as<char>;
-    { 
-        *t
-    } -> std::same_as<char>;
-    { 
-        &t 
-    } -> std::same_as<char>;
-    { 
-        t.capturePeek(i)
-    } -> std::same_as<char>;
+    { t.peek(i) } -> std::same_as<char>;
+    { *t } -> std::same_as<char>;
+    { &t } -> std::same_as<char>;
+    { t.capturePeek(i) } -> std::same_as<char>;
     t.getCaptured();
     t++;
     ++t;
@@ -26,3 +19,4 @@ concept isCursor = requires(T t, int i) {
     t.swapDefault();
     t.beginCapture();
 };
+}  // namespace onyx::dynamic::parser

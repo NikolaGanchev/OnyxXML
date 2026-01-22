@@ -47,7 +47,7 @@ namespace onyx::dynamic::parser {
                 ++pos;                                                         \
             }                                                                  \
             if (end) break;                                                    \
-            std::string_view text = pos.getCaptured();                         \
+            StringType text = pos.getCaptured();                         \
             pos.bringToCapture();                                              \
                                                                                \
             TEXT_ACTION(text, hasEntities, pos);                               \
@@ -68,7 +68,7 @@ namespace onyx::dynamic::parser {
             if (validate && *pos == '\0') {                                    \
                 throw std::invalid_argument("Premature end of document");      \
             }                                                                  \
-            std::string_view tagName = readName(pos);                          \
+            StringType tagName = readName(pos);                          \
             if (validate && tagName.empty()) {                                 \
                 throw std::invalid_argument("Invalid tag name");               \
             }                                                                  \
@@ -85,7 +85,7 @@ namespace onyx::dynamic::parser {
                     bool hasVersion = false;                                   \
                     bool hasEncoding = false;                                  \
                     bool hasStandalone = false;                                \
-                    std::string_view version, encoding, standalone;            \
+                    StringType version, encoding, standalone;            \
                                                                                \
                     /* Walk through all pseudo-attributes in the xml decl */   \
                     while (*pos != '\0' && *pos != '?') {                      \
@@ -100,7 +100,7 @@ namespace onyx::dynamic::parser {
                         }                                                      \
                                                                                \
                         /* read attribute name */                              \
-                        std::string_view attrName = readName(pos);             \
+                        StringType attrName = readName(pos);             \
                         if (validate && attrName.empty()) {                    \
                             throw std::invalid_argument(                       \
                                 "Invalid XML declaration attribute name");     \
@@ -138,7 +138,7 @@ namespace onyx::dynamic::parser {
                                 "Unterminated XML declaration attribute "      \
                                 "value");                                      \
                         }                                                      \
-                        std::string_view val = pos.getCaptured();              \
+                        StringType val = pos.getCaptured();              \
                         pos.bringToCapture();                                  \
                         pos++; /* skip closing quote */                        \
                         if (*pos == '\0') {                                    \
@@ -226,7 +226,7 @@ namespace onyx::dynamic::parser {
                         "Invalid processing instruction without ending");      \
             }                                                                  \
                                                                                \
-            std::string_view processingInstruction = pos.getCaptured();        \
+            StringType processingInstruction = pos.getCaptured();        \
                                                                                \
             pos.bringToCapture();                                              \
             pos.advance(2);                                                    \
@@ -259,7 +259,7 @@ namespace onyx::dynamic::parser {
                             "Invalid comment without ending");                 \
                 }                                                              \
                                                                                \
-                std::string_view commentText = pos.getCaptured();              \
+                StringType commentText = pos.getCaptured();              \
                                                                                \
                 pos.captureAdvance(2);                                         \
                                                                                \
@@ -302,7 +302,7 @@ namespace onyx::dynamic::parser {
                             "Invalid CDATA without ending");                   \
                 }                                                              \
                                                                                \
-                std::string_view cdataText = pos.getCaptured();                \
+                StringType cdataText = pos.getCaptured();                \
                                                                                \
                 pos.bringToCapture();                                          \
                 pos.advance(3);                                                \
@@ -335,7 +335,7 @@ namespace onyx::dynamic::parser {
                             "Invalid DOCTYPE without ending");                 \
                 }                                                              \
                                                                                \
-                std::string_view doctypeText = pos.getCaptured();              \
+                StringType doctypeText = pos.getCaptured();              \
                                                                                \
                 pos.bringToCapture();                                          \
                 pos++;                                                         \
@@ -356,7 +356,7 @@ namespace onyx::dynamic::parser {
         }                                                                      \
                                                                                \
         /* Invariant - pos always at tag name start */                         \
-        std::string_view tagName = readName(pos);                              \
+        StringType tagName = readName(pos);                              \
         if (validate && tagName.empty()) {                                     \
             throw std::invalid_argument("Invalid tag name");                   \
         }                                                                      \
@@ -374,7 +374,7 @@ namespace onyx::dynamic::parser {
         if (couldHaveAttributes) {                                             \
             /* Invariant - either at start of attribute or at > */             \
             while (*pos != '>' && *pos != '/') {                               \
-                std::string_view attributeName = readName(pos);                \
+                StringType attributeName = readName(pos);                \
                 if (attributeName.empty()) {                                   \
                     throw std::invalid_argument("Invalid non-closing tag");    \
                 }                                                              \
@@ -413,7 +413,7 @@ namespace onyx::dynamic::parser {
                     if (&pos == '&') hasEntities = true;                       \
                     ++pos;                                                     \
                 }                                                              \
-                std::string_view attributeValue = pos.getCaptured();           \
+                StringType attributeValue = pos.getCaptured();           \
                 pos.bringToCapture();                                          \
                                                                                \
                 /* Invariant - pos is at closing quote */                      \

@@ -85,7 +85,7 @@ typename Cursor::StringType readName(Cursor& pos)
     pos.swapDefault();
     if (!isNameStartChar(pos)) {
         pos.swapDefault();
-        return std::string_view();
+        return typename Cursor::StringType();
     }
     pos++;
     while (isNameChar(pos)) {

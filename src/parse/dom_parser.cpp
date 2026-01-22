@@ -27,6 +27,7 @@ Arena DomParser::parseDryRun(std::string_view input) {
 
     size_t id = 0;
 
+    using StringType = StringCursor::StringType;
     StringCursor pos(input.data());
 
     Arena::Builder builder;
@@ -100,6 +101,7 @@ ParseResult DomParser::parse(std::string_view input) {
     std::vector<std::string_view> attributeNames;
     std::vector<std::pair<std::string_view, bool>> attributeValues;
 
+    using StringType = StringCursor::StringType;
     StringCursor pos(input.data());
 
     Arena arena = parseDryRun(input);

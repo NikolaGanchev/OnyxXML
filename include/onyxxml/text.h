@@ -54,7 +54,7 @@ uint32_t getUnicodeCodepoint(const char* read);
  * @return uint32_t The codepoint if the sequence is valid, otherwise 0.
  */
 template <typename Cursor>
-uint32_t getUnicodeCodepoint(Cursor& c) requires (isCursor<Cursor>) {
+uint32_t getUnicodeCodepoint(Cursor& c) requires (parser::isCursor<Cursor>) {
     uint32_t codepoint = 0;
     
     if (*c == '\0') return 0;

@@ -11,6 +11,7 @@ void SaxParser::parse(std::string_view input) {
     std::vector<std::string_view> attributeNames;
     std::vector<std::pair<std::string_view, bool>> attributeValues;
 
+    using StringType = StringCursor::StringType;
     StringCursor pos(input.data());
 
     std::string_view root = ".empty";
