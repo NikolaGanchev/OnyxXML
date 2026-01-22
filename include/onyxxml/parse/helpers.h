@@ -1,30 +1,37 @@
 #pragma once
 
-#include <utility>
-#include <string_view>
 #include <cstdint>
 #include <istream>
+#include <string_view>
+#include <utility>
+
+#include "../text.h"
 #include "is_cursor.h"
 #include "string_cursor.h"
-#include "stream_cursor.h"
 
 namespace onyx::dynamic::parser {
 bool isWhitespace(const char pos);
 
 template <typename Cursor>
-void skipWhitespace(Cursor& pos) requires (isCursor<Cursor>) {
-    while (!pos.isEOF() && isWhitespace(*pos)) {
+void skipWhitespace(Cursor& pos)
+    requires(isCursor<Cursor>)
+{
+    while (*pos != '\0' && isWhitespace(*pos)) {
         pos++;
     }
 }
 
 template <typename Cursor>
-uint32_t handleUnicodeChar(Cursor& c) requires (isCursor<Cursor>) {
+uint32_t handleUnicodeChar(Cursor& c)
+    requires(isCursor<Cursor>)
+{
     return text::getUnicodeCodepoint(c);
 }
 
 template <typename Cursor>
-bool isNameStartChar(Cursor& ch) requires (isCursor<Cursor>) {
+bool isNameStartChar(Cursor& ch)
+    requires(isCursor<Cursor>)
+{
     if ((unsigned char)*ch < 128) [[likely]] {
         return (*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z') ||
                *ch == '_' || *ch == ':';
@@ -45,7 +52,9 @@ bool isNameStartChar(Cursor& ch) requires (isCursor<Cursor>) {
 }
 
 template <typename Cursor>
-bool isNameChar(Cursor& ch) requires (isCursor<Cursor>) {
+bool isNameChar(Cursor& ch)
+    requires(isCursor<Cursor>)
+{
     if ((unsigned char)*ch < 128) [[likely]] {
         return (*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z') ||
                (*ch >= '0' && *ch <= '9') || *ch == '_' || *ch == ':' ||
@@ -66,33 +75,24 @@ bool isNameChar(Cursor& ch) requires (isCursor<Cursor>) {
            (codepoint >= 0x10000 && codepoint <= 0xEFFFF) ||
            (codepoint >= 0x0300 && codepoint <= 0x036F) ||
            (codepoint >= 0x203F && codepoint <= 0x2040);
-
 }
 
 template <typename Cursor>
-typename Cursor::StringType readName(Cursor& pos) requires (isCursor<Cursor>) {
-    if constexpr (std::is_same_v<Cursor, StringCursor>) {
-        const char* start = pos.ptr;
-        if (!isNameStartChar(pos)) return std::string_view();
-        
-        pos++;
-        
-        while (isNameChar(pos)) {
-            pos++;
-        }
-        return pos.getStringFrom(start);
+typename Cursor::StringType readName(Cursor& pos)
+    requires(isCursor<Cursor>)
+{
+    pos.beginCapture();
+    pos.swapDefault();
+    if (!isNameStartChar(pos)) {
+        pos.swapDefault();
+        return std::string_view();
     }
-    else {
-        std::string name;
-        if (!isNameStartChar(pos)) return name;
-        
-        name += *pos; 
+    pos++;
+    while (isNameChar(pos)) {
         pos++;
-        
-        while (!pos.isEOF() && isNameChar(pos)) {
-            name += *pos;
-            pos++;
-        }
-        return name;
     }
+    pos.swapDefault();
+
+    return pos.getCaptured();
 }
+}  // namespace onyx::dynamic::parser

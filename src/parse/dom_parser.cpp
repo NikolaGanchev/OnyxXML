@@ -1,5 +1,7 @@
 #include "parse/dom_parser.h"
+
 #include "parse/_parse_macro.h"
+#include "parse/string_cursor.h"
 
 namespace onyx::dynamic::parser {
 ParseResult::ParseResult() : arena{0}, root{nullptr} {}
@@ -25,7 +27,7 @@ Arena DomParser::parseDryRun(std::string_view input) {
 
     size_t id = 0;
 
-    const char* pos = input.data();
+    StringCursor pos(input.data());
 
     Arena::Builder builder;
 
@@ -38,7 +40,7 @@ Arena DomParser::parseDryRun(std::string_view input) {
 
     stack.push_back(hasher(root));
 
-    pos = skipWhitespace(pos);
+    skipWhitespace(pos);
 
 #define TEXT_ACTION(text, hasEntities, pos) builder.preallocate<tags::Text>();
 
@@ -98,7 +100,7 @@ ParseResult DomParser::parse(std::string_view input) {
     std::vector<std::string_view> attributeNames;
     std::vector<std::pair<std::string_view, bool>> attributeValues;
 
-    const char* pos = input.data();
+    StringCursor pos(input.data());
 
     Arena arena = parseDryRun(input);
 
@@ -106,7 +108,7 @@ ParseResult DomParser::parse(std::string_view input) {
 
     stack.push_back(root);
 
-    pos = skipWhitespace(pos);
+    skipWhitespace(pos);
 
 #define TEXT_ACTION(text, hasEntities, pos)            \
     stack.back()->addChild(arena.allocate<tags::Text>( \

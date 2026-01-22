@@ -1,6 +1,7 @@
 #include "parse/sax_parser.h"
 
 #include "parse/_parse_macro.h"
+#include "parse/string_cursor.h"
 
 namespace onyx::dynamic::parser {
 SaxParser::SaxParser(SaxListener& listener) : listener(listener) {}
@@ -10,13 +11,13 @@ void SaxParser::parse(std::string_view input) {
     std::vector<std::string_view> attributeNames;
     std::vector<std::pair<std::string_view, bool>> attributeValues;
 
-    const char* pos = input.data();
+    StringCursor pos(input.data());
 
     std::string_view root = ".empty";
 
     stack.push_back(root);
 
-    pos = skipWhitespace(pos);
+    skipWhitespace(pos);
 
 #define TEXT_ACTION(text, hasEntities, pos)                        \
     this->listener.onText(hasEntities ? text::expandEntities(text) \

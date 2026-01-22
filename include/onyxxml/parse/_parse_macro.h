@@ -3,6 +3,7 @@
 #include <utility>
 #include <vector>
 
+#include "helpers.h"
 #include "nodes/cdata_node.h"
 #include "nodes/comment_node.h"
 #include "nodes/doctype_node.h"
@@ -12,7 +13,6 @@
 #include "nodes/text_node.h"
 #include "nodes/xml_declaration_node.h"
 #include "text.h"
-#include "helpers.h"
 
 namespace onyx::dynamic::parser {
 
@@ -29,11 +29,11 @@ namespace onyx::dynamic::parser {
         /* Invariant - always at the start of either a tag or a sequence of    \
          * text */                                                             \
         if (*pos != '<') {                                                     \
-            const char* localPos = pos;                                        \
+            pos.beginCapture();                                                \
             bool hasEntities = false;                                          \
             bool end = false;                                                  \
-            while (*localPos != '<') {                                         \
-                if (*localPos == '\0') {                                       \
+            while (&pos != '<') {                                              \
+                if (&pos == '\0') {                                            \
                     while (*pos != '\0') {                                     \
                         if (validate && !isWhitespace(*pos))                   \
                             throw std::invalid_argument(                       \
@@ -43,12 +43,12 @@ namespace onyx::dynamic::parser {
                     end = true;                                                \
                     break;                                                     \
                 }                                                              \
-                if (*localPos == '&') hasEntities = true;                      \
-                localPos++;                                                    \
+                if (&pos == '&') hasEntities = true;                           \
+                ++pos;                                                         \
             }                                                                  \
             if (end) break;                                                    \
-            std::string_view text(pos, localPos - pos);                        \
-            pos = localPos;                                                    \
+            std::string_view text = pos.getCaptured();                         \
+            pos.bringToCapture();                                              \
                                                                                \
             TEXT_ACTION(text, hasEntities, pos);                               \
                                                                                \
@@ -72,7 +72,7 @@ namespace onyx::dynamic::parser {
             if (validate && tagName.empty()) {                                 \
                 throw std::invalid_argument("Invalid tag name");               \
             }                                                                  \
-            pos += tagName.size();                                             \
+            pos.advance(tagName.size());                                       \
             /* Invariant - after tag name */                                   \
             if (tagName.size() == 3 && tolower(tagName[0]) == 'x' &&           \
                 tolower(tagName[1]) == 'm' && tolower(tagName[2]) == 'l') {    \
@@ -90,7 +90,7 @@ namespace onyx::dynamic::parser {
                     /* Walk through all pseudo-attributes in the xml decl */   \
                     while (*pos != '\0' && *pos != '?') {                      \
                         /* skip whitespace */                                  \
-                        pos = skipWhitespace(pos);                             \
+                        skipWhitespace(pos);                                   \
                         if (*pos == '?') {                                     \
                             break;                                             \
                         }                                                      \
@@ -105,10 +105,10 @@ namespace onyx::dynamic::parser {
                             throw std::invalid_argument(                       \
                                 "Invalid XML declaration attribute name");     \
                         }                                                      \
-                        pos += attrName.size();                                \
+                        pos.advance(attrName.size());                          \
                                                                                \
                         /* expect '=' */                                       \
-                        pos = skipWhitespace(pos);                             \
+                        skipWhitespace(pos);                                   \
                         if (validate && *pos != '=') {                         \
                             throw std::invalid_argument(                       \
                                 "No '=' after XML declaration attribute "      \
@@ -120,25 +120,26 @@ namespace onyx::dynamic::parser {
                                 "Premature end of document");                  \
                         }                                                      \
                                                                                \
-                        pos = skipWhitespace(pos);                             \
+                        skipWhitespace(pos);                                   \
                         if (validate && (*pos != '"' && *pos != '\'')) {       \
                             throw std::invalid_argument(                       \
                                 "XML declaration attribute value not quoted"); \
                         }                                                      \
-                        char quote = *pos++;                                   \
+                        char quote = *pos;                                     \
+                        pos++;                                                 \
                                                                                \
-                        const char* valStart = pos;                            \
-                        while (*pos != '\0' && *pos != '?' && *pos != quote) { \
-                            pos++;                                             \
+                        pos.beginCapture();                                    \
+                        while (&pos != '\0' && &pos != '?' && &pos != quote) { \
+                            ++pos;                                             \
                         }                                                      \
                         if (validate &&                                        \
-                            (*pos == '?' || *pos == '\0' || *pos != quote)) {  \
+                            (&pos == '?' || &pos == '\0' || &pos != quote)) {  \
                             throw std::invalid_argument(                       \
                                 "Unterminated XML declaration attribute "      \
                                 "value");                                      \
                         }                                                      \
-                        std::string_view val(valStart,                         \
-                                             (size_t)(pos - valStart));        \
+                        std::string_view val = pos.getCaptured();              \
+                        pos.bringToCapture();                                  \
                         pos++; /* skip closing quote */                        \
                         if (*pos == '\0') {                                    \
                             throw std::invalid_argument(                       \
@@ -162,7 +163,7 @@ namespace onyx::dynamic::parser {
                         }                                                      \
                     }                                                          \
                     /* Invariant - pos at ?*/                                  \
-                    if (*(pos + 1) != '>') {                                   \
+                    if (pos.peek(1) != '>') {                                  \
                         throw std::invalid_argument(                           \
                             "Unclosed XML declaration");                       \
                     }                                                          \
@@ -208,26 +209,27 @@ namespace onyx::dynamic::parser {
                     continue;                                                  \
                 }                                                              \
             }                                                                  \
-            if (validate && (*pos != ' ' || *(pos + 1) == '\0')) {             \
+            if (validate && (*pos != ' ' || pos.peek(1) == '\0')) {            \
                 throw std::invalid_argument(                                   \
                     "No space between processing instruction target and "      \
                     "processing instruction content");                         \
             }                                                                  \
             pos++;                                                             \
                                                                                \
-            const char* localPos = pos;                                        \
+            pos.beginCapture();                                                \
                                                                                \
-            while (!(*localPos == '?' && *(localPos + 1) != '\0' &&            \
-                     *(localPos + 1) == '>')) {                                \
-                localPos++;                                                    \
-                if (validate && *localPos == '\0')                             \
+            while (!(&pos == '?' && pos.capturePeek(1) != '\0' &&              \
+                     pos.capturePeek(1) == '>')) {                             \
+                ++pos;                                                         \
+                if (validate && &pos == '\0')                                  \
                     throw std::invalid_argument(                               \
                         "Invalid processing instruction without ending");      \
             }                                                                  \
                                                                                \
-            std::string_view processingInstruction(pos, localPos - pos);       \
+            std::string_view processingInstruction = pos.getCaptured();        \
                                                                                \
-            pos = localPos + 2;                                                \
+            pos.bringToCapture();                                              \
+            pos.advance(2);                                                    \
                                                                                \
             /* Invariant - just after processing instruction end */            \
             INSTRUCTION_ACTION(tagName, processingInstruction, pos);           \
@@ -247,25 +249,25 @@ namespace onyx::dynamic::parser {
                 if (validate && *pos == '\0') {                                \
                     throw std::invalid_argument("Premature end of document");  \
                 }                                                              \
-                const char* localPos = pos;                                    \
+                pos.beginCapture();                                            \
                                                                                \
-                while (!(*localPos == '-' && *(localPos + 1) != '\0' &&        \
-                         *(localPos + 1) == '-')) {                            \
-                    localPos++;                                                \
-                    if (validate && *localPos == '\0')                         \
+                while (!(&pos == '-' && pos.capturePeek(1) != '\0' &&          \
+                         pos.capturePeek(1) == '-')) {                         \
+                    ++pos;                                                     \
+                    if (validate && &pos == '\0')                              \
                         throw std::invalid_argument(                           \
                             "Invalid comment without ending");                 \
                 }                                                              \
                                                                                \
-                std::string_view commentText(pos, localPos - pos);             \
+                std::string_view commentText = pos.getCaptured();              \
                                                                                \
-                localPos += 2;                                                 \
+                pos.captureAdvance(2);                                         \
                                                                                \
                 /* Invariant - either at error state or at > */                \
-                if (validate && *localPos != '>')                              \
+                if (validate && &pos != '>')                                   \
                     throw std::invalid_argument(                               \
                         "-- inside of comment not allowed");                   \
-                pos = localPos;                                                \
+                pos.bringToCapture();                                          \
                 pos++;                                                         \
                 COMMENT_ACTION(commentText, pos);                              \
                 firstTag = false;                                              \
@@ -288,20 +290,22 @@ namespace onyx::dynamic::parser {
                 if (validate && *pos == '\0') {                                \
                     throw std::invalid_argument("Premature end of document");  \
                 }                                                              \
-                const char* localPos = pos;                                    \
+                pos.beginCapture();                                            \
                                                                                \
-                while (!(*localPos == ']' && *(localPos + 1) != '\0' &&        \
-                         *(localPos + 1) == ']' && *(localPos + 2) != '\0' &&  \
-                         *(localPos + 2) == '>')) {                            \
-                    localPos++;                                                \
-                    if (validate && *localPos == '\0')                         \
+                while (!(&pos == ']' && pos.capturePeek(1) != '\0' &&          \
+                         pos.capturePeek(1) == ']' &&                          \
+                         pos.capturePeek(2) != '\0' &&                         \
+                         pos.capturePeek(2) == '>')) {                         \
+                    ++pos;                                                     \
+                    if (validate && &pos == '\0')                              \
                         throw std::invalid_argument(                           \
                             "Invalid CDATA without ending");                   \
                 }                                                              \
                                                                                \
-                std::string_view cdataText(pos, localPos - pos);               \
+                std::string_view cdataText = pos.getCaptured();                \
                                                                                \
-                pos = localPos + 3;                                            \
+                pos.bringToCapture();                                          \
+                pos.advance(3);                                                \
                 CDATA_ACTION(cdataText, pos);                                  \
                 firstTag = false;                                              \
                 continue;                                                      \
@@ -322,18 +326,18 @@ namespace onyx::dynamic::parser {
                 INCREMENT_POS_IF_EQUALS_OR_THROW(                              \
                     validate, pos, ' ', "Premature end of DOCTYPE section");   \
                                                                                \
-                const char* localPos = pos;                                    \
+                pos.beginCapture();                                            \
                                                                                \
-                while (*localPos != '>') {                                     \
-                    localPos++;                                                \
-                    if (validate && *localPos == '\0')                         \
+                while (&pos != '>') {                                          \
+                    ++pos;                                                     \
+                    if (validate && &pos == '\0')                              \
                         throw std::invalid_argument(                           \
                             "Invalid DOCTYPE without ending");                 \
                 }                                                              \
                                                                                \
-                std::string_view doctypeText(pos, localPos - pos);             \
+                std::string_view doctypeText = pos.getCaptured();              \
                                                                                \
-                pos = localPos;                                                \
+                pos.bringToCapture();                                          \
                 pos++;                                                         \
                 DOCTYPE_ACTION(doctypeText, pos);                              \
                 firstTag = false;                                              \
@@ -356,12 +360,12 @@ namespace onyx::dynamic::parser {
         if (validate && tagName.empty()) {                                     \
             throw std::invalid_argument("Invalid tag name");                   \
         }                                                                      \
-        pos += tagName.size();                                                 \
+        pos.advance(tagName.size());                                           \
                                                                                \
         bool couldHaveAttributes = isWhitespace(*pos) && !isClosing;           \
                                                                                \
         /* Invariant - pos always after tag name end */                        \
-        pos = skipWhitespace(pos);                                             \
+        skipWhitespace(pos);                                                   \
                                                                                \
         if (validate && *pos == '\0') {                                        \
             throw std::invalid_argument("Premature end of document");          \
@@ -374,10 +378,10 @@ namespace onyx::dynamic::parser {
                 if (attributeName.empty()) {                                   \
                     throw std::invalid_argument("Invalid non-closing tag");    \
                 }                                                              \
-                pos += attributeName.size();                                   \
+                pos.advance(attributeName.size());                             \
                                                                                \
                 /* Invariant - after attribute name */                         \
-                pos = skipWhitespace(pos);                                     \
+                skipWhitespace(pos);                                           \
                                                                                \
                 /* Invariant - at = or error state */                          \
                 if (validate && (*pos == '\0' || *pos != '=')) {               \
@@ -385,7 +389,7 @@ namespace onyx::dynamic::parser {
                 }                                                              \
                 pos++;                                                         \
                 /* Invariant - after attribute = */                            \
-                pos = skipWhitespace(pos);                                     \
+                skipWhitespace(pos);                                           \
                 char attributeQuote = '\0';                                    \
                 if (validate && *pos == '\0') {                                \
                     throw std::invalid_argument("Premature end at attribute"); \
@@ -400,17 +404,17 @@ namespace onyx::dynamic::parser {
                 pos++;                                                         \
                                                                                \
                 /* Invariant - after attribute value opening quote */          \
-                const char* localPos = pos;                                    \
+                pos.beginCapture();                                            \
                 bool hasEntities = false;                                      \
-                while (*localPos != attributeQuote) {                          \
-                    if (validate && *localPos == '\0')                         \
+                while (&pos != attributeQuote) {                               \
+                    if (validate && &pos == '\0')                              \
                         throw std::invalid_argument(                           \
                             "Improperly closed attribute value");              \
-                    if (*localPos == '&') hasEntities = true;                  \
-                    localPos++;                                                \
+                    if (&pos == '&') hasEntities = true;                       \
+                    ++pos;                                                     \
                 }                                                              \
-                std::string_view attributeValue(pos, localPos - pos);          \
-                pos = localPos;                                                \
+                std::string_view attributeValue = pos.getCaptured();           \
+                pos.bringToCapture();                                          \
                                                                                \
                 /* Invariant - pos is at closing quote */                      \
                 pos++;                                                         \
@@ -428,7 +432,7 @@ namespace onyx::dynamic::parser {
                                  pos);                                         \
                                                                                \
                 /* Continues to either >, /> or another attribute */           \
-                pos = skipWhitespace(pos);                                     \
+                skipWhitespace(pos);                                           \
                 if (validate && *pos == '\0') {                                \
                     throw std::invalid_argument(                               \
                         "Premature end after attribute");                      \
@@ -469,4 +473,4 @@ namespace onyx::dynamic::parser {
             CLOSE_ACTION(tagName, pos);                                        \
         }                                                                      \
     }
-}
+}  // namespace onyx::dynamic::parser
