@@ -15,9 +15,10 @@ std::unique_ptr<Node> If::shallowCopy() const { return std::make_unique<If>(); }
 void If::specialSerialize(std::vector<Node::SerializationNode>& stack,
                           std::ostringstream& result) const {
     stack.pop_back();
-    const auto& children = this->getChildrenLive();
-    for (size_t i = children.size(); i > 0; --i) {
-        stack.emplace_back(SerializationNode{children[i - 1], false});
+    const Node* current = this->getLastChild();
+    while (current != nullptr) {
+        stack.emplace_back(SerializationNode{current, false});
+        current = current->getPrevSibling();
     }
 }
 

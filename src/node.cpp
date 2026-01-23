@@ -10,21 +10,31 @@
 
 namespace onyx::dynamic {
 Node::Node()
-    : attributes{}, children{}, indices{}, parent{nullptr}, _isOwning(true) {}
+    : attributes{}, firstChild{nullptr}, lastChild{nullptr}, prevSibling{nullptr}, nextSibling{nullptr}, indices{}, parent{nullptr}, _isOwning(true) {}
 
 Node::Node(NonOwningNodeTag)
-    : attributes{}, children{}, indices{}, parent{nullptr}, _isOwning(false) {}
+    : attributes{}, firstChild{nullptr}, lastChild{nullptr}, prevSibling{nullptr}, nextSibling{nullptr}, indices{}, parent{nullptr}, _isOwning(false) {}
 
 Node::Node(Node&& other) noexcept
     : attributes{std::move(other.attributes)},
-      children{std::move(other.children)},
+      firstChild{other.firstChild}, 
+      lastChild{other.lastChild}, 
+      prevSibling{nullptr}, 
+      nextSibling{nullptr},
       indices{std::move(other.indices)},
       parent{other.parent},
       _isOwning(other._isOwning) {
     other.parent = nullptr;
+    other.firstChild = nullptr;
+    other.lastChild = nullptr;
+    other.prevSibling = nullptr;
+    other.nextSibling = nullptr;
     this->takeOverIndices(other);
-    for (auto& child : this->children) {
-        child->parent = this;
+
+    Node* current = this->firstChild;
+    while (current != nullptr) {
+        current->parent = this;
+        current = current->nextSibling;
     }
 }
 
@@ -32,6 +42,10 @@ Node::Node(std::vector<Attribute> attributes,
            std::vector<NodeHandle>&& children)
     : attributes{std::move(attributes)},
       indices{},
+      firstChild{nullptr}, 
+      lastChild{nullptr}, 
+      prevSibling{nullptr}, 
+      nextSibling{nullptr},
       parent{nullptr},
       _isOwning(true) {
     for (auto& child : children) {
@@ -40,11 +54,10 @@ Node::Node(std::vector<Attribute> attributes,
                 "Mixing Nodes with different ownership modes");
         }
     }
+
     for (auto& child : children) {
-        this->children.push_back(child.release());
-    }
-    for (auto& child : this->children) {
-        child->parent = this;
+        this->attachChildBack(child.release());
+        this->lastChild->parent = this;
     }
 }
 
@@ -52,6 +65,10 @@ Node::Node(NonOwningNodeTag, std::vector<Attribute> attributes,
            std::vector<NodeHandle>&& children)
     : attributes{std::move(attributes)},
       indices{},
+      firstChild{nullptr}, 
+      lastChild{nullptr}, 
+      prevSibling{nullptr}, 
+      nextSibling{nullptr},
       parent{nullptr},
       _isOwning(false) {
     for (auto& child : children) {
@@ -59,10 +76,9 @@ Node::Node(NonOwningNodeTag, std::vector<Attribute> attributes,
             throw std::invalid_argument(
                 "Mixing Nodes with different ownership modes");
         }
-        this->children.push_back(child.release());
-    }
-    for (auto& child : this->children) {
-        child->parent = this;
+
+        this->attachChildBack(child.release());
+        this->lastChild->parent = this;
     }
 }
 
@@ -70,7 +86,16 @@ Node& Node::operator=(Node&& other) noexcept {
     if (this == &other) return *this;
     this->destroy();
     this->attributes = std::move(other.attributes);
-    this->children = std::move(other.children);
+    this->firstChild = other.firstChild;
+    this->lastChild = other.lastChild;
+    this->prevSibling = other.prevSibling;
+    this->nextSibling = other.nextSibling;
+
+    other.firstChild = nullptr;
+    other.lastChild = nullptr;
+    other.prevSibling = nullptr;
+    other.nextSibling = nullptr;
+
     this->indices = std::move(other.indices);
     this->_isOwning = other._isOwning;
 
@@ -78,8 +103,10 @@ Node& Node::operator=(Node&& other) noexcept {
     this->parent = other.parent;
     other.parent = nullptr;
 
-    for (auto& child : this->children) {
-        child->parent = this;
+    Node* current = this->firstChild;
+    while (current != nullptr) {
+        current->parent = this;
+        current = current->nextSibling;
     }
 
     return *this;
@@ -105,8 +132,16 @@ void Node::processConstructorAttribute(Attribute&& attribute) {
 }
 
 void Node::processConstructorObjectMoveCleanup() {
-    for (size_t i = 0; i < this->children.size(); i++) {
-        delete this->children[i];
+    Node* current = this->firstChild;
+    while (current != nullptr) {
+        Node* copy = current;
+        current = current->nextSibling;
+        
+        if (current) {
+            current->prevSibling = nullptr;
+        }
+        
+        delete copy;
     }
 }
 
@@ -129,25 +164,41 @@ void Node::destroy() {
         index->invalidate();
     };
 
-    for (auto& child : this->children) {
-        child->parent = nullptr;
+    Node* current = this->firstChild;
+    while (current != nullptr) {
+        current->parent = nullptr;
+        current = current->nextSibling;
     }
 
     if (this->_isOwning) {
-        for (auto& child : this->children) {
-            delete child;
+        while (this->firstChild) {
+            Node* child = this->firstChild;
+            
+            this->firstChild = child->nextSibling;
+            
+            child->parent = nullptr; 
+            child->prevSibling = nullptr;
+            child->nextSibling = nullptr;
+
+            delete child; 
         }
+        this->lastChild = nullptr;
     }
+
     if (this->parent && !this->parent->_isOwning) {
         // In non-owning trees, nodes are not guaranteed to be sequentially
         // destroyed, so they need to manually remove themselves from the
-        // parent's child vector to guarantee no dangling pointers are left
-        auto& parentChildren = this->parent->children;
-        for (size_t i = 0; i < parentChildren.size(); i++) {
-            if (parentChildren[i] == this) {
-                parentChildren.erase(parentChildren.begin() + i);
-                break;
-            }
+        // parent's children to guarantee no dangling pointers are left
+        if (this->prevSibling) {
+            this->prevSibling->nextSibling = this->nextSibling; 
+        } else {
+            this->parent->firstChild = this->nextSibling;
+        }
+
+        if (this->nextSibling) {
+            this->nextSibling->prevSibling = this->prevSibling;
+        } else {
+            this->parent->lastChild = this->prevSibling;
         }
     }
 }
@@ -176,7 +227,7 @@ Node* Node::addChild(NodeHandle newChild) {
 
     Node* newChildRef = newChild.get();
 
-    this->children.push_back(newChild.release());
+    this->attachChildBack(newChild.release());
 
     return newChildRef;
 }
@@ -188,10 +239,28 @@ Node* Node::addChild(std::unique_ptr<Node> child) {
 Node* Node::addChild(Node* child) { return addChild(NodeHandle(child, false)); }
 
 std::vector<Node*> Node::getChildren() const {
-    return std::vector<Node*>(this->children);
+    std::vector<Node*> res;
+
+    Node* current = this->firstChild;
+    while (current != nullptr) {
+        res.push_back(current);
+        current = current->nextSibling;
+    }
+
+    return res;
 }
 
-size_t Node::getChildrenCount() const { return this->children.size(); }
+size_t Node::getChildrenCount() const { 
+    size_t count = 0;
+
+    Node* current = this->firstChild;
+    while (current != nullptr) {
+        count++;
+        current = current->nextSibling;
+    }
+
+    return count;
+}
 
 void Node::addIndex(Node::Index* index) {
     iterativeProcessor(
@@ -275,9 +344,10 @@ void Node::iterativeProcessor(const std::function<void(Node*)>& process) {
 
         s.pop_back();
 
-        const std::vector<Node*>& children = obj->children;
-        for (size_t i = 0; i < children.size(); i++) {
-            s.push_back(children[i]);
+        Node* current = obj->firstChild;
+        while (current != nullptr) {
+            s.push_back(current);
+            current = current->nextSibling;
         }
     }
 }
@@ -291,8 +361,10 @@ std::vector<Node*> Node::iterativeChildrenParse(
     std::vector<Node*> s;
     std::vector<Node*> result;
 
-    for (size_t i = 0; i < this->children.size(); i++) {
-        s.push_back(this->children[i]);
+    Node* current = this->firstChild;
+    while (current != nullptr) {
+        s.push_back(current);
+        current = current->nextSibling;
     }
 
     while (!s.empty()) {
@@ -304,9 +376,10 @@ std::vector<Node*> Node::iterativeChildrenParse(
 
         s.pop_back();
 
-        auto& children = obj->children;
-        for (size_t i = children.size(); i > 0; i--) {
-            s.push_back(children[i - 1]);
+        current = obj->lastChild;
+        while (current != nullptr) {
+            s.push_back(current);
+            current = current->prevSibling;
         }
     }
 
@@ -352,40 +425,42 @@ const std::vector<Attribute>& Node::getAttributes() const {
 }
 
 NodeHandle Node::removeChild(Node* childToRemove) {
-    if (!childToRemove->isInTree()) return nullptr;
-
-    std::vector<std::vector<Node*>*> s;
-
-    s.push_back(&(this->children));
-
-    while (!s.empty()) {
-        std::vector<Node*>* children = s.back();
-
-        for (size_t i = 0; i < children->size(); i++) {
-            if (children->at(i) == childToRemove) {
-                childToRemove->iterativeProcessor(
-                    [this, &childToRemove](Node* obj) -> void {
-                        childToRemove->propagateIndexUpdateUp(
-                            obj, IndexPropagationMessage::REMOVE);
-                    });
-
-                NodeHandle ref(childToRemove, childToRemove->parent->_isOwning);
-                childToRemove->parent = nullptr;
-
-                children->erase(children->begin() + i);
-
-                return ref;
-            }
+    bool foundThis = false;
+    Node* par = childToRemove->parent;
+    while (par != nullptr) {
+        if (par == this) {
+            foundThis = true;
+            break;
         }
-
-        s.pop_back();
-
-        for (size_t i = 0; i < children->size(); i++) {
-            s.push_back(&(children->at(i)->children));
-        }
+        par = par->parent;
     }
 
-    return nullptr;
+    if (!foundThis) return nullptr;
+
+    if (childToRemove->prevSibling) {
+        childToRemove->prevSibling->nextSibling = childToRemove->nextSibling;
+    } else {
+        childToRemove->parent->firstChild = childToRemove->nextSibling;
+    }
+
+    if (childToRemove->nextSibling) {
+        childToRemove->nextSibling->prevSibling = childToRemove->prevSibling;
+    } else {
+        childToRemove->parent->lastChild = childToRemove->prevSibling;
+    }
+
+    childToRemove->iterativeProcessor(
+        [this, &childToRemove](Node* obj) -> void {
+            childToRemove->propagateIndexUpdateUp(
+                obj, IndexPropagationMessage::REMOVE);
+        });
+
+    childToRemove->prevSibling = nullptr;
+    childToRemove->nextSibling = nullptr;
+    childToRemove->parent = nullptr;
+
+    return NodeHandle(childToRemove, this->_isOwning);
+
 }
 
 std::unique_ptr<Node> Node::deepCopy() const {
@@ -406,13 +481,12 @@ std::unique_ptr<Node> Node::deepCopy() const {
         const Node* obj = node.obj;
 
         if (!(obj->isVoid())) {
-            const std::vector<Node*>& children = obj->children;
-            if (!children.empty()) {
-                for (size_t i = 0; i < children.size(); i++) {
-                    std::unique_ptr<Node> child = children[i]->shallowCopy();
-                    s.emplace_back(ParseNode{children[i], child.get()});
-                    node.copy->addChild(std::move(child));
-                }
+            Node* current = obj->firstChild;
+            while(current != nullptr) {
+                std::unique_ptr<Node> child = current->shallowCopy();
+                s.emplace_back(ParseNode{current, child.get()});
+                node.copy->addChild(std::move(child));
+                current = current->nextSibling;
             }
         }
     }
@@ -424,7 +498,7 @@ bool Node::shallowEquals(const Node& other) const {
     if (this->isVoid() != other.isVoid()) return false;
     if (this->getTagName() != other.getTagName()) return false;
     if (this->attributes.size() != other.attributes.size()) return false;
-    if (this->children.size() != other.children.size()) return false;
+    if (this->getChildrenCount() != other.getChildrenCount()) return false;
 
     std::vector<const Attribute*> attributes1;
     std::vector<const Attribute*> attributes2;
@@ -472,15 +546,15 @@ bool Node::deepEquals(const Node& other) const {
         if (!obj->shallowEquals(*other)) return false;
 
         if (!(obj->isVoid())) {
-            const std::vector<Node*>& children = obj->children;
-            const std::vector<Node*>& childrenOther = other->children;
-            if (!children.empty()) {
-                for (size_t i = 0; i < children.size(); i++) {
-                    // Because of obj->shallowEquals(*other) succeeding, it is
-                    // known that at this point the two nodes have the same
-                    // amount of children
-                    s.emplace_back(ParseNode{children[i], childrenOther[i]});
-                }
+            Node* current = obj->firstChild;
+            Node* currentOther = other->firstChild;
+            while (current != nullptr && currentOther != nullptr) {
+                // Because of obj->shallowEquals(*other) succeeding, it is
+                // known that at this point the two nodes have the same
+                // amount of children
+                s.emplace_back(ParseNode{current, currentOther});
+                current = current->nextSibling;
+                currentOther = currentOther->nextSibling;
             }
         }
     }
@@ -489,9 +563,10 @@ bool Node::deepEquals(const Node& other) const {
 
 size_t Node::size() const {
     size_t size = 1;
-    for (auto& child : this->children) {
-        size += child->size();
-    }
+    iterativeChildrenParse([&size](Node* cur) -> bool {
+        size++;
+        return false;
+    });
     return size;
 }
 
@@ -512,15 +587,17 @@ size_t Node::depth() const {
         }
 
         if (!(obj->isVoid())) {
-            const std::vector<Node*>& children = obj->children;
-            if (!children.empty()) {
+            Node* current = obj->firstChild;
+            if (current != nullptr) {
                 depth++;
                 if (depth > maxDepth) {
                     maxDepth = depth;
                 }
                 s.emplace_back(nullptr);
-                for (size_t i = children.size(); i > 0; --i) {
-                    s.emplace_back(children[i - 1]);
+                current = obj->lastChild;
+                while (current != nullptr) {
+                    s.emplace_back(current);
+                    current = current->prevSibling;
                 }
             }
         }
@@ -540,10 +617,11 @@ size_t Node::leafCount() const {
         s.pop_back();
 
         if (!(obj->isVoid())) {
-            const std::vector<Node*>& children = obj->children;
-            if (!children.empty()) {
-                for (size_t i = children.size(); i > 0; --i) {
-                    s.emplace_back(children[i - 1]);
+            Node* current = obj->lastChild;
+            if (current != nullptr) {
+                while (current != nullptr) {
+                    s.emplace_back(current);
+                    current = current->prevSibling;
                 }
             } else {
                 leaves++;
@@ -660,11 +738,12 @@ std::string Node::serialize() const {
         }
 
         if (!(obj->isVoid())) {
-            const std::vector<Node*>& children = obj->children;
-            if (!children.empty()) {
+            Node* current = obj->lastChild;
+            if (current != nullptr) {
                 result << ">";
-                for (size_t i = children.size(); i > 0; --i) {
-                    s.emplace_back(SerializationNode{children[i - 1], false});
+                while (current != nullptr) {
+                    s.emplace_back(SerializationNode{current, false});
+                    current = current->prevSibling;
                 }
             } else {
                 result << "></" << tagName << ">";
@@ -751,13 +830,14 @@ std::string Node::serializePretty(const std::string& indentationSequence,
         }
 
         if (!(obj->isVoid())) {
-            const std::vector<Node*>& children = obj->children;
-            if (!children.empty()) {
+            Node* current = obj->lastChild;
+            if (current != nullptr) {
                 result << ">\n";
                 s.emplace_back(SerializationNode{nullptr, false});
                 indentation += indentationSequence;
-                for (size_t i = children.size(); i > 0; --i) {
-                    s.emplace_back(SerializationNode{children[i - 1], false});
+                while (current != nullptr) {
+                    s.emplace_back(SerializationNode{current, false});
+                    current = current->prevSibling;
                 }
             } else {
                 result << "></" << tagName << ">\n";
@@ -850,7 +930,33 @@ void Node::setSortAttributes(bool shouldSort) { sortAttributes = shouldSort; }
 
 bool Node::getSortAttributes() { return sortAttributes; }
 
-const std::vector<Node*>& Node::getChildrenLive() const {
-    return this->children;
+const Node* Node::getFirstChild() const {
+    return this->firstChild;
+}
+    
+const Node* Node::getLastChild() const {
+    return this->lastChild;
+}
+
+const Node* Node::getPrevSibling() const {
+    return this->prevSibling;
+}
+
+const Node* Node::getNextSibling() const {
+    return this->nextSibling;
+}
+
+void Node::attachChildBack(Node* child) {
+    child->nextSibling = nullptr;
+
+    if (this->lastChild) {
+        this->lastChild->nextSibling = child;
+        child->prevSibling = this->lastChild;
+        this->lastChild = child;
+    } else {
+        this->firstChild = child;
+        this->lastChild = this->firstChild;
+        child->prevSibling = nullptr;
+    }
 }
 }  // namespace onyx::dynamic

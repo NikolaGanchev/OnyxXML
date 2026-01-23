@@ -193,16 +193,41 @@ class Node {
         const std::function<bool(Node*)>& condition) const;
 
     /**
+     * @brief Attach the child to the back of the linked list. Does not update parents.
+     * 
+     * @param child 
+     */
+    void attachChildBack(Node* child);
+
+    /**
      * @brief A vector holding the Attributes of this node
      *
      */
     std::vector<Attribute> attributes;
 
     /**
-     * @brief A vector holding unique pointers to the children of this node
-     *
+     * @brief The first child
+     * 
      */
-    std::vector<Node*> children;
+    Node* firstChild;
+
+    /**
+     * @brief The last child
+     * 
+     */
+    Node* lastChild;
+
+    /**
+     * @brief The previous sibling
+     * 
+     */
+    Node* prevSibling;
+
+    /**
+     * @brief The next sibling
+     * 
+     */
+    Node* nextSibling;
 
     /**
      * @brief A linked list holding raw pointers to the indices of this node
@@ -332,14 +357,6 @@ class Node {
      * @param message The type of update to the index to apply
      */
     void updateAndPropagateUp(IndexPropagationMessage message);
-
-   protected:
-    /**
-     * @brief Get a reference to the live children std::vector
-     *
-     * @return const std::vector<Node*>&
-     */
-    const std::vector<Node*>& getChildrenLive() const;
 
    public:
     /**
@@ -873,13 +890,41 @@ class Node {
      * @return false
      */
     static bool getSortAttributes();
+
+    /**
+     * @brief Get a reference to the first child
+     *
+     * @return const Node*
+     */
+    const Node* getFirstChild() const;
+
+    /**
+     * @brief Get a reference to the last child
+     *
+     * @return const Node*
+     */
+    const Node* getLastChild() const;
+
+    /**
+     * @brief Get a reference to the previous sibling
+     *
+     * @return const Node*
+     */
+    const Node* getPrevSibling() const;
+
+    /**
+     * @brief Get a reference to the next sibling
+     *
+     * @return const Node*
+     */
+    const Node* getNextSibling() const;
 };
 }  // namespace onyx::dynamic
 
 template <typename... Args>
 onyx::dynamic::Node::Node(Args&&... args)
     requires(onyx::dynamic::isValidNodeConstructorType<Args> && ...)
-    : attributes{}, children{}, parent{nullptr}, indices{}, _isOwning(true) {
+    : attributes{}, firstChild{nullptr}, lastChild{nullptr}, prevSibling{nullptr}, nextSibling{nullptr}, parent{nullptr}, indices{}, _isOwning(true) {
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
@@ -918,7 +963,7 @@ onyx::dynamic::Node* onyx::dynamic::Node::addChild(T&& newChild)
         obj1->propagateIndexUpdateUp(current, IndexPropagationMessage::PUT);
     });
 
-    children.push_back(obj);
+    this->attachChildBack(obj1);
 
     return obj;
 }
@@ -942,7 +987,7 @@ void onyx::dynamic::Node::processConstructorObjectMove(T&& child)
     T* obj = new std::decay_t<T>(std::forward<T>(child));
     (dynamic_cast<Node*>(obj))->parent = this;
 
-    children.push_back(obj);
+    this->attachChildBack(obj);
 }
 
 template <typename T>
