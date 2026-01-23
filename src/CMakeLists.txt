@@ -33,6 +33,7 @@ target_sources(
         "parse/sax_parser.cpp"
         "node_handle.cpp"
         "arena.cpp"
+        "paged_arena.cpp"
         "nodes/xml_declaration_node.cpp"
         "nodes/doctype_node.cpp"
 )
