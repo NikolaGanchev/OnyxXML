@@ -9,11 +9,20 @@
 #include "is_cursor.h"
 #include "string_cursor.h"
 
+#if defined(_MSC_VER)
+    #define ONYX_NOINLINE __declspec(noinline)
+#elif defined(__GNUC__) || defined(__clang__)
+    #define ONYX_NOINLINE __attribute__((noinline))
+#else
+    #define ONYX_NOINLINE
+#endif
+
 namespace onyx::dynamic::parser {
+
 bool isWhitespace(const char pos);
 
 template <typename Cursor>
-void skipWhitespace(Cursor& pos)
+ONYX_NOINLINE void skipWhitespace(Cursor& pos)
     requires(isCursor<Cursor>)
 {
     while (*pos != '\0' && isWhitespace(*pos)) {
@@ -22,14 +31,14 @@ void skipWhitespace(Cursor& pos)
 }
 
 template <typename Cursor>
-uint32_t handleUnicodeChar(Cursor& c)
+ONYX_NOINLINE uint32_t handleUnicodeChar(Cursor& c)
     requires(isCursor<Cursor>)
 {
     return text::getUnicodeCodepoint(c);
 }
 
 template <typename Cursor>
-bool isNameStartChar(Cursor& ch)
+ONYX_NOINLINE bool isNameStartChar(Cursor& ch)
     requires(isCursor<Cursor>)
 {
     if ((unsigned char)*ch < 128) [[likely]] {
@@ -52,7 +61,7 @@ bool isNameStartChar(Cursor& ch)
 }
 
 template <typename Cursor>
-bool isNameChar(Cursor& ch)
+ONYX_NOINLINE bool isNameChar(Cursor& ch)
     requires(isCursor<Cursor>)
 {
     if ((unsigned char)*ch < 128) [[likely]] {
@@ -78,7 +87,7 @@ bool isNameChar(Cursor& ch)
 }
 
 template <typename Cursor>
-typename Cursor::StringType readName(Cursor& pos)
+ONYX_NOINLINE typename Cursor::StringType readName(Cursor& pos)
     requires(isCursor<Cursor>)
 {
     pos.beginCapture();
