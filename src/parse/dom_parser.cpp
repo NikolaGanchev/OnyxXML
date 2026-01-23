@@ -1,8 +1,8 @@
 #include "parse/dom_parser.h"
 
 #include "parse/_parse_macro.h"
-#include "parse/string_cursor.h"
 #include "parse/stream_cursor.h"
+#include "parse/string_cursor.h"
 
 namespace onyx::dynamic::parser {
 ParseResult::ParseResult() : arena{0}, root{nullptr} {}
@@ -162,8 +162,7 @@ ParseResult DomParser::parse(std::string_view input) {
     attributeNames.clear();                                                 \
     attributeValues.clear();
 
-#define CLOSE_ACTION(tagName, pos) \
-    stack.pop_back();
+#define CLOSE_ACTION(tagName, pos) stack.pop_back();
 
     PARSE_BODY(false);
 
@@ -204,8 +203,9 @@ NodeHandle DomParser::parse(std::istream& input) {
 
     skipWhitespace(pos);
 
-#define TEXT_ACTION(text, hasEntities, pos)            \
-    stack.back()->addChild(tags::Text(hasEntities ? text::expandEntities(text) : text));
+#define TEXT_ACTION(text, hasEntities, pos) \
+    stack.back()->addChild(                 \
+        tags::Text(hasEntities ? text::expandEntities(text) : text));
 
 #define COMMENT_ACTION(commentText, pos) \
     stack.back()->addChild(tags::Comment(std::move(commentText)));
@@ -213,46 +213,49 @@ NodeHandle DomParser::parse(std::istream& input) {
 #define CDATA_ACTION(cdataText, pos) \
     stack.back()->addChild(tags::CData(std::move(cdataText)));
 
-#define INSTRUCTION_ACTION(tagName, processingInstruction, pos)         \
-    stack.back()->addChild(tags::ProcessingInstruction(std::move(tagName), processingInstruction));
+#define INSTRUCTION_ACTION(tagName, processingInstruction, pos) \
+    stack.back()->addChild(tags::ProcessingInstruction(         \
+        std::move(tagName), processingInstruction));
 
 #define ATTRIBUTE_ACTION(attributeName, attributeValue, hasEntities, pos) \
-    attributeNames.push_back(std::move(attributeName));                              \
-    attributeValues.push_back(std::make_pair(std::move(attributeValue), hasEntities));
+    attributeNames.push_back(std::move(attributeName));                   \
+    attributeValues.push_back(                                            \
+        std::make_pair(std::move(attributeValue), hasEntities));
 
 #define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, \
                                hasStandalone, pos)                           \
-    stack.back()->addChild(tags::XmlDeclaration(             \
-        std::move(version), std::move(encoding), hasEncoding,            \
-        isStandalone, hasStandalone, false));
+    stack.back()->addChild(tags::XmlDeclaration(                             \
+        std::move(version), std::move(encoding), hasEncoding, isStandalone,  \
+        hasStandalone, false));
 
 #define DOCTYPE_ACTION(doctypeText, pos) \
     stack.back()->addChild(tags::Doctype(std::move(doctypeText)));
 
-#define OPEN_ACTION(tagName, pos, isSelfClosing)                            \
-    std::unique_ptr<Node> newNode = std::make_unique<tags::GenericNode>(std::move(tagName), isSelfClosing);       \
-                                                                            \
-    auto& attributes = newNode->attributes;                                 \
-    for (int i = 0; i < attributeNames.size(); i++) {                       \
-        attributes.emplace_back(                                            \
-            attributeNames[i],                                 \
-            attributeValues[i].second                                       \
-                ? text::expandEntities(attributeValues[i].first)            \
-                : attributeValues[i].first);                   \
-    }                                                                       \
-                                                                             \
-    Node* newNodePtr = newNode.get();   \
-    stack.back()->addChild(std::move(newNode));                                        \
-    if (!isSelfClosing) {                                                   \
-        stack.push_back(newNodePtr);                                           \
-    }   \
-                                                                          \
-    attributeNames.clear();                                                 \
+#define OPEN_ACTION(tagName, pos, isSelfClosing)                         \
+    std::unique_ptr<Node> newNode = std::make_unique<tags::GenericNode>( \
+        std::move(tagName), isSelfClosing);                              \
+                                                                         \
+    auto& attributes = newNode->attributes;                              \
+    for (int i = 0; i < attributeNames.size(); i++) {                    \
+        attributes.emplace_back(                                         \
+            attributeNames[i],                                           \
+            attributeValues[i].second                                    \
+                ? text::expandEntities(attributeValues[i].first)         \
+                : attributeValues[i].first);                             \
+    }                                                                    \
+                                                                         \
+    Node* newNodePtr = newNode.get();                                    \
+    stack.back()->addChild(std::move(newNode));                          \
+    if (!isSelfClosing) {                                                \
+        stack.push_back(newNodePtr);                                     \
+    }                                                                    \
+                                                                         \
+    attributeNames.clear();                                              \
     attributeValues.clear();
 
-#define CLOSE_ACTION(tagName, pos) \
-    Node* thisNode = stack.back();                               \
-    if (thisNode->getTagName() != tagName) {                            \
+#define CLOSE_ACTION(tagName, pos)                                \
+    Node* thisNode = stack.back();                                \
+    if (thisNode->getTagName() != tagName) {                      \
         throw std::invalid_argument("Closing unopened tag");      \
     }                                                             \
     if (stack.size() == 1) {                                      \
