@@ -2,6 +2,7 @@
 
 #include "parse/_parse_macro.h"
 #include "parse/string_cursor.h"
+#include "parse/stream_cursor.h"
 
 namespace onyx::dynamic::parser {
 ParseResult::ParseResult() : arena{0}, root{nullptr} {}
@@ -162,7 +163,6 @@ ParseResult DomParser::parse(std::string_view input) {
     attributeValues.clear();
 
 #define CLOSE_ACTION(tagName, pos) \
-    Node* thisNode = stack.back(); \
     stack.pop_back();
 
     PARSE_BODY(false);
@@ -188,5 +188,100 @@ ParseResult DomParser::parse(std::string_view input) {
     }
 
     return ParseResult{std::move(arena), root};
+}
+
+NodeHandle DomParser::parse(std::istream& input) {
+    std::vector<Node*> stack;
+    std::vector<std::string> attributeNames;
+    std::vector<std::pair<std::string, bool>> attributeValues;
+
+    using StringType = StreamCursor::StringType;
+    StreamCursor pos(input);
+
+    std::unique_ptr<Node> root = std::make_unique<tags::EmptyNode>();
+
+    stack.push_back(root.get());
+
+    skipWhitespace(pos);
+
+#define TEXT_ACTION(text, hasEntities, pos)            \
+    stack.back()->addChild(tags::Text(hasEntities ? text::expandEntities(text) : text));
+
+#define COMMENT_ACTION(commentText, pos) \
+    stack.back()->addChild(tags::Comment(commentText));
+
+#define CDATA_ACTION(cdataText, pos) \
+    stack.back()->addChild(tags::CData(cdataText));
+
+#define INSTRUCTION_ACTION(tagName, processingInstruction, pos)         \
+    stack.back()->addChild(tags::ProcessingInstruction(tagName, processingInstruction));
+
+#define ATTRIBUTE_ACTION(attributeName, attributeValue, hasEntities, pos) \
+    attributeNames.push_back(attributeName);                              \
+    attributeValues.push_back(std::make_pair(attributeValue, hasEntities));
+
+#define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, \
+                               hasStandalone, pos)                           \
+    stack.back()->addChild(tags::XmlDeclaration(             \
+        version, encoding, hasEncoding,            \
+        isStandalone, hasStandalone, false));
+
+#define DOCTYPE_ACTION(doctypeText, pos) \
+    stack.back()->addChild(tags::Doctype(doctypeText));
+
+#define OPEN_ACTION(tagName, pos, isSelfClosing)                            \
+    std::unique_ptr<Node> newNode = std::make_unique<tags::GenericNode>(tagName, isSelfClosing);       \
+                                                                            \
+    auto& attributes = newNode->attributes;                                 \
+    for (int i = 0; i < attributeNames.size(); i++) {                       \
+        attributes.emplace_back(                                            \
+            attributeNames[i],                                 \
+            attributeValues[i].second                                       \
+                ? text::expandEntities(attributeValues[i].first)            \
+                : attributeValues[i].first);                   \
+    }                                                                       \
+                                                                             \
+    Node* newNodePtr = newNode.get();   \
+    stack.back()->addChild(std::move(newNode));                                        \
+    if (!isSelfClosing) {                                                   \
+        stack.push_back(newNodePtr);                                           \
+    }   \
+                                                                          \
+    attributeNames.clear();                                                 \
+    attributeValues.clear();
+
+#define CLOSE_ACTION(tagName, pos) \
+    Node* thisNode = stack.back();                               \
+    if (thisNode->getTagName() != tagName) {                            \
+        throw std::invalid_argument("Closing unopened tag");      \
+    }                                                             \
+    if (stack.size() == 1) {                                      \
+        throw std::invalid_argument("Closing non-existent tags"); \
+    }                                                             \
+    stack.pop_back();
+
+    PARSE_BODY(true);
+
+#undef TEXT_ACTION
+#undef COMMENT_ACTION
+#undef CDATA_ACTION
+#undef INSTRUCTION_ACTION
+#undef ATTRIBUTE_ACTION
+#undef OPEN_ACTION
+#undef XML_DECLARATION_ACTION
+#undef DOCTYPE_ACTION
+#undef CLOSE_ACTION
+
+    // Invariant - stack may only contain the root
+    if (stack.size() != 1 || stack[0] != root.get()) {
+        throw std::invalid_argument("Unclosed tags left");
+    }
+
+    if (root->getChildrenCount() == 1) {
+        NodeHandle newRoot = root->removeChild(root->getChildren()[0]);
+        root = std::move(newRoot.toUnique());
+    }
+
+    return NodeHandle(std::move(root));
 }
 }  // namespace onyx::dynamic::parser

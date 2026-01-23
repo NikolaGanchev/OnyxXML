@@ -1,4 +1,5 @@
 #include <chrono>
+#include <sstream>
 
 #include "catch2/catch_all.hpp"
 #include "onyx.h"
@@ -8,12 +9,15 @@ TEST_CASE("DomParser works") {
     using namespace onyx::parser;
 
     std::string input = "<html><head></head></html>";
+    std::stringstream inputStream(input);
 
     GenericNode output{"html", false, GenericNode("head", false)};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with text") {
@@ -22,6 +26,7 @@ TEST_CASE("DomParser works with text") {
 
     std::string input =
         "<html><body><div> Hello<span></span>World! </div></body></html>";
+    std::stringstream inputStream(input);
 
     GenericNode output{
         "html", false,
@@ -30,8 +35,10 @@ TEST_CASE("DomParser works with text") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with a single attribute") {
@@ -41,6 +48,7 @@ TEST_CASE("DomParser works with a single attribute") {
     std::string input =
         "<html theme=\"dark\"><body><div> Hello<span></span>World! "
         "</div></body></html>";
+    std::stringstream inputStream(input);
 
     GenericNode output{
         "html", false, Attribute("theme", "dark"),
@@ -49,8 +57,11 @@ TEST_CASE("DomParser works with a single attribute") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
+    INFO(prStream->serialize());
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with many attributes") {
@@ -60,6 +71,7 @@ TEST_CASE("DomParser works with many attributes") {
     std::string input =
         "<html theme=\"dark\" lang='en'><body><div> Hello<span></span>World! "
         "</div></body></html>";
+    std::stringstream inputStream(input);
 
     GenericNode output{
         "html", false, Attribute("theme", "dark"), Attribute("lang", "en"),
@@ -68,8 +80,10 @@ TEST_CASE("DomParser works with many attributes") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser expands entities in text") {
@@ -79,6 +93,7 @@ TEST_CASE("DomParser expands entities in text") {
     std::string input =
         "<html theme=\"dark\" lang='en'><body><div> 4 &#60; 5; "
         "</div></body></html>";
+    std::stringstream inputStream(input);
 
     GenericNode output{
         "html", false, Attribute("theme", "dark"), Attribute("lang", "en"),
@@ -86,8 +101,11 @@ TEST_CASE("DomParser expands entities in text") {
                     GenericNode("div", false, Text(" 4 < 5; ")))};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
+    INFO(prStream->serialize());
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser expands entities in attribute values") {
@@ -97,6 +115,7 @@ TEST_CASE("DomParser expands entities in attribute values") {
     std::string input =
         "<html theme=\"dark&apos;\" lang='en'><body><div> "
         "Hello<span></span>World! </div></body></html>";
+    std::stringstream inputStream(input);
 
     GenericNode output{
         "html", false, Attribute("theme", "dark'"), Attribute("lang", "en"),
@@ -105,8 +124,10 @@ TEST_CASE("DomParser expands entities in attribute values") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser parses complex html") {
@@ -216,6 +237,7 @@ TEST_CASE("DomParser parses complex html") {
         "application.</p></section></main><footer><p>© 2025 Complex HTML Test "
         "Page</p><a href=\"https://www.example.com\">Privacy "
         "Policy</a></footer></body></html>";
+    std::stringstream inputStream(input);
 
     auto t1 = high_resolution_clock::now();
     ParseResult pr = DomParser::parse(input);
@@ -227,6 +249,15 @@ TEST_CASE("DomParser parses complex html") {
     REQUIRE(output.deepEquals(*pr.root));
 
     INFO(time.count());
+
+    t1 = high_resolution_clock::now();
+    NodeHandle prStream = DomParser::parse(inputStream);
+    t2 = high_resolution_clock::now();
+
+    time = t2 - t1;
+
+    INFO(time.count());
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with comments") {
@@ -236,6 +267,7 @@ TEST_CASE("DomParser works with comments") {
     std::string input =
         "<html theme=\"dark\"><!--This is a comment!--><body><div> "
         "Hello<span></span>World! </div></body></html>";
+    std::stringstream inputStream(input);
 
     GenericNode output{
         "html", false, Attribute("theme", "dark"),
@@ -245,10 +277,12 @@ TEST_CASE("DomParser works with comments") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with processing instructions") {
@@ -258,16 +292,19 @@ TEST_CASE("DomParser works with processing instructions") {
     std::string input =
         "<root lang=\"en\"><?templater doSomething 5 > 4 "
         "somethingElse?></root>";
+    std::stringstream inputStream(input);
 
     GenericNode output{
         "root", false, Attribute("lang", "en"),
         ProcessingInstruction("templater", "doSomething 5 > 4 somethingElse")};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with CDATA") {
@@ -277,16 +314,19 @@ TEST_CASE("DomParser works with CDATA") {
     std::string input =
         "<root lang=\"en\"><![CDATA[<someElement> This is some literal text, "
         "in which & and <, > can safely be written!]]></root>";
+    std::stringstream inputStream(input);
 
     GenericNode output{"root", false, Attribute("lang", "en"),
                        CData("<someElement> This is some literal text, in "
                              "which & and <, > can safely be written!")};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with XML declarations") {
@@ -294,16 +334,19 @@ TEST_CASE("DomParser works with XML declarations") {
     using namespace onyx::parser;
 
     std::string input = "<?xml version=\"1.0\"?>";
+    std::stringstream inputStream(input);
 
     XmlDeclaration output("1.0", "UTF-8", false, false, false, false);
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     INFO(dynamic_cast<XmlDeclaration*>(pr.root)->getStandalone());
     INFO(dynamic_cast<XmlDeclaration*>(pr.root)->getEncoding());
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with XML declarations with encoding") {
@@ -311,14 +354,17 @@ TEST_CASE("DomParser works with XML declarations with encoding") {
     using namespace onyx::parser;
 
     std::string input = "<?xml version=\"1.1\" encoding=\"ISO-8859-1\"?>";
+    std::stringstream inputStream(input);
 
     XmlDeclaration output("1.1", "ISO-8859-1", true, false, false, false);
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with XML declarations with standalone") {
@@ -326,14 +372,17 @@ TEST_CASE("DomParser works with XML declarations with standalone") {
     using namespace onyx::parser;
 
     std::string input = "<?xml version=\"1.0\" standalone=\"yes\"?>";
+    std::stringstream inputStream(input);
 
     XmlDeclaration output("1.0", "UTF-8", false, true, true, false);
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser works with DOCTYPE") {
@@ -343,6 +392,7 @@ TEST_CASE("DomParser works with DOCTYPE") {
     std::string input =
         "<!DOCTYPE html><html theme=\"dark\"><body><div> "
         "Hello<span></span>World! </div></body></html>";
+    std::stringstream inputStream(input);
 
     EmptyNode output{
         Doctype("html"),
@@ -353,10 +403,12 @@ TEST_CASE("DomParser works with DOCTYPE") {
                                             Text("World! "))))};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser parses unicode") {
@@ -369,6 +421,7 @@ TEST_CASE("DomParser parses unicode") {
         "👋</елемент-с-юникод><データ>Some mixed content: éléphant, caffè, "
         "España. 🚀</データ><属性 attr=\"値-юникод-1\" "
         "друг-attr=\"テスト値\"></属性><空要素/></root-тест>";
+    std::stringstream inputStream(input);
 
     EmptyNode output{
         XmlDeclaration("1.0", "UTF-8", true, false, false, false),
@@ -384,38 +437,52 @@ TEST_CASE("DomParser parses unicode") {
             GenericNode("空要素", true))};
 
     ParseResult pr = DomParser::parse(input);
+    NodeHandle prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream));
 }
 
 TEST_CASE("DomParser throws \"Invalid end after tag open\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag>   \n\t   ";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Unclosed tags left");
+    std::stringstream inputStream(input);
+    std::string message = "Unclosed tags left";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Premature end of document after <\"") {
     using namespace onyx::parser;
 
     std::string input = "<";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end of document");
+    std::stringstream inputStream(input);
+    std::string message = "Premature end of document";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Premature end in processing instruction\"") {
     using namespace onyx::parser;
 
     std::string input = "<?";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end of document");
+    std::stringstream inputStream(input);
+    std::string message = "Premature end of document";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Empty processing instruction tag name\"") {
     using namespace onyx::parser;
 
     std::string input = "<? >";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid tag name");
+    std::stringstream inputStream(input);
+    std::string message = "Invalid tag name";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE(
@@ -424,193 +491,252 @@ TEST_CASE(
     using namespace onyx::parser;
 
     std::string input = "<tag></tag><?xml ?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "XML declaration is only allowed at the first position "
-                        "in the prologue");
+    std::stringstream inputStream(input);
+    std::string message = "XML declaration is only allowed at the first position "
+                        "in the prologue";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Missing space after PI target\"") {
     using namespace onyx::parser;
 
     std::string input = "<?pi?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "No space between processing instruction target and "
-                        "processing instruction content");
+    std::stringstream inputStream(input);
+    std::string message = "No space between processing instruction target and "
+                        "processing instruction content";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Unterminated processing instruction\"") {
     using namespace onyx::parser;
 
     std::string input = "<?pi content";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "Invalid processing instruction without ending");
+    std::stringstream inputStream(input);
+    std::string message = "Invalid processing instruction without ending";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Unterminated comment\"") {
     using namespace onyx::parser;
 
     std::string input = "<!-- comment";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "Invalid comment without ending");
+    std::stringstream inputStream(input);
+    std::string message = "Invalid comment without ending";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"-- inside comment\"") {
     using namespace onyx::parser;
 
     std::string input = "<!-- comment-- ->";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "-- inside of comment not allowed");
+    std::stringstream inputStream(input);
+    std::string message = "-- inside of comment not allowed";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Empty tag name\"") {
     using namespace onyx::parser;
 
     std::string input = "<>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid tag name");
+    std::stringstream inputStream(input);
+    std::string message = "Invalid tag name";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Invalid attribute name\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag =\"value\">";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Invalid non-closing tag");
+    std::stringstream inputStream(input);
+    std::string message = "Invalid non-closing tag";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"No equals after attribute name\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag attr>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "No = after attribute");
+    std::stringstream inputStream(input);
+    std::string message = "No = after attribute";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Premature end at attribute\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag attr=";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Premature end at attribute");
+    std::stringstream inputStream(input);
+    std::string message = "Premature end at attribute";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"No quote after attribute equals\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag attr=value>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "No quote (\" or ') after attribute =");
+    std::stringstream inputStream(input);
+    std::string message = "No quote (\" or ') after attribute =";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Improperly closed attribute value\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag attr=\"";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "Improperly closed attribute value");
+    std::stringstream inputStream(input);
+    std::string message = "Improperly closed attribute value";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"No whitespace after closing attribute quote\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag attr=\"val\"x>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "No whitespace after attribute closing quote");
+    std::stringstream inputStream(input);
+    std::string message = "No whitespace after attribute closing quote";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Premature end after attribute\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag attr=\"val\"";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "No whitespace after attribute closing quote");
+    std::stringstream inputStream(input);
+    std::string message = "No whitespace after attribute closing quote";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Double closing tag\"") {
     using namespace onyx::parser;
 
     std::string input = "</tag/>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "Trying to double-close closing tag");
+    std::stringstream inputStream(input);
+    std::string message = "Trying to double-close closing tag";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Invalid tag close after /\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag/ ";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "Invalid tag close - must have > after /");
+    std::stringstream inputStream(input);
+    std::string message = "Invalid tag close - must have > after /";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"No tag close\"") {
     using namespace onyx::parser;
 
     std::string input = "<tag attr=\"val\" x";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "No = after attribute");
+    std::stringstream inputStream(input);
+    std::string message = "No = after attribute";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Closing unopened tag\"") {
     using namespace onyx::parser;
 
     std::string input = "<a></b>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Closing unopened tag");
+    std::stringstream inputStream(input);
+    std::string message = "Closing unopened tag";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Closing non-existent tags\"") {
     using namespace onyx::parser;
 
     std::string input = "</a>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Closing unopened tag");
+    std::stringstream inputStream(input);
+    std::string message = "Closing unopened tag";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Unclosed tags left\"") {
     using namespace onyx::parser;
 
     std::string input = "<a><b></b>";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Unclosed tags left");
+    std::stringstream inputStream(input);
+    std::string message = "Unclosed tags left";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Premature end of CDATA section\"") {
     using namespace onyx::parser;
 
     std::string input = "<![CD";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "Premature end of CDATA section");
+    std::stringstream inputStream(input);
+    std::string message = "Premature end of CDATA section";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Invalid CDATA without ending\"") {
     using namespace onyx::parser;
 
     std::string input = "<![CDATA[asdfasfasfasfasfasfasda";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "Invalid CDATA without ending");
+    std::stringstream inputStream(input);
+    std::string message = "Invalid CDATA without ending";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Premature end of DOCTYPE section\"") {
     using namespace onyx::parser;
 
     std::string input = "<!DOC";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "Premature end of DOCTYPE section");
+    std::stringstream inputStream(input);
+    std::string message = "Premature end of DOCTYPE section";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Invalid DOCTYPE without ending\"") {
     using namespace onyx::parser;
 
     std::string input = "<!DOCTYPE sdfsdfsdf";
-    REQUIRE_THROWS_WITH(DomParser::parse(input),
-                        "Invalid DOCTYPE without ending");
+    std::stringstream inputStream(input);
+    std::string message = "Invalid DOCTYPE without ending";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Tag name cannot contain '!'\"") {
     using namespace onyx::parser;
 
     std::string input = "<!as";
-    REQUIRE_THROWS_WITH(DomParser::parse(input), "Tag name cannot contain '!'");
+    std::stringstream inputStream(input);
+    std::string message = "Tag name cannot contain '!'";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"XML declaration must include version\"") {
     using namespace onyx::parser;
 
     std::string xml = "<?xml encoding=\"UTF-8\"?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(xml),
-                        "XML declaration must include version");
+    std::stringstream inputStream(xml);
+    std::string message = "XML declaration must include version";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE(
@@ -618,40 +744,50 @@ TEST_CASE(
     using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"2.0\"?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(xml),
-                        "Unsupported XML version, must be '1.0' or '1.1'");
+    std::stringstream inputStream(xml);
+    std::string message = "Unsupported XML version, must be '1.0' or '1.1'";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"No '=' after XML declaration attribute name\"") {
     using namespace onyx::parser;
 
     std::string xml = "<?xml version \"1.0\"?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(xml),
-                        "No '=' after XML declaration attribute name");
+    std::stringstream inputStream(xml);
+    std::string message = "No '=' after XML declaration attribute name";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"XML declaration attribute value not quoted\"") {
     using namespace onyx::parser;
 
     std::string xml = "<?xml version=1.0?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(xml),
-                        "XML declaration attribute value not quoted");
+    std::stringstream inputStream(xml);
+    std::string message = "XML declaration attribute value not quoted";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Unterminated XML declaration attribute value\"") {
     using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"1.0?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(xml),
-                        "Unterminated XML declaration attribute value");
+    std::stringstream inputStream(xml);
+    std::string message = "Unterminated XML declaration attribute value";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Invalid encoding in XML declaration\"") {
     using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"1.0\" encoding=\"123-UTF\"?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(xml),
-                        "Invalid encoding in XML declaration");
+    std::stringstream inputStream(xml);
+    std::string message = "Invalid encoding in XML declaration";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE(
@@ -659,16 +795,20 @@ TEST_CASE(
     using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"1.0\" standalone=\"maybe\"?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(xml),
-                        "Invalid standalone value, must be 'yes' or 'no'");
+    std::stringstream inputStream(xml);
+    std::string message = "Invalid standalone value, must be 'yes' or 'no'";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 TEST_CASE("DomParser throws \"Invalid XML declaration attribute 'extra'\"") {
     using namespace onyx::parser;
 
     std::string xml = "<?xml version=\"1.0\" extra=\"oops\"?>";
-    REQUIRE_THROWS_WITH(DomParser::parse(xml),
-                        "Invalid XML declaration attribute 'extra'");
+    std::stringstream inputStream(xml);
+    std::string message = "Invalid XML declaration attribute 'extra'";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
 #include <iostream>

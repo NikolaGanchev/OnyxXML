@@ -6,7 +6,6 @@
 namespace onyx::dynamic::parser {
 /**
  * @brief A minimal cursor built upon a string. Supports capture operations.
- * Mixing normal and capture operations is not supported.
  *
  */
 struct StringCursor {

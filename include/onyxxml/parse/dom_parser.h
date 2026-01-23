@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <istream>
 
 #include "../arena.h"
 #include "../node.h"
@@ -90,5 +91,13 @@ class DomParser {
      * @return ParseResult
      */
     static ParseResult parse(std::string_view input);
+
+    /**
+     * @brief Parse an XML stream
+     *
+     * @param input
+     * @return NodeHandle
+     */
+    static NodeHandle parse(std::istream& input);
 };
 }  // namespace onyx::dynamic::parser
