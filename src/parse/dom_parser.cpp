@@ -208,29 +208,29 @@ NodeHandle DomParser::parse(std::istream& input) {
     stack.back()->addChild(tags::Text(hasEntities ? text::expandEntities(text) : text));
 
 #define COMMENT_ACTION(commentText, pos) \
-    stack.back()->addChild(tags::Comment(commentText));
+    stack.back()->addChild(tags::Comment(std::move(commentText)));
 
 #define CDATA_ACTION(cdataText, pos) \
-    stack.back()->addChild(tags::CData(cdataText));
+    stack.back()->addChild(tags::CData(std::move(cdataText)));
 
 #define INSTRUCTION_ACTION(tagName, processingInstruction, pos)         \
-    stack.back()->addChild(tags::ProcessingInstruction(tagName, processingInstruction));
+    stack.back()->addChild(tags::ProcessingInstruction(std::move(tagName), processingInstruction));
 
 #define ATTRIBUTE_ACTION(attributeName, attributeValue, hasEntities, pos) \
-    attributeNames.push_back(attributeName);                              \
-    attributeValues.push_back(std::make_pair(attributeValue, hasEntities));
+    attributeNames.push_back(std::move(attributeName));                              \
+    attributeValues.push_back(std::make_pair(std::move(attributeValue), hasEntities));
 
 #define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, \
                                hasStandalone, pos)                           \
     stack.back()->addChild(tags::XmlDeclaration(             \
-        version, encoding, hasEncoding,            \
+        std::move(version), std::move(encoding), hasEncoding,            \
         isStandalone, hasStandalone, false));
 
 #define DOCTYPE_ACTION(doctypeText, pos) \
-    stack.back()->addChild(tags::Doctype(doctypeText));
+    stack.back()->addChild(tags::Doctype(std::move(doctypeText)));
 
 #define OPEN_ACTION(tagName, pos, isSelfClosing)                            \
-    std::unique_ptr<Node> newNode = std::make_unique<tags::GenericNode>(tagName, isSelfClosing);       \
+    std::unique_ptr<Node> newNode = std::make_unique<tags::GenericNode>(std::move(tagName), isSelfClosing);       \
                                                                             \
     auto& attributes = newNode->attributes;                                 \
     for (int i = 0; i < attributeNames.size(); i++) {                       \
