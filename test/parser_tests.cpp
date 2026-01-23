@@ -14,10 +14,10 @@ TEST_CASE("DomParser works") {
     GenericNode output{"html", false, GenericNode("head", false)};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with text") {
@@ -35,10 +35,10 @@ TEST_CASE("DomParser works with text") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with a single attribute") {
@@ -57,11 +57,10 @@ TEST_CASE("DomParser works with a single attribute") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
-    INFO(prStream->serialize());
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with many attributes") {
@@ -80,10 +79,10 @@ TEST_CASE("DomParser works with many attributes") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser expands entities in text") {
@@ -101,11 +100,10 @@ TEST_CASE("DomParser expands entities in text") {
                     GenericNode("div", false, Text(" 4 < 5; ")))};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
-    INFO(prStream->serialize());
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser expands entities in attribute values") {
@@ -124,10 +122,10 @@ TEST_CASE("DomParser expands entities in attribute values") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser parses complex html") {
@@ -251,13 +249,13 @@ TEST_CASE("DomParser parses complex html") {
     INFO(time.count());
 
     t1 = high_resolution_clock::now();
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
     t2 = high_resolution_clock::now();
 
     time = t2 - t1;
 
     INFO(time.count());
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with comments") {
@@ -277,12 +275,12 @@ TEST_CASE("DomParser works with comments") {
                                 GenericNode("span", false), Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with processing instructions") {
@@ -299,12 +297,12 @@ TEST_CASE("DomParser works with processing instructions") {
         ProcessingInstruction("templater", "doSomething 5 > 4 somethingElse")};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with CDATA") {
@@ -321,12 +319,12 @@ TEST_CASE("DomParser works with CDATA") {
                              "which & and <, > can safely be written!")};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with XML declarations") {
@@ -339,14 +337,14 @@ TEST_CASE("DomParser works with XML declarations") {
     XmlDeclaration output("1.0", "UTF-8", false, false, false, false);
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     INFO(dynamic_cast<XmlDeclaration*>(pr.root)->getStandalone());
     INFO(dynamic_cast<XmlDeclaration*>(pr.root)->getEncoding());
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with XML declarations with encoding") {
@@ -359,12 +357,12 @@ TEST_CASE("DomParser works with XML declarations with encoding") {
     XmlDeclaration output("1.1", "ISO-8859-1", true, false, false, false);
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with XML declarations with standalone") {
@@ -377,12 +375,12 @@ TEST_CASE("DomParser works with XML declarations with standalone") {
     XmlDeclaration output("1.0", "UTF-8", false, true, true, false);
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser works with DOCTYPE") {
@@ -403,12 +401,12 @@ TEST_CASE("DomParser works with DOCTYPE") {
                                             Text("World! "))))};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser parses unicode") {
@@ -437,12 +435,12 @@ TEST_CASE("DomParser parses unicode") {
             GenericNode("空要素", true))};
 
     ParseResult pr = DomParser::parse(input);
-    NodeHandle prStream = DomParser::parse(inputStream);
+    ParseResult prStream = DomParser::parse(inputStream);
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
     REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream));
+    REQUIRE(output.deepEquals(*prStream.root));
 }
 
 TEST_CASE("DomParser throws \"Invalid end after tag open\"") {

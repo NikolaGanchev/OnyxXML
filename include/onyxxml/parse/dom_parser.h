@@ -5,6 +5,7 @@
 
 #include "../arena.h"
 #include "../node.h"
+#include "../paged_arena.h"
 
 namespace onyx::dynamic::parser {
 class DomParser;
@@ -14,6 +15,7 @@ class DomParser;
  * it is built upon.
  *
  */
+template <typename ArenaType>
 class ParseResult {
     friend DomParser;
 
@@ -22,7 +24,7 @@ class ParseResult {
      * @brief The allocated Arena
      *
      */
-    Arena arena;
+    ArenaType arena;
 
     ParseResult();
 
@@ -32,7 +34,7 @@ class ParseResult {
      * @param arena
      * @param root
      */
-    ParseResult(Arena arena, Node* root);
+    ParseResult(ArenaType arena, Node* root);
 
    public:
     /**
@@ -90,7 +92,7 @@ class DomParser {
      * @param input
      * @return ParseResult
      */
-    static ParseResult parse(std::string_view input);
+    static ParseResult<Arena> parse(std::string_view input);
 
     /**
      * @brief Parse an XML stream
@@ -98,6 +100,29 @@ class DomParser {
      * @param input
      * @return NodeHandle
      */
-    static NodeHandle parse(std::istream& input);
+    static ParseResult<PagedArena> parse(std::istream& input);
 };
+
+template <typename ArenaType>
+ParseResult<ArenaType>::ParseResult() : arena{0}, root{nullptr} {}
+
+template <typename ArenaType>
+ParseResult<ArenaType>::ParseResult(ArenaType arena, Node* root)
+    : arena{std::move(arena)}, root{root} {}
+
+template <typename ArenaType>
+ParseResult<ArenaType>::ParseResult(ParseResult&& other) : arena{std::move(other.arena)} {
+    this->root = other.root;
+    other.root = nullptr;
+}
+
+template <typename ArenaType>
+ParseResult<ArenaType>& ParseResult<ArenaType>::ParseResult::operator=(ParseResult&& other) {
+    this->arena = std::move(other.arena);
+    this->root = other.root;
+    other.root = nullptr;
+
+    return *this;
+}
+
 }  // namespace onyx::dynamic::parser

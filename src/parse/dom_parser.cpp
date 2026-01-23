@@ -5,23 +5,6 @@
 #include "parse/string_cursor.h"
 
 namespace onyx::dynamic::parser {
-ParseResult::ParseResult() : arena{0}, root{nullptr} {}
-
-ParseResult::ParseResult(Arena arena, Node* root)
-    : arena{std::move(arena)}, root{root} {}
-
-ParseResult::ParseResult(ParseResult&& other) : arena{std::move(other.arena)} {
-    this->root = other.root;
-    other.root = nullptr;
-}
-
-ParseResult& ParseResult::operator=(ParseResult&& other) {
-    this->arena = std::move(other.arena);
-    this->root = other.root;
-    other.root = nullptr;
-
-    return *this;
-}
 
 Arena DomParser::parseDryRun(std::string_view input) {
     std::vector<size_t> stack;
@@ -97,7 +80,7 @@ Arena DomParser::parseDryRun(std::string_view input) {
     return builder.build();
 }
 
-ParseResult DomParser::parse(std::string_view input) {
+ParseResult<Arena> DomParser::parse(std::string_view input) {
     std::vector<Node*> stack;
     std::vector<std::string_view> attributeNames;
     std::vector<std::pair<std::string_view, bool>> attributeValues;
@@ -189,7 +172,7 @@ ParseResult DomParser::parse(std::string_view input) {
     return ParseResult{std::move(arena), root};
 }
 
-NodeHandle DomParser::parse(std::istream& input) {
+ParseResult<PagedArena> DomParser::parse(std::istream& input) {
     std::vector<Node*> stack;
     std::vector<std::string> attributeNames;
     std::vector<std::pair<std::string, bool>> attributeValues;
@@ -197,24 +180,26 @@ NodeHandle DomParser::parse(std::istream& input) {
     using StringType = StreamCursor::StringType;
     StreamCursor pos(input);
 
-    std::unique_ptr<Node> root = std::make_unique<tags::EmptyNode>();
+    PagedArena arena;
 
-    stack.push_back(root.get());
+    Node* root = arena.allocate<tags::EmptyNode>();
+
+    stack.push_back(root);
 
     skipWhitespace(pos);
 
 #define TEXT_ACTION(text, hasEntities, pos) \
     stack.back()->addChild(                 \
-        tags::Text(hasEntities ? text::expandEntities(text) : text));
+        arena.allocate<tags::Text>(hasEntities ? text::expandEntities(text) : text));
 
 #define COMMENT_ACTION(commentText, pos) \
-    stack.back()->addChild(tags::Comment(std::move(commentText)));
+    stack.back()->addChild(arena.allocate<tags::Comment>(std::move(commentText)));
 
 #define CDATA_ACTION(cdataText, pos) \
-    stack.back()->addChild(tags::CData(std::move(cdataText)));
+    stack.back()->addChild(arena.allocate<tags::CData>(std::move(cdataText)));
 
 #define INSTRUCTION_ACTION(tagName, processingInstruction, pos) \
-    stack.back()->addChild(tags::ProcessingInstruction(         \
+    stack.back()->addChild(arena.allocate<tags::ProcessingInstruction>(         \
         std::move(tagName), processingInstruction));
 
 #define ATTRIBUTE_ACTION(attributeName, attributeValue, hasEntities, pos) \
@@ -224,15 +209,15 @@ NodeHandle DomParser::parse(std::istream& input) {
 
 #define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, \
                                hasStandalone, pos)                           \
-    stack.back()->addChild(tags::XmlDeclaration(                             \
+    stack.back()->addChild(arena.allocate<tags::XmlDeclaration>(                             \
         std::move(version), std::move(encoding), hasEncoding, isStandalone,  \
         hasStandalone, false));
 
 #define DOCTYPE_ACTION(doctypeText, pos) \
-    stack.back()->addChild(tags::Doctype(std::move(doctypeText)));
+    stack.back()->addChild(arena.allocate<tags::Doctype>(std::move(doctypeText)));
 
 #define OPEN_ACTION(tagName, pos, isSelfClosing)                         \
-    std::unique_ptr<Node> newNode = std::make_unique<tags::GenericNode>( \
+    Node* newNode = arena.allocate<tags::GenericNode>( \
         std::move(tagName), isSelfClosing);                              \
                                                                          \
     auto& attributes = newNode->attributes;                              \
@@ -244,10 +229,9 @@ NodeHandle DomParser::parse(std::istream& input) {
                 : attributeValues[i].first);                             \
     }                                                                    \
                                                                          \
-    Node* newNodePtr = newNode.get();                                    \
-    stack.back()->addChild(std::move(newNode));                          \
+    stack.back()->addChild(newNode);                          \
     if (!isSelfClosing) {                                                \
-        stack.push_back(newNodePtr);                                     \
+        stack.push_back(newNode);                                     \
     }                                                                    \
                                                                          \
     attributeNames.clear();                                              \
@@ -276,15 +260,15 @@ NodeHandle DomParser::parse(std::istream& input) {
 #undef CLOSE_ACTION
 
     // Invariant - stack may only contain the root
-    if (stack.size() != 1 || stack[0] != root.get()) {
+    if (stack.size() != 1 || stack[0] != root) {
         throw std::invalid_argument("Unclosed tags left");
     }
 
     if (root->getChildrenCount() == 1) {
-        NodeHandle newRoot = root->removeChild(root->getChildren()[0]);
-        root = std::move(newRoot.toUnique());
+        Node* newRoot = root->removeChild(root->getChildren()[0]).release();
+        root = std::move(newRoot);
     }
 
-    return NodeHandle(std::move(root));
+    return ParseResult{std::move(arena), root};
 }
 }  // namespace onyx::dynamic::parser
