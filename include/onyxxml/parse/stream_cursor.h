@@ -19,6 +19,12 @@ struct StreamCursor {
     std::istream* stream;
 
     /**
+     * @brief The raw buffer of the stream
+     *
+     */
+    std::streambuf* buf;
+
+    /**
      * @brief A buffer for holding captured characters
      *
      */
@@ -41,7 +47,8 @@ struct StreamCursor {
      *
      * @param is The input stream to wrap
      */
-    StreamCursor(std::istream& is) : stream(&is), pos(0), captured(0) {}
+    StreamCursor(std::istream& is)
+        : stream(&is), pos(0), captured(0), buf(is.rdbuf()) {}
 
     /**
      * @brief Fills the internal buffer to the index
@@ -52,7 +59,7 @@ struct StreamCursor {
      */
     bool fillTo(size_t index) {
         while (buffer.size() <= index) {
-            int c = stream->get();
+            int c = buf->sbumpc();
             if (c == std::char_traits<char>::eof()) return false;
             buffer.push_back(static_cast<char>(c));
         }
