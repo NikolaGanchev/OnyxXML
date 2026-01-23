@@ -105,10 +105,10 @@ class Node {
          */
         std::string* ptr;
         /**
-         * @brief A callback which is invoked on reassignment
+         * @brief The Node that will be updated
          *
          */
-        std::function<void()> callback;
+        Node* origin;
 
        public:
         /**
@@ -117,7 +117,7 @@ class Node {
          * @param ref The std::string pointer
          * @param callback The callback function for reassignment
          */
-        ObservableStringRef(std::string* ref, std::function<void()> callback);
+        ObservableStringRef(std::string* ref, Node* origin);
 
         /**
          * @brief Implicit cast to const std::string*

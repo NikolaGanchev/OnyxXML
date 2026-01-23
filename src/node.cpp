@@ -781,8 +781,8 @@ std::string Node::serializePretty(const std::string& indentationSequence,
 }
 
 Node::ObservableStringRef::ObservableStringRef(std::string* ref,
-                                               std::function<void()> callback)
-    : ptr(ref), callback(std::move(callback)) {}
+                                               Node* origin)
+    : ptr(ref), origin(origin) {}
 
 Node::ObservableStringRef::operator const std::string*() const {
     return this->ptr;
@@ -808,7 +808,7 @@ Node::ObservableStringRef& Node::ObservableStringRef::operator=(
     std::string newPtr) {
     if (*this->ptr != newPtr) {
         *this->ptr = newPtr;
-        this->callback();
+        this->origin->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
     }
     return *this;
 }
@@ -820,9 +820,7 @@ Node::ObservableStringRef Node::operator[](const std::string& name) {
 
     for (auto& attr : this->attributes) {
         if (attr.getName() == name) {
-            return ObservableStringRef(&(attr.getValueMutable()), [this]() {
-                this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
-            });
+            return ObservableStringRef(&(attr.getValueMutable()), this);
         }
     }
 
