@@ -37,4 +37,6 @@ target_sources(
         "paged_arena.cpp"
         "nodes/xml_declaration_node.cpp"
         "nodes/doctype_node.cpp"
+        "xpath/functions.cpp"
+        "xpath/xpath_object.cpp"
 )

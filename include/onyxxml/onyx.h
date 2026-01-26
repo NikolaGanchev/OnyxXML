@@ -34,6 +34,8 @@
 #include "parse/sax_parser.h"
 #include "text.h"
 #include "void_node.h"
+#include "xpath/xpath_object.h"
+#include "xpath/functions.h"
 
 #if __has_include("dynamic/tags.h")
 #include "dynamic/tags.h"
