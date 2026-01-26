@@ -184,4 +184,8 @@ bool XmlDeclaration::shallowEquals(const Node& _other) const {
            this->versionInfo == other->versionInfo &&
            this->encoding == other->encoding;
 }
+
+bool XmlDeclaration::shouldAppearInStringValue() const {
+    return false;
+}
 }  // namespace onyx::dynamic::tags

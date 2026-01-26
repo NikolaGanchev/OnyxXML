@@ -2227,3 +2227,204 @@ TEST_CASE("Arena throws on over allocation", "[Arena]") {
 
     REQUIRE_THROWS(arena.allocate<Text>(""));
 }
+
+TEST_CASE("getStringValue returns text content for Text nodes", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    Text t("Hello World");
+    CHECK(t.getStringValue() == "Hello World");
+
+    Text t2("");
+    CHECK(t2.getStringValue() == "");
+}
+
+TEST_CASE("getStringValue handles entities in Text nodes", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    Text t("5 < 10 & 2 > 1");
+    
+    CHECK(t.getStringValue() == "5 < 10 & 2 > 1");
+}
+
+TEST_CASE("getStringValue returns content for CDATA", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    CData c("Some <raw> data & stuff");
+    
+    CHECK(c.getStringValue() == "Some <raw> data & stuff");
+}
+
+TEST_CASE("getStringValue returns content for Comment nodes directly", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    Comment c("This is a comment");
+    CHECK(c.getStringValue() == "This is a comment");
+}
+
+TEST_CASE("getStringValue returns content for ProcessingInstruction nodes directly", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    ProcessingInstruction pi("php", "echo 'hello';");
+    CHECK(pi.getStringValue() == "echo 'hello';"); 
+}
+
+TEST_CASE("getStringValue ignores XML Declaration and Doctype", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    XmlDeclaration xml("1.0", "UTF-8", true);
+    CHECK(xml.getStringValue().empty());
+
+    Doctype dt("html");
+    CHECK(dt.getStringValue().empty());
+}
+
+
+TEST_CASE("getStringValue concatenates text descendants for Element nodes", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    cdiv d{
+        Text("Hello "),
+        span(Text("World")),
+        Text("!")
+    };
+
+    CHECK(d.getStringValue() == "Hello World!");
+}
+
+TEST_CASE("getStringValue skips Comments and PIs when inside an Element", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    // <div>Text More Text <?pi ?></div>
+    cdiv d{
+        Text("Text "),
+        Comment("Ignored comment"),
+        Text("More Text"),
+        ProcessingInstruction("target", "Ignored PI")
+    };
+
+    CHECK(d.getStringValue() == "Text More Text");
+}
+
+TEST_CASE("getStringValue works with nested If nodes", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    cdiv d{
+        Text("Start "),
+        If(true, 
+            Text("Included"), 
+            Text("Excluded")
+        ),
+        Text(" "),
+        If(false, 
+            Text("Excluded"), 
+            Text("Also Excluded")
+        ),
+        Text("End")
+    };
+
+    cdiv complexIf{
+        Text("A"),
+        If(true, span(Text("B")), span(Text("X"))),
+        If(false, span(Text("X")), span(Text("C"))),
+        Text("D")
+    };
+
+    CHECK(complexIf.getStringValue() == "ABCD");
+}
+
+TEST_CASE("getStringValue works with ForEach nodes", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    std::vector<std::string> items = {"1", "2", "3"};
+
+    // <ul><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>
+    ul list{
+        ForEach{items.begin(), items.end(), [](auto it) {
+            return li(Text("Item "), Text(*it));
+        }}
+    };
+
+    CHECK(list.getStringValue() == "Item 1Item 2Item 3");
+}
+
+TEST_CASE("getStringValue works on deep complex trees with mixed content", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    // Structure:
+    // <article>
+    //   <header>Title</header>
+    //   <section>
+    //     <p>Para 1</p>
+    //     <p>Para <![CDATA[2 & 3]]></p>
+    //     <If true>
+    //        <div>Dynamic content</div>
+    //     </If>
+    //   </section>
+    // </article>
+
+    article root{
+        header(Text("Title")),
+        section(
+            p(Text("Para 1")),
+            Comment("Splitting comment"),
+            p(Text("Para "), CData("2 & 3")),
+            If(true, 
+                cdiv(Text("Dynamic content")), 
+                cdiv(Text("Hidden")))
+        )
+    };
+
+    CHECK(root.getStringValue() == "TitlePara 1Para 2 & 3Dynamic content");
+}
+
+TEST_CASE("getStringValue handles empty trees and void nodes correctly", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    cdiv emptyDiv{};
+    CHECK(emptyDiv.getStringValue() == "");
+
+    // <div><img alt="text" /></div>
+    cdiv divWithImg{
+        img(Attribute("alt", "Alternative Text"))
+    };
+    CHECK(divWithImg.getStringValue() == "");
+    
+    // <br>
+    br breakTag{};
+    CHECK(breakTag.getStringValue() == "");
+}
+
+TEST_CASE("getStringValue handles mixed depth concatenation", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    // <div>
+    //   A
+    //   <div>
+    //     B
+    //     <span>C</span>
+    //   </div>
+    //   D
+    // </div>
+    
+    cdiv root{
+        Text("A"),
+        cdiv(
+            Text("B"),
+            span(Text("C"))
+        ),
+        Text("D")
+    };
+
+    CHECK(root.getStringValue() == "ABCD");
+}
+
+TEST_CASE("getStringValue handles __DangerousRawText", "[Node::getStringValue]") {
+    using namespace onyx::tags;
+
+    cdiv d{
+        Text("Safe"),
+        __DangerousRawText("<span>Unsafe</span>")
+    };
+
+    CHECK(d.getStringValue() == "Safe<span>Unsafe</span>");
+}

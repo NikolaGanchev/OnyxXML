@@ -85,4 +85,8 @@ bool ProcessingInstruction::shallowEquals(const Node& _other) const {
 
     return this->target == other->target;
 }
+
+bool ProcessingInstruction::shouldAppearInStringValue() const {
+    return false;
+}
 }  // namespace onyx::dynamic::tags

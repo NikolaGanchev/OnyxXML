@@ -37,5 +37,7 @@ class Doctype : public Text {
                                 bool sortAttributes) const override;
     bool hasSpecialSerialization() const override;
     std::unique_ptr<Node> shallowCopy() const override;
+    bool shouldAppearInStringValue() const override;
+    std::string getStringValue() const override;
 };
 }  // namespace onyx::dynamic::tags

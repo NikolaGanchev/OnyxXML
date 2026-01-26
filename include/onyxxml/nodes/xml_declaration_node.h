@@ -181,5 +181,6 @@ class XmlDeclaration : public ProcessingInstruction {
     bool hasSpecialSerialization() const override;
     std::unique_ptr<Node> shallowCopy() const override;
     virtual bool shallowEquals(const Node& other) const override;
+    bool shouldAppearInStringValue() const override;
 };
 }  // namespace onyx::dynamic::tags

@@ -64,4 +64,12 @@ void __DangerousRawText::specialSerializePretty(
     result << indentation << this->text << "\n";
     stack.pop_back();
 }
+
+std::string __DangerousRawText::getStringValue() const {
+    return this->getText();
+}
+
+bool __DangerousRawText::hasShallowStringValue() const {
+    return true;
+}
 }  // namespace onyx::dynamic::tags

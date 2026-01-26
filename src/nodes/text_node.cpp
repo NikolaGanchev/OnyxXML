@@ -73,4 +73,12 @@ bool Text::shallowEquals(const Node& _other) const {
 
     return this->text == other->text;
 }
+
+std::string Text::getStringValue() const {
+    return this->getText();
+}
+
+bool Text::hasShallowStringValue() const {
+    return true;
+}
 }  // namespace onyx::dynamic::tags

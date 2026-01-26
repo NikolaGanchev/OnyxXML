@@ -918,6 +918,30 @@ class Node {
      * @return const Node*
      */
     const Node* getNextSibling() const;
+
+    /**
+     * @brief Get the string value, as defined per 
+     * https://www.w3.org/TR/1999/REC-xpath-19991116/#data-model
+     * 
+     * @return std::string 
+     */
+    virtual std::string getStringValue() const;
+
+    /**
+     * @brief Whether the node should appear in the string value
+     * 
+     * @return true 
+     * @return false 
+     */
+    virtual bool shouldAppearInStringValue() const;
+
+    /**
+     * @brief Whether the node has a trivial/shallow string value
+     * 
+     * @return true 
+     * @return false 
+     */
+    virtual bool hasShallowStringValue() const;
 };
 }  // namespace onyx::dynamic
 

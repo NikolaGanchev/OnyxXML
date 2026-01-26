@@ -87,5 +87,7 @@ class __DangerousRawText : public Node, public Node::SpecialSerializable {
     bool hasSpecialSerialization() const override;
     std::unique_ptr<Node> shallowCopy() const override;
     virtual bool shallowEquals(const Node& other) const override;
+    std::string getStringValue() const override;
+    bool hasShallowStringValue() const override;
 };
 }  // namespace onyx::dynamic::tags

@@ -361,10 +361,10 @@ std::vector<Node*> Node::iterativeChildrenParse(
     std::vector<Node*> s;
     std::vector<Node*> result;
 
-    Node* current = this->firstChild;
+    Node* current = this->lastChild; 
     while (current != nullptr) {
         s.push_back(current);
-        current = current->nextSibling;
+        current = current->prevSibling;
     }
 
     while (!s.empty()) {
@@ -958,5 +958,32 @@ void Node::attachChildBack(Node* child) {
         this->lastChild = this->firstChild;
         child->prevSibling = nullptr;
     }
+}
+
+std::string Node::getStringValue() const {
+    std::stringstream res;
+
+    iterativeChildrenParse([&res](const Node* obj) -> bool {
+        // Text nodes are CData, Comment, Doctype, Processing instruction, XML declaration and Text itself
+        // XML Declaration, Doctype must disable shouldAppearInStringValue() for validity.
+        // Text nodes should override getStringValue() since they do not have children
+        // AttributeViewNode should not at all appear in a tree and should not be reachable from here.
+
+        if (obj->shouldAppearInStringValue() && obj->hasShallowStringValue()) {
+            res << obj->getStringValue();
+        }
+
+        return false;
+    });
+
+    return res.str();
+}
+
+bool Node::shouldAppearInStringValue() const {
+    return true;
+}
+
+bool Node::hasShallowStringValue() const {
+    return false;
 }
 }  // namespace onyx::dynamic
