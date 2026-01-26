@@ -2228,6 +2228,106 @@ TEST_CASE("Arena throws on over allocation", "[Arena]") {
     REQUIRE_THROWS(arena.allocate<Text>(""));
 }
 
+TEST_CASE("AttributeViewNode identifies correctly", "[AttributeViewNode]") {
+    using namespace onyx::dynamic::tags;
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode owner{"div", false, Attribute("id", "test-id")};
+    AttributeViewNode view(&owner, 0);
+
+    CHECK(view.getTagName() == ".attribute-view-node");
+    CHECK(view.isVoid());
+    CHECK_FALSE(view.hasSpecialSerialization());
+    CHECK(view.getRealNode() == &owner);
+}
+
+TEST_CASE("AttributeViewNode references correct attribute index", "[AttributeViewNode]") {
+    using namespace onyx::dynamic::tags;
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode owner{"div", false, 
+        Attribute("id", "1"), 
+        Attribute("class", "container"), 
+        Attribute("data-val", "xyz")
+    };
+
+    AttributeViewNode viewId(&owner, 0);
+    AttributeViewNode viewClass(&owner, 1);
+    AttributeViewNode viewData(&owner, 2);
+
+    CHECK(viewId.getReferencedAttribute().getName() == "id");
+    CHECK(viewId.getReferencedAttribute().getValue() == "1");
+
+    CHECK(viewClass.getReferencedAttribute().getName() == "class");
+    CHECK(viewClass.getReferencedAttribute().getValue() == "container");
+
+    CHECK(viewData.getReferencedAttribute().getName() == "data-val");
+    CHECK(viewData.getReferencedAttribute().getValue() == "xyz");
+}
+
+TEST_CASE("AttributeViewNode serializes to empty string", "[AttributeViewNode]") {
+    using namespace onyx::dynamic::tags;
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode owner{"span", false, Attribute("hidden", "true")};
+    AttributeViewNode view(&owner, 0);
+
+    CHECK(view.serialize() == "");
+    CHECK(view.serializePretty("\t", true) == "");
+}
+
+TEST_CASE("AttributeViewNode shallow copy works", "[AttributeViewNode]") {
+    using namespace onyx::dynamic::tags;
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode owner{"a", false, Attribute("href", "google.com")};
+    AttributeViewNode view(&owner, 0);
+
+    std::unique_ptr<Node> copy = view.shallowCopy();
+
+    CHECK(copy.get() != &view);
+
+    auto* castedCopy = dynamic_cast<AttributeViewNode*>(copy.get());
+    REQUIRE(castedCopy != nullptr);
+    
+    CHECK(castedCopy->getTagName() == ".attribute-view-node");
+    CHECK(castedCopy->getRealNode() == &owner);
+    CHECK(castedCopy->getReferencedAttribute().getValue() == "google.com");
+}
+
+TEST_CASE("AttributeViewNode equality compares attribute values", "[AttributeViewNode]") {
+    using namespace onyx::dynamic::tags;
+    using namespace onyx::tags;
+    using namespace onyx::dynamic::xpath;
+
+    GenericNode node1{"div", false, Attribute("class", "same")};
+    GenericNode node2{"span", false, Attribute("class1", "same")};
+    GenericNode node3{"div", false, Attribute("class", "different")};
+
+    AttributeViewNode view1(&node1, 0);
+    AttributeViewNode view2(&node2, 0);
+    AttributeViewNode view3(&node3, 0);
+
+    CHECK(view1.shallowEquals(view2));
+    
+    CHECK_FALSE(view1.shallowEquals(view3));
+}
+
+TEST_CASE("AttributeViewNode equality handles type mismatch", "[AttributeViewNode]") {
+    using namespace onyx::dynamic::tags;
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode owner{"div", false, Attribute("id", "1")};
+    AttributeViewNode view(&owner, 0);
+    
+    CHECK_FALSE(view.shallowEquals(owner));
+}
+
 TEST_CASE("getStringValue returns text content for Text nodes", "[Node::getStringValue]") {
     using namespace onyx::tags;
 
@@ -2278,6 +2378,25 @@ TEST_CASE("getStringValue ignores XML Declaration and Doctype", "[Node::getStrin
     CHECK(dt.getStringValue().empty());
 }
 
+TEST_CASE("AttributeViewNode returns strictly the attribute value", "[Node::getStringValue][AttributeViewNode]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic::tags;
+    using namespace onyx::dynamic::xpath;
+
+    GenericNode owner{"div", false, 
+        Attribute("id", "main-container"),
+        Attribute("class", "hidden"),
+        Attribute("data-val", "123")
+    };
+
+    AttributeViewNode viewId(&owner, 0);
+    AttributeViewNode viewClass(&owner, 1);
+    AttributeViewNode viewData(&owner, 2);
+
+    CHECK(viewId.getStringValue() == "main-container");
+    CHECK(viewClass.getStringValue() == "hidden");
+    CHECK(viewData.getStringValue() == "123");
+}
 
 TEST_CASE("getStringValue concatenates text descendants for Element nodes", "[Node::getStringValue]") {
     using namespace onyx::tags;

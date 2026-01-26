@@ -29,6 +29,7 @@
 #include "nodes/processing_instruction_node.h"
 #include "nodes/text_node.h"
 #include "nodes/xml_declaration_node.h"
+#include "nodes/attribute_view_node.h"
 #include "parse/dom_parser.h"
 #include "parse/sax_parser.h"
 #include "text.h"
