@@ -10,11 +10,11 @@
 #include "string_cursor.h"
 
 #if defined(_MSC_VER)
-    #define ONYX_NOINLINE __declspec(noinline)
+#define ONYX_NOINLINE __declspec(noinline)
 #elif defined(__GNUC__) || defined(__clang__)
-    #define ONYX_NOINLINE __attribute__((noinline))
+#define ONYX_NOINLINE __attribute__((noinline))
 #else
-    #define ONYX_NOINLINE
+#define ONYX_NOINLINE
 #endif
 
 namespace onyx::dynamic::parser {

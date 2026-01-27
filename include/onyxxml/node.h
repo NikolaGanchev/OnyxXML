@@ -193,9 +193,10 @@ class Node {
         const std::function<bool(Node*)>& condition) const;
 
     /**
-     * @brief Attach the child to the back of the linked list. Does not update parents.
-     * 
-     * @param child 
+     * @brief Attach the child to the back of the linked list. Does not update
+     * parents.
+     *
+     * @param child
      */
     void attachChildBack(Node* child);
 
@@ -207,25 +208,25 @@ class Node {
 
     /**
      * @brief The first child
-     * 
+     *
      */
     Node* firstChild;
 
     /**
      * @brief The last child
-     * 
+     *
      */
     Node* lastChild;
 
     /**
      * @brief The previous sibling
-     * 
+     *
      */
     Node* prevSibling;
 
     /**
      * @brief The next sibling
-     * 
+     *
      */
     Node* nextSibling;
 
@@ -920,26 +921,26 @@ class Node {
     const Node* getNextSibling() const;
 
     /**
-     * @brief Get the string value, as defined per 
+     * @brief Get the string value, as defined per
      * https://www.w3.org/TR/1999/REC-xpath-19991116/#data-model
-     * 
-     * @return std::string 
+     *
+     * @return std::string
      */
     virtual std::string getStringValue() const;
 
     /**
      * @brief Whether the node should appear in the string value
-     * 
-     * @return true 
-     * @return false 
+     *
+     * @return true
+     * @return false
      */
     virtual bool shouldAppearInStringValue() const;
 
     /**
      * @brief Whether the node has a trivial/shallow string value
-     * 
-     * @return true 
-     * @return false 
+     *
+     * @return true
+     * @return false
      */
     virtual bool hasShallowStringValue() const;
 };
@@ -948,7 +949,14 @@ class Node {
 template <typename... Args>
 onyx::dynamic::Node::Node(Args&&... args)
     requires(onyx::dynamic::isValidNodeConstructorType<Args> && ...)
-    : attributes{}, firstChild{nullptr}, lastChild{nullptr}, prevSibling{nullptr}, nextSibling{nullptr}, parent{nullptr}, indices{}, _isOwning(true) {
+    : attributes{},
+      firstChild{nullptr},
+      lastChild{nullptr},
+      prevSibling{nullptr},
+      nextSibling{nullptr},
+      parent{nullptr},
+      indices{},
+      _isOwning(true) {
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 

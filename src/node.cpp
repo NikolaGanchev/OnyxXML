@@ -10,16 +10,30 @@
 
 namespace onyx::dynamic {
 Node::Node()
-    : attributes{}, firstChild{nullptr}, lastChild{nullptr}, prevSibling{nullptr}, nextSibling{nullptr}, indices{}, parent{nullptr}, _isOwning(true) {}
+    : attributes{},
+      firstChild{nullptr},
+      lastChild{nullptr},
+      prevSibling{nullptr},
+      nextSibling{nullptr},
+      indices{},
+      parent{nullptr},
+      _isOwning(true) {}
 
 Node::Node(NonOwningNodeTag)
-    : attributes{}, firstChild{nullptr}, lastChild{nullptr}, prevSibling{nullptr}, nextSibling{nullptr}, indices{}, parent{nullptr}, _isOwning(false) {}
+    : attributes{},
+      firstChild{nullptr},
+      lastChild{nullptr},
+      prevSibling{nullptr},
+      nextSibling{nullptr},
+      indices{},
+      parent{nullptr},
+      _isOwning(false) {}
 
 Node::Node(Node&& other) noexcept
     : attributes{std::move(other.attributes)},
-      firstChild{other.firstChild}, 
-      lastChild{other.lastChild}, 
-      prevSibling{nullptr}, 
+      firstChild{other.firstChild},
+      lastChild{other.lastChild},
+      prevSibling{nullptr},
       nextSibling{nullptr},
       indices{std::move(other.indices)},
       parent{other.parent},
@@ -42,9 +56,9 @@ Node::Node(std::vector<Attribute> attributes,
            std::vector<NodeHandle>&& children)
     : attributes{std::move(attributes)},
       indices{},
-      firstChild{nullptr}, 
-      lastChild{nullptr}, 
-      prevSibling{nullptr}, 
+      firstChild{nullptr},
+      lastChild{nullptr},
+      prevSibling{nullptr},
       nextSibling{nullptr},
       parent{nullptr},
       _isOwning(true) {
@@ -65,9 +79,9 @@ Node::Node(NonOwningNodeTag, std::vector<Attribute> attributes,
            std::vector<NodeHandle>&& children)
     : attributes{std::move(attributes)},
       indices{},
-      firstChild{nullptr}, 
-      lastChild{nullptr}, 
-      prevSibling{nullptr}, 
+      firstChild{nullptr},
+      lastChild{nullptr},
+      prevSibling{nullptr},
       nextSibling{nullptr},
       parent{nullptr},
       _isOwning(false) {
@@ -136,11 +150,11 @@ void Node::processConstructorObjectMoveCleanup() {
     while (current != nullptr) {
         Node* copy = current;
         current = current->nextSibling;
-        
+
         if (current) {
             current->prevSibling = nullptr;
         }
-        
+
         delete copy;
     }
 }
@@ -173,14 +187,14 @@ void Node::destroy() {
     if (this->_isOwning) {
         while (this->firstChild) {
             Node* child = this->firstChild;
-            
+
             this->firstChild = child->nextSibling;
-            
-            child->parent = nullptr; 
+
+            child->parent = nullptr;
             child->prevSibling = nullptr;
             child->nextSibling = nullptr;
 
-            delete child; 
+            delete child;
         }
         this->lastChild = nullptr;
     }
@@ -190,7 +204,7 @@ void Node::destroy() {
         // destroyed, so they need to manually remove themselves from the
         // parent's children to guarantee no dangling pointers are left
         if (this->prevSibling) {
-            this->prevSibling->nextSibling = this->nextSibling; 
+            this->prevSibling->nextSibling = this->nextSibling;
         } else {
             this->parent->firstChild = this->nextSibling;
         }
@@ -250,7 +264,7 @@ std::vector<Node*> Node::getChildren() const {
     return res;
 }
 
-size_t Node::getChildrenCount() const { 
+size_t Node::getChildrenCount() const {
     size_t count = 0;
 
     Node* current = this->firstChild;
@@ -361,7 +375,7 @@ std::vector<Node*> Node::iterativeChildrenParse(
     std::vector<Node*> s;
     std::vector<Node*> result;
 
-    Node* current = this->lastChild; 
+    Node* current = this->lastChild;
     while (current != nullptr) {
         s.push_back(current);
         current = current->prevSibling;
@@ -460,7 +474,6 @@ NodeHandle Node::removeChild(Node* childToRemove) {
     childToRemove->parent = nullptr;
 
     return NodeHandle(childToRemove, this->_isOwning);
-
 }
 
 std::unique_ptr<Node> Node::deepCopy() const {
@@ -482,7 +495,7 @@ std::unique_ptr<Node> Node::deepCopy() const {
 
         if (!(obj->isVoid())) {
             Node* current = obj->firstChild;
-            while(current != nullptr) {
+            while (current != nullptr) {
                 std::unique_ptr<Node> child = current->shallowCopy();
                 s.emplace_back(ParseNode{current, child.get()});
                 node.copy->addChild(std::move(child));
@@ -860,8 +873,7 @@ std::string Node::serializePretty(const std::string& indentationSequence,
     return strResult;
 }
 
-Node::ObservableStringRef::ObservableStringRef(std::string* ref,
-                                               Node* origin)
+Node::ObservableStringRef::ObservableStringRef(std::string* ref, Node* origin)
     : ptr(ref), origin(origin) {}
 
 Node::ObservableStringRef::operator const std::string*() const {
@@ -930,21 +942,13 @@ void Node::setSortAttributes(bool shouldSort) { sortAttributes = shouldSort; }
 
 bool Node::getSortAttributes() { return sortAttributes; }
 
-const Node* Node::getFirstChild() const {
-    return this->firstChild;
-}
-    
-const Node* Node::getLastChild() const {
-    return this->lastChild;
-}
+const Node* Node::getFirstChild() const { return this->firstChild; }
 
-const Node* Node::getPrevSibling() const {
-    return this->prevSibling;
-}
+const Node* Node::getLastChild() const { return this->lastChild; }
 
-const Node* Node::getNextSibling() const {
-    return this->nextSibling;
-}
+const Node* Node::getPrevSibling() const { return this->prevSibling; }
+
+const Node* Node::getNextSibling() const { return this->nextSibling; }
 
 void Node::attachChildBack(Node* child) {
     child->nextSibling = nullptr;
@@ -964,10 +968,12 @@ std::string Node::getStringValue() const {
     std::stringstream res;
 
     iterativeChildrenParse([&res](const Node* obj) -> bool {
-        // Text nodes are CData, Comment, Doctype, Processing instruction, XML declaration and Text itself
-        // XML Declaration, Doctype must disable shouldAppearInStringValue() for validity.
-        // Text nodes should override getStringValue() since they do not have children
-        // AttributeViewNode should not at all appear in a tree and should not be reachable from here.
+        // Text nodes are CData, Comment, Doctype, Processing instruction, XML
+        // declaration and Text itself XML Declaration, Doctype must disable
+        // shouldAppearInStringValue() for validity. Text nodes should override
+        // getStringValue() since they do not have children AttributeViewNode
+        // should not at all appear in a tree and should not be reachable from
+        // here.
 
         if (obj->shouldAppearInStringValue() && obj->hasShallowStringValue()) {
             res << obj->getStringValue();
@@ -979,11 +985,7 @@ std::string Node::getStringValue() const {
     return res.str();
 }
 
-bool Node::shouldAppearInStringValue() const {
-    return true;
-}
+bool Node::shouldAppearInStringValue() const { return true; }
 
-bool Node::hasShallowStringValue() const {
-    return false;
-}
+bool Node::hasShallowStringValue() const { return false; }
 }  // namespace onyx::dynamic

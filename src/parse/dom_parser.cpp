@@ -188,18 +188,19 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
 
     skipWhitespace(pos);
 
-#define TEXT_ACTION(text, hasEntities, pos) \
-    stack.back()->addChild(                 \
-        arena.allocate<tags::Text>(hasEntities ? text::expandEntities(text) : text));
+#define TEXT_ACTION(text, hasEntities, pos)            \
+    stack.back()->addChild(arena.allocate<tags::Text>( \
+        hasEntities ? text::expandEntities(text) : text));
 
 #define COMMENT_ACTION(commentText, pos) \
-    stack.back()->addChild(arena.allocate<tags::Comment>(std::move(commentText)));
+    stack.back()->addChild(              \
+        arena.allocate<tags::Comment>(std::move(commentText)));
 
 #define CDATA_ACTION(cdataText, pos) \
     stack.back()->addChild(arena.allocate<tags::CData>(std::move(cdataText)));
 
-#define INSTRUCTION_ACTION(tagName, processingInstruction, pos) \
-    stack.back()->addChild(arena.allocate<tags::ProcessingInstruction>(         \
+#define INSTRUCTION_ACTION(tagName, processingInstruction, pos)         \
+    stack.back()->addChild(arena.allocate<tags::ProcessingInstruction>( \
         std::move(tagName), processingInstruction));
 
 #define ATTRIBUTE_ACTION(attributeName, attributeValue, hasEntities, pos) \
@@ -209,32 +210,33 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
 
 #define XML_DECLARATION_ACTION(version, encoding, hasEncoding, isStandalone, \
                                hasStandalone, pos)                           \
-    stack.back()->addChild(arena.allocate<tags::XmlDeclaration>(                             \
+    stack.back()->addChild(arena.allocate<tags::XmlDeclaration>(             \
         std::move(version), std::move(encoding), hasEncoding, isStandalone,  \
         hasStandalone, false));
 
 #define DOCTYPE_ACTION(doctypeText, pos) \
-    stack.back()->addChild(arena.allocate<tags::Doctype>(std::move(doctypeText)));
+    stack.back()->addChild(              \
+        arena.allocate<tags::Doctype>(std::move(doctypeText)));
 
-#define OPEN_ACTION(tagName, pos, isSelfClosing)                         \
-    Node* newNode = arena.allocate<tags::GenericNode>( \
-        std::move(tagName), isSelfClosing);                              \
-                                                                         \
-    auto& attributes = newNode->attributes;                              \
-    for (int i = 0; i < attributeNames.size(); i++) {                    \
-        attributes.emplace_back(                                         \
-            attributeNames[i],                                           \
-            attributeValues[i].second                                    \
-                ? text::expandEntities(attributeValues[i].first)         \
-                : attributeValues[i].first);                             \
-    }                                                                    \
-                                                                         \
-    stack.back()->addChild(newNode);                          \
-    if (!isSelfClosing) {                                                \
-        stack.push_back(newNode);                                     \
-    }                                                                    \
-                                                                         \
-    attributeNames.clear();                                              \
+#define OPEN_ACTION(tagName, pos, isSelfClosing)                              \
+    Node* newNode =                                                           \
+        arena.allocate<tags::GenericNode>(std::move(tagName), isSelfClosing); \
+                                                                              \
+    auto& attributes = newNode->attributes;                                   \
+    for (int i = 0; i < attributeNames.size(); i++) {                         \
+        attributes.emplace_back(                                              \
+            attributeNames[i],                                                \
+            attributeValues[i].second                                         \
+                ? text::expandEntities(attributeValues[i].first)              \
+                : attributeValues[i].first);                                  \
+    }                                                                         \
+                                                                              \
+    stack.back()->addChild(newNode);                                          \
+    if (!isSelfClosing) {                                                     \
+        stack.push_back(newNode);                                             \
+    }                                                                         \
+                                                                              \
+    attributeNames.clear();                                                   \
     attributeValues.clear();
 
 #define CLOSE_ACTION(tagName, pos)                                \

@@ -69,7 +69,5 @@ std::string __DangerousRawText::getStringValue() const {
     return this->getText();
 }
 
-bool __DangerousRawText::hasShallowStringValue() const {
-    return true;
-}
+bool __DangerousRawText::hasShallowStringValue() const { return true; }
 }  // namespace onyx::dynamic::tags

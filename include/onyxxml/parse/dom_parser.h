@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stack>
 #include <istream>
+#include <stack>
 
 #include "../arena.h"
 #include "../node.h"
@@ -111,13 +111,15 @@ ParseResult<ArenaType>::ParseResult(ArenaType arena, Node* root)
     : arena{std::move(arena)}, root{root} {}
 
 template <typename ArenaType>
-ParseResult<ArenaType>::ParseResult(ParseResult&& other) : arena{std::move(other.arena)} {
+ParseResult<ArenaType>::ParseResult(ParseResult&& other)
+    : arena{std::move(other.arena)} {
     this->root = other.root;
     other.root = nullptr;
 }
 
 template <typename ArenaType>
-ParseResult<ArenaType>& ParseResult<ArenaType>::ParseResult::operator=(ParseResult&& other) {
+ParseResult<ArenaType>& ParseResult<ArenaType>::ParseResult::operator=(
+    ParseResult&& other) {
     this->arena = std::move(other.arena);
     this->root = other.root;
     other.root = nullptr;

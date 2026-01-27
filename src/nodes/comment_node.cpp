@@ -47,7 +47,5 @@ void Comment::specialSerializePretty(
     stack.pop_back();
 }
 
-bool Comment::shouldAppearInStringValue() const {
-    return false;
-}
+bool Comment::shouldAppearInStringValue() const { return false; }
 }  // namespace onyx::dynamic::tags

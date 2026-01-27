@@ -1,9 +1,9 @@
+#include "xpath/functions.h"
+
+#include <charconv>
+#include <limits>
 #include <string>
 #include <variant>
-#include <limits>
-
-#include "xpath/functions.h"
-#include <charconv>
 
 namespace onyx::dynamic::xpath::functions {
 
@@ -32,9 +32,12 @@ std::string string(const XPathObject& obj) {
 
                 std::array<char, 512> buf;
 
-                // std::chars_format::fixed with no precision specified automatically
-                // produces the shortest representation that uniquely distinguishes the number.
-                auto [ptr, ec] = std::to_chars(buf.data(), buf.data() + buf.size(), arg, std::chars_format::fixed);
+                // std::chars_format::fixed with no precision specified
+                // automatically produces the shortest representation that
+                // uniquely distinguishes the number.
+                auto [ptr, ec] =
+                    std::to_chars(buf.data(), buf.data() + buf.size(), arg,
+                                  std::chars_format::fixed);
 
                 if (ec != std::errc()) {
                     throw std::runtime_error("Cannot convert double to string");
@@ -95,13 +98,14 @@ bool boolean(const XPathObject& obj) {
 
 // https://stackoverflow.com/questions/216823/how-can-i-trim-a-stdstring
 void trim(std::string& str) {
-    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char ch) {
-        return ch != ' ';
-    }));
+    str.erase(str.begin(),
+              std::find_if(str.begin(), str.end(),
+                           [](unsigned char ch) { return ch != ' '; }));
 
-    str.erase(std::find_if(str.rbegin(), str.rend(), [](unsigned char ch) {
-        return ch != ' ';
-    }).base(), str.end());
+    str.erase(std::find_if(str.rbegin(), str.rend(),
+                           [](unsigned char ch) { return ch != ' '; })
+                  .base(),
+              str.end());
 }
 
 double number(const XPathObject& obj) {
@@ -122,8 +126,10 @@ double number(const XPathObject& obj) {
                 trim(copy);
 
                 double result = std::numeric_limits<double>::quiet_NaN();
-                auto [ptr, ec] = std::from_chars(copy.data(), copy.data() + copy.size(), result, std::chars_format::fixed);
- 
+                auto [ptr, ec] =
+                    std::from_chars(copy.data(), copy.data() + copy.size(),
+                                    result, std::chars_format::fixed);
+
                 if (ptr != copy.data() + copy.size()) {
                     return std::numeric_limits<double>::quiet_NaN();
                 }
@@ -132,12 +138,14 @@ double number(const XPathObject& obj) {
             }
 
             if constexpr (std::is_same_v<T, std::vector<Node*>>) {
-                std::string strVal = string(obj); 
+                std::string strVal = string(obj);
 
                 trim(strVal);
-            
+
                 double result = std::numeric_limits<double>::quiet_NaN();
-                auto [ptr, ec] = std::from_chars(strVal.data(), strVal.data() + strVal.size(), result, std::chars_format::fixed);
+                auto [ptr, ec] = std::from_chars(
+                    strVal.data(), strVal.data() + strVal.size(), result,
+                    std::chars_format::fixed);
 
                 if (ptr != strVal.data() + strVal.size()) {
                     return std::numeric_limits<double>::quiet_NaN();

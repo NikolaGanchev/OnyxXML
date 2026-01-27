@@ -19,6 +19,7 @@
 #include "indices/tag_name_index.h"
 #include "node_handle.h"
 #include "nodes/_dangerous_raw_text_node.h"
+#include "nodes/attribute_view_node.h"
 #include "nodes/cdata_node.h"
 #include "nodes/comment_node.h"
 #include "nodes/doctype_node.h"
@@ -29,13 +30,12 @@
 #include "nodes/processing_instruction_node.h"
 #include "nodes/text_node.h"
 #include "nodes/xml_declaration_node.h"
-#include "nodes/attribute_view_node.h"
 #include "parse/dom_parser.h"
 #include "parse/sax_parser.h"
 #include "text.h"
 #include "void_node.h"
-#include "xpath/xpath_object.h"
 #include "xpath/functions.h"
+#include "xpath/xpath_object.h"
 
 #if __has_include("dynamic/tags.h")
 #include "dynamic/tags.h"

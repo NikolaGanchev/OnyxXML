@@ -47,11 +47,7 @@ void Doctype::specialSerializePretty(
     stack.pop_back();
 }
 
-bool Doctype::shouldAppearInStringValue() const {
-    return false;
-}
+bool Doctype::shouldAppearInStringValue() const { return false; }
 
-std::string Doctype::getStringValue() const {
-    return "";
-}
+std::string Doctype::getStringValue() const { return ""; }
 }  // namespace onyx::dynamic::tags
