@@ -22,28 +22,28 @@ struct XPathObject {
      * 
      * @param d 
      */
-    XPathObject(double d);
+    explicit XPathObject(double d);
 
     /**
      * @brief Construct a new XPathObject object from a bool
      * 
      * @param b 
      */
-    XPathObject(bool b);
+    explicit XPathObject(bool b);
 
     /**
      * @brief Construct a new XPathObject object from a string
      * 
      * @param s 
      */
-    XPathObject(std::string s);
+    explicit XPathObject(std::string s);
 
     /**
      * @brief Construct a new XPathObject object from a nodeset
      * 
      * @param ns 
      */
-    XPathObject(std::vector<Node*> ns);
+    explicit XPathObject(std::vector<Node*> ns);
 
     /**
      * @brief Whether the object is a nodeset
@@ -105,5 +105,59 @@ struct XPathObject {
      * @return const std::vector<Node*>& 
      */
     const std::vector<Node*>& asNodeset() const;
+
+    /**
+     * @brief Equality according to https://www.w3.org/TR/1999/REC-xpath-19991116/#booleans
+     * 
+     * @param r 
+     * @return true 
+     * @return false 
+     */
+    bool operator==(const XPathObject& r) const;
+
+    /**
+     * @brief Inequality according to https://www.w3.org/TR/1999/REC-xpath-19991116/#booleans
+     * 
+     * @param r 
+     * @return true 
+     * @return false 
+     */
+    bool operator!=(const XPathObject& r) const;
+
+    /**
+     * @brief Less-than according to https://www.w3.org/TR/1999/REC-xpath-19991116/#booleans
+     * 
+     * @param r 
+     * @return true 
+     * @return false 
+     */
+    bool operator<(const XPathObject& r) const;
+
+    /**
+     * @brief Greater-than according to https://www.w3.org/TR/1999/REC-xpath-19991116/#booleans
+     * 
+     * @param r 
+     * @return true 
+     * @return false 
+     */
+    bool operator>(const XPathObject& r) const;
+
+    /**
+     * @brief Less-or-equal-to according to https://www.w3.org/TR/1999/REC-xpath-19991116/#booleans
+     * 
+     * @param r 
+     * @return true 
+     * @return false 
+     */
+    bool operator<=(const XPathObject& r) const;
+
+    /**
+     * @brief Greater-or-equal-to according to https://www.w3.org/TR/1999/REC-xpath-19991116/#booleans
+     * 
+     * @param r 
+     * @return true 
+     * @return false 
+     */
+    bool operator>=(const XPathObject& r) const;
 };
 }

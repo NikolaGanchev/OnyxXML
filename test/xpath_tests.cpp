@@ -211,3 +211,227 @@ TEST_CASE("XPathObject throws when trying to cast non-nodeset to nodeset") {
 
     REQUIRE_THROWS_WITH(XPathObject(1.0).asNodeset(), "Tried to cast non-nodeset to nodeset");
 }
+
+TEST_CASE("XPathObject boolean vs boolean comparison") {
+    using namespace onyx::dynamic::xpath;
+
+    REQUIRE(XPathObject(true) == XPathObject(true));
+    REQUIRE(XPathObject(false) == XPathObject(false));
+    REQUIRE(XPathObject(true) != XPathObject(false));
+    REQUIRE_FALSE(XPathObject(true) == XPathObject(false));
+}
+
+TEST_CASE("XPathObject boolean vs other comparison") {
+    using namespace onyx::dynamic::xpath;
+    
+    REQUIRE(XPathObject(true) == XPathObject(1.0));
+    REQUIRE(XPathObject(false) == XPathObject(0.0));
+    REQUIRE(XPathObject(true) != XPathObject(0.0)); 
+    REQUIRE(XPathObject(true) == XPathObject(std::string("true"))); 
+    REQUIRE(XPathObject(false) == XPathObject(std::string(""))); 
+    REQUIRE(XPathObject(true) == XPathObject(std::string("false")));
+    REQUIRE(XPathObject(true) <= XPathObject(1.0));
+    REQUIRE(XPathObject(true) >= XPathObject(1.0));
+    REQUIRE(XPathObject(false) < XPathObject(1.0));
+}
+
+TEST_CASE("XPathObject number vs string comparison") {
+    using namespace onyx::dynamic::xpath;
+    
+    REQUIRE(XPathObject(1.0) == XPathObject(std::string("1.0")));
+    REQUIRE(XPathObject(1.0) == XPathObject(std::string("  1  ")));
+    REQUIRE(XPathObject(0.5) == XPathObject(std::string(".5")));
+    REQUIRE(XPathObject(std::string("02")) == XPathObject(2.0));
+}
+
+TEST_CASE("XPathObject number vs number comparison") {
+    using namespace onyx::dynamic::xpath;
+    double nan = std::numeric_limits<double>::quiet_NaN();
+
+    REQUIRE(XPathObject(1.0) == XPathObject(1.0));
+    REQUIRE(XPathObject(1.0) != XPathObject(0.8));
+    REQUIRE(XPathObject(1.0) > XPathObject(0.9));
+    REQUIRE(XPathObject(0.5) < XPathObject(1.0));
+    REQUIRE(XPathObject(2.0) >= XPathObject(2.0));
+    REQUIRE(XPathObject(2.0) >= XPathObject(1.9));
+    REQUIRE(XPathObject(2.0) <= XPathObject(2.0));
+    REQUIRE(XPathObject(2.0) <= XPathObject(2.1));
+
+    REQUIRE(XPathObject(nan) != XPathObject(nan));
+    REQUIRE_FALSE(XPathObject(nan) == XPathObject(nan));
+    REQUIRE_FALSE(XPathObject(nan) < XPathObject(1.0));
+    REQUIRE_FALSE(XPathObject(nan) > XPathObject(1.0));
+    REQUIRE_FALSE(XPathObject(nan) <= XPathObject(1.0));
+    REQUIRE_FALSE(XPathObject(nan) >= XPathObject(1.0));
+}
+
+TEST_CASE("XPathObject string vs string comparison") {
+    using namespace onyx::dynamic::xpath;
+    
+    REQUIRE(XPathObject(std::string("foo")) == XPathObject(std::string("foo")));
+    REQUIRE(XPathObject(std::string("foo")) != XPathObject(std::string("Foo")));
+    REQUIRE(XPathObject(std::string("10")) > XPathObject(std::string("2"))); 
+    REQUIRE_FALSE(XPathObject(std::string("10")) < XPathObject(std::string("2")));
+    REQUIRE_FALSE(XPathObject(std::string("abc")) < XPathObject(std::string("def")));
+    REQUIRE_FALSE(XPathObject(std::string("abc")) > XPathObject(std::string("def")));
+    REQUIRE_FALSE(XPathObject(std::string("abc")) == XPathObject(std::string("def")));
+}
+
+TEST_CASE("XPathObject nodeset vs number comparison") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    Text node10{"10"}; 
+    Text node20{"20"}; 
+    std::vector<Node*> nodes = { &node10, &node20 };
+    XPathObject set(nodes);
+
+    std::vector<Node*> empty_vec;
+    XPathObject emptySet(empty_vec);
+
+    REQUIRE(set == XPathObject(10.0));
+    REQUIRE(set == XPathObject(20.0));
+    REQUIRE(set != XPathObject(15.0));
+    REQUIRE_FALSE(set == XPathObject(15.0));
+    REQUIRE_FALSE(emptySet == XPathObject(0.0));
+}
+
+TEST_CASE("XPathObject nodeset vs number with NaN value comparison") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    Text node2{"test"}; 
+    std::vector<Node*> nodes2 = { &node2 };
+    XPathObject set2(nodes2);
+
+    REQUIRE(set2 != XPathObject(1.0));
+    REQUIRE_FALSE(set2 == XPathObject(1.0)); 
+}
+
+TEST_CASE("XPathObject nodeset vs string comparison") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    
+    Text nodeA{"A"}; 
+    Text nodeB{"B"}; 
+    std::vector<Node*> nodes = { &nodeA, &nodeB };
+    XPathObject set(nodes);
+    
+    std::vector<Node*> empty_vec;
+    XPathObject emptySet(empty_vec);
+
+    REQUIRE(set == XPathObject(std::string("A")));
+    REQUIRE(set == XPathObject(std::string("B")));
+    REQUIRE_FALSE(set == XPathObject(std::string("C")));
+    REQUIRE_FALSE(emptySet == XPathObject(std::string("")));
+}
+
+TEST_CASE("XPathObject nodeset vs boolean comparison") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    
+    Text node1{"false"}; 
+    Text node2{"0"}; 
+    std::vector<Node*> nodes = { &node1, &node2 };
+    XPathObject set(nodes);
+    
+    std::vector<Node*> empty_vec;
+    XPathObject emptySet(empty_vec);
+    
+    REQUIRE(set == XPathObject(true));
+    REQUIRE(set != XPathObject(false));
+    REQUIRE(emptySet == XPathObject(false));
+}
+
+TEST_CASE("XPathObject nodeset vs nodeset intersection comparison") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    
+    Text node11{"1"}; 
+    Text node12{"2"}; 
+    std::vector<Node*> nodes1 = { &node11, &node12 };
+    
+    Text node21{"2"}; 
+    Text node22{"3"}; 
+    std::vector<Node*> nodes2 = { &node21, &node22 };
+
+    XPathObject set1(nodes1);
+    XPathObject set2(nodes2);
+    
+    REQUIRE(set1 == set2);
+    REQUIRE(set1 != set2);
+}
+
+TEST_CASE("XPathObject nodeset vs nodeset subset comparison") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    
+    Text node1{"1"}; 
+    std::vector<Node*> nodes1 = { &node1 };
+    
+    Text node21{"1"}; 
+    Text node22{"2"}; 
+    std::vector<Node*> nodes2 = { &node21, &node22 };
+
+    XPathObject set1(nodes1);
+    XPathObject set2(nodes2);
+
+    REQUIRE(set1 == set2);
+    REQUIRE(set1 != set2);
+}
+
+TEST_CASE("XPathObject nodeset vs nodeset single match comparison") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    
+    Text node1{"1"}; 
+    std::vector<Node*> nodes1 = { &node1 };
+    
+    Text node2{"1"}; 
+    std::vector<Node*> nodes2 = { &node2 };
+
+    XPathObject set1(nodes1);
+    XPathObject set2(nodes2);
+
+    REQUIRE(set1 == set2);
+    
+    REQUIRE_FALSE(set1 != set2);
+}
+
+TEST_CASE("XPathObject nodeset vs nodeset relational operators") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    Text node5{"5"};
+    Text node10{"10"};
+    Text node20{"20"};
+    
+    std::vector<Node*> nodesA = { &node10, &node20 };
+    XPathObject setA(nodesA);
+
+    std::vector<Node*> nodesB = { &node5 };
+    XPathObject setB(nodesB);
+
+    std::vector<Node*> empty_vec;
+    XPathObject emptySet(empty_vec);
+
+    REQUIRE(setA > XPathObject(15.0)); 
+    REQUIRE(setA < XPathObject(15.0)); 
+    REQUIRE_FALSE(emptySet < XPathObject(10.0)); 
+
+    REQUIRE(setA > setB);
+    REQUIRE(setB < setA);
+}
+
+TEST_CASE("XPathObject nodeset vs nodeset not equal comparison") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    Text nodeA{"foo"};
+    Text nodeB{"bar"};
+    std::vector<Node*> nodes = { &nodeA, &nodeB };
+    XPathObject set(nodes);
+
+    REQUIRE(set == XPathObject(std::string("foo")));
+    REQUIRE(set != XPathObject(std::string("foo")));
+}
