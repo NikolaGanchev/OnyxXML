@@ -93,6 +93,6 @@ class AttributeViewNode : public Node {
     bool shallowEquals(const Node& other) const override;
 
     std::string getStringValue() const override;
-    bool hasShallowStringValue() const override;
+    XPathType getXPathType() const override;
 };
 }  // namespace onyx::dynamic::xpath

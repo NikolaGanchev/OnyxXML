@@ -185,5 +185,7 @@ bool XmlDeclaration::shallowEquals(const Node& _other) const {
            this->encoding == other->encoding;
 }
 
-bool XmlDeclaration::shouldAppearInStringValue() const { return false; }
+Node::XPathType XmlDeclaration::getXPathType() const {
+    return XPathType::OTHER;
+}
 }  // namespace onyx::dynamic::tags

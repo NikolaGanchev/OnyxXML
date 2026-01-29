@@ -86,5 +86,7 @@ bool ProcessingInstruction::shallowEquals(const Node& _other) const {
     return this->target == other->target;
 }
 
-bool ProcessingInstruction::shouldAppearInStringValue() const { return false; }
+Node::XPathType ProcessingInstruction::getXPathType() const {
+    return XPathType::PROCESSING_INSTRUCTION;
+}
 }  // namespace onyx::dynamic::tags

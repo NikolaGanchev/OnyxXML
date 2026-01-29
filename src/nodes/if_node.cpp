@@ -31,4 +31,6 @@ void If::specialSerializePretty(std::vector<Node::SerializationNode>& stack,
 }
 
 bool If::hasSpecialSerialization() const { return true; }
+
+Node::XPathType If::getXPathType() const { return XPathType::OTHER; }
 }  // namespace onyx::dynamic::tags

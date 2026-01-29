@@ -47,5 +47,5 @@ void Comment::specialSerializePretty(
     stack.pop_back();
 }
 
-bool Comment::shouldAppearInStringValue() const { return false; }
+Node::XPathType Comment::getXPathType() const { return XPathType::COMMENT; }
 }  // namespace onyx::dynamic::tags

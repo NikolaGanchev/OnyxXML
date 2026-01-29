@@ -84,6 +84,7 @@ class If : public Node, public Node::SpecialSerializable {
     bool isVoid() const override;
     bool hasSpecialSerialization() const override;
     std::unique_ptr<Node> shallowCopy() const override;
+    XPathType getXPathType() const override;
 };
 
 template <typename T, typename K>

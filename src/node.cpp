@@ -358,10 +358,10 @@ void Node::iterativeProcessor(const std::function<void(Node*)>& process) {
 
         s.pop_back();
 
-        Node* current = obj->firstChild;
+        Node* current = obj->lastChild;
         while (current != nullptr) {
             s.push_back(current);
-            current = current->nextSibling;
+            current = current->prevSibling;
         }
     }
 }
@@ -950,6 +950,14 @@ const Node* Node::getPrevSibling() const { return this->prevSibling; }
 
 const Node* Node::getNextSibling() const { return this->nextSibling; }
 
+Node* Node::getFirstChild() { return this->firstChild; }
+
+Node* Node::getLastChild() { return this->lastChild; }
+
+Node* Node::getPrevSibling() { return this->prevSibling; }
+
+Node* Node::getNextSibling() { return this->nextSibling; }
+
 void Node::attachChildBack(Node* child) {
     child->nextSibling = nullptr;
 
@@ -968,14 +976,7 @@ std::string Node::getStringValue() const {
     std::stringstream res;
 
     iterativeChildrenParse([&res](const Node* obj) -> bool {
-        // Text nodes are CData, Comment, Doctype, Processing instruction, XML
-        // declaration and Text itself XML Declaration, Doctype must disable
-        // shouldAppearInStringValue() for validity. Text nodes should override
-        // getStringValue() since they do not have children AttributeViewNode
-        // should not at all appear in a tree and should not be reachable from
-        // here.
-
-        if (obj->shouldAppearInStringValue() && obj->hasShallowStringValue()) {
+        if (obj->getXPathType() == XPathType::TEXT) {
             res << obj->getStringValue();
         }
 
@@ -985,7 +986,5 @@ std::string Node::getStringValue() const {
     return res.str();
 }
 
-bool Node::shouldAppearInStringValue() const { return true; }
-
-bool Node::hasShallowStringValue() const { return false; }
+Node::XPathType Node::getXPathType() const { return XPathType::ELEMENT; }
 }  // namespace onyx::dynamic

@@ -32,4 +32,6 @@ void ForEach::specialSerializePretty(
 }
 
 bool ForEach::hasSpecialSerialization() const { return true; }
+
+Node::XPathType ForEach::getXPathType() const { return XPathType::OTHER; }
 }  // namespace onyx::dynamic::tags

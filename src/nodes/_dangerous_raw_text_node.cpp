@@ -69,5 +69,7 @@ std::string __DangerousRawText::getStringValue() const {
     return this->getText();
 }
 
-bool __DangerousRawText::hasShallowStringValue() const { return true; }
+Node::XPathType __DangerousRawText::getXPathType() const {
+    return XPathType::TEXT;
+}
 }  // namespace onyx::dynamic::tags

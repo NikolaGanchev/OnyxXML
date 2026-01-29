@@ -47,7 +47,7 @@ void Doctype::specialSerializePretty(
     stack.pop_back();
 }
 
-bool Doctype::shouldAppearInStringValue() const { return false; }
-
 std::string Doctype::getStringValue() const { return ""; }
+
+Node::XPathType Doctype::getXPathType() const { return XPathType::OTHER; }
 }  // namespace onyx::dynamic::tags

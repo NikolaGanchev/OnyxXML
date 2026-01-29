@@ -76,5 +76,5 @@ bool Text::shallowEquals(const Node& _other) const {
 
 std::string Text::getStringValue() const { return this->getText(); }
 
-bool Text::hasShallowStringValue() const { return true; }
+Node::XPathType Text::getXPathType() const { return XPathType::TEXT; }
 }  // namespace onyx::dynamic::tags

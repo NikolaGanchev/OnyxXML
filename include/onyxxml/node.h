@@ -21,6 +21,9 @@ class Index;
 namespace parser {
 class DomParser;
 }
+namespace xpath {
+class RootViewNode;
+}
 
 /**
  * @brief Checks if the template parameter is s subclass of Node or an
@@ -84,6 +87,7 @@ inline constexpr NonOwningNodeTag NonOwning{};
  */
 class Node {
     friend parser::DomParser;
+    friend xpath::RootViewNode;
 
    public:
     class Index;
@@ -172,14 +176,6 @@ class Node {
          */
         ObservableStringRef& operator=(std::string newPtr);
     };
-
-    /**
-     * @brief Invokes the process callback over this and all its children.
-     * Parses iteratively
-     *
-     * @param process The process function
-     */
-    void iterativeProcessor(const std::function<void(Node*)>& process);
 
     /**
      * @brief Parses over all children of this and constructs a vector including
@@ -893,32 +889,60 @@ class Node {
     static bool getSortAttributes();
 
     /**
-     * @brief Get a reference to the first child
+     * @brief Get a const reference to the first child
      *
      * @return const Node*
      */
     const Node* getFirstChild() const;
 
     /**
-     * @brief Get a reference to the last child
+     * @brief Get a const reference to the last child
      *
      * @return const Node*
      */
     const Node* getLastChild() const;
 
     /**
-     * @brief Get a reference to the previous sibling
+     * @brief Get a const reference to the previous sibling
      *
      * @return const Node*
      */
     const Node* getPrevSibling() const;
 
     /**
-     * @brief Get a reference to the next sibling
+     * @brief Get a const reference to the next sibling
      *
      * @return const Node*
      */
     const Node* getNextSibling() const;
+
+    /**
+     * @brief Get a reference to the first child
+     *
+     * @return Node*
+     */
+    Node* getFirstChild();
+
+    /**
+     * @brief Get a reference to the last child
+     *
+     * @return Node*
+     */
+    Node* getLastChild();
+
+    /**
+     * @brief Get a reference to the previous sibling
+     *
+     * @return Node*
+     */
+    Node* getPrevSibling();
+
+    /**
+     * @brief Get a reference to the next sibling
+     *
+     * @return Node*
+     */
+    Node* getNextSibling();
 
     /**
      * @brief Get the string value, as defined per
@@ -929,20 +953,25 @@ class Node {
     virtual std::string getStringValue() const;
 
     /**
-     * @brief Whether the node should appear in the string value
+     * @brief Invokes the process callback over this and all its children.
+     * Parses iteratively.
      *
-     * @return true
-     * @return false
+     * @param process The process function
      */
-    virtual bool shouldAppearInStringValue() const;
+    void iterativeProcessor(const std::function<void(Node*)>& process);
 
-    /**
-     * @brief Whether the node has a trivial/shallow string value
-     *
-     * @return true
-     * @return false
-     */
-    virtual bool hasShallowStringValue() const;
+    enum class XPathType {
+        ROOT,
+        ELEMENT,
+        TEXT,
+        ATTRIBUTE,
+        NAMESPACE,
+        PROCESSING_INSTRUCTION,
+        COMMENT,
+        OTHER
+    };
+
+    virtual XPathType getXPathType() const;
 };
 }  // namespace onyx::dynamic
 

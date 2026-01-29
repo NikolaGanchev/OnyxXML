@@ -36,6 +36,6 @@ class Comment : public Text {
                                 bool sortAttributes) const override;
     bool hasSpecialSerialization() const override;
     std::unique_ptr<Node> shallowCopy() const override;
-    bool shouldAppearInStringValue() const override;
+    XPathType getXPathType() const override;
 };
 }  // namespace onyx::dynamic::tags

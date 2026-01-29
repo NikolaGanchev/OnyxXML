@@ -46,5 +46,7 @@ std::string AttributeViewNode::getStringValue() const {
     return this->getReferencedAttribute().getValue();
 }
 
-bool AttributeViewNode::hasShallowStringValue() const { return true; }
+Node::XPathType AttributeViewNode::getXPathType() const {
+    return XPathType::ATTRIBUTE;
+}
 }  // namespace onyx::dynamic::xpath

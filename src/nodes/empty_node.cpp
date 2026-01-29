@@ -32,4 +32,6 @@ void EmptyNode::specialSerializePretty(
 }
 
 bool EmptyNode::hasSpecialSerialization() const { return true; }
+
+Node::XPathType EmptyNode::getXPathType() const { return XPathType::OTHER; }
 }  // namespace onyx::dynamic::tags

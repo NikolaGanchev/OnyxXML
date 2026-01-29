@@ -88,6 +88,6 @@ class __DangerousRawText : public Node, public Node::SpecialSerializable {
     std::unique_ptr<Node> shallowCopy() const override;
     virtual bool shallowEquals(const Node& other) const override;
     std::string getStringValue() const override;
-    bool hasShallowStringValue() const override;
+    XPathType getXPathType() const override;
 };
 }  // namespace onyx::dynamic::tags
