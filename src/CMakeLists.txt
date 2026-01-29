@@ -29,6 +29,7 @@ target_sources(
         "nodes/foreach_node.cpp"
         "nodes/if_node.cpp"
         "nodes/attribute_view_node.cpp"
+        "nodes/root_view_node.cpp"
         "parse/helpers.cpp"
         "parse/dom_parser.cpp"
         "parse/sax_parser.cpp"

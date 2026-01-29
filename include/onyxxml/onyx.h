@@ -20,6 +20,7 @@
 #include "node_handle.h"
 #include "nodes/_dangerous_raw_text_node.h"
 #include "nodes/attribute_view_node.h"
+#include "nodes/root_view_node.h"
 #include "nodes/cdata_node.h"
 #include "nodes/comment_node.h"
 #include "nodes/doctype_node.h"
