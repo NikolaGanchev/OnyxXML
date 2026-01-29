@@ -41,4 +41,7 @@ target_sources(
         "xpath/functions.cpp"
         "xpath/xpath_object.cpp"
         "xpath/program.cpp"
+        "xpath/virtual_machine.cpp"
+        "xpath/virtual_machine_functions.cpp"
+        "xpath/vm_tree_operations.cpp"
 )

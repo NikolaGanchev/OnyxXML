@@ -36,6 +36,7 @@
 #include "text.h"
 #include "void_node.h"
 #include "xpath/functions.h"
+#include "xpath/virtual_machine.h"
 #include "xpath/xpath_object.h"
 
 #if __has_include("dynamic/tags.h")

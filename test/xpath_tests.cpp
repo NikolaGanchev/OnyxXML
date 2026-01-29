@@ -435,3 +435,595 @@ TEST_CASE("XPathObject nodeset vs nodeset not equal comparison") {
     REQUIRE(set == XPathObject(std::string("foo")));
     REQUIRE(set != XPathObject(std::string("foo")));
 }
+
+TEST_CASE("Virtual machine runs") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1")),
+            GenericNode("price", false, Text("10"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")),
+            GenericNode("price", false, Text("20")))
+    );
+
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("store")))
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 1);
+    REQUIRE(res.asNodeset()[0] == &doc);
+}
+
+TEST_CASE("Virtual machine /store/book") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1")),
+            GenericNode("price", false, Text("10"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")),
+            GenericNode("price", false, Text("20")))
+    );
+
+    // 0="store", 1="book"
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("store")))
+        .addData(XPathObject(std::string("book")))
+        // Select /store
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+        .addInstruction(Instruction(OPCODE::LOOP_ENTER, 8))
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+            .addInstruction(Instruction(OPCODE::LOOP_UNION))
+        .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 2);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "1");
+    REQUIRE(nodeset[1]->getTagName() == "book");
+    REQUIRE(nodeset[1]->getAttributeValue("id") == "2");
+}
+
+TEST_CASE("Virtual machine predicate /store/book[price > 15]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1")),
+            GenericNode("price", false, Text("10"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")),
+            GenericNode("price", false, Text("20")))
+    );
+
+    // 0="store", 1="book", 2="price", 3=15.0
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("store")))
+        .addData(XPathObject(std::string("book")))
+        .addData(XPathObject(std::string("price")))
+        .addData(XPathObject(15.0))
+        // Select /store
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0)) 
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+        .addInstruction(Instruction(OPCODE::LOOP_ENTER, 16)) 
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE)) 
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1)) 
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 14)) // Jump to UNION
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))
+                .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::GREATER_THAN))
+                .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
+            .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+            .addInstruction(Instruction(OPCODE::LOOP_UNION))
+        .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "2");
+}
+
+TEST_CASE("Virtual machine attribute Test /store/book[@id='1']") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1")),
+            GenericNode("price", false, Text("10"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")),
+            GenericNode("price", false, Text("20")))
+    );
+
+    // 0="store", 1="book", 2="id", 3="1"
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("store")))
+        .addData(XPathObject(std::string("book")))
+        .addData(XPathObject(std::string("id")))
+        .addData(XPathObject(std::string("1")))
+        // Select /store
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0)) 
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+        .addInstruction(Instruction(OPCODE::LOOP_ENTER, 16)) 
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 14))
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))  // "id"
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))  // "1"
+                .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::EQUAL))
+                .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
+            .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+            .addInstruction(Instruction(OPCODE::LOOP_UNION))
+        .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "1");
+}
+
+TEST_CASE("Virtual machine empty /store/book/author") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")))
+    );
+
+    // 0="store", 1="book", 2="author"
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("store")))
+        .addData(XPathObject(std::string("book")))
+        .addData(XPathObject(std::string("author")))
+        // 1. Select /store
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0)) 
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+        .addInstruction(Instruction(OPCODE::LOOP_ENTER, 13)) 
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 11))
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2)) // "author"
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+                .addInstruction(Instruction(OPCODE::LOOP_UNION))
+            .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+            .addInstruction(Instruction(OPCODE::LOOP_UNION))
+        .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().empty());
+}
+
+TEST_CASE("Virtual machine math /store/book[price div 2 < 15]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("price", false, Text("20"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("price", false, Text("40")))
+    );
+
+    // 0="store", 1="book", 2="price", 3=2.0, 4=15.0
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("store")))
+        .addData(XPathObject(std::string("book")))
+        .addData(XPathObject(std::string("price")))
+        .addData(XPathObject(2.0))
+        .addData(XPathObject(15.0))
+        // Select /store/book
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0)) 
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+        .addInstruction(Instruction(OPCODE::LOOP_ENTER, 20)) 
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 18))
+                // Select 'price'
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2)) 
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+                // Load 2
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3)) 
+                .addInstruction(Instruction(OPCODE::CALCULATE, CALCULATE_MODE::DIVIDE))
+                // Load 15
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))
+                .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::LESS_THAN))
+                .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
+            .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+            .addInstruction(Instruction(OPCODE::LOOP_UNION))
+        .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "1");
+}
+
+TEST_CASE("Virtual machine function composition book[not(starts-with(title, 'Second'))]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Second Book")))
+    );
+
+    // 0="store", 1="book", 2="title", 3="Second"
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("store")))
+        .addData(XPathObject(std::string("book")))
+        .addData(XPathObject(std::string("title")))
+        .addData(XPathObject(std::string("Second")))
+        // Select /store/book
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0)) 
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+        .addInstruction(Instruction(OPCODE::LOOP_ENTER, 20)) 
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 18))
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))
+                .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::STARTS_WITH_2))
+                .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::NOT_1))
+                .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
+            .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+            .addInstruction(Instruction(OPCODE::LOOP_UNION))
+        .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "1");
+}
+
+TEST_CASE("Virtual machine sum function /store[sum(book/price) > 50]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("store", false, Attribute("id", "1"),
+            GenericNode("book", false, GenericNode("price", false, Text("10"))),
+            GenericNode("book", false, GenericNode("price", false, Text("20")))
+        ),
+        GenericNode("store", false, Attribute("id", "2"),
+            GenericNode("book", false, GenericNode("price", false, Text("40"))),
+            GenericNode("book", false, GenericNode("price", false, Text("30")))
+        )
+    );
+
+    // 0="store", 1="book", 2="price", 3=50.0, 4="root"
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("store")))
+        .addData(XPathObject(std::string("book")))
+        .addData(XPathObject(std::string("price")))
+        .addData(XPathObject(50.0))
+        .addData(XPathObject(std::string("root")))
+        // Select /root/store
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4)) 
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+        .addInstruction(Instruction(OPCODE::LOOP_ENTER, 24)) 
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0)) // store
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+            
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 22))
+                
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1)) // book
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+                
+                .addInstruction(Instruction(OPCODE::LOOP_ENTER, 16)) 
+                    .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                    .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2)) // price
+                    .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+                    .addInstruction(Instruction(OPCODE::LOOP_UNION))
+                .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+                
+                // Call sum()
+                .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::SUM_1))
+                
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3)) // 50.0
+                .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::GREATER_THAN))
+                .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
+            .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+            .addInstruction(Instruction(OPCODE::LOOP_UNION))
+        .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "store");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "2");
+}
+
+TEST_CASE("Virtual machine attributes /root/item/@id") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("item", false, Attribute("id", "a")),
+        GenericNode("item", false, Attribute("id", "b"), Attribute("other", "x"))
+    );
+
+    // 0="root", 1="item", 2="id"
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("root")))
+        .addData(XPathObject(std::string("item")))
+        .addData(XPathObject(std::string("id")))
+        
+        // Select /root
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+        
+        .addInstruction(Instruction(OPCODE::LOOP_ENTER, 13)) 
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1)) // "item"
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+            
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 11))
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2)) // "id"
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+                .addInstruction(Instruction(OPCODE::LOOP_UNION))
+            .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+            
+            .addInstruction(Instruction(OPCODE::LOOP_UNION))
+        .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 2);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getXPathType() == Node::XPathType::ATTRIBUTE);
+    REQUIRE(nodeset[0]->getStringValue() == "a"); 
+    REQUIRE(nodeset[1]->getXPathType() == Node::XPathType::ATTRIBUTE);
+    REQUIRE(nodeset[1]->getStringValue() == "b"); 
+}
+
+TEST_CASE("Virtual machine booleans item[@x='1' and (@y='2' or @z='3')]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("item", false, Attribute("id", "1"), Attribute("x", "1"), Attribute("y", "2")),
+        GenericNode("item", false, Attribute("id", "2"), Attribute("x", "1"), Attribute("z", "3")),
+        GenericNode("item", false, Attribute("id", "3"), Attribute("x", "1"), Attribute("y", "9")),
+        GenericNode("item", false, Attribute("id", "4"), Attribute("x", "0"), Attribute("y", "2"))
+    );
+
+    // 0="root", 1="item", 2="x", 3="1", 4="y", 5="2", 6="z", 7="3"
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("root")))
+        .addData(XPathObject(std::string("item")))
+        .addData(XPathObject(std::string("x")))
+        .addData(XPathObject(std::string("1")))
+        .addData(XPathObject(std::string("y")))
+        .addData(XPathObject(std::string("2")))
+        .addData(XPathObject(std::string("z")))
+        .addData(XPathObject(std::string("3")))
+
+        // Select /root/item
+        .addInstruction(Instruction(OPCODE::LOAD_ROOT))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+        .addInstruction(Instruction(OPCODE::LOOP_ENTER, 33)) // Skip to HALT
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 27))
+                
+                // Check @x == '1'
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))
+                .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::EQUAL))
+                // If False, Jump to FAIL
+                .addInstruction(Instruction(OPCODE::JUMP_F, 26)) 
+
+                // Check (@y='2' OR @z='3')
+                
+                // Check @y == '2'
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 5))
+                .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::EQUAL))
+                // If True, Jump to SUCCESS
+                .addInstruction(Instruction(OPCODE::JUMP_T, 28)) 
+
+                // Check @z == '3'
+                .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 6))
+                .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+                .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 7))
+                .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::EQUAL))
+                // If True, Jump to SUCCESS
+                .addInstruction(Instruction(OPCODE::JUMP_T, 28))
+
+                // FAIL (26)
+                .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::_FALSE_0))
+                .addInstruction(Instruction(OPCODE::JUMP, 29)) // Jump to Test
+
+                // SUCCESS (28)
+                .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::_TRUE_0))
+
+                // TEST (29)
+                .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
+            .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+            .addInstruction(Instruction(OPCODE::LOOP_UNION))
+
+        .addInstruction(Instruction(OPCODE::LOOP_NEXT))
+        .addInstruction(Instruction(OPCODE::HALT)) // 33
+        .build();
+
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.asNodeset().size() == 2);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getAttributes()[0].getValue()== "1");
+    REQUIRE(nodeset[1]->getAttributes()[0].getValue() == "2");
+}
+
+TEST_CASE("Virtual machine union Operator //div | //span") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("div", false,
+            GenericNode("span", false, Text("A"))
+        ),
+        GenericNode("section", false,
+            GenericNode("span", false, Text("B")),
+            GenericNode("div", false, Text("C"))
+        )
+    );
+
+    // 0="div", 1="span"
+    std::unique_ptr<Program> pr = Program::Builder()
+        .addData(XPathObject(std::string("div")))
+        .addData(XPathObject(std::string("span")))
+        
+        // Context Node
+        .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+        
+        // Select //div
+        .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE)) 
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::DESCENDANT))
+        
+        // Select //span
+        .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+        .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+        .addInstruction(Instruction(OPCODE::SELECT, AXIS::DESCENDANT))
+        .addInstruction(Instruction(OPCODE::UNION))
+        
+        .addInstruction(Instruction(OPCODE::HALT))
+        .build();
+
+    VirtualMachine vm(std::move(pr));
+    VirtualMachine::ExecutionResult res1 = std::move(vm.executeOn(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.asNodeset().size() == 4);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "div");
+    REQUIRE(nodeset[0]->getChildrenCount() == 1);
+    REQUIRE(nodeset[0]->getFirstChild()->getTagName() == "span");
+    REQUIRE(nodeset[1]->getTagName() == "span");
+    REQUIRE(nodeset[1]->getChildrenCount() == 1);
+    REQUIRE(nodeset[1]->getFirstChild()->serialize() == "A");
+    REQUIRE(nodeset[2]->getTagName() == "span");
+    REQUIRE(nodeset[2]->getChildrenCount() == 1);
+    REQUIRE(nodeset[2]->getFirstChild()->serialize() == "B");
+    REQUIRE(nodeset[3]->getTagName() == "div");
+    REQUIRE(nodeset[3]->getChildrenCount() == 1);
+    REQUIRE(nodeset[3]->getFirstChild()->serialize() == "C");
+}
