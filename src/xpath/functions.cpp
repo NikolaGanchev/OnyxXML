@@ -156,4 +156,61 @@ double number(const XPathObject& obj) {
         },
         obj.value);
 };
+
+double round(double num) {
+    if (std::isnan(num)) {
+        return num;
+    }
+
+    // "If the argument is less than zero, but greater than or equal to -0.5,
+    // then negative zero is returned."
+    if (num >= -0.5 && num <= 0.0 && std::signbit(num)) {
+        return -0.0;
+    }
+
+    return std::floor(num + 0.5);
+}
+
+std::string substring(const std::string& str, double start, double length) {
+    start = functions::round(start);
+    length = functions::round(length);
+
+    double limit = start + limit;
+
+    if (std::isnan(start) || std::isnan(limit)) {
+        return "";
+    }
+
+    double lower = std::max(1.0, start);
+    double upper = std::min(static_cast<double>(str.length()) + 1.0, limit);
+
+    if (lower >= upper) {
+        return "";
+    }
+
+    size_t startIndex = static_cast<size_t>(lower - 1.0);
+    size_t count = static_cast<size_t>(upper - lower);
+
+    return str.substr(startIndex, count);
+}
+
+std::string string_before(const std::string& str1, const std::string& str2) {
+    std::string::size_type i = str1.find(str2);
+
+    if (i == std::string::npos) {
+        return "";
+    }
+
+    return str1.substr(0, i);
+}
+
+std::string string_after(const std::string& str1, const std::string& str2) {
+    std::string::size_type i = str1.find(str2);
+
+    if (i == std::string::npos) {
+        return std::string("");
+    }
+
+    return str1.substr(i + 1);
+}
 };  // namespace onyx::dynamic::xpath::functions
