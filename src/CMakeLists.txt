@@ -40,4 +40,5 @@ target_sources(
         "nodes/doctype_node.cpp"
         "xpath/functions.cpp"
         "xpath/xpath_object.cpp"
+        "xpath/program.cpp"
 )
