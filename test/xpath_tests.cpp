@@ -1027,3 +1027,242 @@ TEST_CASE("Virtual machine union Operator //div | //span") {
     REQUIRE(nodeset[3]->getChildrenCount() == 1);
     REQUIRE(nodeset[3]->getFirstChild()->serialize() == "C");
 }
+
+void requireToken(onyx::xpath::Lexer& lexer, 
+    onyx::xpath::Lexer::TokenType expectedType, 
+    const std::string& expectedValue = "") {
+    const auto& token = lexer.nextToken();
+    REQUIRE(token.getType() == expectedType);
+    if (!expectedValue.empty()) {
+        REQUIRE(token.getValue() == expectedValue);
+    }
+}
+
+TEST_CASE("XPath Lexer basic test") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("/book/title | //author");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::SLASH);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "book");
+    requireToken(lexer, Lexer::TokenType::SLASH);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "title");
+    requireToken(lexer, Lexer::TokenType::PIPE);
+    requireToken(lexer, Lexer::TokenType::DOUBLE_SLASH);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "author");
+}
+
+TEST_CASE("XPath Lexer integers and decimals") {
+        using namespace onyx::dynamic::xpath;
+        using namespace onyx::dynamic;
+        parser::StringCursor cursor("123 45.67");
+        Lexer lexer(cursor);
+        
+        requireToken(lexer, Lexer::TokenType::NUMBER, "123");
+        requireToken(lexer, Lexer::TokenType::NUMBER, "45.67");
+}
+
+TEST_CASE("XPath Lexer dot ambiguities") {
+        using namespace onyx::dynamic::xpath;
+        using namespace onyx::dynamic;
+        parser::StringCursor cursor(". .. .5");
+        Lexer lexer(cursor);
+
+        requireToken(lexer, Lexer::TokenType::DOT);
+        requireToken(lexer, Lexer::TokenType::TWO_DOTS);
+        requireToken(lexer, Lexer::TokenType::NUMBER, ".5");
+}
+
+TEST_CASE("XPath Lexer Dot attached to path") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("./book");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::DOT);
+    requireToken(lexer, Lexer::TokenType::SLASH);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "book");
+}
+
+TEST_CASE("XPath Lexer * disambiguation as nametest") {
+        using namespace onyx::dynamic::xpath;
+        using namespace onyx::dynamic;
+        parser::StringCursor cursor("child::* / *");
+        Lexer lexer(cursor);
+
+        requireToken(lexer, Lexer::TokenType::AXIS_NAME, "child");
+        requireToken(lexer, Lexer::TokenType::DOUBLE_COLON);
+        requireToken(lexer, Lexer::TokenType::NAME_TEST, "*");
+        requireToken(lexer, Lexer::TokenType::SLASH);
+        requireToken(lexer, Lexer::TokenType::NAME_TEST, "*");
+}
+
+TEST_CASE("XPath Lexer * disambiguation as multiplication")  {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("price * 5");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "price");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "*"); 
+    requireToken(lexer, Lexer::TokenType::NUMBER, "5");
+}
+    
+TEST_CASE("XPath Lexer * as namespace wildcard") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("svg:*");
+    Lexer lexer(cursor);
+    
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "svg:*");
+}
+
+TEST_CASE("XPath Lexer operator keywords as operators") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("10 div 5 mod 2");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::NUMBER, "10");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "div");
+    requireToken(lexer, Lexer::TokenType::NUMBER, "5");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "mod");
+    requireToken(lexer, Lexer::TokenType::NUMBER, "2");
+}
+
+TEST_CASE("XPath Lexer operator keywords as nametests") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("div/mod");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "div");
+    requireToken(lexer, Lexer::TokenType::SLASH);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "mod");
+}
+
+TEST_CASE("XPath Lexer div div div edge case") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("div div div");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "div");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "div");
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "div");
+}
+
+TEST_CASE("XPath Lexer node types") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("child::node()/child::text()/child::comment()");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::AXIS_NAME, "child");
+    requireToken(lexer, Lexer::TokenType::DOUBLE_COLON);
+    requireToken(lexer, Lexer::TokenType::NODE_TYPE, "node()");
+    requireToken(lexer, Lexer::TokenType::SLASH);
+    requireToken(lexer, Lexer::TokenType::AXIS_NAME, "child");
+    requireToken(lexer, Lexer::TokenType::DOUBLE_COLON);
+    requireToken(lexer, Lexer::TokenType::NODE_TYPE, "text()");
+    requireToken(lexer, Lexer::TokenType::SLASH);
+    requireToken(lexer, Lexer::TokenType::AXIS_NAME, "child");
+    requireToken(lexer, Lexer::TokenType::DOUBLE_COLON);
+    requireToken(lexer, Lexer::TokenType::NODE_TYPE, "comment()");
+}
+
+TEST_CASE("XPath Lexer function calls") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("count(book)");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::FUNCTION_NAME, "count");
+    requireToken(lexer, Lexer::TokenType::OPENING_PAREN);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "book");
+    requireToken(lexer, Lexer::TokenType::CLOSING_PAREN);
+}
+
+TEST_CASE("XPath Lexer processing instruction special case") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("processing-instruction('xml-stylesheet')");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::NODE_TYPE, "processing-instruction('xml-stylesheet')");
+}
+
+TEST_CASE("XPath Lexer empty processing instruction") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("processing-instruction()");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::NODE_TYPE, "processing-instruction()");
+}
+
+TEST_CASE("XPath Lexer literals") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("'single' \"double\"");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::LITERAL, "single");
+    requireToken(lexer, Lexer::TokenType::LITERAL, "double");
+}
+
+TEST_CASE("XPath Lexer variables") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("$varName $my-var");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::VARIABLE_REFERENCE, "varName");
+    requireToken(lexer, Lexer::TokenType::VARIABLE_REFERENCE, "my-var");
+}
+
+TEST_CASE("XPath Lexer real predicate") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("book[price > 10 and @instock]");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "book");
+    requireToken(lexer, Lexer::TokenType::OPENING_BRACKET);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "price");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, ">");
+    requireToken(lexer, Lexer::TokenType::NUMBER, "10");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "and");
+    requireToken(lexer, Lexer::TokenType::AT);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "instock");
+    requireToken(lexer, Lexer::TokenType::CLOSING_BRACKET);
+}
+
+TEST_CASE("XPath Lexer complex predicate") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("div div mod * .5 | child::* * 5 and node() or processing-instruction(' ) ') / .. // .");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "div");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "div");
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "mod");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "*");
+    requireToken(lexer, Lexer::TokenType::NUMBER, ".5");
+    requireToken(lexer, Lexer::TokenType::PIPE);
+    requireToken(lexer, Lexer::TokenType::AXIS_NAME, "child");
+    requireToken(lexer, Lexer::TokenType::DOUBLE_COLON);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "*");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "*");
+    requireToken(lexer, Lexer::TokenType::NUMBER, "5");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "and");
+    requireToken(lexer, Lexer::TokenType::NODE_TYPE, "node()");
+    requireToken(lexer, Lexer::TokenType::OPERATOR, "or");
+    requireToken(lexer, Lexer::TokenType::NODE_TYPE, "processing-instruction(' ) ')");
+    requireToken(lexer, Lexer::TokenType::SLASH);
+    requireToken(lexer, Lexer::TokenType::TWO_DOTS);
+    requireToken(lexer, Lexer::TokenType::DOUBLE_SLASH);
+    requireToken(lexer, Lexer::TokenType::DOT);
+    requireToken(lexer, Lexer::TokenType::END);
+}

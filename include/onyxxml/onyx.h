@@ -38,6 +38,7 @@
 #include "xpath/functions.h"
 #include "xpath/virtual_machine.h"
 #include "xpath/xpath_object.h"
+#include "xpath/lexer.h"
 
 #if __has_include("dynamic/tags.h")
 #include "dynamic/tags.h"
@@ -53,6 +54,7 @@ namespace ctags = compile::ctags;
 namespace index = dynamic::index;
 namespace text = dynamic::text;
 namespace parser = dynamic::parser;
+namespace xpath = dynamic::xpath;
 
 namespace dynamic::tags {
 using onyx::dynamic::Arena;
