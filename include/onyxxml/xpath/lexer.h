@@ -6,6 +6,7 @@
 #include "parse/string_cursor.h"
 
 namespace onyx::dynamic::xpath {
+class Parser;
 /**
  * @brief Tokenizes an XPath query into a list of Tokens. Handles basic
  * validation of the tokens.
@@ -93,7 +94,9 @@ class Lexer {
         LITERAL,             // "' [^"]* '"'	| "'" [^']* "'"
         NUMBER,              // Digits ('.' Digits?)? | '.' Digits
         VARIABLE_REFERENCE,  // 	'$' QName
-        END
+        END,
+
+        UNARY_MINUS // Used by parser. Not emitted by Lexer
     };
 
     /**
@@ -101,6 +104,7 @@ class Lexer {
      *
      */
     class Token {
+       friend Parser;
        private:
         /**
          * @brief The TokenType

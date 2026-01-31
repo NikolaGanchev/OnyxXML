@@ -39,6 +39,7 @@
 #include "xpath/virtual_machine.h"
 #include "xpath/xpath_object.h"
 #include "xpath/lexer.h"
+#include "xpath/parser.h"
 
 #if __has_include("dynamic/tags.h")
 #include "dynamic/tags.h"
