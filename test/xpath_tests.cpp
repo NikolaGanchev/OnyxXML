@@ -1283,8 +1283,8 @@ TEST_CASE("XPath Parser basic element selection") {
     std::unique_ptr<Parser::AstNode> ast = parse("para");
     
     // Should be child::para
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    REQUIRE(step != nullptr);
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+    Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     CHECK(step->axis == "child");
     CHECK(step->test == "para");
     CHECK(step->predicates.empty());
@@ -1296,8 +1296,8 @@ TEST_CASE("XPath Parser wildcard selection") {
     std::unique_ptr<Parser::AstNode> ast = parse("*");
 
     // Should be child::* (NameTest)
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    REQUIRE(step != nullptr);
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+    Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     CHECK(step->axis == "child");
     CHECK(step->test == "*");
 }
@@ -1308,8 +1308,8 @@ TEST_CASE("XPath Parser text node selection") {
     std::unique_ptr<Parser::AstNode> ast = parse("text()");
 
     // Should be child::text() (NodeType)
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    REQUIRE(step != nullptr);
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+    Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     CHECK(step->axis == "child");
     CHECK(step->test == "text()"); 
 }
@@ -1320,8 +1320,8 @@ TEST_CASE("XPath Parser attribute selection abbreviation") {
     std::unique_ptr<Parser::AstNode> ast = parse("@name");
 
     // Should be attribute::name
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    REQUIRE(step != nullptr);
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+    Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     CHECK(step->axis == "attribute");
     CHECK(step->test == "name");
 }
@@ -1332,8 +1332,8 @@ TEST_CASE("XPath Parser attribute wildcard") {
     std::unique_ptr<Parser::AstNode> ast = parse("@*");
 
     // Should be attribute::*
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    REQUIRE(step != nullptr);
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+    Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     CHECK(step->axis == "attribute");
     CHECK(step->test == "*");
 }
@@ -1343,12 +1343,13 @@ TEST_CASE("XPath Parser numeric predicate") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("para[1]");
 
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    REQUIRE(step != nullptr);
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+    Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     CHECK(step->test == "para");
     REQUIRE(step->predicates.size() == 1);
     
-    Parser::Number* num = dynamic_cast<Parser::Number*>(step->predicates[0].get());
+    REQUIRE(step->predicates[0]->getType() == Parser::AstNode::Number);
+    Parser::Number* num = static_cast<Parser::Number*>(step->predicates[0].get());
     REQUIRE(num != nullptr);
     CHECK(num->num == "1");
 }
@@ -1358,12 +1359,12 @@ TEST_CASE("XPath Parser function predicate") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("para[last()]");
 
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    REQUIRE(step != nullptr);
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+    Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     REQUIRE(step->predicates.size() == 1);
 
-    Parser::FunctionCall* func = dynamic_cast<Parser::FunctionCall*>(step->predicates[0].get());
-    REQUIRE(func != nullptr);
+    REQUIRE(step->predicates[0]->getType() == Parser::AstNode::FunctionCall);
+    Parser::FunctionCall* func = static_cast<Parser::FunctionCall*>(step->predicates[0].get());
     CHECK(func->name == "last");
     CHECK(func->args.empty());
 }
@@ -1373,15 +1374,16 @@ TEST_CASE("XPath Parser relative path with wildcard") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("*/para");
 
-    Parser::BinaryOp* binary = dynamic_cast<Parser::BinaryOp*>(ast.get());
-    REQUIRE(binary != nullptr);
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+    Parser::BinaryOp* binary = static_cast<Parser::BinaryOp*>(ast.get());
     CHECK(binary->op == "/");
 
-    Parser::Step* left = dynamic_cast<Parser::Step*>(binary->left.get());
-    REQUIRE(left != nullptr);
+    REQUIRE(binary->left->getType() == Parser::AstNode::Step);
+    Parser::Step* left = static_cast<Parser::Step*>(binary->left.get());
     CHECK(left->test == "*");
 
-    Parser::Step* right = dynamic_cast<Parser::Step*>(binary->right.get());
+    REQUIRE(binary->right->getType() == Parser::AstNode::Step);
+    Parser::Step* right = static_cast<Parser::Step*>(binary->right.get());
     REQUIRE(right != nullptr);
     CHECK(right->test == "para");
 }
@@ -1391,28 +1393,29 @@ TEST_CASE("XPath Parser absolute path with predicates") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("/doc/chapter[5]/section[2]");
     
-    Parser::BinaryOp* op2 = dynamic_cast<Parser::BinaryOp*>(ast.get()); 
-    REQUIRE(op2 != nullptr);
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+    Parser::BinaryOp* op2 = static_cast<Parser::BinaryOp*>(ast.get()); 
     
-    Parser::Step* section = dynamic_cast<Parser::Step*>(op2->right.get());
-    REQUIRE(section != nullptr);
+    REQUIRE(op2->right->getType() == Parser::AstNode::Step);
+    Parser::Step* section = static_cast<Parser::Step*>(op2->right.get());
     CHECK(section->test == "section");
     CHECK(section->predicates.size() == 1);
 
-    Parser::BinaryOp* op1 = dynamic_cast<Parser::BinaryOp*>(op2->left.get());
-    REQUIRE(op1 != nullptr);
+    REQUIRE(op2->left->getType() == Parser::AstNode::BinaryOp);
+    Parser::BinaryOp* op1 = static_cast<Parser::BinaryOp*>(op2->left.get());
 
-    Parser::Step* chapter = dynamic_cast<Parser::Step*>(op1->right.get());
-    REQUIRE(chapter != nullptr);
+    REQUIRE(op1->right->getType() == Parser::AstNode::Step);
+    Parser::Step* chapter = static_cast<Parser::Step*>(op1->right.get());
     CHECK(chapter->test == "chapter");
     CHECK(chapter->predicates.size() == 1);
 
-    Parser::BinaryOp* op0 = dynamic_cast<Parser::BinaryOp*>(op1->left.get());
-    REQUIRE(op0 != nullptr);
+    REQUIRE(op1->left->getType() == Parser::AstNode::BinaryOp);
+    Parser::BinaryOp* op0 = static_cast<Parser::BinaryOp*>(op1->left.get());
     
-    CHECK(dynamic_cast<Parser::RootNode*>(op0->left.get()) != nullptr);
+    REQUIRE(op0->left->getType() == Parser::AstNode::RootNode);
     
-    Parser::Step* doc = dynamic_cast<Parser::Step*>(op0->right.get());
+    REQUIRE(op0->right->getType() == Parser::AstNode::Step);
+    Parser::Step* doc = static_cast<Parser::Step*>(op0->right.get());
     CHECK(doc->test == "doc");
 }
 
@@ -1422,19 +1425,24 @@ TEST_CASE("XPath Parser double slash expansion") {
     // Should expand to chapter / descendant-or-self::node() / para
     std::unique_ptr<Parser::AstNode> ast = parse("chapter//para");
 
-    Parser::BinaryOp* finalSlash = dynamic_cast<Parser::BinaryOp*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+    Parser::BinaryOp* finalSlash = static_cast<Parser::BinaryOp*>(ast.get());
     REQUIRE(finalSlash != nullptr);
     
-    Parser::Step* right = dynamic_cast<Parser::Step*>(finalSlash->right.get());
+    REQUIRE(finalSlash->right->getType() == Parser::AstNode::Step);
+	Parser::Step* right = static_cast<Parser::Step*>(finalSlash->right.get());
     CHECK(right->test == "para");
 
-    Parser::BinaryOp* firstSlash = dynamic_cast<Parser::BinaryOp*>(finalSlash->left.get());
+    REQUIRE(finalSlash->left->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* firstSlash = static_cast<Parser::BinaryOp*>(finalSlash->left.get());
     REQUIRE(firstSlash != nullptr);
 
-    Parser::Step* chapter = dynamic_cast<Parser::Step*>(firstSlash->left.get());
+    REQUIRE(firstSlash->left->getType() == Parser::AstNode::Step);
+	Parser::Step* chapter = static_cast<Parser::Step*>(firstSlash->left.get());
     CHECK(chapter->test == "chapter");
 
-    Parser::Step* hidden = dynamic_cast<Parser::Step*>(firstSlash->right.get());
+    REQUIRE(firstSlash->right->getType() == Parser::AstNode::Step);
+	Parser::Step* hidden = static_cast<Parser::Step*>(firstSlash->right.get());
     REQUIRE(hidden != nullptr);
     CHECK(hidden->axis == "descendant-or-self");
     CHECK(hidden->test == "node()");
@@ -1446,15 +1454,18 @@ TEST_CASE("XPath Parser absolute double slash") {
     // Root / descendant-or-self::node() / para
     std::unique_ptr<Parser::AstNode> ast = parse("//para");
 
-    Parser::BinaryOp* finalSlash = dynamic_cast<Parser::BinaryOp*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* finalSlash = static_cast<Parser::BinaryOp*>(ast.get());
     REQUIRE(finalSlash != nullptr);
 
-    Parser::BinaryOp* firstSlash = dynamic_cast<Parser::BinaryOp*>(finalSlash->left.get());
+    REQUIRE(finalSlash->left->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* firstSlash = static_cast<Parser::BinaryOp*>(finalSlash->left.get());
     REQUIRE(firstSlash != nullptr);
 
-    CHECK(dynamic_cast<Parser::RootNode*>(firstSlash->left.get()) != nullptr);
+    CHECK(static_cast<Parser::RootNode*>(firstSlash->left.get()) != nullptr);
 
-    Parser::Step* hidden = dynamic_cast<Parser::Step*>(firstSlash->right.get());
+    REQUIRE(firstSlash->right->getType() == Parser::AstNode::Step);
+	Parser::Step* hidden = static_cast<Parser::Step*>(firstSlash->right.get());
     CHECK(hidden->axis == "descendant-or-self");
 }
 
@@ -1463,7 +1474,8 @@ TEST_CASE("XPath Parser context node abbreviation") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse(".");
     
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     REQUIRE(step != nullptr);
     CHECK(step->axis == "self");
     CHECK(step->test == "node()");
@@ -1474,7 +1486,8 @@ TEST_CASE("XPath Parser parent node abbreviation") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("..");
     
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     REQUIRE(step != nullptr);
     CHECK(step->axis == "parent");
     CHECK(step->test == "node()");
@@ -1485,13 +1498,16 @@ TEST_CASE("XPath Parser parent attribute path") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("../@lang");
 
-    Parser::BinaryOp* binary = dynamic_cast<Parser::BinaryOp*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* binary = static_cast<Parser::BinaryOp*>(ast.get());
     REQUIRE(binary != nullptr);
 
-    Parser::Step* left = dynamic_cast<Parser::Step*>(binary->left.get());
+    REQUIRE(binary->left->getType() == Parser::AstNode::Step);
+	Parser::Step* left = static_cast<Parser::Step*>(binary->left.get());
     CHECK(left->axis == "parent");
 
-    Parser::Step* right = dynamic_cast<Parser::Step*>(binary->right.get());
+    REQUIRE(binary->right->getType() == Parser::AstNode::Step);
+	Parser::Step* right = static_cast<Parser::Step*>(binary->right.get());
     CHECK(right->axis == "attribute");
     CHECK(right->test == "lang");
 }
@@ -1501,19 +1517,23 @@ TEST_CASE("XPath Parser predicate with attribute equality") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("para[@type=\"warning\"]");
 
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     REQUIRE(step != nullptr);
     REQUIRE(step->predicates.size() == 1);
 
-    Parser::BinaryOp* eqOp = dynamic_cast<Parser::BinaryOp*>(step->predicates[0].get());
+    REQUIRE(step->predicates[0]->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* eqOp = static_cast<Parser::BinaryOp*>(step->predicates[0].get());
     REQUIRE(eqOp != nullptr);
     CHECK(eqOp->op == "=");
 
-    Parser::Step* left = dynamic_cast<Parser::Step*>(eqOp->left.get());
+    REQUIRE(eqOp->left->getType() == Parser::AstNode::Step);
+	Parser::Step* left = static_cast<Parser::Step*>(eqOp->left.get());
     CHECK(left->axis == "attribute");
     CHECK(left->test == "type");
 
-    Parser::Literal* right = dynamic_cast<Parser::Literal*>(eqOp->right.get());
+    REQUIRE(eqOp->right->getType() == Parser::AstNode::Literal);
+	Parser::Literal* right = static_cast<Parser::Literal*>(eqOp->right.get());
     CHECK(right->value == "warning");
 }
 
@@ -1521,12 +1541,13 @@ TEST_CASE("XPath Parser multiple predicates") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("para[5][@type=\"warning\"]");
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     
     REQUIRE(step != nullptr);
     CHECK(step->predicates.size() == 2); 
-    CHECK(dynamic_cast<Parser::Number*>(step->predicates[0].get()) != nullptr);
-    CHECK(dynamic_cast<Parser::BinaryOp*>(step->predicates[1].get()) != nullptr);
+    CHECK(step->predicates[0]->getType() == Parser::AstNode::Number);
+    CHECK(step->predicates[1]->getType() == Parser::AstNode::BinaryOp);
 }
 
 TEST_CASE("XPath Parser predicate with child string value") {
@@ -1534,10 +1555,13 @@ TEST_CASE("XPath Parser predicate with child string value") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("chapter[title=\"Introduction\"]");
 
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    Parser::BinaryOp* pred = dynamic_cast<Parser::BinaryOp*>(step->predicates[0].get());
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(ast.get());
+    REQUIRE(step->predicates[0]->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* pred = static_cast<Parser::BinaryOp*>(step->predicates[0].get());
     
-    Parser::Step* titleStep = dynamic_cast<Parser::Step*>(pred->left.get());
+    REQUIRE(pred->left->getType() == Parser::AstNode::Step);
+	Parser::Step* titleStep = static_cast<Parser::Step*>(pred->left.get());
     CHECK(titleStep->test == "title");
     CHECK(titleStep->axis == "child");
 }
@@ -1547,8 +1571,10 @@ TEST_CASE("XPath Parser predicate existence test") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("chapter[title]");
 
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    Parser::Step* predStep = dynamic_cast<Parser::Step*>(step->predicates[0].get());
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(ast.get());
+    REQUIRE(step->predicates[0]->getType() == Parser::AstNode::Step);
+	Parser::Step* predStep = static_cast<Parser::Step*>(step->predicates[0].get());
     CHECK(predStep->test == "title");
 }
 
@@ -1557,17 +1583,21 @@ TEST_CASE("XPath Parser boolean and in predicate") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("employee[@secretary and @assistant]");
 
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
-    Parser::BinaryOp* andOp = dynamic_cast<Parser::BinaryOp*>(step->predicates[0].get());
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(ast.get());
+    REQUIRE(step->predicates[0]->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* andOp = static_cast<Parser::BinaryOp*>(step->predicates[0].get());
     
     REQUIRE(andOp != nullptr);
     CHECK(andOp->op == "and");
 
-    Parser::Step* left = dynamic_cast<Parser::Step*>(andOp->left.get());
+    REQUIRE(andOp->left->getType() == Parser::AstNode::Step);
+	Parser::Step* left = static_cast<Parser::Step*>(andOp->left.get());
     CHECK(left->axis == "attribute");
     CHECK(left->test == "secretary");
 
-    Parser::Step* right = dynamic_cast<Parser::Step*>(andOp->right.get());
+    REQUIRE(andOp->right->getType() == Parser::AstNode::Step);
+	Parser::Step* right = static_cast<Parser::Step*>(andOp->right.get());
     CHECK(right->axis == "attribute");
     CHECK(right->test == "assistant");
 }
@@ -1577,7 +1607,8 @@ TEST_CASE("XPath Parser precedence step") {
     using namespace onyx::dynamic;
 
     std::unique_ptr<Parser::AstNode> ast = parse("ancestor::div[1]");
-    Parser::Step* step = dynamic_cast<Parser::Step*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(ast.get());
     REQUIRE(step != nullptr);
     CHECK(step->axis == "ancestor");
     CHECK(step->test == "div");
@@ -1589,16 +1620,19 @@ TEST_CASE("XPath Parser precedence grouping") {
     using namespace onyx::dynamic;
 
     std::unique_ptr<Parser::AstNode> ast = parse("(ancestor::div)[1]");
-    Parser::FilterExpr* filter = dynamic_cast<Parser::FilterExpr*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::FilterExpr);
+	Parser::FilterExpr* filter = static_cast<Parser::FilterExpr*>(ast.get());
     REQUIRE(filter != nullptr);
     
-    Parser::Step* step = dynamic_cast<Parser::Step*>(filter->subject.get());
+    REQUIRE(filter->subject->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(filter->subject.get());
     REQUIRE(step != nullptr);
     CHECK(step->axis == "ancestor");
     CHECK(step->predicates.empty());
 
     REQUIRE(filter->predicates.size() == 1);
-    CHECK(dynamic_cast<Parser::Number*>(filter->predicates[0].get())->num == "1");
+    REQUIRE(filter->predicates[0]->getType() == Parser::AstNode::Number);
+    CHECK(static_cast<Parser::Number*>(filter->predicates[0].get())->num == "1");
 }
 
 TEST_CASE("XPath Parser arithmetic precedence") {
@@ -1606,11 +1640,13 @@ TEST_CASE("XPath Parser arithmetic precedence") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("5 + 3 * 2");
     
-    Parser::BinaryOp* plusOp = dynamic_cast<Parser::BinaryOp*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* plusOp = static_cast<Parser::BinaryOp*>(ast.get());
     REQUIRE(plusOp != nullptr);
     CHECK(plusOp->op == "+");
 
-    Parser::BinaryOp* multOp = dynamic_cast<Parser::BinaryOp*>(plusOp->right.get());
+    REQUIRE(plusOp->right->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* multOp = static_cast<Parser::BinaryOp*>(plusOp->right.get());
     REQUIRE(multOp != nullptr);
     CHECK(multOp->op == "*");
 }
@@ -1620,14 +1656,17 @@ TEST_CASE("XPath Parser unary minus") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("-child::para");
 
-    Parser::BinaryOp* subOp = dynamic_cast<Parser::BinaryOp*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* subOp = static_cast<Parser::BinaryOp*>(ast.get());
     REQUIRE(subOp != nullptr);
     CHECK(subOp->op == "-");
 
-    Parser::Number* zero = dynamic_cast<Parser::Number*>(subOp->left.get());
+    REQUIRE(subOp->left->getType() == Parser::AstNode::Number);
+	Parser::Number* zero = static_cast<Parser::Number*>(subOp->left.get());
     CHECK(zero->num == "0");
 
-    Parser::Step* step = dynamic_cast<Parser::Step*>(subOp->right.get());
+    REQUIRE(subOp->right->getType() == Parser::AstNode::Step);
+	Parser::Step* step = static_cast<Parser::Step*>(subOp->right.get());
     CHECK(step->test == "para");
 }
 
@@ -1636,7 +1675,8 @@ TEST_CASE("XPath Parser complex union") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("book | cd");
 
-    Parser::BinaryOp* pipeOp = dynamic_cast<Parser::BinaryOp*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* pipeOp = static_cast<Parser::BinaryOp*>(ast.get());
     REQUIRE(pipeOp != nullptr);
     CHECK(pipeOp->op == "|");
 }
@@ -1646,15 +1686,18 @@ TEST_CASE("XPath Parser nested functions") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("substring-before(@src, '?')");
 
-    Parser::FunctionCall* func = dynamic_cast<Parser::FunctionCall*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::FunctionCall);
+	Parser::FunctionCall* func = static_cast<Parser::FunctionCall*>(ast.get());
     REQUIRE(func != nullptr);
     CHECK(func->name == "substring-before");
     REQUIRE(func->args.size() == 2);
 
-    Parser::Step* arg1 = dynamic_cast<Parser::Step*>(func->args[0].get()); // @src
+    REQUIRE(func->args[0]->getType() == Parser::AstNode::Step);
+	Parser::Step* arg1 = static_cast<Parser::Step*>(func->args[0].get()); // @src
     CHECK(arg1->axis == "attribute");
 
-    Parser::Literal* arg2 = dynamic_cast<Parser::Literal*>(func->args[1].get()); // '?'
+    REQUIRE(func->args[1]->getType() == Parser::AstNode::Literal);
+	Parser::Literal* arg2 = static_cast<Parser::Literal*>(func->args[1].get()); // '?'
     CHECK(arg2->value == "?");
 }
 
@@ -1663,8 +1706,10 @@ TEST_CASE("XPath Parser complex filter on path") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("book/author[name='Bob'][1]");
     
-    Parser::BinaryOp* path = dynamic_cast<Parser::BinaryOp*>(ast.get());
-    Parser::Step* authorStep = dynamic_cast<Parser::Step*>(path->right.get());
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* path = static_cast<Parser::BinaryOp*>(ast.get());
+    REQUIRE(path->right->getType() == Parser::AstNode::Step);
+	Parser::Step* authorStep = static_cast<Parser::Step*>(path->right.get());
     
     REQUIRE(authorStep != nullptr);
     CHECK(authorStep->test == "author");
@@ -1676,11 +1721,13 @@ TEST_CASE("XPath Parser union precedence") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("book | cd | dvd");
 
-    Parser::BinaryOp* topPipe = dynamic_cast<Parser::BinaryOp*>(ast.get());
-    CHECK(dynamic_cast<Parser::Step*>(topPipe->right.get())->test == "dvd");
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* topPipe = static_cast<Parser::BinaryOp*>(ast.get());
+    CHECK(static_cast<Parser::Step*>(topPipe->right.get())->test == "dvd");
 
-    Parser::BinaryOp* leftPipe = dynamic_cast<Parser::BinaryOp*>(topPipe->left.get());
-    CHECK(dynamic_cast<Parser::Step*>(leftPipe->right.get())->test == "cd");
+    REQUIRE(topPipe->left->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* leftPipe = static_cast<Parser::BinaryOp*>(topPipe->left.get());
+    CHECK(static_cast<Parser::Step*>(leftPipe->right.get())->test == "cd");
 }
 
 TEST_CASE("XPath Parser ambiguous operators and names") {
@@ -1688,26 +1735,31 @@ TEST_CASE("XPath Parser ambiguous operators and names") {
     using namespace onyx::dynamic;
     std::unique_ptr<Parser::AstNode> ast = parse("div div mod * - 5");
 
-    Parser::BinaryOp* multOp = dynamic_cast<Parser::BinaryOp*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* multOp = static_cast<Parser::BinaryOp*>(ast.get());
     REQUIRE(multOp != nullptr);
     CHECK(multOp->op == "*");
 
-    Parser::BinaryOp* unaryNode = dynamic_cast<Parser::BinaryOp*>(multOp->right.get());
+    REQUIRE(multOp->right->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* unaryNode = static_cast<Parser::BinaryOp*>(multOp->right.get());
     REQUIRE(unaryNode != nullptr);
     CHECK(unaryNode->op == "-"); 
-    CHECK(dynamic_cast<Parser::Number*>(unaryNode->left.get())->num == "0");
-    CHECK(dynamic_cast<Parser::Number*>(unaryNode->right.get())->num == "5");
+    CHECK(static_cast<Parser::Number*>(unaryNode->left.get())->num == "0");
+    CHECK(static_cast<Parser::Number*>(unaryNode->right.get())->num == "5");
 
-    Parser::BinaryOp* divOp = dynamic_cast<Parser::BinaryOp*>(multOp->left.get());
+    REQUIRE(multOp->left->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* divOp = static_cast<Parser::BinaryOp*>(multOp->left.get());
     REQUIRE(divOp != nullptr);
     CHECK(divOp->op == "div");
 
-    Parser::Step* divName = dynamic_cast<Parser::Step*>(divOp->left.get());
+    REQUIRE(divOp->left->getType() == Parser::AstNode::Step);
+	Parser::Step* divName = static_cast<Parser::Step*>(divOp->left.get());
     REQUIRE(divName != nullptr);
     CHECK(divName->axis == "child");
     CHECK(divName->test == "div");
 
-    Parser::Step* modName = dynamic_cast<Parser::Step*>(divOp->right.get());
+    REQUIRE(divOp->right->getType() == Parser::AstNode::Step);
+	Parser::Step* modName = static_cast<Parser::Step*>(divOp->right.get());
     REQUIRE(modName != nullptr);
     CHECK(modName->axis == "child");
     CHECK(modName->test == "mod");
@@ -1718,15 +1770,18 @@ TEST_CASE("XPath Parser ambiguous wildcard and multiply") {
     using namespace onyx::dynamic;
     auto ast = parse("* * *");
 
-    Parser::BinaryOp* multOp = dynamic_cast<Parser::BinaryOp*>(ast.get());
+    REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
+	Parser::BinaryOp* multOp = static_cast<Parser::BinaryOp*>(ast.get());
     REQUIRE(multOp != nullptr);
     CHECK(multOp->op == "*");
 
-    Parser::Step* left = dynamic_cast<Parser::Step*>(multOp->left.get());
+    REQUIRE(multOp->left->getType() == Parser::AstNode::Step);
+	Parser::Step* left = static_cast<Parser::Step*>(multOp->left.get());
     REQUIRE(left != nullptr);
     CHECK(left->test == "*");
     
-    Parser::Step* right = dynamic_cast<Parser::Step*>(multOp->right.get());
+    REQUIRE(multOp->right->getType() == Parser::AstNode::Step);
+	Parser::Step* right = static_cast<Parser::Step*>(multOp->right.get());
     REQUIRE(right != nullptr);
     CHECK(right->test == "*");
 }

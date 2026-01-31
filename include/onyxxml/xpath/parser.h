@@ -75,15 +75,30 @@ public:
      * 
      */
     struct AstNode {
+        enum Type {
+            RootNode,
+            VarRef,
+            Literal,
+            Number,
+            FunctionCall,
+            FilterExpr,
+            BinaryOp,
+            Step,
+            FunctionSentinel
+        };
+        virtual Type getType() const = 0;
         virtual ~AstNode() {}
     };
-    struct RootNode : public AstNode {};
+    struct RootNode : public AstNode {
+        Type getType() const override { return Type::RootNode; }
+    };
     /**
      * @brief A variable reference
      * 
      */
     struct VarRef : public AstNode {
         std::string name;
+        Type getType() const override { return Type::VarRef; }
     };
     /**
      * @brief A literal
@@ -91,6 +106,7 @@ public:
      */
     struct Literal : public AstNode {
         std::string value;
+        Type getType() const override { return Type::Literal; }
     };
     /**
      * @brief A number
@@ -98,6 +114,7 @@ public:
      */
     struct Number : public AstNode {
         std::string num;
+        Type getType() const override { return Type::Number; }
     };
     /**
      * @brief A function call
@@ -106,6 +123,7 @@ public:
     struct FunctionCall : public AstNode {
         std::string name;
         std::vector<std::unique_ptr<AstNode>> args;
+        Type getType() const override { return Type::FunctionCall; }
     };
     /**
      * @brief A filter expression. That is an expression with an attached predicate.
@@ -114,6 +132,7 @@ public:
     struct FilterExpr : public AstNode {
         std::unique_ptr<AstNode> subject;
         std::vector<std::unique_ptr<AstNode>> predicates;
+        Type getType() const override { return Type::FilterExpr; }
     };
     /**
      * @brief A binary operation. Includes '/', '|', comparison and arithmetic operators.
@@ -123,6 +142,7 @@ public:
         std::unique_ptr<AstNode> left;
         std::string op;
         std::unique_ptr<AstNode> right;
+        Type getType() const override { return Type::BinaryOp; }
     };
     /**
      * @brief An XPath step, which contains an axis, a node test and a list of predicates.
@@ -132,6 +152,7 @@ public:
         std::string axis;
         std::string test;
         std::vector<std::unique_ptr<AstNode>> predicates;
+        Type getType() const override { return Type::Step; }
     };
     /**
      * @brief Used to signify if a function is being parsed or not.
@@ -139,7 +160,9 @@ public:
      * may be interpreted as 'count(item, 5)'
      * 
      */
-    struct FunctionSentinel : public AstNode {};
+    struct FunctionSentinel : public AstNode {
+        Type getType() const override { return Type::FunctionSentinel; }
+    };
 
     /**
      * @brief Construct a new Parser object. Completes the lexing process.
