@@ -43,15 +43,15 @@ bool VirtualMachine::nodeMatchesTest(Node* node, AXIS axis,
             // This is a valid error
             std::string target = test.substr(24);
 
-            if (target.starts_with("processing-instruction(\"")) {
+            if (test.starts_with("processing-instruction(\"")) {
                 if (target.ends_with("\")")) {
                     target.pop_back();
                     target.pop_back();
 
                     return pi->getTarget() == target;
                 }
-            } else if (target.starts_with("processing-instruction('")) {
-                if (target.ends_with("\")")) {
+            } else if (test.starts_with("processing-instruction('")) {
+                if (target.ends_with("')")) {
                     target.pop_back();
                     target.pop_back();
 
