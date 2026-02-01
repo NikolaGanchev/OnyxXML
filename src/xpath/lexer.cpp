@@ -1,7 +1,5 @@
 #include "xpath/lexer.h"
 
-#include <iostream>
-
 #include "parse/helpers.h"
 
 namespace onyx::dynamic::xpath {
@@ -335,7 +333,6 @@ const Lexer::Token& Lexer::nextToken() {
 
             // NodeType and FunctionName
             if (*cursor == '(') {
-                std::cout << token.value << "\n";
                 if (token.value == "comment" || token.value == "text" ||
                     token.value == "processing-instruction" ||
                     token.value == "node") {
