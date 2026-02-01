@@ -23,6 +23,7 @@ class DomParser;
 }
 namespace xpath {
 class RootViewNode;
+class AttributeViewNode;
 }
 
 /**
@@ -88,6 +89,7 @@ inline constexpr NonOwningNodeTag NonOwning{};
 class Node {
     friend parser::DomParser;
     friend xpath::RootViewNode;
+    friend xpath::AttributeViewNode;
 
    public:
     class Index;

@@ -2,7 +2,9 @@
 
 namespace onyx::dynamic::xpath {
 AttributeViewNode::AttributeViewNode(Node* owner, size_t index)
-    : Node{}, owner{owner}, index{index} {}
+    : Node{}, owner{owner}, index{index} {
+    this->parent = owner;
+}
 
 const std::string& AttributeViewNode::getTagName() const {
     static const std::string name = ".attribute-view-node";
