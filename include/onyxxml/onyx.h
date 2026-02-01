@@ -40,6 +40,7 @@
 #include "xpath/xpath_object.h"
 #include "xpath/lexer.h"
 #include "xpath/parser.h"
+#include "xpath/compiler.h"
 
 #if __has_include("dynamic/tags.h")
 #include "dynamic/tags.h"
