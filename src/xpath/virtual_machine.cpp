@@ -236,7 +236,15 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current) {
             case OPCODE::CONTEXT_NODE_TEST: {
                 EMPTY_STACK_GUARD(CONTEXT_NODE_TEST);
 
-                if (ec.dataStack.top().asBool()) {
+                // Encode special predicate behaviour (ancestor::div[5] means ancestor::div[position() == 5])
+                // This cannot be resolved any earlier, because until evaluation is is hard to determine
+                // the type of the result in the predicate
+                if (ec.dataStack.top().isNumber()) {
+                    if (context.currentIndex + 1 == ec.dataStack.top().asNumber()) {
+                        context.result.push_back(
+                            context.contextSet[context.currentIndex]);
+                    }
+                } else if (ec.dataStack.top().asBool()) {
                     context.result.push_back(
                         context.contextSet[context.currentIndex]);
                 }
@@ -478,8 +486,7 @@ void VirtualMachine::executeSort(const Instruction& instruction,
     FrameContext& context = ec.contextStack.top();
 
     if (!ec.dataStack.top().isNodeset()) {
-        throw std::runtime_error(
-            "Cannot execute SORT because top of data stack is not a Nodeset");
+        return;
     }
 
     ec.root.findRoot(context.contextSet[context.currentIndex]);
