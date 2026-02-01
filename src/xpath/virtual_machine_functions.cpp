@@ -110,13 +110,6 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
                          return XPathObject(str1 + str2);
                      });
 
-    registry.emplace(FUNCTION_CODE::CONCAT_3,
-                     [](Context context, Stack stack) -> XPathObject {
-                         GET_THREE_STACK_STRINGS(concat);
-
-                         return XPathObject(str1 + str2 + str3);
-                     });
-
     registry.emplace(FUNCTION_CODE::STARTS_WITH_2,
                      [](Context context, Stack stack) -> XPathObject {
                          GET_TWO_STACK_STRINGS(starts - with);
@@ -241,12 +234,12 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
                          return res;
                      });
 
-    registry.emplace(FUNCTION_CODE::_TRUE_0,
+    registry.emplace(FUNCTION_CODE::TRUE_0,
                      [](Context context, Stack stack) -> XPathObject {
                          return XPathObject(true);
                      });
 
-    registry.emplace(FUNCTION_CODE::_FALSE_0,
+    registry.emplace(FUNCTION_CODE::FALSE_0,
                      [](Context context, Stack stack) -> XPathObject {
                          return XPathObject(false);
                      });

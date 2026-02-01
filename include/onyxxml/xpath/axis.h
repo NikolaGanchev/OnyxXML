@@ -17,7 +17,7 @@ enum AXIS : uint8_t {
     FOLLOWING = 0x6,
     PRECEDING = 0x7,
     ATTRIBUTE = 0x8,
-    _NAMESPACE = 0x9,
+    NAMESPACE = 0x9,
     SELF = 0xA,
     DESCENDANT_OR_SELF = 0xB,
     ANCESTOR_OR_SELF = 0xC

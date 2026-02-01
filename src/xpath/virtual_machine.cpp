@@ -422,7 +422,8 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
             collectPreceding(contextNode, axis, nodeTest, nodeset, ec);
             break;
         };
-        case AXIS::_NAMESPACE: {
+        case AXIS::NAMESPACE: {
+            throw std::runtime_error("Unsupported axis used.");
             break;
         };
         default: {
