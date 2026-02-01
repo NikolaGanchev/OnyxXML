@@ -347,6 +347,17 @@ std::unique_ptr<Parser::AstNode> Parser::buildAST() {
                 t.type = TokenType::UNARY_MINUS;
             }
 
+            if (t.getType() == TokenType::SLASH || t.getType() == TokenType::DOUBLE_SLASH) {
+                // If the current token is a slash, the previous token cannot be a slash.
+                // We check pos > 0 because if pos == 0, it's a valid absolute path start.
+                if (pos > 0) {
+                    TokenType prevType = tokens[pos - 1].getType();
+                    if (prevType == TokenType::SLASH || prevType == TokenType::DOUBLE_SLASH) {
+                        throw std::runtime_error("Invalid path syntax: Adjacent slashes.");
+                    }
+                }
+            }
+
             if (unary && (t.getType() == Lexer::TokenType::SLASH || t.getType() == Lexer::TokenType::DOUBLE_SLASH)) {
                 nodeStack.push(std::make_unique<RootNode>());
             }
@@ -368,9 +379,13 @@ std::unique_ptr<Parser::AstNode> Parser::buildAST() {
         opStack.pop();
     }
 
-    if (nodeStack.empty()) {
-        throw std::runtime_error("Invalid expression");
+    if (nodeStack.size() != 1) {
+        if (nodeStack.empty()) {
+            throw std::runtime_error("Invalid expression");
+        }
+        throw std::runtime_error("Invalid expression: Unclosed function call or missing operator.");
     }
+
     return std::move(nodeStack.top());
 }
 };
