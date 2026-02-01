@@ -99,5 +99,12 @@ class Program {
      * @return const std::vector<XPathObject>&
      */
     const std::vector<Instruction>& getInstructions() const;
+
+    /**
+     * @brief Converts a program to a bytecode string
+     * 
+     * @return std::string 
+     */
+    std::string toString() const;
 };
 }  // namespace onyx::dynamic::xpath

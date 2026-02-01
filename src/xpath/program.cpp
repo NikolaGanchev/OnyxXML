@@ -40,4 +40,51 @@ const std::vector<XPathObject>& Program::getData() const { return this->data; }
 const std::vector<Instruction>& Program::getInstructions() const {
     return this->instructions;
 }
+
+std::string Program::toString() const {
+    std::stringstream result;
+
+    for (size_t i = 0; i < this->instructions.size(); i++) {
+        result << i << " ";
+        const Instruction& instr = this->instructions[i];
+        OPCODE opcode = instr.getOpcode();
+        std::string_view opcodeStr = Instruction::opcodeToString(opcode);
+        
+        result << opcodeStr;
+
+        if (opcode == OPCODE::LOAD_CONSTANT) {
+            if (instr.getOperandImm() >= this->data.size()) {
+                throw std::runtime_error("Program requires data address that does not exist.");
+            }
+            result << " \"" << this->data[instr.getOperandImm()].asString() << "\"";
+        }
+
+        if (opcode == OPCODE::JUMP 
+            || opcode == OPCODE::JUMP_T
+            || opcode == OPCODE::JUMP_F
+            || opcode == OPCODE::LOOP_ENTER) {
+            result << " " << instr.getOperandImm();
+        }
+
+        if (opcode == OPCODE::COMPARE) {
+            result << " " << Instruction::compareModeToString(static_cast<COMPARE_MODE>(instr.getOperandImm()));
+        }
+        
+        if (opcode == OPCODE::CALCULATE) {
+            result << " " << Instruction::calcModeToString(static_cast<CALCULATE_MODE>(instr.getOperandImm()));
+        }
+        
+        if (opcode == OPCODE::CALL) {
+            result << " " << Instruction::functionCodeToString(static_cast<FUNCTION_CODE>(instr.getOperandImm()));
+        }
+        
+        if (opcode == OPCODE::SELECT) {
+            result << " " << Instruction::axisToString(static_cast<AXIS>(instr.getOperandImm()));
+        }
+
+        result << "\n";
+    }
+
+    return result.str();
+}
 }  // namespace onyx::dynamic::xpath

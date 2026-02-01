@@ -46,4 +46,6 @@ target_sources(
         "xpath/vm_tree_operations.cpp"
         "xpath/lexer.cpp"
         "xpath/parser.cpp"
+        "xpath/compiler.cpp"
+        "xpath/instruction.cpp"
 )

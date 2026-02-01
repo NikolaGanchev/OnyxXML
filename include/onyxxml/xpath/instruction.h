@@ -1,5 +1,10 @@
 #pragma once
 #include "opcode.h"
+#include "compare_mode.h"
+#include "calculate_mode.h"
+#include "function_code.h"
+#include "axis.h"
+#include <string_view>
 
 namespace onyx::dynamic::xpath {
 
@@ -65,5 +70,46 @@ class Instruction {
      * @return uint32_t
      */
     uint32_t getRaw() const { return data; }
+
+    /**
+     * @brief Converts an OPCODE to string
+     * 
+     * @param op 
+     * @return std::string_view 
+     */
+    static std::string_view opcodeToString(OPCODE op);
+
+    /**
+     * @brief Converts a COMPARE_MODE to string
+     * 
+     * @param cm 
+     * @return std::string_view 
+     */
+    static std::string_view compareModeToString(COMPARE_MODE cm);
+
+    /**
+     * @brief Converts a CALCULATE_MODE to string
+     * 
+     * @param cm 
+     * @return std::string_view 
+     */
+    static std::string_view calcModeToString(CALCULATE_MODE cm);
+
+    /**
+     * @brief Converts a FUNCTION_CODE to string
+     * 
+     * @param fc
+     * @return std::string_view 
+     */
+    static std::string_view functionCodeToString(FUNCTION_CODE fc);
+
+    /**
+     * @brief Converts an AXIS to string
+     * 
+     * @param a
+     * @return std::string_view 
+     */
+    static std::string_view axisToString(AXIS a);
+
 };
 }  // namespace onyx::dynamic::xpath
