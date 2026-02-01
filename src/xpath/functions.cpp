@@ -175,7 +175,7 @@ std::string substring(const std::string& str, double start, double length) {
     start = functions::round(start);
     length = functions::round(length);
 
-    double limit = start + limit;
+    double limit = start + length;
 
     if (std::isnan(start) || std::isnan(limit)) {
         return "";
@@ -212,5 +212,44 @@ std::string string_after(const std::string& str1, const std::string& str2) {
     }
 
     return str1.substr(i + 1);
+}
+
+std::string translate(const std::string& str1, const std::string& str2, const std::string& str3) {
+    std::stringstream result;
+
+    // Values
+    // -1: Character not found in str2
+    // -2: Character found in str2 but no corresponding char in str3
+    // 0..255: The replacement character
+    std::vector<int> map(256, -1);
+
+    for (size_t i = 0; i < str2.length(); ++i) {
+        unsigned char key = static_cast<unsigned char>(str2[i]);
+
+        // XPath spec: "If a character occurs more than once in the second argument string, 
+        // then the first occurrence determines the replacement character."
+        // We only set the rule if this character hasn't been processed yet
+        if (map[key] == -1) {
+            if (i < str3.length()) {
+                map[key] = static_cast<unsigned char>(str3[i]);
+            } else {
+                map[key] = -2;
+            }
+        }
+    }
+
+    for (char c : str1) {
+        unsigned char index = static_cast<unsigned char>(c);
+        int action = map[index];
+
+        if (action == -1) {
+            result << c;
+        } else if (action == -2) {
+        } else {
+            result << static_cast<char>(action);
+        }
+    }
+
+    return result.str();
 }
 };  // namespace onyx::dynamic::xpath::functions

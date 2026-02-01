@@ -73,13 +73,13 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
 
     registry.emplace(FUNCTION_CODE::ID_1,
                      [](Context context, Stack stack) -> XPathObject {
-                         // TODO
+                        // No support for DTDs
                          return XPathObject(std::string(""));
                      });
 
     registry.emplace(FUNCTION_CODE::LOCAL_NAME_1,
                      [](Context context, Stack stack) -> XPathObject {
-                         // TODO
+                        // TODO
                          return XPathObject(std::string(""));
                      });
 
@@ -203,8 +203,8 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
 
     registry.emplace(FUNCTION_CODE::TRANSLATE_3,
                      [](Context context, Stack stack) -> XPathObject {
-                         // TODO
-                         return XPathObject(std::string(""));
+                        GET_THREE_STACK_STRINGS(translate);
+                         return XPathObject(functions::translate(str1, str2, str3));
                      });
 
     registry.emplace(

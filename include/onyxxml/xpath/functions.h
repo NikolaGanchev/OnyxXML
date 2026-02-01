@@ -27,4 +27,14 @@ std::string substring(const std::string& str, double start,
 std::string string_before(const std::string& str1, const std::string& str2);
 
 std::string string_after(const std::string& str1, const std::string& str2);
+
+/**
+ * @brief Currently does not handle UTF-8
+ * 
+ * @param str1 
+ * @param str2 
+ * @param str3 
+ * @return std::string 
+ */
+std::string translate(const std::string& str1, const std::string& str2, const std::string& str3);
 };  // namespace onyx::dynamic::xpath::functions
