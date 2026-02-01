@@ -767,7 +767,7 @@ TEST_CASE("Virtual machine function composition book[not(starts-with(title, 'Sec
     REQUIRE(nodeset[0]->getAttributeValue("id") == "1");
 }
 
-TEST_CASE("Virtual machine sum function /store[sum(book/price) > 50]") {
+TEST_CASE("Virtual machine sum function /root/store[sum(book/price) > 50]") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
@@ -946,11 +946,11 @@ TEST_CASE("Virtual machine booleans item[@x='1' and (@y='2' or @z='3')]") {
                 .addInstruction(Instruction(OPCODE::JUMP_T, 28))
 
                 // FAIL (26)
-                .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::_FALSE_0))
+                .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::FALSE_0))
                 .addInstruction(Instruction(OPCODE::JUMP, 29)) // Jump to Test
 
                 // SUCCESS (28)
-                .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::_TRUE_0))
+                .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::TRUE_0))
 
                 // TEST (29)
                 .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
@@ -1051,6 +1051,22 @@ TEST_CASE("XPath Lexer basic test") {
     requireToken(lexer, Lexer::TokenType::PIPE);
     requireToken(lexer, Lexer::TokenType::DOUBLE_SLASH);
     requireToken(lexer, Lexer::TokenType::NAME_TEST, "author");
+}
+
+TEST_CASE("XPath Lexer basic test expression") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+    parser::StringCursor cursor("(ancestor::*)[1]");
+    Lexer lexer(cursor);
+
+    requireToken(lexer, Lexer::TokenType::OPENING_PAREN);
+    requireToken(lexer, Lexer::TokenType::AXIS_NAME, "ancestor");
+    requireToken(lexer, Lexer::TokenType::DOUBLE_COLON);
+    requireToken(lexer, Lexer::TokenType::NAME_TEST, "*");
+    requireToken(lexer, Lexer::TokenType::CLOSING_PAREN);
+    requireToken(lexer, Lexer::TokenType::OPENING_BRACKET);
+    requireToken(lexer, Lexer::TokenType::NUMBER, "1");
+    requireToken(lexer, Lexer::TokenType::CLOSING_BRACKET);
 }
 
 TEST_CASE("XPath Lexer integers and decimals") {
@@ -1784,4 +1800,804 @@ TEST_CASE("XPath Parser ambiguous wildcard and multiply") {
 	Parser::Step* right = static_cast<Parser::Step*>(multOp->right.get());
     REQUIRE(right != nullptr);
     CHECK(right->test == "*");
+}
+
+TEST_CASE("XPath execute /store") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1")),
+            GenericNode("price", false, Text("10"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")),
+            GenericNode("price", false, Text("20")))
+    );
+
+    VirtualMachine::ExecutionResult res1 = std::move(XPathQuery("/store").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 1);
+    REQUIRE(res.asNodeset()[0] == &doc);
+}
+
+TEST_CASE("XPath execute /store/book") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1")),
+            GenericNode("price", false, Text("10"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")),
+            GenericNode("price", false, Text("20")))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/store/book").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 2);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "1");
+    REQUIRE(nodeset[1]->getTagName() == "book");
+    REQUIRE(nodeset[1]->getAttributeValue("id") == "2");
+}
+
+TEST_CASE("XPath execute predicate /store/book[price > 15]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1")),
+            GenericNode("price", false, Text("10"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")),
+            GenericNode("price", false, Text("20")))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/store/book[price > 15]").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "2");
+}
+
+TEST_CASE("XPath execute attribute Test /store/book[@id='1']") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1")),
+            GenericNode("price", false, Text("10"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")),
+            GenericNode("price", false, Text("20")))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/store/book[@id='1']").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "1");
+}
+
+TEST_CASE("XPath execute empty /store/book/author") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book1"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Book2")))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/store/book/author").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().empty());
+}
+
+TEST_CASE("XPath execute math /store/book[price div 2 < 15]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("price", false, Text("20"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("price", false, Text("40")))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/store/book[price div 2 < 15]").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "1");
+}
+
+TEST_CASE("XPath execute function composition book[not(starts-with(title, 'Second'))]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("store", false,
+        GenericNode("book", false, Attribute("id", "1"),
+            GenericNode("title", false, Text("Book"))),
+        GenericNode("book", false, Attribute("id", "2"),
+            GenericNode("title", false, Text("Second Book")))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("book[not(starts-with(title, 'Second'))]").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "book");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "1");
+}
+
+TEST_CASE("XPath execute sum function /root/store[sum(book/price) > 50]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("store", false, Attribute("id", "1"),
+            GenericNode("book", false, GenericNode("price", false, Text("10"))),
+            GenericNode("book", false, GenericNode("price", false, Text("20")))
+        ),
+        GenericNode("store", false, Attribute("id", "2"),
+            GenericNode("book", false, GenericNode("price", false, Text("40"))),
+            GenericNode("book", false, GenericNode("price", false, Text("30")))
+        )
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/root/store[sum(book/price) > 50]").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.asNodeset().size() == 1);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "store");
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "2");
+}
+
+TEST_CASE("XPath execute attributes /root/item/@id") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("item", false, Attribute("id", "a")),
+        GenericNode("item", false, Attribute("id", "b"), Attribute("other", "x"))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/root/item/@id").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNodeset());
+    REQUIRE(res.asNodeset().size() == 2);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getXPathType() == Node::XPathType::ATTRIBUTE);
+    REQUIRE(nodeset[0]->getStringValue() == "a"); 
+    REQUIRE(nodeset[1]->getXPathType() == Node::XPathType::ATTRIBUTE);
+    REQUIRE(nodeset[1]->getStringValue() == "b"); 
+}
+
+TEST_CASE("XPath execute booleans item[@x='1' and (@y='2' or @z='3')]") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("item", false, Attribute("id", "1"), Attribute("x", "1"), Attribute("y", "2")),
+        GenericNode("item", false, Attribute("id", "2"), Attribute("x", "1"), Attribute("z", "3")),
+        GenericNode("item", false, Attribute("id", "3"), Attribute("x", "1"), Attribute("y", "9")),
+        GenericNode("item", false, Attribute("id", "4"), Attribute("x", "0"), Attribute("y", "2"))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("item[@x='1' and (@y='2' or @z='3')]").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.asNodeset().size() == 2);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getAttributes()[0].getValue()== "1");
+    REQUIRE(nodeset[1]->getAttributes()[0].getValue() == "2");
+}
+
+TEST_CASE("XPath execute union Operator //div | //span") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("div", false,
+            GenericNode("span", false, Text("A"))
+        ),
+        GenericNode("section", false,
+            GenericNode("span", false, Text("B")),
+            GenericNode("div", false, Text("C"))
+        )
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("//div | //span").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.asNodeset().size() == 4);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getTagName() == "div");
+    REQUIRE(nodeset[0]->getChildrenCount() == 1);
+    REQUIRE(nodeset[0]->getFirstChild()->getTagName() == "span");
+    REQUIRE(nodeset[1]->getTagName() == "span");
+    REQUIRE(nodeset[1]->getChildrenCount() == 1);
+    REQUIRE(nodeset[1]->getFirstChild()->serialize() == "A");
+    REQUIRE(nodeset[2]->getTagName() == "span");
+    REQUIRE(nodeset[2]->getChildrenCount() == 1);
+    REQUIRE(nodeset[2]->getFirstChild()->serialize() == "B");
+    REQUIRE(nodeset[3]->getTagName() == "div");
+    REQUIRE(nodeset[3]->getChildrenCount() == 1);
+    REQUIRE(nodeset[3]->getFirstChild()->serialize() == "C");
+}
+
+TEST_CASE("XPath execute (1 < 5 - 6)") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false);
+
+    XPathQuery::Result res1 = std::move(XPathQuery("(1 < 5 - 6)").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isBool());
+    REQUIRE_FALSE(res.asBool());
+}
+
+TEST_CASE("XPath execute concat() with many arguments") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false);
+
+    XPathQuery::Result res1 = std::move(XPathQuery("concat('a', 'b', 'c', 'd', 'e')").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isString());
+    REQUIRE(res.asString() == "abcde");
+}
+
+TEST_CASE("XPath execute arithmetic (1 + 2 * 3 * (6 div 2) - 3)") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false);
+
+    XPathQuery::Result res1 = std::move(XPathQuery("(1 + 2 * 3 * (6 div 2) - 5)").execute(&doc));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isNumber());
+    REQUIRE(res.asNumber() == Catch::Approx(14));
+}
+
+TEST_CASE("XPath execute axis precedence (ancestor vs paren-ancestor)") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic::tags;
+    using namespace onyx::dynamic;
+
+    GenericNode doc("root", false,
+        GenericNode("grandparent", false,
+            GenericNode("parent", false,
+                GenericNode("child", false)
+            )
+        )
+    );
+
+    Node* childNode = doc.getChildren()[0]->getChildren()[0]->getChildren()[0];
+
+    // ancestor::*[1] should be 'parent'
+    XPathQuery::Result res1 = std::move(XPathQuery("ancestor::*[1]").execute(childNode));
+    REQUIRE(res1.object.asNodeset()[0]->getTagName() == "parent");
+
+    // (ancestor::*)[1] should be 'root' (first in document order)
+    XPathQuery::Result res2 = std::move(XPathQuery("(ancestor::*)[1]").execute(childNode));
+    REQUIRE(res2.object.asNodeset()[0]->getTagName() == "root");
+}
+
+TEST_CASE("XPath execute implicit numeric predicates and last()") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("list", false,
+        GenericNode("item", false, Text("A")),
+        GenericNode("item", false, Text("B")),
+        GenericNode("item", false, Text("C")),
+        GenericNode("item", false, Text("D"))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("item[2]").execute(&doc));
+    REQUIRE(res1.object.asNodeset().size() == 1);
+    REQUIRE(res1.object.asNodeset()[0]->getFirstChild()->serialize() == "B");
+
+    XPathQuery::Result res2 = std::move(XPathQuery("item[last()]").execute(&doc));
+    REQUIRE(res2.object.asNodeset().size() == 1);
+    REQUIRE(res2.object.asNodeset()[0]->getFirstChild()->serialize() == "D");
+
+    XPathQuery::Result res3 = std::move(XPathQuery("item[last()-1]").execute(&doc));
+    REQUIRE(res3.object.asNodeset().size() == 1);
+    REQUIRE(res3.object.asNodeset()[0]->getFirstChild()->serialize() == "C");
+}
+
+TEST_CASE("XPath execute following-sibling and preceding-sibling") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("data", false,
+        GenericNode("a", false, Attribute("id", "1")),
+        GenericNode("b", false, Attribute("id", "2")),
+        GenericNode("c", false, Attribute("id", "3")),
+        GenericNode("d", false, Attribute("id", "4"))
+    );
+
+    Node* nodeB = doc.getChildren()[1];
+
+    XPathQuery::Result res1 = std::move(XPathQuery("following-sibling::node()[1]").execute(nodeB));
+    REQUIRE(res1.object.asNodeset()[0]->getAttributeValue("id") == "3");
+
+    XPathQuery::Result res2 = std::move(XPathQuery("preceding-sibling::node()[1]").execute(nodeB));
+    REQUIRE(res2.object.asNodeset()[0]->getAttributeValue("id") == "1");
+}
+
+TEST_CASE("XPath execute deep string concatenation (Element String Value)") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("doc", false,
+        GenericNode("p", false, 
+            Text("Hello "),
+            GenericNode("b", false, Text("World")),
+            Text("!")
+        )
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("string(/doc/p)").execute(&doc));
+    REQUIRE(res1.object.asString() == "Hello World!");
+}
+
+TEST_CASE("XPath execute complex boolean and string functions") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("inventory", false,
+        GenericNode("item", false, 
+            Attribute("code", "A-123"), 
+            GenericNode("name", false, Text("Widget"))),
+        GenericNode("item", false, 
+            Attribute("code", "B-456"), 
+            GenericNode("name", false, Text("Gadget"))),
+        GenericNode("item", false, 
+            Attribute("code", "A-789"), 
+            GenericNode("name", false, Text("Wodget")))
+    );
+
+    // Find items where code starts with 'A' AND name contains 'get' and name doesn't contain 'Gad'
+    std::string query = "/inventory/item[starts-with(@code, 'A') and contains(name, 'get') and not(contains(name, 'Gad'))]";
+    
+    XPathQuery::Result res1 = std::move(XPathQuery(query).execute(&doc));
+    
+    REQUIRE(res1.object.asNodeset().size() == 2);
+    REQUIRE(res1.object.asNodeset()[0]->getFirstChild()->getTagName() == "name"); 
+    REQUIRE(res1.object.asNodeset()[0]->getFirstChild()->getFirstChild()->serialize() == "Widget");
+    REQUIRE(res1.object.asNodeset()[1]->getFirstChild()->getTagName() == "name"); 
+    REQUIRE(res1.object.asNodeset()[1]->getFirstChild()->getFirstChild()->serialize() == "Wodget");
+}
+
+TEST_CASE("XPath execute substring and translate") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false);
+
+    XPathQuery::Result res1 = std::move(XPathQuery("substring('12345', 2, 3)").execute(&doc));
+    REQUIRE(res1.object.asString() == "234");
+
+    XPathQuery::Result res2 = std::move(XPathQuery("translate('bar', 'abc', 'ABC')").execute(&doc));
+    REQUIRE(res2.object.asString() == "BAr");
+    
+    XPathQuery::Result res3 = std::move(XPathQuery("translate('data', 'd', '')").execute(&doc));
+    REQUIRE(res3.object.asString() == "ata");
+}
+
+TEST_CASE("XPath execute parent abbreviation (..) and self (.)") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("a", false,
+        GenericNode("b", false,
+            GenericNode("c", false, Attribute("attr", "val"))
+        )
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/a/b/c/../c/@attr").execute(&doc));
+    
+    REQUIRE(res1.object.asNodeset().size() == 1);
+    REQUIRE(res1.object.asNodeset()[0]->getStringValue() == "val");
+
+    XPathQuery::Result res2 = std::move(XPathQuery("/a/b/./c").execute(&doc));
+    REQUIRE(res2.object.asNodeset().size() == 1);
+    REQUIRE(res2.object.asNodeset()[0]->getTagName() == "c");
+}
+
+TEST_CASE("XPath execute nodeset equality (Exists semantics)") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("val", false, Text("foo")),
+        GenericNode("val", false, Text("bar")),
+        GenericNode("val", false, Text("baz"))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/root/val = 'bar'").execute(&doc));
+    REQUIRE(res1.object.asBool() == true);
+
+    XPathQuery::Result res2 = std::move(XPathQuery("/root/val = 'qux'").execute(&doc));
+    REQUIRE(res2.object.asBool() == false);
+    
+    XPathQuery::Result res3 = std::move(XPathQuery("/root/val != 'bar'").execute(&doc));
+    REQUIRE(res3.object.asBool() == true);
+}
+
+TEST_CASE("XPath execute number formatting and operations") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false);
+
+    REQUIRE(XPathQuery("floor(1.9)").execute(&doc).object.asNumber() == 1.0);
+    REQUIRE(XPathQuery("ceiling(1.1)").execute(&doc).object.asNumber() == 2.0);
+    REQUIRE(XPathQuery("round(1.5)").execute(&doc).object.asNumber() == 2.0); // 1.5 rounds up
+    REQUIRE(XPathQuery("round(1.4)").execute(&doc).object.asNumber() == 1.0);
+
+    REQUIRE(XPathQuery("number('-10.5')").execute(&doc).object.asNumber() == -10.5);
+}
+
+TEST_CASE("XPath execute attribute node edge cases") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("item", false, Attribute("id", "1"), Text("Hello"))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/root/item/@id/child::node()").execute(&doc));
+    REQUIRE(res1.object.asNodeset().empty());
+
+    XPathQuery::Result res2 = std::move(XPathQuery("/root/item/text()/child::node()").execute(&doc));
+    REQUIRE(res2.object.asNodeset().empty());
+    
+    XPathQuery::Result res3 = std::move(XPathQuery("/root/item/@id/..").execute(&doc));
+    REQUIRE(res3.object.asNodeset().size() == 1);
+    REQUIRE(res3.object.asNodeset()[0]->getTagName() == "item");
+}
+
+TEST_CASE("XPath execute axis test") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("A", false, Attribute("id", "1"),
+            GenericNode("B", false, Attribute("id", "2")),
+            GenericNode("C", false, Attribute("id", "3"),
+                GenericNode("D", false, Attribute("id", "4"))
+            )
+        ),
+        GenericNode("E", false, Attribute("id", "5"))
+    );
+
+    Node* nodeC = doc.getChildren()[0]->getChildren()[1];
+
+    XPathQuery::Result resDesc = std::move(XPathQuery("/root/A/descendant::*").execute(&doc));
+    REQUIRE(resDesc.object.asNodeset().size() == 3);
+
+    Node* nodeD = nodeC->getChildren()[0];
+    XPathQuery::Result resAnc = std::move(XPathQuery("ancestor::*").execute(nodeD));
+    REQUIRE(resAnc.object.asNodeset().size() == 3);
+    REQUIRE(resAnc.object.asNodeset()[0]->getTagName() == "C");
+
+    Node* nodeB = doc.getChildren()[0]->getChildren()[0];
+    XPathQuery::Result resFoll = std::move(XPathQuery("following::*").execute(nodeB));
+    REQUIRE(resFoll.object.asNodeset().size() == 3);
+    REQUIRE(resFoll.object.asNodeset()[0]->getAttributeValue("id") == "3");
+    REQUIRE(resFoll.object.asNodeset()[2]->getAttributeValue("id") == "5");
+
+    Node* nodeE = doc.getChildren()[1];
+    XPathQuery::Result resPrec = std::move(XPathQuery("preceding::*").execute(nodeE));
+    REQUIRE(resPrec.object.asNodeset().size() == 4);
+    
+    XPathQuery::Result resSelf = std::move(XPathQuery("self::*").execute(nodeC));
+    REQUIRE(resSelf.object.asNodeset().size() == 1);
+    REQUIRE(resSelf.object.asNodeset()[0] == nodeC);
+}
+
+TEST_CASE("XPath execute special node tests") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("elem", false, Text("text1")),
+        GenericNode("elem", false, Text("text2")),
+        GenericNode("other", false)
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/root/*").execute(&doc));
+    REQUIRE(res1.object.asNodeset().size() == 3);
+
+    XPathQuery::Result res2 = std::move(XPathQuery("/root/elem/text()").execute(&doc));
+    REQUIRE(res2.object.asNodeset().size() == 2);
+    REQUIRE(res2.object.asNodeset()[0]->serialize() == "text1");
+
+    XPathQuery::Result res3 = std::move(XPathQuery("/root/node()").execute(&doc));
+    REQUIRE(res3.object.asNodeset().size() == 3);
+}
+
+TEST_CASE("XPath execute finds processing instructions") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    
+    GenericNode doc("root", false,
+        ProcessingInstruction("php", "echo \"hello\";"),
+        GenericNode("child", false),
+        ProcessingInstruction("xml-stylesheet", "type=\"css\""),
+        GenericNode("child", false));
+
+    XPathQuery::Result resAllPI = std::move(XPathQuery("/root/processing-instruction()").execute(&doc));
+    REQUIRE(resAllPI.object.asNodeset().size() == 2);
+    
+    Node* pi1 = resAllPI.object.asNodeset()[0];
+    Node* pi2 = resAllPI.object.asNodeset()[1];
+    
+    REQUIRE(pi1->getXPathType() == Node::XPathType::PROCESSING_INSTRUCTION);
+    REQUIRE(static_cast<ProcessingInstruction*>(pi1)->getTarget() == "php");
+
+    REQUIRE(pi2->getXPathType() == Node::XPathType::PROCESSING_INSTRUCTION);
+    REQUIRE(static_cast<ProcessingInstruction*>(pi2)->getTarget() == "xml-stylesheet");
+
+    XPathQuery::Result resSpecificPI = std::move(XPathQuery("/root/processing-instruction('php')").execute(&doc));
+    REQUIRE(resSpecificPI.object.asNodeset().size() == 1);
+    Node* pi3 = resSpecificPI.object.asNodeset()[0];
+    REQUIRE(pi3->getXPathType() == Node::XPathType::PROCESSING_INSTRUCTION);
+    REQUIRE(static_cast<ProcessingInstruction*>(pi3)->getTarget() == "php");
+    REQUIRE(pi3->getStringValue() == "echo \"hello\";");
+
+    XPathQuery::Result resSpecificPI2 = std::move(XPathQuery("/root/processing-instruction(\"xml-stylesheet\")").execute(&doc));
+    REQUIRE(resSpecificPI2.object.asNodeset().size() == 1);
+    Node* pi4 = resSpecificPI2.object.asNodeset()[0];
+    REQUIRE(pi4->getXPathType() == Node::XPathType::PROCESSING_INSTRUCTION);
+    REQUIRE(static_cast<ProcessingInstruction*>(pi4)->getTarget() == "xml-stylesheet");
+    REQUIRE(pi4->getStringValue() == "type=\"css\"");
+
+    XPathQuery::Result resMissingPI = std::move(XPathQuery("/root/processing-instruction('unknown')").execute(&doc));
+    REQUIRE(resMissingPI.object.asNodeset().empty());
+}
+
+TEST_CASE("XPath execute finds comments") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    
+    GenericNode doc("root", false,
+        GenericNode("child", false),
+        Comment("This is a comment"),
+        GenericNode("child", false),
+        GenericNode("child", false));
+
+    XPathQuery::Result resComments = std::move(XPathQuery("/root/comment()").execute(&doc));
+    REQUIRE(resComments.object.asNodeset().size() == 1);
+    REQUIRE(resComments.object.asNodeset()[0]->getXPathType() == Node::XPathType::COMMENT);
+    REQUIRE(resComments.object.asNodeset()[0]->serialize() == "<!--This is a comment-->");
+}
+
+TEST_CASE("XPath execute invalid axis throws") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    GenericNode doc("root", false);
+
+    REQUIRE_THROWS(XPathQuery("invalid-axis::root").execute(&doc));
+}
+
+TEST_CASE("XPath execute complex path step predicates") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("section", false, Attribute("id", "s1"),
+            GenericNode("div", false, Attribute("class", "a")),
+            GenericNode("div", false, Attribute("class", "b")),
+            GenericNode("div", false, Attribute("class", "a"))
+        ),
+        GenericNode("section", false, Attribute("id", "s2"),
+            GenericNode("div", false, Attribute("class", "a")),
+            GenericNode("div", false, Attribute("class", "b"))
+        )
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("/root/section/div[2]").execute(&doc));
+    REQUIRE(res1.object.asNodeset().size() == 2);
+    REQUIRE(res1.object.asNodeset()[0]->getAttributeValue("class") == "b");
+    REQUIRE(res1.object.asNodeset()[1]->getAttributeValue("class") == "b");
+
+    XPathQuery::Result res2 = std::move(XPathQuery("(/root/section/div)[2]").execute(&doc));
+    REQUIRE(res2.object.asNodeset().size() == 1);
+    REQUIRE(res2.object.asNodeset()[0]->getAttributeValue("class") == "b");
+}
+
+TEST_CASE("XPath execute multiple predicates") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("list", false,
+        GenericNode("item", false, Attribute("id", "1"), Attribute("type", "A")),
+        GenericNode("item", false, Attribute("id", "2"), Attribute("type", "B")),
+        GenericNode("item", false, Attribute("id", "3"), Attribute("type", "A")),
+        GenericNode("item", false, Attribute("id", "4"), Attribute("type", "B"))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("item[@type='A'][2]").execute(&doc));
+    
+    REQUIRE(res1.object.asNodeset().size() == 1);
+    REQUIRE(res1.object.asNodeset()[0]->getAttributeValue("id") == "3");
+}
+
+TEST_CASE("XPath execute context position shifting in predicates") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("list", false,
+        GenericNode("item", false, Attribute("id", "1")),
+        GenericNode("item", false, Attribute("id", "2")),
+        GenericNode("item", false, Attribute("id", "3")),
+        GenericNode("item", false, Attribute("id", "4"))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("item[position() != 1][position() != 2]").execute(&doc));
+
+    REQUIRE(res1.object.asNodeset().size() == 2);
+    const std::vector<Node*>& nodeset = res1.object.asNodeset();
+    REQUIRE(nodeset[0]->getAttributeValue("id") == "2");
+    REQUIRE(nodeset[1]->getAttributeValue("id") == "4");
+}
+
+TEST_CASE("XPath execute complex predicate nesting") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("section", false, Attribute("status", "open"),
+            GenericNode("div", false, Attribute("class", "content"))
+        ),
+        GenericNode("section", false, Attribute("status", "open"),
+            GenericNode("span", false)
+        ),
+        GenericNode("section", false, Attribute("status", "closed"),
+            GenericNode("div", false, Attribute("class", "content")) 
+        )
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("section[@status='open'][div]").execute(&doc));
+
+    REQUIRE(res1.object.asNodeset().size() == 1);
+    REQUIRE(res1.object.asNodeset()[0]->getFirstChild()->getTagName() == "div");
+}
+
+TEST_CASE("XPath execute empty and null expressions throw") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    GenericNode doc("root", false);
+
+    REQUIRE_THROWS(XPathQuery("").execute(&doc));
+    REQUIRE_THROWS(XPathQuery("   ").execute(&doc));
+}
+
+TEST_CASE("XPath execute unclosed brackets and parenthesis throw") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    GenericNode doc("root", false);
+
+    REQUIRE_THROWS(XPathQuery("/root/item[@id='1'").execute(&doc));
+
+    REQUIRE_THROWS(XPathQuery("count(/root/item").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("/root/item]").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("/root/item)").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("item[(@id='1']").execute(&doc));
+
+    REQUIRE_THROWS(XPathQuery("count(/root").execute(&doc));
+
+    REQUIRE_THROWS(XPathQuery("/root/item[").execute(&doc));
+}
+
+TEST_CASE("XPath execute invalid operator syntax throws") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    GenericNode doc("root", false);
+
+    REQUIRE_THROWS(XPathQuery("1 +").execute(&doc));
+    REQUIRE_THROWS(XPathQuery("+ 1").execute(&doc));
+    REQUIRE_THROWS(XPathQuery("1 or").execute(&doc));
+    REQUIRE_THROWS(XPathQuery("div 5").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("1 ++ 1").execute(&doc));
+    REQUIRE_THROWS(XPathQuery("1 div mod 2").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("item[@id = ]").execute(&doc));
+}
+
+TEST_CASE("XPath execute invalid path sequences throw") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    GenericNode doc("root", false);
+
+    REQUIRE_THROWS(XPathQuery("/root/").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("/root//").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("///root").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("child::").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("imaginary-axis::node()").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("/[1]").execute(&doc));
+}
+
+TEST_CASE("XPath execute invalid function call arguments throw") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    GenericNode doc("root", false);
+
+    REQUIRE_THROWS(XPathQuery("count()").execute(&doc));
+    REQUIRE_THROWS(XPathQuery("count(1, 2)").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("concat('a')").execute(&doc)); 
+    
+    REQUIRE_THROWS(XPathQuery("not()").execute(&doc));
+    REQUIRE_THROWS(XPathQuery("not(true(), false())").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("foo:bar()").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("unknown-function('arg')").execute(&doc));
+}
+
+TEST_CASE("XPath execute invalid predicates throw") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    GenericNode doc("root", false);
+
+    REQUIRE_THROWS(XPathQuery("item[]").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("[@id='1']").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("item[[1]]").execute(&doc));
+}
+
+TEST_CASE("XPath execute lexical errors throw") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    GenericNode doc("root", false);
+
+    REQUIRE_THROWS(XPathQuery("'Unfinished string").execute(&doc));
+    
+    REQUIRE_THROWS(XPathQuery("1 & 1").execute(&doc));
 }

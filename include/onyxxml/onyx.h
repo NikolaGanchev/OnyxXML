@@ -41,6 +41,7 @@
 #include "xpath/lexer.h"
 #include "xpath/parser.h"
 #include "xpath/compiler.h"
+#include "xpath/xpath_query.h"
 
 #if __has_include("dynamic/tags.h")
 #include "dynamic/tags.h"

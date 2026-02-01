@@ -48,4 +48,5 @@ target_sources(
         "xpath/parser.cpp"
         "xpath/compiler.cpp"
         "xpath/instruction.cpp"
+        "xpath/xpath_query.cpp"
 )
