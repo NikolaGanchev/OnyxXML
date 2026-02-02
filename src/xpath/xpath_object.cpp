@@ -11,6 +11,8 @@ XPathObject::XPathObject(std::string s) : value(std::move(s)) {}
 
 XPathObject::XPathObject(std::vector<Node*> ns) : value(std::move(ns)) {}
 
+XPathObject::XPathObject(const char* s) : XPathObject(std::string(s)) {}
+
 bool XPathObject::isNodeset() const {
     return std::holds_alternative<std::vector<Node*>>(value);
 }

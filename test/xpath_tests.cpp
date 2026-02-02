@@ -227,9 +227,9 @@ TEST_CASE("XPathObject boolean vs other comparison") {
     REQUIRE(XPathObject(true) == XPathObject(1.0));
     REQUIRE(XPathObject(false) == XPathObject(0.0));
     REQUIRE(XPathObject(true) != XPathObject(0.0)); 
-    REQUIRE(XPathObject(true) == XPathObject(std::string("true"))); 
-    REQUIRE(XPathObject(false) == XPathObject(std::string(""))); 
-    REQUIRE(XPathObject(true) == XPathObject(std::string("false")));
+    REQUIRE(XPathObject(true) == XPathObject("true")); 
+    REQUIRE(XPathObject(false) == XPathObject("")); 
+    REQUIRE(XPathObject(true) == XPathObject("false"));
     REQUIRE(XPathObject(true) <= XPathObject(1.0));
     REQUIRE(XPathObject(true) >= XPathObject(1.0));
     REQUIRE(XPathObject(false) < XPathObject(1.0));
@@ -238,10 +238,10 @@ TEST_CASE("XPathObject boolean vs other comparison") {
 TEST_CASE("XPathObject number vs string comparison") {
     using namespace onyx::dynamic::xpath;
     
-    REQUIRE(XPathObject(1.0) == XPathObject(std::string("1.0")));
-    REQUIRE(XPathObject(1.0) == XPathObject(std::string("  1  ")));
-    REQUIRE(XPathObject(0.5) == XPathObject(std::string(".5")));
-    REQUIRE(XPathObject(std::string("02")) == XPathObject(2.0));
+    REQUIRE(XPathObject(1.0) == XPathObject("1.0"));
+    REQUIRE(XPathObject(1.0) == XPathObject("  1  "));
+    REQUIRE(XPathObject(0.5) == XPathObject(".5"));
+    REQUIRE(XPathObject("02") == XPathObject(2.0));
 }
 
 TEST_CASE("XPathObject number vs number comparison") {
@@ -268,13 +268,13 @@ TEST_CASE("XPathObject number vs number comparison") {
 TEST_CASE("XPathObject string vs string comparison") {
     using namespace onyx::dynamic::xpath;
     
-    REQUIRE(XPathObject(std::string("foo")) == XPathObject(std::string("foo")));
-    REQUIRE(XPathObject(std::string("foo")) != XPathObject(std::string("Foo")));
-    REQUIRE(XPathObject(std::string("10")) > XPathObject(std::string("2"))); 
-    REQUIRE_FALSE(XPathObject(std::string("10")) < XPathObject(std::string("2")));
-    REQUIRE_FALSE(XPathObject(std::string("abc")) < XPathObject(std::string("def")));
-    REQUIRE_FALSE(XPathObject(std::string("abc")) > XPathObject(std::string("def")));
-    REQUIRE_FALSE(XPathObject(std::string("abc")) == XPathObject(std::string("def")));
+    REQUIRE(XPathObject("foo") == XPathObject("foo"));
+    REQUIRE(XPathObject("foo") != XPathObject("Foo"));
+    REQUIRE(XPathObject("10") > XPathObject("2")); 
+    REQUIRE_FALSE(XPathObject("10") < XPathObject("2"));
+    REQUIRE_FALSE(XPathObject("abc") < XPathObject("def"));
+    REQUIRE_FALSE(XPathObject("abc") > XPathObject("def"));
+    REQUIRE_FALSE(XPathObject("abc") == XPathObject("def"));
 }
 
 TEST_CASE("XPathObject nodeset vs number comparison") {
@@ -320,10 +320,10 @@ TEST_CASE("XPathObject nodeset vs string comparison") {
     std::vector<Node*> empty_vec;
     XPathObject emptySet(empty_vec);
 
-    REQUIRE(set == XPathObject(std::string("A")));
-    REQUIRE(set == XPathObject(std::string("B")));
-    REQUIRE_FALSE(set == XPathObject(std::string("C")));
-    REQUIRE_FALSE(emptySet == XPathObject(std::string("")));
+    REQUIRE(set == XPathObject("A"));
+    REQUIRE(set == XPathObject("B"));
+    REQUIRE_FALSE(set == XPathObject("C"));
+    REQUIRE_FALSE(emptySet == XPathObject(""));
 }
 
 TEST_CASE("XPathObject nodeset vs boolean comparison") {
@@ -432,8 +432,8 @@ TEST_CASE("XPathObject nodeset vs nodeset not equal comparison") {
     std::vector<Node*> nodes = { &nodeA, &nodeB };
     XPathObject set(nodes);
 
-    REQUIRE(set == XPathObject(std::string("foo")));
-    REQUIRE(set != XPathObject(std::string("foo")));
+    REQUIRE(set == XPathObject("foo"));
+    REQUIRE(set != XPathObject("foo"));
 }
 
 TEST_CASE("Virtual machine runs") {
@@ -450,7 +450,7 @@ TEST_CASE("Virtual machine runs") {
     );
 
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("store")))
+        .addData(XPathObject("store"))
         .addInstruction(Instruction(OPCODE::LOAD_ROOT))
         .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
         .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
@@ -482,8 +482,8 @@ TEST_CASE("Virtual machine /store/book") {
 
     // 0="store", 1="book"
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("store")))
-        .addData(XPathObject(std::string("book")))
+        .addData(XPathObject("store"))
+        .addData(XPathObject("book"))
         // Select /store
         .addInstruction(Instruction(OPCODE::LOAD_ROOT))
         .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
@@ -526,9 +526,9 @@ TEST_CASE("Virtual machine predicate /store/book[price > 15]") {
 
     // 0="store", 1="book", 2="price", 3=15.0
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("store")))
-        .addData(XPathObject(std::string("book")))
-        .addData(XPathObject(std::string("price")))
+        .addData(XPathObject("store"))
+        .addData(XPathObject("book"))
+        .addData(XPathObject("price"))
         .addData(XPathObject(15.0))
         // Select /store
         .addInstruction(Instruction(OPCODE::LOAD_ROOT))
@@ -579,10 +579,10 @@ TEST_CASE("Virtual machine attribute Test /store/book[@id='1']") {
 
     // 0="store", 1="book", 2="id", 3="1"
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("store")))
-        .addData(XPathObject(std::string("book")))
-        .addData(XPathObject(std::string("id")))
-        .addData(XPathObject(std::string("1")))
+        .addData(XPathObject("store"))
+        .addData(XPathObject("book"))
+        .addData(XPathObject("id"))
+        .addData(XPathObject("1"))
         // Select /store
         .addInstruction(Instruction(OPCODE::LOAD_ROOT))
         .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0)) 
@@ -630,9 +630,9 @@ TEST_CASE("Virtual machine empty /store/book/author") {
 
     // 0="store", 1="book", 2="author"
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("store")))
-        .addData(XPathObject(std::string("book")))
-        .addData(XPathObject(std::string("author")))
+        .addData(XPathObject("store"))
+        .addData(XPathObject("book"))
+        .addData(XPathObject("author"))
         // 1. Select /store
         .addInstruction(Instruction(OPCODE::LOAD_ROOT))
         .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0)) 
@@ -674,9 +674,9 @@ TEST_CASE("Virtual machine math /store/book[price div 2 < 15]") {
 
     // 0="store", 1="book", 2="price", 3=2.0, 4=15.0
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("store")))
-        .addData(XPathObject(std::string("book")))
-        .addData(XPathObject(std::string("price")))
+        .addData(XPathObject("store"))
+        .addData(XPathObject("book"))
+        .addData(XPathObject("price"))
         .addData(XPathObject(2.0))
         .addData(XPathObject(15.0))
         // Select /store/book
@@ -730,10 +730,10 @@ TEST_CASE("Virtual machine function composition book[not(starts-with(title, 'Sec
 
     // 0="store", 1="book", 2="title", 3="Second"
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("store")))
-        .addData(XPathObject(std::string("book")))
-        .addData(XPathObject(std::string("title")))
-        .addData(XPathObject(std::string("Second")))
+        .addData(XPathObject("store"))
+        .addData(XPathObject("book"))
+        .addData(XPathObject("title"))
+        .addData(XPathObject("Second"))
         // Select /store/book
         .addInstruction(Instruction(OPCODE::LOAD_ROOT))
         .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0)) 
@@ -784,11 +784,11 @@ TEST_CASE("Virtual machine sum function /root/store[sum(book/price) > 50]") {
 
     // 0="store", 1="book", 2="price", 3=50.0, 4="root"
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("store")))
-        .addData(XPathObject(std::string("book")))
-        .addData(XPathObject(std::string("price")))
+        .addData(XPathObject("store"))
+        .addData(XPathObject("book"))
+        .addData(XPathObject("price"))
         .addData(XPathObject(50.0))
-        .addData(XPathObject(std::string("root")))
+        .addData(XPathObject("root"))
         // Select /root/store
         .addInstruction(Instruction(OPCODE::LOAD_ROOT))
         .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4)) 
@@ -844,9 +844,9 @@ TEST_CASE("Virtual machine attributes /root/item/@id") {
 
     // 0="root", 1="item", 2="id"
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("root")))
-        .addData(XPathObject(std::string("item")))
-        .addData(XPathObject(std::string("id")))
+        .addData(XPathObject("root"))
+        .addData(XPathObject("item"))
+        .addData(XPathObject("id"))
         
         // Select /root
         .addInstruction(Instruction(OPCODE::LOAD_ROOT))
@@ -896,14 +896,14 @@ TEST_CASE("Virtual machine booleans item[@x='1' and (@y='2' or @z='3')]") {
 
     // 0="root", 1="item", 2="x", 3="1", 4="y", 5="2", 6="z", 7="3"
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("root")))
-        .addData(XPathObject(std::string("item")))
-        .addData(XPathObject(std::string("x")))
-        .addData(XPathObject(std::string("1")))
-        .addData(XPathObject(std::string("y")))
-        .addData(XPathObject(std::string("2")))
-        .addData(XPathObject(std::string("z")))
-        .addData(XPathObject(std::string("3")))
+        .addData(XPathObject("root"))
+        .addData(XPathObject("item"))
+        .addData(XPathObject("x"))
+        .addData(XPathObject("1"))
+        .addData(XPathObject("y"))
+        .addData(XPathObject("2"))
+        .addData(XPathObject("z"))
+        .addData(XPathObject("3"))
 
         // Select /root/item
         .addInstruction(Instruction(OPCODE::LOAD_ROOT))
@@ -988,8 +988,8 @@ TEST_CASE("Virtual machine union Operator //div | //span") {
 
     // 0="div", 1="span"
     std::unique_ptr<Program> pr = Program::Builder()
-        .addData(XPathObject(std::string("div")))
-        .addData(XPathObject(std::string("span")))
+        .addData(XPathObject("div"))
+        .addData(XPathObject("span"))
         
         // Context Node
         .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
@@ -2031,9 +2031,9 @@ TEST_CASE("XPath execute booleans item[@x=$var1 and (@y=$var2 or @z=$var3)] with
 
     XPathQuery::Result res1 = std::move(XPathQuery("item[@x=$var1 and (@y=$var2 or @z=$var3)]").execute(&doc, 
                                                         [](std::string_view name) -> XPathObject {
-                                                            if (name == "var1") return XPathObject(std::string("1"));
-                                                            if (name == "var2") return XPathObject(std::string("2"));
-                                                            if (name == "var3") return XPathObject(std::string("3"));
+                                                            if (name == "var1") return XPathObject("1");
+                                                            if (name == "var2") return XPathObject("2");
+                                                            if (name == "var3") return XPathObject("3");
                                                             throw std::runtime_error("Unknown variable");
                                                         }));
     XPathObject& res = res1.object;
