@@ -114,6 +114,30 @@ bool verifyArgumentCount(std::pair<FUNCTION_CODE, size_t> definition, size_t arg
     return definition.second == argCount;
 }
 
+void pushInstruction(std::vector<Instruction>& instructions, Instruction&& instruction) {
+    if (instructions.size() >= Instruction::maxOperand()) {
+        throw std::runtime_error("Emitted more than the maximum allowed instruction count of " + Instruction::maxOperand());
+    }
+
+    instructions.emplace_back(std::move(instruction));
+}
+
+void pushData(std::vector<XPathObject>& data, std::string&& str) {
+    if (data.size() >= Instruction::maxOperand()) {
+        throw std::runtime_error("Emitted more than the maximum allowed data count of " + std::to_string(Instruction::maxOperand()));
+    }
+
+    data.emplace_back(std::move(str));
+}
+
+void pushData(std::vector<XPathObject>& data, double num) {
+    if (data.size() >= Instruction::maxOperand()) {
+        throw std::runtime_error("Emitted more than the maximum allowed data count of " + std::to_string(Instruction::maxOperand()));
+    }
+
+    data.emplace_back(num);
+}
+
 std::unique_ptr<Program> Compiler::compile() {
     // this is currently very wasteful on data; it will record the same string/number twice on different indices
     // this needs to be optimized in the future - TODO
@@ -141,27 +165,27 @@ std::unique_ptr<Program> Compiler::compile() {
         switch (current->getType()) {
             case Parser::AstNode::Literal: {
                 Parser::Literal* lit = static_cast<Parser::Literal*>(current);
-                data.emplace_back(lit->value);
-                instructions.emplace_back(Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
+                pushData(data, std::move(lit->value));
+                pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
                 stack.pop();
                 break;
             };
             case Parser::AstNode::Number: {
                 Parser::Number* num = static_cast<Parser::Number*>(current);
-                data.emplace_back(XPathObject(num->num).asNumber());
-                instructions.emplace_back(Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
+                pushData(data, XPathObject(num->num).asNumber());
+                pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
                 stack.pop();
                 break;
             };
             case Parser::AstNode::RootNode: {
-                instructions.emplace_back(Instruction(OPCODE::LOAD_ROOT));
+                pushInstruction(instructions, Instruction(OPCODE::LOAD_ROOT));
                 stack.pop();
                 break;
             };
             case Parser::AstNode::VarRef: {
                 Parser::VarRef* var = static_cast<Parser::VarRef*>(current);
-                data.emplace_back(XPathObject(var->name).asString());
-                instructions.emplace_back(Instruction(OPCODE::LOAD_VARIABLE, data.size() - 1));
+                pushData(data, std::move(var->name));
+                pushInstruction(instructions, Instruction(OPCODE::LOAD_VARIABLE, data.size() - 1));
                 stack.pop();
                 break;
             };
@@ -185,7 +209,7 @@ std::unique_ptr<Program> Compiler::compile() {
                         stack.emplace(binaryOp->left.get());
                         currentCompileNode.resolveState++;
                     } else {
-                        instructions.emplace_back(Instruction(OPCODE::CALCULATE, resolveCalculateMode(binaryOp->op)));
+                        pushInstruction(instructions, Instruction(OPCODE::CALCULATE, resolveCalculateMode(binaryOp->op)));
                         stack.pop();
                     }
                 } else if (binaryOp->op == "/") {
@@ -198,7 +222,7 @@ std::unique_ptr<Program> Compiler::compile() {
                         currentCompileNode.resolveState++;
                     } else if (resolveState == 1) {
                         // Placeholder jump address
-                        instructions.emplace_back(Instruction(OPCODE::LOOP_ENTER, 0));
+                        pushInstruction(instructions, Instruction(OPCODE::LOOP_ENTER, 0));
                         // We remember the instruction address to fill in the jump address later
                         currentCompileNode.address1 = instructions.size() - 1;
                         // for root nodes, this produces 
@@ -215,8 +239,8 @@ std::unique_ptr<Program> Compiler::compile() {
                     } else {
                         // We have resolved the left and right sides
                         // The loop can be finished
-                        instructions.emplace_back(Instruction(OPCODE::LOOP_UNION));
-                        instructions.emplace_back(Instruction(OPCODE::LOOP_NEXT));
+                        pushInstruction(instructions, Instruction(OPCODE::LOOP_UNION));
+                        pushInstruction(instructions, Instruction(OPCODE::LOOP_NEXT));
                         // The address of the LOOP_ENTER jump must be filled 
                         // It is valid to point it to loop next
                         // It will jump to the next instruction
@@ -232,7 +256,7 @@ std::unique_ptr<Program> Compiler::compile() {
                         stack.emplace(binaryOp->left.get());
                         currentCompileNode.resolveState++;
                     } else {
-                        instructions.emplace_back(Instruction(OPCODE::UNION));
+                        pushInstruction(instructions, Instruction(OPCODE::UNION));
                         stack.pop();
                     }
                 } else if (binaryOp->op == "!="
@@ -247,7 +271,7 @@ std::unique_ptr<Program> Compiler::compile() {
                         stack.emplace(binaryOp->left.get());
                         currentCompileNode.resolveState++;
                     } else {
-                        instructions.emplace_back(Instruction(OPCODE::COMPARE, resolveCompareMode(binaryOp->op)));
+                        pushInstruction(instructions, Instruction(OPCODE::COMPARE, resolveCompareMode(binaryOp->op)));
                         stack.pop();
                     }
                 } else if (binaryOp->op == "and"
@@ -290,7 +314,7 @@ std::unique_ptr<Program> Compiler::compile() {
                     } else if (resolveState == 1) {
                         // the left side has been visited
                         // The jump must be placed, then the right side must be visited
-                        instructions.emplace_back(
+                        pushInstruction(instructions, 
                             Instruction(isAnd ? OPCODE::JUMP_F : OPCODE::JUMP_T, 0)
                         );
                         // The address must be recorded for later
@@ -304,22 +328,22 @@ std::unique_ptr<Program> Compiler::compile() {
                         // the false address is the next instruction
                         uint32_t trueAddress = falseAddress + 2; // the instruction after the false address is the jump to the exit
                         // right after it is the true address
-                        instructions.emplace_back(
+                        pushInstruction(instructions, 
                             Instruction(OPCODE::JUMP_T, trueAddress)
                         );
                         
                         // produce the jump locations
                         // produce the false jump
                         // the instruction places a false value onto the stack to recover the one consumed in the jump
-                        instructions.emplace_back(Instruction(OPCODE::CALL, FUNCTION_CODE::FALSE_0));
+                        pushInstruction(instructions, Instruction(OPCODE::CALL, FUNCTION_CODE::FALSE_0));
                         // jump to exit
                         uint32_t exitAddress = trueAddress + 1; // Just after the trueAddress is the next instruction
                         // It must exist eventually because HALT is mandatory
 
-                        instructions.emplace_back(Instruction(OPCODE::JUMP, exitAddress));
+                        pushInstruction(instructions, Instruction(OPCODE::JUMP, exitAddress));
                         // produce the true jump
                         // the instruction places a true value onto the stack to recover the one consumed in the jump
-                        instructions.emplace_back(Instruction(OPCODE::CALL, FUNCTION_CODE::TRUE_0));
+                        pushInstruction(instructions, Instruction(OPCODE::CALL, FUNCTION_CODE::TRUE_0));
                         // the exit location is the one after this last instruction
                         // this means, here a jump is not needed, we can just fall through
                         // Now, we go back to give the first jump the proper address
@@ -339,10 +363,10 @@ std::unique_ptr<Program> Compiler::compile() {
                 // predicates must be handled one by one in separate loops
                 // each one of them is a resolveState of the step
                 if (currentCompileNode.resolveState == 0) {
-                    instructions.emplace_back(Instruction(OPCODE::LOAD_CONTEXT_NODE));
-                    data.emplace_back(step->test);   
-                    instructions.emplace_back(Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
-                    instructions.emplace_back(Instruction(OPCODE::SELECT, resolveAxis(step->axis)));
+                    pushInstruction(instructions, Instruction(OPCODE::LOAD_CONTEXT_NODE));
+                    pushData(data, std::move(step->test));   
+                    pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
+                    pushInstruction(instructions, Instruction(OPCODE::SELECT, resolveAxis(step->axis)));
 
                     if (step->predicates.empty()) {
                         stack.pop();
@@ -350,7 +374,7 @@ std::unique_ptr<Program> Compiler::compile() {
                         break;
                     }
 
-                    instructions.emplace_back(Instruction(OPCODE::LOOP_ENTER, 0));
+                    pushInstruction(instructions, Instruction(OPCODE::LOOP_ENTER, 0));
                     // we remember the instruction address to fill in the jump address later
                     currentCompileNode.address1 = instructions.size() - 1;
                     stack.emplace(step->predicates[0].get());
@@ -358,8 +382,8 @@ std::unique_ptr<Program> Compiler::compile() {
                 } else {
                     // we must close the previous predicate loop
                     // if there is a next predicate, we must begin the next loop
-                    instructions.emplace_back(Instruction(OPCODE::CONTEXT_NODE_TEST));
-                    instructions.emplace_back(Instruction(OPCODE::LOOP_NEXT));
+                    pushInstruction(instructions, Instruction(OPCODE::CONTEXT_NODE_TEST));
+                    pushInstruction(instructions, Instruction(OPCODE::LOOP_NEXT));
 
                     // The address of the LOOP_ENTER jump must be filled 
                     // It is valid to point it to loop next
@@ -375,7 +399,7 @@ std::unique_ptr<Program> Compiler::compile() {
                         break;
                     }
 
-                    instructions.emplace_back(Instruction(OPCODE::LOOP_ENTER, 0));
+                    pushInstruction(instructions, Instruction(OPCODE::LOOP_ENTER, 0));
                     // we remember the instruction address to fill in the jump address later
                     currentCompileNode.address1 = instructions.size() - 1;
                     stack.emplace(step->predicates[currentCompileNode.resolveState].get());
@@ -413,7 +437,7 @@ std::unique_ptr<Program> Compiler::compile() {
                     break;
                 } else if (currentCompileNode.resolveState == 1) {
                     // the subject is now visited
-                    instructions.emplace_back(Instruction(OPCODE::SORT));
+                    pushInstruction(instructions, Instruction(OPCODE::SORT));
 
                     // If there are no predicates, we are finished
                     if (expression->predicates.empty()) {
@@ -422,7 +446,7 @@ std::unique_ptr<Program> Compiler::compile() {
                         break;
                     }
 
-                    instructions.emplace_back(Instruction(OPCODE::LOOP_ENTER, 0));
+                    pushInstruction(instructions, Instruction(OPCODE::LOOP_ENTER, 0));
                     // we remember the instruction address to fill in the jump address later
                     currentCompileNode.address1 = instructions.size() - 1;
                     stack.emplace(expression->predicates[currentCompileNode.resolveState - 1].get());
@@ -431,8 +455,8 @@ std::unique_ptr<Program> Compiler::compile() {
                 } else {
                     // we must close the previous predicate loop
                     // if there is a next predicate, we must begin the next loop
-                    instructions.emplace_back(Instruction(OPCODE::CONTEXT_NODE_TEST));
-                    instructions.emplace_back(Instruction(OPCODE::LOOP_NEXT));
+                    pushInstruction(instructions, Instruction(OPCODE::CONTEXT_NODE_TEST));
+                    pushInstruction(instructions, Instruction(OPCODE::LOOP_NEXT));
 
                     // The address of the LOOP_ENTER jump must be filled 
                     // It is valid to point it to loop next
@@ -448,7 +472,7 @@ std::unique_ptr<Program> Compiler::compile() {
                         break;
                     }
 
-                    instructions.emplace_back(Instruction(OPCODE::LOOP_ENTER, 0));
+                    pushInstruction(instructions, Instruction(OPCODE::LOOP_ENTER, 0));
                     // we remember the instruction address to fill in the jump address later
                     currentCompileNode.address1 = instructions.size() - 1;
                     stack.emplace(expression->predicates[resolveState - 1].get());
@@ -526,18 +550,18 @@ std::unique_ptr<Program> Compiler::compile() {
                 // Handle concat
                 if (fc == CONCAT_2) {
                     for (int i = 0; i < function->args.size() - 1; i++) {
-                        instructions.emplace_back(Instruction(OPCODE::CALL, CONCAT_2));
+                        pushInstruction(instructions, Instruction(OPCODE::CALL, CONCAT_2));
                     }
                 } else if (fc == SUBSTRING_3 && function->args.size() == 2) { 
                     // Handle 'substring' with two arguments
-                    instructions.emplace_back(Instruction(OPCODE::CALL, SUBSTRING_2));
+                    pushInstruction(instructions, Instruction(OPCODE::CALL, SUBSTRING_2));
                 } else if (hasDefaultArgument(fc) && function->args.size() == 0) {                    
                     // for the default argument, an additional instruction must be injected to load the context node
-                    instructions.emplace_back(Instruction(OPCODE::LOAD_CONTEXT_NODE));
-                    instructions.emplace_back(Instruction(OPCODE::CALL, fc));
+                    pushInstruction(instructions, Instruction(OPCODE::LOAD_CONTEXT_NODE));
+                    pushInstruction(instructions, Instruction(OPCODE::CALL, fc));
                 } else {
                     // Call the function
-                    instructions.emplace_back(Instruction(OPCODE::CALL, fc));
+                    pushInstruction(instructions, Instruction(OPCODE::CALL, fc));
                 }
 
                 // We have finished processing the function
@@ -548,7 +572,7 @@ std::unique_ptr<Program> Compiler::compile() {
         }
     }
 
-    instructions.emplace_back(Instruction(OPCODE::HALT));
+    pushInstruction(instructions, Instruction(OPCODE::HALT));
 
     return std::make_unique<Program>(data, instructions);
 }

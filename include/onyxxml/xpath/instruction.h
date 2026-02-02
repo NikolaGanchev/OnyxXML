@@ -111,5 +111,12 @@ class Instruction {
      */
     static std::string_view axisToString(AXIS a);
 
+    /**
+     * @brief Returns the maximum value of an operand
+     * 
+     * @return uint32_t 
+     */
+    static uint32_t maxOperand() { return 0x00FFFFFF; }
+
 };
 }  // namespace onyx::dynamic::xpath
