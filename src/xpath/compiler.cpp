@@ -154,12 +154,15 @@ std::unique_ptr<Program> Compiler::compile() {
                 break;
             };
             case Parser::AstNode::RootNode: {
-                instructions.emplace_back(Instruction(OPCODE::LOAD_ROOT, data.size() - 1));
+                instructions.emplace_back(Instruction(OPCODE::LOAD_ROOT));
                 stack.pop();
                 break;
             };
             case Parser::AstNode::VarRef: {
-                // TODO
+                Parser::VarRef* var = static_cast<Parser::VarRef*>(current);
+                data.emplace_back(XPathObject(var->name).asString());
+                instructions.emplace_back(Instruction(OPCODE::LOAD_VARIABLE, data.size() - 1));
+                stack.pop();
                 break;
             };
             case Parser::AstNode::FunctionSentinel: {

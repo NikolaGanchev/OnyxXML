@@ -405,6 +405,8 @@ class VirtualMachine {
      * @param current
      * @return ExecutionResult
      */
-    ExecutionResult executeOn(Node* current);
+    ExecutionResult executeOn(Node* current, std::function<XPathObject(std::string_view)> variableProvider = [](std::string_view v) -> XPathObject {
+                                                throw std::runtime_error("Found unresolved variable reference to " + std::string(v));
+                                            });
 };
 }  // namespace onyx::dynamic::xpath

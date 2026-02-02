@@ -52,7 +52,7 @@ std::string Program::toString() const {
         
         result << opcodeStr;
 
-        if (opcode == OPCODE::LOAD_CONSTANT) {
+        if (opcode == OPCODE::LOAD_CONSTANT || opcode == OPCODE::LOAD_VARIABLE) {
             if (instr.getOperandImm() >= this->data.size()) {
                 throw std::runtime_error("Program requires data address that does not exist.");
             }

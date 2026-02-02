@@ -10,6 +10,7 @@ std::string_view Instruction::opcodeToString(OPCODE op) {
         case OPCODE::LOAD_POSITION: return "LOAD_POSITION";
         case OPCODE::LOAD_LENGTH: return "LOAD_LENGTH";
         case OPCODE::LOAD_ROOT: return "LOAD_ROOT";
+        case OPCODE::LOAD_VARIABLE: return "LOAD_VARIABLE";
         case OPCODE::SELECT: return "SELECT";
         case OPCODE::UNION: return "UNION";
         case OPCODE::SORT: return "SORT";

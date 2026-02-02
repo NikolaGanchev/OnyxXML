@@ -47,6 +47,13 @@ enum class OPCODE : uint8_t {
     LOAD_ROOT = 0x5,
 
     /**
+     * @brief Attempts to load the variable indicated by the variable name provided.
+     * Immediate type instruction.
+     * 
+     */
+    LOAD_VARIABLE = 0x6,
+
+    /**
      * @brief Selects nodes on a given axis with a given name (from the stack)
      * into a nodeset and pushes it to the top of the stack based on the node on
      * top of the stack. Pop the stack. Immediate instruction.

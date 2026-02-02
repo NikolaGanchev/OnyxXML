@@ -89,7 +89,7 @@ void VirtualMachine::DocumentOrder::normalizeDocumentOrderSet(
                                  " because data stack is empty"); \
     }
 
-VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current) {
+VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current, std::function<XPathObject(std::string_view)> variableProvider) {
     static VirtualMachine::FunctionRegistry functionRegistry =
         registerFunctions();
 
@@ -127,7 +127,7 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current) {
                 uint32_t address = instruction.getOperandImm();
 
                 if (address >= data.size()) {
-                    throw std::runtime_error("Data address out of bounds");
+                    throw std::runtime_error("Data address out of bounds in LOAD_CONSTANT");
                 }
 
                 ec.dataStack.push(data[address]);
@@ -157,6 +157,21 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current) {
 
                 ec.dataStack.push(
                     XPathObject(std::vector<Node*>{ec.root.getXPathRoot()}));
+
+                break;
+            };
+            case OPCODE::LOAD_VARIABLE: {
+                uint32_t address = instruction.getOperandImm();
+
+                if (address >= data.size()) {
+                    throw std::runtime_error("Data address out of bounds in LOAD_VARIABLE");
+                }
+
+                if (!data[address].isString()) {
+                    throw std::runtime_error("Variable name must be string.");
+                }
+
+                ec.dataStack.push(variableProvider(data[address].asString()));
 
                 break;
             };

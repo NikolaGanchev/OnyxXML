@@ -14,7 +14,7 @@ XPathQuery::XPathQuery(std::string_view query) : vm{nullptr} {
     this->vm = std::move(VirtualMachine(std::move(pr)));
 };
 
-XPathQuery::Result XPathQuery::execute(Node* node) {
-    return this->vm.executeOn(node);
+XPathQuery::Result XPathQuery::execute(Node* node, std::function<XPathObject(std::string_view)> variableProvider) {
+    return this->vm.executeOn(node, variableProvider);
 }
 };

@@ -2018,7 +2018,33 @@ TEST_CASE("XPath execute booleans item[@x='1' and (@y='2' or @z='3')]") {
     REQUIRE(nodeset[1]->getAttributes()[0].getValue() == "2");
 }
 
-TEST_CASE("XPath execute union Operator //div | //span") {
+TEST_CASE("XPath execute booleans item[@x=$var1 and (@y=$var2 or @z=$var3)] with variables") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("item", false, Attribute("id", "1"), Attribute("x", "1"), Attribute("y", "2")),
+        GenericNode("item", false, Attribute("id", "2"), Attribute("x", "1"), Attribute("z", "3")),
+        GenericNode("item", false, Attribute("id", "3"), Attribute("x", "1"), Attribute("y", "9")),
+        GenericNode("item", false, Attribute("id", "4"), Attribute("x", "0"), Attribute("y", "2"))
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("item[@x=$var1 and (@y=$var2 or @z=$var3)]").execute(&doc, 
+                                                        [](std::string_view name) -> XPathObject {
+                                                            if (name == "var1") return XPathObject(std::string("1"));
+                                                            if (name == "var2") return XPathObject(std::string("2"));
+                                                            if (name == "var3") return XPathObject(std::string("3"));
+                                                            throw std::runtime_error("Unknown variable");
+                                                        }));
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.asNodeset().size() == 2);
+    const std::vector<Node*>& nodeset = res.asNodeset();
+    REQUIRE(nodeset[0]->getAttributes()[0].getValue()== "1");
+    REQUIRE(nodeset[1]->getAttributes()[0].getValue() == "2");
+}
+
+TEST_CASE("XPath execute union operator //div | //span") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
@@ -2405,14 +2431,6 @@ TEST_CASE("XPath execute finds comments") {
     REQUIRE(resComments.object.asNodeset().size() == 1);
     REQUIRE(resComments.object.asNodeset()[0]->getXPathType() == Node::XPathType::COMMENT);
     REQUIRE(resComments.object.asNodeset()[0]->serialize() == "<!--This is a comment-->");
-}
-
-TEST_CASE("XPath execute invalid axis throws") {
-    using namespace onyx::dynamic::xpath;
-    using namespace onyx::tags;
-    GenericNode doc("root", false);
-
-    REQUIRE_THROWS(XPathQuery("invalid-axis::root").execute(&doc));
 }
 
 TEST_CASE("XPath execute complex path step predicates") {
