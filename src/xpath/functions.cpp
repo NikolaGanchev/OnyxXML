@@ -1,8 +1,10 @@
 #include "xpath/functions.h"
+#include "parse/helpers.h"
 
 #include <charconv>
 #include <limits>
 #include <string>
+#include <array>
 #include <variant>
 
 namespace onyx::dynamic::xpath::functions {
@@ -100,10 +102,10 @@ bool boolean(const XPathObject& obj) {
 void trim(std::string& str) {
     str.erase(str.begin(),
               std::find_if(str.begin(), str.end(),
-                           [](unsigned char ch) { return ch != ' '; }));
+                           [](unsigned char ch) { return !parser::isWhitespace(ch); }));
 
     str.erase(std::find_if(str.rbegin(), str.rend(),
-                           [](unsigned char ch) { return ch != ' '; })
+                           [](unsigned char ch) { return !parser::isWhitespace(ch); })
                   .base(),
               str.end());
 }
@@ -194,7 +196,7 @@ std::string substring(const std::string& str, double start, double length) {
     return str.substr(startIndex, count);
 }
 
-std::string string_before(const std::string& str1, const std::string& str2) {
+std::string stringBefore(const std::string& str1, const std::string& str2) {
     std::string::size_type i = str1.find(str2);
 
     if (i == std::string::npos) {
@@ -204,7 +206,7 @@ std::string string_before(const std::string& str1, const std::string& str2) {
     return str1.substr(0, i);
 }
 
-std::string string_after(const std::string& str1, const std::string& str2) {
+std::string stringAfter(const std::string& str1, const std::string& str2) {
     std::string::size_type i = str1.find(str2);
 
     if (i == std::string::npos) {
@@ -251,5 +253,37 @@ std::string translate(const std::string& str1, const std::string& str2, const st
     }
 
     return result.str();
+}
+
+std::string normalizeSpace(const std::string& str) {
+    std::string res;
+
+    parser::StringCursor pos(str.data());
+
+    while (*pos != '\0' && parser::isWhitespace(*pos)) pos++;
+
+    pos.beginCapture();
+
+    while (pos.capturePeek(0) != '\0') {
+        if (parser::isWhitespace(pos.capturePeek(0))) {
+            res += pos.getCaptured();
+
+            while (pos.capturePeek(0) != '\0' && parser::isWhitespace(pos.capturePeek(0))) pos.captureAdvance(1);
+
+            if (pos.capturePeek(0) != '\0') {
+                res += ' ';
+            }
+
+            pos.bringToCapture();
+            continue;
+        }
+        pos.captureAdvance(1);
+    }
+
+    if (pos.getCaptured() != "") {
+        res += pos.getCaptured();
+    }
+
+    return res;
 }
 };  // namespace onyx::dynamic::xpath::functions

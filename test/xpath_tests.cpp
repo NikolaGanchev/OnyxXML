@@ -205,6 +205,25 @@ TEST_CASE("xpath number function correctly converts nodeset to number") {
     REQUIRE(std::isnan(functions::number(obj4)));
 }
 
+TEST_CASE("xpath normalize-space function works") {
+    using namespace onyx::dynamic::xpath;
+    
+    REQUIRE(functions::normalizeSpace(" \t\r\n ") == "");
+    REQUIRE(functions::normalizeSpace("A\t\r\nB") == "A B");
+    REQUIRE(functions::normalizeSpace("\t\nA") == "A");
+    REQUIRE(functions::normalizeSpace("A\r ") == "A");
+    REQUIRE(functions::normalizeSpace("A\r ") == "A");
+    REQUIRE(functions::normalizeSpace("A\r ") == "A");
+    REQUIRE(functions::normalizeSpace("A \u00A0 B") == "A \u00A0 B");
+    REQUIRE(functions::normalizeSpace("\v") == "\v");
+    REQUIRE(functions::normalizeSpace("\f") == "\f");
+    REQUIRE(functions::normalizeSpace("") == "");
+    REQUIRE(functions::normalizeSpace(" ") == "");
+    REQUIRE(functions::normalizeSpace(" A ") == "A");
+    REQUIRE(functions::normalizeSpace("A B") == "A B");
+    REQUIRE(functions::normalizeSpace(" A B ") == "A B");
+}
+
 TEST_CASE("XPathObject throws when trying to cast non-nodeset to nodeset") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::dynamic;

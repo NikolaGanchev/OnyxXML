@@ -24,9 +24,9 @@ double round(double num);
 std::string substring(const std::string& str, double start,
                       double length = std::numeric_limits<double>::infinity());
 
-std::string string_before(const std::string& str1, const std::string& str2);
+std::string stringBefore(const std::string& str1, const std::string& str2);
 
-std::string string_after(const std::string& str1, const std::string& str2);
+std::string stringAfter(const std::string& str1, const std::string& str2);
 
 /**
  * @brief Currently does not handle UTF-8
@@ -37,4 +37,6 @@ std::string string_after(const std::string& str1, const std::string& str2);
  * @return std::string 
  */
 std::string translate(const std::string& str1, const std::string& str2, const std::string& str3);
+
+std::string normalizeSpace(const std::string& str);
 };  // namespace onyx::dynamic::xpath::functions

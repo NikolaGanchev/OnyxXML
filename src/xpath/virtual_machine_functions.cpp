@@ -130,7 +130,7 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
         [](Context context, Stack stack) -> XPathObject {
             GET_TWO_STACK_STRINGS(substring - before);
 
-            return XPathObject(functions::string_before(str1, str2));
+            return XPathObject(functions::stringBefore(str1, str2));
         });
 
     registry.emplace(
@@ -138,7 +138,7 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
         [](Context context, Stack stack) -> XPathObject {
             GET_TWO_STACK_STRINGS(substring - after);
 
-            return XPathObject(functions::string_after(str1, str2));
+            return XPathObject(functions::stringAfter(str1, str2));
         });
 
     registry.emplace(
@@ -197,8 +197,15 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
 
     registry.emplace(FUNCTION_CODE::NORMALIZE_SPACE_1,
                      [](Context context, Stack stack) -> XPathObject {
-                         // TODO
-                         return XPathObject("");
+                         if (stack.size() < 1) {
+                            throw std::runtime_error("normalize-space needs one arguments");
+                        }
+
+                        std::string str = functions::normalizeSpace(stack.top().asString());
+
+                        stack.pop();
+
+                        return XPathObject(str);
                      });
 
     registry.emplace(FUNCTION_CODE::TRANSLATE_3,
