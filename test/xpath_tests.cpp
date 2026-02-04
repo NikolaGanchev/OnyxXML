@@ -1784,7 +1784,7 @@ TEST_CASE("XPath Parser ambiguous operators and names") {
 TEST_CASE("XPath Parser ambiguous wildcard and multiply") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::dynamic;
-    auto ast = parse("* * *");
+    std::unique_ptr<Parser::AstNode> ast = parse("* * *");
 
     REQUIRE(ast->getType() == Parser::AstNode::BinaryOp);
 	Parser::BinaryOp* multOp = static_cast<Parser::BinaryOp*>(ast.get());
@@ -1800,6 +1800,22 @@ TEST_CASE("XPath Parser ambiguous wildcard and multiply") {
 	Parser::Step* right = static_cast<Parser::Step*>(multOp->right.get());
     REQUIRE(right != nullptr);
     CHECK(right->test == "*");
+}
+
+#include <iostream>
+
+TEST_CASE("XPath Compiler does not create duplicate data") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::dynamic;
+
+    parser::StringCursor cursor("div[@class='2']/div[2*2]/@id | div[@class='2']/div[2*2]/@id");
+    Lexer lexer(cursor);
+    Parser parser(lexer);
+    Compiler compiler(std::move(parser.buildAST()));
+    std::unique_ptr<Program> pr = compiler.compile();
+
+    // "div", "class", "2", 2, "id"
+    REQUIRE(pr->getData().size() == 5);
 }
 
 TEST_CASE("XPath execute /store") {

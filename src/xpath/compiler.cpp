@@ -122,20 +122,36 @@ void pushInstruction(std::vector<Instruction>& instructions, Instruction&& instr
     instructions.emplace_back(std::move(instruction));
 }
 
-void pushData(std::vector<XPathObject>& data, std::string&& str) {
+
+// TODO optimize to not use linear search
+// This is difficult due to XPathObjects of different types being generally comparable
+// Which is not the desired behaviour here
+size_t pushData(std::vector<XPathObject>& data, std::string&& str) {
     if (data.size() >= Instruction::maxOperand()) {
         throw std::runtime_error("Emitted more than the maximum allowed data count of " + std::to_string(Instruction::maxOperand()));
+    }
+
+    for (size_t i = 0; i < data.size(); i++) {
+        if (data[i].isString() && data[i].asString() == str) return i;
     }
 
     data.emplace_back(std::move(str));
+
+    return data.size() - 1;
 }
 
-void pushData(std::vector<XPathObject>& data, double num) {
+size_t pushData(std::vector<XPathObject>& data, double num) {
     if (data.size() >= Instruction::maxOperand()) {
         throw std::runtime_error("Emitted more than the maximum allowed data count of " + std::to_string(Instruction::maxOperand()));
     }
 
+    for (size_t i = 0; i < data.size(); i++) {
+        if (data[i].isNumber() && data[i].asNumber() == num) return i;
+    }
+
     data.emplace_back(num);
+    
+    return data.size() - 1;
 }
 
 bool isReverseAxis(AXIS axis) {
@@ -143,11 +159,6 @@ bool isReverseAxis(AXIS axis) {
 }
 
 std::unique_ptr<Program> Compiler::compile() {
-    // this is currently very wasteful on data; it will record the same string/number twice on different indices
-    // this needs to be optimized in the future - TODO
-    // currently, it also doesn't protect the data and instruction boundaries
-    // data can have at most 24 entries; instructions may have at most 24 entries as well
-    // this is due to the restrictions on instruction size - TODO
     std::vector<XPathObject> data;
     std::vector<Instruction> instructions;
 
@@ -169,15 +180,15 @@ std::unique_ptr<Program> Compiler::compile() {
         switch (current->getType()) {
             case Parser::AstNode::Literal: {
                 Parser::Literal* lit = static_cast<Parser::Literal*>(current);
-                pushData(data, std::move(lit->value));
-                pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
+                size_t address = pushData(data, std::move(lit->value));
+                pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, address));
                 stack.pop();
                 break;
             };
             case Parser::AstNode::Number: {
                 Parser::Number* num = static_cast<Parser::Number*>(current);
-                pushData(data, XPathObject(num->num).asNumber());
-                pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
+                size_t address = pushData(data, XPathObject(num->num).asNumber());
+                pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, address));
                 stack.pop();
                 break;
             };
@@ -188,8 +199,8 @@ std::unique_ptr<Program> Compiler::compile() {
             };
             case Parser::AstNode::VarRef: {
                 Parser::VarRef* var = static_cast<Parser::VarRef*>(current);
-                pushData(data, std::move(var->name));
-                pushInstruction(instructions, Instruction(OPCODE::LOAD_VARIABLE, data.size() - 1));
+                size_t address = pushData(data, std::move(var->name));
+                pushInstruction(instructions, Instruction(OPCODE::LOAD_VARIABLE, address));
                 stack.pop();
                 break;
             };
@@ -376,8 +387,8 @@ std::unique_ptr<Program> Compiler::compile() {
                 // 'preceding', 'ancestor', 'ancestor-or-self' and 'preceding-sibling'.
                 if (currentCompileNode.resolveState == 0) {
                     pushInstruction(instructions, Instruction(OPCODE::LOAD_CONTEXT_NODE));
-                    pushData(data, std::move(step->test));   
-                    pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
+                    size_t address = pushData(data, std::move(step->test));   
+                    pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, address));
                     AXIS axis = resolveAxis(step->axis);
                     pushInstruction(instructions, Instruction(OPCODE::SELECT, axis));
 
