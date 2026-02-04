@@ -20,8 +20,9 @@ OnyxXML is a C++ library designed to streamline XML document construction, parsi
    - [Non-Owning Nodes](#non-owning-nodes)
    - [Arena Allocator](#arena-allocator)
    - [DOM Parser](#dom-parser)
-   - [XPath 1.0 Support](#xpath-10-support)
+   - [SAX Parser](#sax-parser)
    - [GenericNode API](#genericnode-api)
+   - [XPath 1.0 Support](#xpath-10-support)
    - [Text Handling](#text-handling)
    - [Other Provided Nodes](#other-provided-nodes)
 6. [License](#license)
@@ -338,6 +339,38 @@ ParseResult document = DomParser::parse(xmlString);
 
 The DOM Parser is non-recursive, syntax-preserving, and throws detailed exceptions on invalid XML. Per the standard, it is non-validating - meaning it does not validate content according to DTDs. Due to security concerns, it does not parse DTDs at all, nor does it parse or expand user-defined entities. It also has no explicit namespace support. It is otherwise standard compliant, including encoding handling, character reference and entity expansion and newline behavior. The DOM parser currently represents every element as a `GenericNode`. `ParseResult` contains a private Arena and a public `ParseResult::root` Node\*, the root of the underlying non-owning tree. All memory is handled by ParseResult and is released when it goes out of scope.
 
+The DOM Parser supports both reading from a string in memory and streams. Generally, parsing an in memory string is faster. However, streaming does not require the whole document to be loaded in memory. 
+
+### SAX Parser
+
+A SAX Parser is also provided. It uses the same underlying parser as the DOM Parser, as well as the same text handling functions and same validation logic. It is used via implementing the `SaxListener` interface and supplying the instance to the SAX Parser on construction.
+```cpp
+class ConcreteSaxListener : public SaxListener {
+   public:
+    void onStart() override {};
+    void onText(std::string text) override {};
+    void onComment(std::string text) override {};
+    void onCData(std::string text) override {};
+    void onInstruction(std::string tag, std::string instruction) override {};
+    void onTagOpen(std::string name, bool isSelfClosing,
+                   std::vector<Attribute> attributes) override {};
+    void onTagClose(std::string name) override {};
+    void onXMLDeclaration(std::string version, std::string encoding,
+                          bool hasEncoding, bool isStandalone,
+                          bool hasStandalone) override {};
+    void onDoctype(std::string text) override {};
+    void onException(std::exception& e) override {};
+    void onEnd() override {};
+};
+
+ConcreteSaxListener listener;
+SaxParser parser(listener);
+
+parser.parse(xmlString);
+```
+
+The SAX Parser is generally slower than the DOM Parser due to the function call overhead. However, it allows massive savings in memory as the full DOM tree is not constructed.
+
 ### GenericNode API
 
 `GenericNode` serves as the universal node type used by the DOM parser and dynamic API when no specific tag class is generated. It accepts a tag name and a void flag as the first two arguments and the remaining arguments are as per normal Node constructors.
@@ -435,6 +468,5 @@ OnyxXML is distributed under the Apache License 2.0. See [LICENSE](LICENSE) fo
 
 ## Roadmap
 
-- SAX parser
 - Runtime and compile-time schema validation
 - Sanitization
