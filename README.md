@@ -386,6 +386,22 @@ GenericNode custom("customTag", false,
 std::string output = custom.serialize();
 ```
 
+`GenericNode` provides a fallback for any tag not covered by the generated definitions.
+
+A compile-time `GenericNode` struct also exists:
+
+```cpp
+using namespace onyx::ctags;
+using MyDoc = Document<
+    GenericNode<"catalog", false,
+        product<Attribute<"id","001">,
+            name<Text<"Gizmo">>,
+            price<Text<"9.99">>
+        >
+    >
+>;
+```
+
 ### XPath 1.0 Support
 
 OnyxXML includes a fully custom XPath 1.0 engine. The engine uses a custom pipeline to lex, parse and compile XPath queries into custom bytecode, which is then executed by a stack-based virtual machine. The engine is fully iterative. The engine also supports attribute nodes and the special XPath 1.0 root node via the classes `AttributeViewNode` and `RootViewNode`.
@@ -421,22 +437,6 @@ if (result.object.isNodeset()) {
     // nodes contains the "title" element for Book2
     REQUIRE(result.object.asString() == "Book2"); // supports XPath type-casting rules and string-value
 }
-```
-
-`GenericNode` provides a fallback for any tag not covered by the generated definitions.
-
-A compile-time `GenericNode` struct also exists:
-
-```cpp
-using namespace onyx::ctags;
-using MyDoc = Document<
-    GenericNode<"catalog", false,
-        product<Attribute<"id","001">,
-            name<Text<"Gizmo">>,
-            price<Text<"9.99">>
-        >
-    >
->;
 ```
 
 ### Text Handling
