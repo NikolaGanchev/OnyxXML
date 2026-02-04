@@ -20,6 +20,7 @@ OnyxXML is a C++ library designed to streamline XML document construction, parsi
    - [Non-Owning Nodes](#non-owning-nodes)
    - [Arena Allocator](#arena-allocator)
    - [DOM Parser](#dom-parser)
+   - [XPath 1.0 Support](#xpath-10-support)
    - [GenericNode API](#genericnode-api)
    - [Text Handling](#text-handling)
    - [Other Provided Nodes](#other-provided-nodes)
@@ -352,6 +353,43 @@ GenericNode custom("customTag", false,
 std::string output = custom.serialize();
 ```
 
+### XPath 1.0 Support
+
+OnyxXML includes a fully custom XPath 1.0 engine. The engine uses a custom pipeline to lex, parse and compile XPath queries into custom bytecode, which is then executed by a stack-based virtual machine. The engine is fully iterative. The engine also supports attribute nodes and the special XPath 1.0 root node via the classes `AttributeViewNode` and `RootViewNode`.
+
+XML Namespaces are not currently supported by the XPath engine. The engine also does NOT explicitly handle UTF-8 content, especially in string functions.
+
+Not all functions are supported. In particular, `name`, `local-name` and `lang` are not supported yet. `id` is implement in a specification-compliant manner and returns the empty string, as the library does not support DTDs. However, this may be unexpected behavior for some users.
+
+The pipeline should correctly execute valid XPath queries, but it is not guaranteed to reject all invalid ones. It has been reasonably tested against many wrong queries with missing brackets/parenthesis, invalid names, wrong syntax structure, but does not validate the complete XPath 1.0 grammar. In general, an invalid query will either be rejected or successfully complete with a reasonably expected result given the query. Queries can be rejected at different stages, such as the Lexer, Parser, Compiler or at execution. This means that an `XPathQuery` object may be constructed successfully using an invalid query, but fail at execution.
+
+Outside of these constraints, the engine follows the XPath 1.0 specification as closely as possible.
+
+```cpp
+using namespace onyx::dynamic::xpath;
+using namespace onyx::dynamic::tags;
+
+GenericNode store("store", false,
+    GenericNode("book", false, Attribute("category", "fiction"),
+        GenericNode("title", false, Text("Book1")),
+        GenericNode("price", false, Text("10"))
+    ),
+    GenericNode("book", false, Attribute("category", "code"),
+        GenericNode("title", false, Text("Book2")),
+        GenericNode("price", false, Text("55"))
+    )
+);
+
+XPathQuery query("/store/book[price > 15]/title");
+XPathQuery::Result result = query.execute(&store);
+
+if (result.object.isNodeset()) {
+    const std::vector<Node*>& nodes = result.object.asNodeset();
+    // nodes contains the "title" element for Book2
+    REQUIRE(result.object.asString() == "Book2"); // supports XPath type-casting rules and string-value
+}
+```
+
 `GenericNode` provides a fallback for any tag not covered by the generated definitions.
 
 A compile-time `GenericNode` struct also exists:
@@ -400,4 +438,3 @@ OnyxXML is distributed under the Apache License 2.0. See [LICENSE](LICENSE) fo
 - SAX parser
 - Runtime and compile-time schema validation
 - Sanitization
-- XPath support
