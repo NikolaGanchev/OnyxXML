@@ -132,9 +132,8 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current, std::fu
             case OPCODE::HALT: {
                 EMPTY_STACK_GUARD(HALT);
 
-                return std::move(
-                    ExecutionResult(std::move(ec.temporaryNodes),
-                                    std::move(ec.dataStack.top())));
+                return ExecutionResult(std::move(ec.temporaryNodes),
+                                    std::move(ec.dataStack.top()));
             };
             case OPCODE::LOAD_CONSTANT: {
                 uint32_t address = instruction.getOperandImm();

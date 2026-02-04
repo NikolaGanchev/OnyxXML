@@ -1815,7 +1815,7 @@ TEST_CASE("XPath execute /store") {
             GenericNode("price", false, Text("20")))
     );
 
-    VirtualMachine::ExecutionResult res1 = std::move(XPathQuery("/store").execute(&doc));
+    XPathQuery::Result res1 = std::move(XPathQuery("/store").execute(&doc));
     XPathObject& res = res1.object;
 
     REQUIRE(res.isNodeset());
@@ -1836,7 +1836,7 @@ TEST_CASE("XPath execute /store/book") {
             GenericNode("price", false, Text("20")))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/store/book").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/store/book").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.isNodeset());
@@ -1861,7 +1861,7 @@ TEST_CASE("XPath execute predicate /store/book[price > 15]") {
             GenericNode("price", false, Text("20")))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/store/book[price > 15]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/store/book[price > 15]").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.isNodeset());
@@ -1884,7 +1884,7 @@ TEST_CASE("XPath execute attribute Test /store/book[@id='1']") {
             GenericNode("price", false, Text("20")))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/store/book[@id='1']").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/store/book[@id='1']").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.isNodeset());
@@ -1905,7 +1905,7 @@ TEST_CASE("XPath execute empty /store/book/author") {
             GenericNode("title", false, Text("Book2")))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/store/book/author").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/store/book/author").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.isNodeset());
@@ -1923,7 +1923,7 @@ TEST_CASE("XPath execute math /store/book[price div 2 < 15]") {
             GenericNode("price", false, Text("40")))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/store/book[price div 2 < 15]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/store/book[price div 2 < 15]").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.isNodeset());
@@ -1944,7 +1944,7 @@ TEST_CASE("XPath execute function composition book[not(starts-with(title, 'Secon
             GenericNode("title", false, Text("Second Book")))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("book[not(starts-with(title, 'Second'))]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("book[not(starts-with(title, 'Second'))]").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.asNodeset().size() == 1);
@@ -1968,7 +1968,7 @@ TEST_CASE("XPath execute sum function /root/store[sum(book/price) > 50]") {
         )
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/root/store[sum(book/price) > 50]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/root/store[sum(book/price) > 50]").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.asNodeset().size() == 1);
@@ -1986,7 +1986,7 @@ TEST_CASE("XPath execute attributes /root/item/@id") {
         GenericNode("item", false, Attribute("id", "b"), Attribute("other", "x"))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/root/item/@id").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/root/item/@id").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.isNodeset());
@@ -2009,7 +2009,7 @@ TEST_CASE("XPath execute booleans item[@x='1' and (@y='2' or @z='3')]") {
         GenericNode("item", false, Attribute("id", "4"), Attribute("x", "0"), Attribute("y", "2"))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("item[@x='1' and (@y='2' or @z='3')]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("item[@x='1' and (@y='2' or @z='3')]").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.asNodeset().size() == 2);
@@ -2029,13 +2029,13 @@ TEST_CASE("XPath execute booleans item[@x=$var1 and (@y=$var2 or @z=$var3)] with
         GenericNode("item", false, Attribute("id", "4"), Attribute("x", "0"), Attribute("y", "2"))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("item[@x=$var1 and (@y=$var2 or @z=$var3)]").execute(&doc, 
+    XPathQuery::Result res1 = XPathQuery("item[@x=$var1 and (@y=$var2 or @z=$var3)]").execute(&doc, 
                                                         [](std::string_view name) -> XPathObject {
                                                             if (name == "var1") return XPathObject("1");
                                                             if (name == "var2") return XPathObject("2");
                                                             if (name == "var3") return XPathObject("3");
                                                             throw std::runtime_error("Unknown variable");
-                                                        }));
+                                                        });
     XPathObject& res = res1.object;
 
     REQUIRE(res.asNodeset().size() == 2);
@@ -2058,7 +2058,7 @@ TEST_CASE("XPath execute union operator //div | //span") {
         )
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("//div | //span").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("//div | //span").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.asNodeset().size() == 4);
@@ -2083,7 +2083,7 @@ TEST_CASE("XPath execute (1 < 5 - 6)") {
 
     GenericNode doc("root", false);
 
-    XPathQuery::Result res1 = std::move(XPathQuery("(1 < 5 - 6)").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("(1 < 5 - 6)").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.isBool());
@@ -2096,7 +2096,7 @@ TEST_CASE("XPath execute concat() with many arguments") {
 
     GenericNode doc("root", false);
 
-    XPathQuery::Result res1 = std::move(XPathQuery("concat('a', 'b', 'c', 'd', 'e')").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("concat('a', 'b', 'c', 'd', 'e')").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.isString());
@@ -2109,7 +2109,7 @@ TEST_CASE("XPath execute arithmetic (1 + 2 * 3 * (6 div 2) - 3)") {
 
     GenericNode doc("root", false);
 
-    XPathQuery::Result res1 = std::move(XPathQuery("(1 + 2 * 3 * (6 div 2) - 5)").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("(1 + 2 * 3 * (6 div 2) - 5)").execute(&doc);
     XPathObject& res = res1.object;
 
     REQUIRE(res.isNumber());
@@ -2132,11 +2132,11 @@ TEST_CASE("XPath execute axis precedence (ancestor vs paren-ancestor)") {
     Node* childNode = doc.getChildren()[0]->getChildren()[0]->getChildren()[0];
 
     // ancestor::*[1] should be 'parent'
-    XPathQuery::Result res1 = std::move(XPathQuery("ancestor::*[1]").execute(childNode));
+    XPathQuery::Result res1 = XPathQuery("ancestor::*[1]").execute(childNode);
     REQUIRE(res1.object.asNodeset()[0]->getTagName() == "parent");
 
     // (ancestor::*)[1] should be 'root' (first in document order)
-    XPathQuery::Result res2 = std::move(XPathQuery("(ancestor::*)[1]").execute(childNode));
+    XPathQuery::Result res2 = XPathQuery("(ancestor::*)[1]").execute(childNode);
     REQUIRE(res2.object.asNodeset()[0]->getTagName() == "root");
 }
 
@@ -2151,15 +2151,15 @@ TEST_CASE("XPath execute implicit numeric predicates and last()") {
         GenericNode("item", false, Text("D"))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("item[2]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("item[2]").execute(&doc);
     REQUIRE(res1.object.asNodeset().size() == 1);
     REQUIRE(res1.object.asNodeset()[0]->getFirstChild()->serialize() == "B");
 
-    XPathQuery::Result res2 = std::move(XPathQuery("item[last()]").execute(&doc));
+    XPathQuery::Result res2 = XPathQuery("item[last()]").execute(&doc);
     REQUIRE(res2.object.asNodeset().size() == 1);
     REQUIRE(res2.object.asNodeset()[0]->getFirstChild()->serialize() == "D");
 
-    XPathQuery::Result res3 = std::move(XPathQuery("item[last()-1]").execute(&doc));
+    XPathQuery::Result res3 = XPathQuery("item[last()-1]").execute(&doc);
     REQUIRE(res3.object.asNodeset().size() == 1);
     REQUIRE(res3.object.asNodeset()[0]->getFirstChild()->serialize() == "C");
 }
@@ -2177,10 +2177,10 @@ TEST_CASE("XPath execute following-sibling and preceding-sibling") {
 
     Node* nodeB = doc.getChildren()[1];
 
-    XPathQuery::Result res1 = std::move(XPathQuery("following-sibling::node()[1]").execute(nodeB));
+    XPathQuery::Result res1 = XPathQuery("following-sibling::node()[1]").execute(nodeB);
     REQUIRE(res1.object.asNodeset()[0]->getAttributeValue("id") == "3");
 
-    XPathQuery::Result res2 = std::move(XPathQuery("preceding-sibling::node()[1]").execute(nodeB));
+    XPathQuery::Result res2 = XPathQuery("preceding-sibling::node()[1]").execute(nodeB);
     REQUIRE(res2.object.asNodeset()[0]->getAttributeValue("id") == "1");
 }
 
@@ -2196,7 +2196,7 @@ TEST_CASE("XPath execute deep string concatenation (Element String Value)") {
         )
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("string(/doc/p)").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("string(/doc/p)").execute(&doc);
     REQUIRE(res1.object.asString() == "Hello World!");
 }
 
@@ -2219,7 +2219,7 @@ TEST_CASE("XPath execute complex boolean and string functions") {
     // Find items where code starts with 'A' AND name contains 'get' and name doesn't contain 'Gad'
     std::string query = "/inventory/item[starts-with(@code, 'A') and contains(name, 'get') and not(contains(name, 'Gad'))]";
     
-    XPathQuery::Result res1 = std::move(XPathQuery(query).execute(&doc));
+    XPathQuery::Result res1 = XPathQuery(query).execute(&doc);
     
     REQUIRE(res1.object.asNodeset().size() == 2);
     REQUIRE(res1.object.asNodeset()[0]->getFirstChild()->getTagName() == "name"); 
@@ -2234,13 +2234,13 @@ TEST_CASE("XPath execute substring and translate") {
 
     GenericNode doc("root", false);
 
-    XPathQuery::Result res1 = std::move(XPathQuery("substring('12345', 2, 3)").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("substring('12345', 2, 3)").execute(&doc);
     REQUIRE(res1.object.asString() == "234");
 
-    XPathQuery::Result res2 = std::move(XPathQuery("translate('bar', 'abc', 'ABC')").execute(&doc));
+    XPathQuery::Result res2 = XPathQuery("translate('bar', 'abc', 'ABC')").execute(&doc);
     REQUIRE(res2.object.asString() == "BAr");
     
-    XPathQuery::Result res3 = std::move(XPathQuery("translate('data', 'd', '')").execute(&doc));
+    XPathQuery::Result res3 = XPathQuery("translate('data', 'd', '')").execute(&doc);
     REQUIRE(res3.object.asString() == "ata");
 }
 
@@ -2254,12 +2254,12 @@ TEST_CASE("XPath execute parent abbreviation (..) and self (.)") {
         )
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/a/b/c/../c/@attr").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/a/b/c/../c/@attr").execute(&doc);
     
     REQUIRE(res1.object.asNodeset().size() == 1);
     REQUIRE(res1.object.asNodeset()[0]->getStringValue() == "val");
 
-    XPathQuery::Result res2 = std::move(XPathQuery("/a/b/./c").execute(&doc));
+    XPathQuery::Result res2 = XPathQuery("/a/b/./c").execute(&doc);
     REQUIRE(res2.object.asNodeset().size() == 1);
     REQUIRE(res2.object.asNodeset()[0]->getTagName() == "c");
 }
@@ -2274,13 +2274,13 @@ TEST_CASE("XPath execute nodeset equality (Exists semantics)") {
         GenericNode("val", false, Text("baz"))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/root/val = 'bar'").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/root/val = 'bar'").execute(&doc);
     REQUIRE(res1.object.asBool() == true);
 
-    XPathQuery::Result res2 = std::move(XPathQuery("/root/val = 'qux'").execute(&doc));
+    XPathQuery::Result res2 = XPathQuery("/root/val = 'qux'").execute(&doc);
     REQUIRE(res2.object.asBool() == false);
     
-    XPathQuery::Result res3 = std::move(XPathQuery("/root/val != 'bar'").execute(&doc));
+    XPathQuery::Result res3 = XPathQuery("/root/val != 'bar'").execute(&doc);
     REQUIRE(res3.object.asBool() == true);
 }
 
@@ -2306,13 +2306,13 @@ TEST_CASE("XPath execute attribute node edge cases") {
         GenericNode("item", false, Attribute("id", "1"), Text("Hello"))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/root/item/@id/child::node()").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/root/item/@id/child::node()").execute(&doc);
     REQUIRE(res1.object.asNodeset().empty());
 
-    XPathQuery::Result res2 = std::move(XPathQuery("/root/item/text()/child::node()").execute(&doc));
+    XPathQuery::Result res2 = XPathQuery("/root/item/text()/child::node()").execute(&doc);
     REQUIRE(res2.object.asNodeset().empty());
     
-    XPathQuery::Result res3 = std::move(XPathQuery("/root/item/@id/..").execute(&doc));
+    XPathQuery::Result res3 = XPathQuery("/root/item/@id/..").execute(&doc);
     REQUIRE(res3.object.asNodeset().size() == 1);
     REQUIRE(res3.object.asNodeset()[0]->getTagName() == "item");
 }
@@ -2333,25 +2333,25 @@ TEST_CASE("XPath execute axis test") {
 
     Node* nodeC = doc.getChildren()[0]->getChildren()[1];
 
-    XPathQuery::Result resDesc = std::move(XPathQuery("/root/A/descendant::*").execute(&doc));
+    XPathQuery::Result resDesc = XPathQuery("/root/A/descendant::*").execute(&doc);
     REQUIRE(resDesc.object.asNodeset().size() == 3);
 
     Node* nodeD = nodeC->getChildren()[0];
-    XPathQuery::Result resAnc = std::move(XPathQuery("ancestor::*").execute(nodeD));
+    XPathQuery::Result resAnc = XPathQuery("ancestor::*").execute(nodeD);
     REQUIRE(resAnc.object.asNodeset().size() == 3);
     REQUIRE(resAnc.object.asNodeset()[0]->getTagName() == "root");
 
     Node* nodeB = doc.getChildren()[0]->getChildren()[0];
-    XPathQuery::Result resFoll = std::move(XPathQuery("following::*").execute(nodeB));
+    XPathQuery::Result resFoll = XPathQuery("following::*").execute(nodeB);
     REQUIRE(resFoll.object.asNodeset().size() == 3);
     REQUIRE(resFoll.object.asNodeset()[0]->getAttributeValue("id") == "3");
     REQUIRE(resFoll.object.asNodeset()[2]->getAttributeValue("id") == "5");
 
     Node* nodeE = doc.getChildren()[1];
-    XPathQuery::Result resPrec = std::move(XPathQuery("preceding::*").execute(nodeE));
+    XPathQuery::Result resPrec = XPathQuery("preceding::*").execute(nodeE);
     REQUIRE(resPrec.object.asNodeset().size() == 4);
     
-    XPathQuery::Result resSelf = std::move(XPathQuery("self::*").execute(nodeC));
+    XPathQuery::Result resSelf = XPathQuery("self::*").execute(nodeC);
     REQUIRE(resSelf.object.asNodeset().size() == 1);
     REQUIRE(resSelf.object.asNodeset()[0] == nodeC);
 }
@@ -2366,14 +2366,14 @@ TEST_CASE("XPath execute special node tests") {
         GenericNode("other", false)
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/root/*").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/root/*").execute(&doc);
     REQUIRE(res1.object.asNodeset().size() == 3);
 
-    XPathQuery::Result res2 = std::move(XPathQuery("/root/elem/text()").execute(&doc));
+    XPathQuery::Result res2 = XPathQuery("/root/elem/text()").execute(&doc);
     REQUIRE(res2.object.asNodeset().size() == 2);
     REQUIRE(res2.object.asNodeset()[0]->serialize() == "text1");
 
-    XPathQuery::Result res3 = std::move(XPathQuery("/root/node()").execute(&doc));
+    XPathQuery::Result res3 = XPathQuery("/root/node()").execute(&doc);
     REQUIRE(res3.object.asNodeset().size() == 3);
 }
 
@@ -2387,7 +2387,7 @@ TEST_CASE("XPath execute finds processing instructions") {
         ProcessingInstruction("xml-stylesheet", "type=\"css\""),
         GenericNode("child", false));
 
-    XPathQuery::Result resAllPI = std::move(XPathQuery("/root/processing-instruction()").execute(&doc));
+    XPathQuery::Result resAllPI = XPathQuery("/root/processing-instruction()").execute(&doc);
     REQUIRE(resAllPI.object.asNodeset().size() == 2);
     
     Node* pi1 = resAllPI.object.asNodeset()[0];
@@ -2399,21 +2399,21 @@ TEST_CASE("XPath execute finds processing instructions") {
     REQUIRE(pi2->getXPathType() == Node::XPathType::PROCESSING_INSTRUCTION);
     REQUIRE(static_cast<ProcessingInstruction*>(pi2)->getTarget() == "xml-stylesheet");
 
-    XPathQuery::Result resSpecificPI = std::move(XPathQuery("/root/processing-instruction('php')").execute(&doc));
+    XPathQuery::Result resSpecificPI = XPathQuery("/root/processing-instruction('php')").execute(&doc);
     REQUIRE(resSpecificPI.object.asNodeset().size() == 1);
     Node* pi3 = resSpecificPI.object.asNodeset()[0];
     REQUIRE(pi3->getXPathType() == Node::XPathType::PROCESSING_INSTRUCTION);
     REQUIRE(static_cast<ProcessingInstruction*>(pi3)->getTarget() == "php");
     REQUIRE(pi3->getStringValue() == "echo \"hello\";");
 
-    XPathQuery::Result resSpecificPI2 = std::move(XPathQuery("/root/processing-instruction(\"xml-stylesheet\")").execute(&doc));
+    XPathQuery::Result resSpecificPI2 = XPathQuery("/root/processing-instruction(\"xml-stylesheet\")").execute(&doc);
     REQUIRE(resSpecificPI2.object.asNodeset().size() == 1);
     Node* pi4 = resSpecificPI2.object.asNodeset()[0];
     REQUIRE(pi4->getXPathType() == Node::XPathType::PROCESSING_INSTRUCTION);
     REQUIRE(static_cast<ProcessingInstruction*>(pi4)->getTarget() == "xml-stylesheet");
     REQUIRE(pi4->getStringValue() == "type=\"css\"");
 
-    XPathQuery::Result resMissingPI = std::move(XPathQuery("/root/processing-instruction('unknown')").execute(&doc));
+    XPathQuery::Result resMissingPI = XPathQuery("/root/processing-instruction('unknown')").execute(&doc);
     REQUIRE(resMissingPI.object.asNodeset().empty());
 }
 
@@ -2427,7 +2427,7 @@ TEST_CASE("XPath execute finds comments") {
         GenericNode("child", false),
         GenericNode("child", false));
 
-    XPathQuery::Result resComments = std::move(XPathQuery("/root/comment()").execute(&doc));
+    XPathQuery::Result resComments = XPathQuery("/root/comment()").execute(&doc);
     REQUIRE(resComments.object.asNodeset().size() == 1);
     REQUIRE(resComments.object.asNodeset()[0]->getXPathType() == Node::XPathType::COMMENT);
     REQUIRE(resComments.object.asNodeset()[0]->serialize() == "<!--This is a comment-->");
@@ -2449,12 +2449,12 @@ TEST_CASE("XPath execute complex path step predicates") {
         )
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("/root/section/div[2]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("/root/section/div[2]").execute(&doc);
     REQUIRE(res1.object.asNodeset().size() == 2);
     REQUIRE(res1.object.asNodeset()[0]->getAttributeValue("class") == "b");
     REQUIRE(res1.object.asNodeset()[1]->getAttributeValue("class") == "b");
 
-    XPathQuery::Result res2 = std::move(XPathQuery("(/root/section/div)[2]").execute(&doc));
+    XPathQuery::Result res2 = XPathQuery("(/root/section/div)[2]").execute(&doc);
     REQUIRE(res2.object.asNodeset().size() == 1);
     REQUIRE(res2.object.asNodeset()[0]->getAttributeValue("class") == "b");
 }
@@ -2475,7 +2475,7 @@ TEST_CASE("XPath execute maintains document order on paths with reverse axis") {
         )
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("//section[@id='s1']/div[@class = 'a']/ancestor::*").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("//section[@id='s1']/div[@class = 'a']/ancestor::*").execute(&doc);
     REQUIRE(res1.object.asNodeset().size() == 2);
     REQUIRE(res1.object.asNodeset()[0]->getTagName() == "root");
     REQUIRE(res1.object.asNodeset()[1]->getTagName() == "section");
@@ -2497,7 +2497,7 @@ TEST_CASE("XPath execute correctly unions AttributeViewNode") {
         )
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("//@class[. = 'a'] | //@class[. = 'a']").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("//@class[. = 'a'] | //@class[. = 'a']").execute(&doc);
     REQUIRE(res1.object.asNodeset().size() == 3);
     REQUIRE(res1.object.asNodeset()[0]->getParentNode()->getAttributeValue("id") == "1");
     REQUIRE(res1.object.asNodeset()[1]->getParentNode()->getAttributeValue("id") == "3");
@@ -2515,7 +2515,7 @@ TEST_CASE("XPath execute multiple predicates") {
         GenericNode("item", false, Attribute("id", "4"), Attribute("type", "B"))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("item[@type='A'][2]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("item[@type='A'][2]").execute(&doc);
     
     REQUIRE(res1.object.asNodeset().size() == 1);
     REQUIRE(res1.object.asNodeset()[0]->getAttributeValue("id") == "3");
@@ -2532,7 +2532,7 @@ TEST_CASE("XPath execute context position shifting in predicates") {
         GenericNode("item", false, Attribute("id", "4"))
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("item[position() != 1][position() != 2]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("item[position() != 1][position() != 2]").execute(&doc);
 
     REQUIRE(res1.object.asNodeset().size() == 2);
     const std::vector<Node*>& nodeset = res1.object.asNodeset();
@@ -2556,7 +2556,7 @@ TEST_CASE("XPath execute complex predicate nesting") {
         )
     );
 
-    XPathQuery::Result res1 = std::move(XPathQuery("section[@status='open'][div]").execute(&doc));
+    XPathQuery::Result res1 = XPathQuery("section[@status='open'][div]").execute(&doc);
 
     REQUIRE(res1.object.asNodeset().size() == 1);
     REQUIRE(res1.object.asNodeset()[0]->getFirstChild()->getTagName() == "div");
