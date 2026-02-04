@@ -6,6 +6,11 @@ AttributeViewNode::AttributeViewNode(Node* owner, size_t index)
     this->parent = owner;
 }
 
+AttributeViewNode::AttributeViewNode(AttributeViewNode&& other) noexcept
+    : owner{owner}, index{index}, Node{std::move(other)} {
+    this->parent = owner;
+}
+
 const std::string& AttributeViewNode::getTagName() const {
     static const std::string name = ".attribute-view-node";
     return name;
@@ -24,7 +29,7 @@ std::unique_ptr<Node> AttributeViewNode::shallowCopy() const {
     return std::make_unique<AttributeViewNode>(this->owner, this->index);
 }
 
-Node* AttributeViewNode::getRealNode() { return this->owner; }
+Node* AttributeViewNode::getRealNode() const { return this->owner; }
 
 const Attribute& AttributeViewNode::getReferencedAttribute() const {
     return this->owner->getAttributes()[index];
@@ -50,5 +55,9 @@ std::string AttributeViewNode::getStringValue() const {
 
 Node::XPathType AttributeViewNode::getXPathType() const {
     return XPathType::ATTRIBUTE;
+}
+
+size_t AttributeViewNode::getAttributeOffset() const {
+    return this->index;
 }
 }  // namespace onyx::dynamic::xpath

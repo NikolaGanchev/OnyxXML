@@ -25,6 +25,13 @@ class AttributeViewNode : public Node {
     AttributeViewNode(Node* owner, size_t index);
 
     /**
+     * @brief AttributeViewNode move
+     * 
+     * @param other 
+     */
+    AttributeViewNode(AttributeViewNode&& other) noexcept;
+
+    /**
      * @brief Uses the special xml tag name ".attribute-view-node"
      *
      * @return const std::string&
@@ -68,7 +75,14 @@ class AttributeViewNode : public Node {
      *
      * @return Node*
      */
-    Node* getRealNode();
+    Node* getRealNode() const;
+
+    /**
+     * @brief Get the index at which this Node is in the Attribute structure of the parent
+     * 
+     * @return size_t 
+     */
+    size_t getAttributeOffset() const;
 
     /**
      * @brief Get a constant reference to the referenced Attribute
