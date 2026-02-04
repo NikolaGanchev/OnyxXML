@@ -34,7 +34,8 @@ public:
      * @brief Executes the query on the given node.
      * 
      * @param node 
-     * @return ExecutionResult 
+     * @param std::function<XPathObject(std::string_view)>
+     * @return Result 
      */
     Result execute(Node* node, std::function<XPathObject(std::string_view)> variableProvider = [](std::string_view v) -> XPathObject {
                                                 throw std::runtime_error("Found unresolved variable reference to " + std::string(v));

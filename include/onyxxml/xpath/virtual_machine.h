@@ -403,6 +403,7 @@ class VirtualMachine {
      * execution result.
      *
      * @param current
+     * @param std::function<XPathObject(std::string_view)> Resolves variables
      * @return ExecutionResult
      */
     ExecutionResult executeOn(Node* current, std::function<XPathObject(std::string_view)> variableProvider = [](std::string_view v) -> XPathObject {
