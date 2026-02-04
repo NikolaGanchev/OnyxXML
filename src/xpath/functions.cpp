@@ -1,11 +1,12 @@
 #include "xpath/functions.h"
-#include "parse/helpers.h"
 
+#include <array>
 #include <charconv>
 #include <limits>
 #include <string>
-#include <array>
 #include <variant>
+
+#include "parse/helpers.h"
 
 namespace onyx::dynamic::xpath::functions {
 
@@ -101,13 +102,15 @@ bool boolean(const XPathObject& obj) {
 // https://stackoverflow.com/questions/216823/how-can-i-trim-a-stdstring
 void trim(std::string& str) {
     str.erase(str.begin(),
-              std::find_if(str.begin(), str.end(),
-                           [](unsigned char ch) { return !parser::isWhitespace(ch); }));
+              std::find_if(str.begin(), str.end(), [](unsigned char ch) {
+                  return !parser::isWhitespace(ch);
+              }));
 
-    str.erase(std::find_if(str.rbegin(), str.rend(),
-                           [](unsigned char ch) { return !parser::isWhitespace(ch); })
-                  .base(),
-              str.end());
+    str.erase(
+        std::find_if(str.rbegin(), str.rend(),
+                     [](unsigned char ch) { return !parser::isWhitespace(ch); })
+            .base(),
+        str.end());
 }
 
 double number(const XPathObject& obj) {
@@ -216,7 +219,8 @@ std::string stringAfter(const std::string& str1, const std::string& str2) {
     return str1.substr(i + 1);
 }
 
-std::string translate(const std::string& str1, const std::string& str2, const std::string& str3) {
+std::string translate(const std::string& str1, const std::string& str2,
+                      const std::string& str3) {
     std::stringstream result;
 
     // Values
@@ -228,9 +232,10 @@ std::string translate(const std::string& str1, const std::string& str2, const st
     for (size_t i = 0; i < str2.length(); ++i) {
         unsigned char key = static_cast<unsigned char>(str2[i]);
 
-        // XPath spec: "If a character occurs more than once in the second argument string, 
-        // then the first occurrence determines the replacement character."
-        // We only set the rule if this character hasn't been processed yet
+        // XPath spec: "If a character occurs more than once in the second
+        // argument string, then the first occurrence determines the replacement
+        // character." We only set the rule if this character hasn't been
+        // processed yet
         if (map[key] == -1) {
             if (i < str3.length()) {
                 map[key] = static_cast<unsigned char>(str3[i]);
@@ -268,7 +273,9 @@ std::string normalizeSpace(const std::string& str) {
         if (parser::isWhitespace(pos.capturePeek(0))) {
             res += pos.getCaptured();
 
-            while (pos.capturePeek(0) != '\0' && parser::isWhitespace(pos.capturePeek(0))) pos.captureAdvance(1);
+            while (pos.capturePeek(0) != '\0' &&
+                   parser::isWhitespace(pos.capturePeek(0)))
+                pos.captureAdvance(1);
 
             if (pos.capturePeek(0) != '\0') {
                 res += ' ';

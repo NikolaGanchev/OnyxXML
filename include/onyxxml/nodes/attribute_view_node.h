@@ -26,8 +26,8 @@ class AttributeViewNode : public Node {
 
     /**
      * @brief AttributeViewNode move
-     * 
-     * @param other 
+     *
+     * @param other
      */
     AttributeViewNode(AttributeViewNode&& other) noexcept;
 
@@ -78,9 +78,10 @@ class AttributeViewNode : public Node {
     Node* getRealNode() const;
 
     /**
-     * @brief Get the index at which this Node is in the Attribute structure of the parent
-     * 
-     * @return size_t 
+     * @brief Get the index at which this Node is in the Attribute structure of
+     * the parent
+     *
+     * @return size_t
      */
     size_t getAttributeOffset() const;
 

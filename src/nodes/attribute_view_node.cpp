@@ -57,7 +57,5 @@ Node::XPathType AttributeViewNode::getXPathType() const {
     return XPathType::ATTRIBUTE;
 }
 
-size_t AttributeViewNode::getAttributeOffset() const {
-    return this->index;
-}
+size_t AttributeViewNode::getAttributeOffset() const { return this->index; }
 }  // namespace onyx::dynamic::xpath

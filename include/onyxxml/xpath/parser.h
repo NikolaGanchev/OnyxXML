@@ -1,78 +1,84 @@
 #pragma once
 
-#include "lexer.h"
 #include <memory>
 #include <stack>
 
+#include "lexer.h"
+
 namespace onyx::dynamic::xpath {
 /**
- * @brief Parses a list of tokens for XPath into an Abstract syntax tree iteratively
- * using Shunting yard.
- * 
+ * @brief Parses a list of tokens for XPath into an Abstract syntax tree
+ * iteratively using Shunting yard.
+ *
  */
 class Parser {
-public:
+   public:
     struct AstNode;
-private:
+
+   private:
     /**
      * @brief The result stack in Shunting yard.
-     * 
+     *
      */
     std::stack<std::unique_ptr<AstNode>> nodeStack;
     /**
      * @brief The operator stack in Shunting yard.
-     * 
+     *
      */
     std::stack<Lexer::Token*> opStack;
     /**
-     * @brief A copy of the list of tokens. The parser may modify the token list internally.
-     * 
+     * @brief A copy of the list of tokens. The parser may modify the token list
+     * internally.
+     *
      */
     std::vector<Lexer::Token> tokens;
 
     /**
      * @brief The current positions in the token list.
-     * 
+     *
      */
     size_t pos;
 
     /**
-     * @brief Checks if the tokens list has the given token type at an offset relPos from pos.
-     * If the token list ends, throws std::runtime_error.
-     * @param t 
-     * @param relPos 
+     * @brief Checks if the tokens list has the given token type at an offset
+     * relPos from pos. If the token list ends, throws std::runtime_error.
+     * @param t
+     * @param relPos
      * @return true The token with the given token type was found
      * @return false The token was not found
      */
     bool requireToken(Lexer::TokenType t, size_t relPos);
 
     /**
-     * @brief Checks if the current context suggests an operator should be interpreted as unary.
-     * 
-     * @return true 
-     * @return false 
+     * @brief Checks if the current context suggests an operator should be
+     * interpreted as unary.
+     *
+     * @return true
+     * @return false
      */
     bool shouldBeUnary();
 
     /**
-     * @brief Pops an operation from opStack and the needed amount of nodeStack nodes to create a new AstNode.
-     * 
+     * @brief Pops an operation from opStack and the needed amount of nodeStack
+     * nodes to create a new AstNode.
+     *
      */
     void applyOperation();
 
     /**
      * @brief Get the precedence of the given token
-     * 
-     * @param t 
-     * @return uint8_t 
+     *
+     * @param t
+     * @return uint8_t
      */
     uint8_t static getPrecedence(const Lexer::Token* t);
-public:
+
+   public:
     struct BinaryOp;
     struct Step;
     /**
      * @brief Node for the Abstract syntax tree.
-     * 
+     *
      */
     struct AstNode {
         enum Type {
@@ -94,7 +100,7 @@ public:
     };
     /**
      * @brief A variable reference
-     * 
+     *
      */
     struct VarRef : public AstNode {
         std::string name;
@@ -102,7 +108,7 @@ public:
     };
     /**
      * @brief A literal
-     * 
+     *
      */
     struct Literal : public AstNode {
         std::string value;
@@ -110,7 +116,7 @@ public:
     };
     /**
      * @brief A number
-     * 
+     *
      */
     struct Number : public AstNode {
         std::string num;
@@ -118,7 +124,7 @@ public:
     };
     /**
      * @brief A function call
-     * 
+     *
      */
     struct FunctionCall : public AstNode {
         std::string name;
@@ -126,8 +132,9 @@ public:
         Type getType() const override { return Type::FunctionCall; }
     };
     /**
-     * @brief A filter expression. That is an expression with an attached predicate.
-     * 
+     * @brief A filter expression. That is an expression with an attached
+     * predicate.
+     *
      */
     struct FilterExpr : public AstNode {
         std::unique_ptr<AstNode> subject;
@@ -135,8 +142,9 @@ public:
         Type getType() const override { return Type::FilterExpr; }
     };
     /**
-     * @brief A binary operation. Includes '/', '|', comparison and arithmetic operators.
-     * 
+     * @brief A binary operation. Includes '/', '|', comparison and arithmetic
+     * operators.
+     *
      */
     struct BinaryOp : public AstNode {
         std::unique_ptr<AstNode> left;
@@ -145,8 +153,9 @@ public:
         Type getType() const override { return Type::BinaryOp; }
     };
     /**
-     * @brief An XPath step, which contains an axis, a node test and a list of predicates.
-     * 
+     * @brief An XPath step, which contains an axis, a node test and a list of
+     * predicates.
+     *
      */
     struct Step : public AstNode {
         std::string axis;
@@ -158,7 +167,7 @@ public:
      * @brief Used to signify if a function is being parsed or not.
      * Without it, an expression such as 'count(item) + (5)'
      * may be interpreted as 'count(item, 5)'
-     * 
+     *
      */
     struct FunctionSentinel : public AstNode {
         Type getType() const override { return Type::FunctionSentinel; }
@@ -166,16 +175,16 @@ public:
 
     /**
      * @brief Construct a new Parser object. Completes the lexing process.
-     * 
-     * @param lexer 
+     *
+     * @param lexer
      */
     Parser(Lexer& lexer);
 
     /**
      * @brief Parses the token list and builds the Abstract syntax tree.
-     * 
-     * @return std::unique_ptr<AstNode> 
+     *
+     * @return std::unique_ptr<AstNode>
      */
     std::unique_ptr<AstNode> buildAST();
 };
-};
+};  // namespace onyx::dynamic::xpath

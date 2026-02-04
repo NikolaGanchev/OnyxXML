@@ -35,27 +35,28 @@ class PagedArena {
 
         /**
          * @brief Construct a new Page object
-         * 
-         * @param size 
+         *
+         * @param size
          */
         Page(size_t size);
 
         /**
-         * @brief Checks if the Page has enough capacity to allocate with the given size and alignment
-         * 
-         * @param size 
-         * @param alignment 
-         * @return true 
-         * @return false 
+         * @brief Checks if the Page has enough capacity to allocate with the
+         * given size and alignment
+         *
+         * @param size
+         * @param alignment
+         * @return true
+         * @return false
          */
         bool canAllocate(size_t size, size_t alignment) const;
 
         /**
          * @brief Allocates a portion of the buffer.
-         * 
-         * @param size 
-         * @param alignment 
-         * @return char* 
+         *
+         * @param size
+         * @param alignment
+         * @return char*
          */
         char* allocateRaw(size_t size, size_t alignment);
     };
@@ -105,16 +106,16 @@ class PagedArena {
 
     /**
      * @brief Move constructor
-     * 
-     * @param other 
+     *
+     * @param other
      */
     PagedArena(PagedArena&& other);
 
     /**
      * @brief Move assignment
-     * 
-     * @param other 
-     * @return PagedArena& 
+     *
+     * @param other
+     * @return PagedArena&
      */
     PagedArena& operator=(PagedArena&& other);
 
@@ -123,7 +124,7 @@ class PagedArena {
 
     /**
      * @brief Destroy the PagedArena object
-     * 
+     *
      */
     ~PagedArena();
 

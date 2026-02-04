@@ -73,13 +73,13 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
 
     registry.emplace(FUNCTION_CODE::ID_1,
                      [](Context context, Stack stack) -> XPathObject {
-                        // No support for DTDs
+                         // No support for DTDs
                          return XPathObject("");
                      });
 
     registry.emplace(FUNCTION_CODE::LOCAL_NAME_1,
                      [](Context context, Stack stack) -> XPathObject {
-                        // TODO
+                         // TODO
                          return XPathObject("");
                      });
 
@@ -133,13 +133,12 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
             return XPathObject(functions::stringBefore(str1, str2));
         });
 
-    registry.emplace(
-        FUNCTION_CODE::SUBSTRING_AFTER_2,
-        [](Context context, Stack stack) -> XPathObject {
-            GET_TWO_STACK_STRINGS(substring - after);
+    registry.emplace(FUNCTION_CODE::SUBSTRING_AFTER_2,
+                     [](Context context, Stack stack) -> XPathObject {
+                         GET_TWO_STACK_STRINGS(substring - after);
 
-            return XPathObject(functions::stringAfter(str1, str2));
-        });
+                         return XPathObject(functions::stringAfter(str1, str2));
+                     });
 
     registry.emplace(
         FUNCTION_CODE::SUBSTRING_2,
@@ -195,24 +194,26 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
             return XPathObject(static_cast<double>(str.length()));
         });
 
-    registry.emplace(FUNCTION_CODE::NORMALIZE_SPACE_1,
-                     [](Context context, Stack stack) -> XPathObject {
-                         if (stack.size() < 1) {
-                            throw std::runtime_error("normalize-space needs one arguments");
-                        }
+    registry.emplace(
+        FUNCTION_CODE::NORMALIZE_SPACE_1,
+        [](Context context, Stack stack) -> XPathObject {
+            if (stack.size() < 1) {
+                throw std::runtime_error("normalize-space needs one arguments");
+            }
 
-                        std::string str = functions::normalizeSpace(stack.top().asString());
+            std::string str = functions::normalizeSpace(stack.top().asString());
 
-                        stack.pop();
+            stack.pop();
 
-                        return XPathObject(str);
-                     });
+            return XPathObject(str);
+        });
 
-    registry.emplace(FUNCTION_CODE::TRANSLATE_3,
-                     [](Context context, Stack stack) -> XPathObject {
-                        GET_THREE_STACK_STRINGS(translate);
-                         return XPathObject(functions::translate(str1, str2, str3));
-                     });
+    registry.emplace(
+        FUNCTION_CODE::TRANSLATE_3,
+        [](Context context, Stack stack) -> XPathObject {
+            GET_THREE_STACK_STRINGS(translate);
+            return XPathObject(functions::translate(str1, str2, str3));
+        });
 
     registry.emplace(
         FUNCTION_CODE::BOOLEAN_1,

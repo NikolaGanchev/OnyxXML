@@ -72,7 +72,8 @@ bool VirtualMachine::DocumentOrder::compare(Node* a, Node* b) {
         b = b->getParentNode();
     }
 
-    if (a->getXPathType() == Node::XPathType::ROOT || b->getXPathType() == Node::XPathType::ROOT) {
+    if (a->getXPathType() == Node::XPathType::ROOT ||
+        b->getXPathType() == Node::XPathType::ROOT) {
         return true;
     }
 
@@ -90,8 +91,7 @@ VirtualMachine::ExecutionContext::ExecutionContext()
 void VirtualMachine::DocumentOrder::normalizeDocumentOrderSet(
     std::vector<Node*>& nodeset) {
     std::sort(nodeset.begin(), nodeset.end(),
-              [this](Node* a, Node* b) { 
-                return this->compare(a, b); });
+              [this](Node* a, Node* b) { return this->compare(a, b); });
 
     nodeset.erase(std::unique(nodeset.begin(), nodeset.end()), nodeset.end());
 }
@@ -102,7 +102,9 @@ void VirtualMachine::DocumentOrder::normalizeDocumentOrderSet(
                                  " because data stack is empty"); \
     }
 
-VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current, std::function<XPathObject(std::string_view)> variableProvider) {
+VirtualMachine::ExecutionResult VirtualMachine::executeOn(
+    Node* current,
+    std::function<XPathObject(std::string_view)> variableProvider) {
     static VirtualMachine::FunctionRegistry functionRegistry =
         registerFunctions();
 
@@ -133,13 +135,14 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current, std::fu
                 EMPTY_STACK_GUARD(HALT);
 
                 return ExecutionResult(std::move(ec.temporaryNodes),
-                                    std::move(ec.dataStack.top()));
+                                       std::move(ec.dataStack.top()));
             };
             case OPCODE::LOAD_CONSTANT: {
                 uint32_t address = instruction.getOperandImm();
 
                 if (address >= data.size()) {
-                    throw std::runtime_error("Data address out of bounds in LOAD_CONSTANT");
+                    throw std::runtime_error(
+                        "Data address out of bounds in LOAD_CONSTANT");
                 }
 
                 ec.dataStack.push(data[address]);
@@ -176,7 +179,8 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current, std::fu
                 uint32_t address = instruction.getOperandImm();
 
                 if (address >= data.size()) {
-                    throw std::runtime_error("Data address out of bounds in LOAD_VARIABLE");
+                    throw std::runtime_error(
+                        "Data address out of bounds in LOAD_VARIABLE");
                 }
 
                 if (!data[address].isString()) {
@@ -263,11 +267,13 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current, std::fu
             case OPCODE::CONTEXT_NODE_TEST: {
                 EMPTY_STACK_GUARD(CONTEXT_NODE_TEST);
 
-                // Encode special predicate behaviour (ancestor::div[5] means ancestor::div[position() == 5])
-                // This cannot be resolved any earlier, because until evaluation is is hard to determine
-                // the type of the result in the predicate
+                // Encode special predicate behaviour (ancestor::div[5] means
+                // ancestor::div[position() == 5]) This cannot be resolved any
+                // earlier, because until evaluation is is hard to determine the
+                // type of the result in the predicate
                 if (ec.dataStack.top().isNumber()) {
-                    if (context.currentIndex + 1 == ec.dataStack.top().asNumber()) {
+                    if (context.currentIndex + 1 ==
+                        ec.dataStack.top().asNumber()) {
                         context.result.push_back(
                             context.contextSet[context.currentIndex]);
                     }
@@ -421,20 +427,27 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
         }
         case AXIS::ATTRIBUTE: {
             if (contextNode->getXPathType() == Node::XPathType::ELEMENT) {
-                for (size_t i = 0; i < contextNode->getAttributes().size(); i++) {
+                for (size_t i = 0; i < contextNode->getAttributes().size();
+                     i++) {
                     AttributeViewNode tempAttr(contextNode, i);
 
                     if (nodeMatchesTest(&tempAttr, axis, nodeTest)) {
-                        
-                        // TODO AttributeViewNodes need to be pointer level identical for the union to work
-                        // This means we must return existing nodes
-                        // Currently, this is done using a slow linear search
-                        // This can be optimized heavily via a second structure or replacing the vector alltogether, but the memory impact needs to be considered
+                        // TODO AttributeViewNodes need to be pointer level
+                        // identical for the union to work This means we must
+                        // return existing nodes Currently, this is done using a
+                        // slow linear search This can be optimized heavily via
+                        // a second structure or replacing the vector
+                        // alltogether, but the memory impact needs to be
+                        // considered
                         bool found = false;
                         for (size_t j = 0; j < ec.temporaryNodes.size(); j++) {
-                            if (ec.temporaryNodes[j]->getXPathType() == Node::XPathType::ATTRIBUTE) {
-                                AttributeViewNode* ptr = static_cast<AttributeViewNode*>(ec.temporaryNodes[j].get());
-                                if (ptr->getRealNode() == contextNode && ptr->getAttributeOffset() == i) {
+                            if (ec.temporaryNodes[j]->getXPathType() ==
+                                Node::XPathType::ATTRIBUTE) {
+                                AttributeViewNode* ptr =
+                                    static_cast<AttributeViewNode*>(
+                                        ec.temporaryNodes[j].get());
+                                if (ptr->getRealNode() == contextNode &&
+                                    ptr->getAttributeOffset() == i) {
                                     nodeset.push_back(ptr);
                                     found = true;
                                     break;

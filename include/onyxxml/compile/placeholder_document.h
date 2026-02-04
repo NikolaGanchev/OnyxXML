@@ -94,8 +94,8 @@ struct PlaceholderDocument {
      * @return std::unique_ptr<onyx::dynamic::Node>
      */
     template <typename T, typename... Rest>
-    static std::unique_ptr<onyx::dynamic::Node>
-    dynamicTreeWithPlaceholders(const char* name, T&& node, Rest&&... rest)
+    static std::unique_ptr<onyx::dynamic::Node> dynamicTreeWithPlaceholders(
+        const char* name, T&& node, Rest&&... rest)
         requires(onyx::dynamic::isValidNodeChild<T>)
     {
         std::unique_ptr<onyx::dynamic::Node> obj = doc::dynamicTree();
@@ -103,8 +103,7 @@ struct PlaceholderDocument {
         auto placeholderNodes =
             obj->getChildrenByTagName(ctags::Placeholder<"">::TAG_NAME);
 
-        std::unordered_map<std::string, onyx::dynamic::Node*>
-            placeholdersMap;
+        std::unordered_map<std::string, onyx::dynamic::Node*> placeholdersMap;
 
         for (auto& node : placeholderNodes) {
             placeholdersMap.emplace(node->getAttributeValue("name"), node);
@@ -125,8 +124,7 @@ struct PlaceholderDocument {
     template <typename T, typename... Rest>
     static void evaluateDynamicTreeRec(
         onyx::dynamic::Node* result,
-        std::unordered_map<std::string, onyx::dynamic::Node*>&
-            placeholders,
+        std::unordered_map<std::string, onyx::dynamic::Node*>& placeholders,
         const char* name, T&& node, Rest&&... rest)
         requires(onyx::dynamic::isValidNodeChild<T>)
     {
@@ -143,8 +141,7 @@ struct PlaceholderDocument {
      */
     static void evaluateDynamicTreeRec(
         onyx::dynamic::Node* result,
-        std::unordered_map<std::string, onyx::dynamic::Node*>&
-            placeholders) {
+        std::unordered_map<std::string, onyx::dynamic::Node*>& placeholders) {
         return;
     }
 
@@ -156,8 +153,7 @@ struct PlaceholderDocument {
     template <typename T>
     static void evaluateDynamicTreePlaceholder(
         onyx::dynamic::Node* result,
-        std::unordered_map<std::string, onyx::dynamic::Node*>&
-            placeholders,
+        std::unordered_map<std::string, onyx::dynamic::Node*>& placeholders,
         const char* name, T&& node)
         requires(onyx::dynamic::isValidNodeChild<T>)
     {

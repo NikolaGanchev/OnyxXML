@@ -64,7 +64,8 @@ struct XmlDeclaration {
      * @return std::unique_ptr<onyx::dynamic::Node>
      */
     static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {
-        return std::make_unique<onyx::dynamic::tags::XmlDeclaration>(Version, Encoding, std::string_view(Standalone.value) == "yes");
+        return std::make_unique<onyx::dynamic::tags::XmlDeclaration>(
+            Version, Encoding, std::string_view(Standalone.value) == "yes");
     }
 };
 }  // namespace onyx::compile::ctags

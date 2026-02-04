@@ -24,7 +24,7 @@ class DomParser;
 namespace xpath {
 class RootViewNode;
 class AttributeViewNode;
-}
+}  // namespace xpath
 
 /**
  * @brief Checks if the template parameter is s subclass of Node or an

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <istream>
+
 #include "../node.h"
 
 namespace onyx::dynamic::parser {

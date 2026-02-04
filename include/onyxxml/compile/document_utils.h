@@ -38,8 +38,7 @@ struct DocumentUtils {
         } else {
             (
                 ([&] {
-                    if constexpr (onyx::compile::ctags::isAttribute<
-                                      Children>) {
+                    if constexpr (onyx::compile::ctags::isAttribute<Children>) {
                         if (passedAttr) {
                             throw "Cannot add attribute after first child of node.";
                         }
@@ -85,8 +84,7 @@ struct DocumentUtils {
         index = CompileStringUtils::placeStringInArray(result, tagName, index);
         if constexpr (sizeof...(Children) != 0) {
             (([&] {
-                 if constexpr (!onyx::compile::ctags::isAttribute<
-                                   Children>) {
+                 if constexpr (!onyx::compile::ctags::isAttribute<Children>) {
                      throw "Cannot add non-attribute child for void node.";
                  }
 

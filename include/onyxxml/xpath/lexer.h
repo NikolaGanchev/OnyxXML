@@ -96,7 +96,7 @@ class Lexer {
         VARIABLE_REFERENCE,  // 	'$' QName
         END,
 
-        UNARY_MINUS // Used by parser. Not emitted by Lexer
+        UNARY_MINUS  // Used by parser. Not emitted by Lexer
     };
 
     /**
@@ -104,7 +104,8 @@ class Lexer {
      *
      */
     class Token {
-       friend Parser;
+        friend Parser;
+
        private:
         /**
          * @brief The TokenType

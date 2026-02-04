@@ -102,8 +102,8 @@ class Program {
 
     /**
      * @brief Converts a program to a bytecode string
-     * 
-     * @return std::string 
+     *
+     * @return std::string
      */
     std::string toString() const;
 };

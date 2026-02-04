@@ -88,8 +88,8 @@ ONYX_NOINLINE bool isNameChar(Cursor& ch)
 
 /**
  * @brief Same as isNameStartChar but does not recognize ':'
- * 
- * @tparam Cursor 
+ *
+ * @tparam Cursor
  */
 template <typename Cursor>
 ONYX_NOINLINE bool isNCNameStartChar(Cursor& ch)
@@ -116,8 +116,8 @@ ONYX_NOINLINE bool isNCNameStartChar(Cursor& ch)
 
 /**
  * @brief Same as isNameChar but does not recognize ':'
- * 
- * @tparam Cursor 
+ *
+ * @tparam Cursor
  */
 template <typename Cursor>
 ONYX_NOINLINE bool isNCNameChar(Cursor& ch)
@@ -125,8 +125,8 @@ ONYX_NOINLINE bool isNCNameChar(Cursor& ch)
 {
     if ((unsigned char)*ch < 128) [[likely]] {
         return (*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z') ||
-               (*ch >= '0' && *ch <= '9') || *ch == '_' ||
-               *ch == '-' || *ch == '.';
+               (*ch >= '0' && *ch <= '9') || *ch == '_' || *ch == '-' ||
+               *ch == '.';
     }
     uint32_t codepoint = handleUnicodeChar(ch);
     return codepoint == 0xB7 || (codepoint >= 0xC0 && codepoint <= 0xD6) ||
@@ -187,8 +187,8 @@ ONYX_NOINLINE typename Cursor::StringType readNCName(Cursor& pos)
 
 /**
  * @brief A QName is a name of the sort NCName : NCName
- * 
- * @tparam Cursor 
+ *
+ * @tparam Cursor
  */
 template <typename Cursor>
 ONYX_NOINLINE typename Cursor::StringType readQName(Cursor& pos)

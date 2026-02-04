@@ -42,7 +42,8 @@ struct XPathObject {
     explicit XPathObject(std::string s);
 
     /**
-     * @brief Construct a new XPathObject object from a const char*. Delegates to std::string constructor.
+     * @brief Construct a new XPathObject object from a const char*. Delegates
+     * to std::string constructor.
      *
      * @param s
      */

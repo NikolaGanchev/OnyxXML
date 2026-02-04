@@ -56,7 +56,8 @@ struct ProcessingInstruction {
      * @return std::unique_ptr<onyx::dynamic::Node>
      */
     static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {
-        return std::make_unique<onyx::dynamic::tags::ProcessingInstruction>(Target, Instruction);
+        return std::make_unique<onyx::dynamic::tags::ProcessingInstruction>(
+            Target, Instruction);
     }
 };
 }  // namespace onyx::compile::ctags

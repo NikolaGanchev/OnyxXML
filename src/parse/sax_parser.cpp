@@ -1,8 +1,8 @@
 #include "parse/sax_parser.h"
 
 #include "parse/_parse_macro.h"
-#include "parse/string_cursor.h"
 #include "parse/stream_cursor.h"
+#include "parse/string_cursor.h"
 
 namespace onyx::dynamic::parser {
 SaxParser::SaxParser(SaxListener& listener) : listener(listener) {}

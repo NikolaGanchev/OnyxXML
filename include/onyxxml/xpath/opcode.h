@@ -47,9 +47,9 @@ enum class OPCODE : uint8_t {
     LOAD_ROOT = 0x5,
 
     /**
-     * @brief Attempts to load the variable indicated by the variable name provided.
-     * Immediate type instruction.
-     * 
+     * @brief Attempts to load the variable indicated by the variable name
+     * provided. Immediate type instruction.
+     *
      */
     LOAD_VARIABLE = 0x6,
 
@@ -70,7 +70,8 @@ enum class OPCODE : uint8_t {
     /**
      * @brief Takes the nodeset on top of the stack and sorts it into document
      * order. Used after a SELECT call to preceding, ancestor, ancestor-or-self
-     * and preceding-sibling. If the top of the stack is not a nodeset, does not do anything.
+     * and preceding-sibling. If the top of the stack is not a nodeset, does not
+     * do anything.
      *
      */
     SORT = 0x12,

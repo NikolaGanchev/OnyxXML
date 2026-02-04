@@ -1,10 +1,11 @@
 #pragma once
-#include "opcode.h"
-#include "compare_mode.h"
-#include "calculate_mode.h"
-#include "function_code.h"
-#include "axis.h"
 #include <string_view>
+
+#include "axis.h"
+#include "calculate_mode.h"
+#include "compare_mode.h"
+#include "function_code.h"
+#include "opcode.h"
 
 namespace onyx::dynamic::xpath {
 
@@ -73,50 +74,49 @@ class Instruction {
 
     /**
      * @brief Converts an OPCODE to string
-     * 
-     * @param op 
-     * @return std::string_view 
+     *
+     * @param op
+     * @return std::string_view
      */
     static std::string_view opcodeToString(OPCODE op);
 
     /**
      * @brief Converts a COMPARE_MODE to string
-     * 
-     * @param cm 
-     * @return std::string_view 
+     *
+     * @param cm
+     * @return std::string_view
      */
     static std::string_view compareModeToString(COMPARE_MODE cm);
 
     /**
      * @brief Converts a CALCULATE_MODE to string
-     * 
-     * @param cm 
-     * @return std::string_view 
+     *
+     * @param cm
+     * @return std::string_view
      */
     static std::string_view calcModeToString(CALCULATE_MODE cm);
 
     /**
      * @brief Converts a FUNCTION_CODE to string
-     * 
+     *
      * @param fc
-     * @return std::string_view 
+     * @return std::string_view
      */
     static std::string_view functionCodeToString(FUNCTION_CODE fc);
 
     /**
      * @brief Converts an AXIS to string
-     * 
+     *
      * @param a
-     * @return std::string_view 
+     * @return std::string_view
      */
     static std::string_view axisToString(AXIS a);
 
     /**
      * @brief Returns the maximum value of an operand
-     * 
-     * @return uint32_t 
+     *
+     * @return uint32_t
      */
     static uint32_t maxOperand() { return 0x00FFFFFF; }
-
 };
 }  // namespace onyx::dynamic::xpath

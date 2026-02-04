@@ -6,39 +6,45 @@ namespace onyx::dynamic::xpath {
 /**
  * @brief A facade for the XPath compilation and execution pipeline.
  * Compiles an XPath query and allows its repeated execution.
- * 
+ *
  */
 class XPathQuery {
-private:
+   private:
     /**
      * @brief The internal virtual machine.
-     * 
+     *
      */
     VirtualMachine vm;
-public:
+
+   public:
     /**
-     * @brief Holds the execution result objects, as well as the and the storage for the
-     * temporary nodes, such as AttributeViewName and RootViewNode.
-     * 
+     * @brief Holds the execution result objects, as well as the and the storage
+     * for the temporary nodes, such as AttributeViewName and RootViewNode.
+     *
      */
     using Result = VirtualMachine::ExecutionResult;
 
     /**
-     * @brief Construct a new XPathQuery object. Lexes, parses and compiles the query to VirtualMachine bytecode.
-     * 
-     * @param query 
+     * @brief Construct a new XPathQuery object. Lexes, parses and compiles the
+     * query to VirtualMachine bytecode.
+     *
+     * @param query
      */
     XPathQuery(std::string_view query);
 
     /**
      * @brief Executes the query on the given node.
-     * 
-     * @param node 
+     *
+     * @param node
      * @param std::function<XPathObject(std::string_view)>
-     * @return Result 
+     * @return Result
      */
-    Result execute(Node* node, std::function<XPathObject(std::string_view)> variableProvider = [](std::string_view v) -> XPathObject {
-                                                throw std::runtime_error("Found unresolved variable reference to " + std::string(v));
-                                            });
+    Result execute(
+        Node* node,
+        std::function<XPathObject(std::string_view)> variableProvider =
+            [](std::string_view v) -> XPathObject {
+            throw std::runtime_error("Found unresolved variable reference to " +
+                                     std::string(v));
+        });
 };
-};
+};  // namespace onyx::dynamic::xpath

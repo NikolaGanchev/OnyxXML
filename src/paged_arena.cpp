@@ -18,10 +18,10 @@ char* PagedArena::Page::allocateRaw(size_t size, size_t alignment) {
     return ptr;
 }
 
-PagedArena::PagedArena(size_t pageSize) 
+PagedArena::PagedArena(size_t pageSize)
     : pageSize(pageSize), currentPage(nullptr) {}
 
-PagedArena::PagedArena(PagedArena&& other) 
+PagedArena::PagedArena(PagedArena&& other)
     : pageSize(4096), currentPage(nullptr) {
     move(std::move(other));
 }
@@ -34,15 +34,13 @@ PagedArena& PagedArena::operator=(PagedArena&& other) {
     return *this;
 }
 
-PagedArena::~PagedArena() { 
-    this->destroy(); 
-}
+PagedArena::~PagedArena() { this->destroy(); }
 
 void PagedArena::destroy() {
     for (size_t i = 0; i < this->allocations.size(); i++) {
         this->allocations[i]->~Node();
     }
-    
+
     allocations.clear();
     pages.clear();
     currentPage = nullptr;
@@ -61,4 +59,4 @@ void PagedArena::expand(size_t neededSize) {
     pages.push_back(std::make_unique<Page>(neededSize));
     currentPage = pages.back().get();
 }
-} // namespace onyx::dynamic
+}  // namespace onyx::dynamic

@@ -49,37 +49,46 @@ std::string Program::toString() const {
         const Instruction& instr = this->instructions[i];
         OPCODE opcode = instr.getOpcode();
         std::string_view opcodeStr = Instruction::opcodeToString(opcode);
-        
+
         result << opcodeStr;
 
-        if (opcode == OPCODE::LOAD_CONSTANT || opcode == OPCODE::LOAD_VARIABLE) {
+        if (opcode == OPCODE::LOAD_CONSTANT ||
+            opcode == OPCODE::LOAD_VARIABLE) {
             if (instr.getOperandImm() >= this->data.size()) {
-                throw std::runtime_error("Program requires data address that does not exist.");
+                throw std::runtime_error(
+                    "Program requires data address that does not exist.");
             }
-            result << " \"" << this->data[instr.getOperandImm()].asString() << "\"";
+            result << " \"" << this->data[instr.getOperandImm()].asString()
+                   << "\"";
         }
 
-        if (opcode == OPCODE::JUMP 
-            || opcode == OPCODE::JUMP_T
-            || opcode == OPCODE::JUMP_F
-            || opcode == OPCODE::LOOP_ENTER) {
+        if (opcode == OPCODE::JUMP || opcode == OPCODE::JUMP_T ||
+            opcode == OPCODE::JUMP_F || opcode == OPCODE::LOOP_ENTER) {
             result << " " << instr.getOperandImm();
         }
 
         if (opcode == OPCODE::COMPARE) {
-            result << " " << Instruction::compareModeToString(static_cast<COMPARE_MODE>(instr.getOperandImm()));
+            result << " "
+                   << Instruction::compareModeToString(
+                          static_cast<COMPARE_MODE>(instr.getOperandImm()));
         }
-        
+
         if (opcode == OPCODE::CALCULATE) {
-            result << " " << Instruction::calcModeToString(static_cast<CALCULATE_MODE>(instr.getOperandImm()));
+            result << " "
+                   << Instruction::calcModeToString(
+                          static_cast<CALCULATE_MODE>(instr.getOperandImm()));
         }
-        
+
         if (opcode == OPCODE::CALL) {
-            result << " " << Instruction::functionCodeToString(static_cast<FUNCTION_CODE>(instr.getOperandImm()));
+            result << " "
+                   << Instruction::functionCodeToString(
+                          static_cast<FUNCTION_CODE>(instr.getOperandImm()));
         }
-        
+
         if (opcode == OPCODE::SELECT) {
-            result << " " << Instruction::axisToString(static_cast<AXIS>(instr.getOperandImm()));
+            result << " "
+                   << Instruction::axisToString(
+                          static_cast<AXIS>(instr.getOperandImm()));
         }
 
         result << "\n";
