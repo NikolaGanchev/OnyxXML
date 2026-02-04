@@ -1,5 +1,6 @@
 #pragma once
 
+#include <istream>
 #include "../node.h"
 
 namespace onyx::dynamic::parser {
@@ -108,5 +109,7 @@ class SaxParser {
      * @param input
      */
     void parse(std::string_view input);
+
+    void parse(std::istream& input);
 };
 }  // namespace onyx::dynamic::parser

@@ -918,5 +918,41 @@ TEST_CASE("SAXParser parses complex XML") {
     SaxParser parser(listener);
 
     parser.parse(input);
+
+    REQUIRE(listener.getEventCount() == 53);
+}
+
+TEST_CASE("SAXParser parses complex XML stream") {
+    using namespace onyx::parser;
+    
+    std::stringstream input;
+    input.str(
+        "<html lang=\"en\" theme=\"dark\"><head><meta charset=\"UTF-8\"/><meta "
+        "name=\"viewport\" content=\"width=device-width, "
+        "initial-scale=1.0\"/><title>Complex Test Page</title><link "
+        "rel=\"stylesheet\" "
+        "href=\"/styles/main.css\"/></head><body><header><nav><ul><li><a "
+        "href=\"#home\">Home</a></li><li><a href=\"#about\">About "
+        "Us</a></li></ul></nav></header><main><section "
+        "id=\"introduction\"><h1>Introduction</h1><p>Welcome to the complex "
+        "HTML structure test case.</p><p>This test includes various nested "
+        "elements, attributes, and content.</p><form "
+        "name=\"contact-form\"><label for=\"name\">Your Name:</label><input "
+        "type=\"text\" id=\"name\" name=\"name\"/><label for=\"email\">Your "
+        "Email:</label><input type=\"email\" id=\"email\" "
+        "name=\"email\"/><button "
+        "type=\"submit\">Submit</button></form></section><section "
+        "id=\"features\"><h2>Features</h2><ul><li>Feature 1</li><li>Feature "
+        "2</li><li>Feature 3</li></ul><p>These are the key features of the "
+        "application.</p></section></main><footer><p>© 2025 Complex HTML Test "
+        "Page</p><a href=\"https://www.example.com\">Privacy "
+        "Policy</a></footer></body></html>");
+
+    std::stringstream str;
+    SaxListenerLogger listener(str);
+    SaxParser parser(listener);
+
+    parser.parse(input);
+
     REQUIRE(listener.getEventCount() == 53);
 }

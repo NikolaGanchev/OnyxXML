@@ -369,7 +369,7 @@ SaxParser parser(listener);
 parser.parse(xmlString);
 ```
 
-The SAX Parser is generally slower than the DOM Parser due to the function call overhead. However, it allows massive savings in memory as the full DOM tree is not constructed.
+The SAX Parser is generally slower than the DOM Parser due to the function call overhead. However, it allows massive savings in memory as the full DOM tree is not constructed. Also supports stream parsing.
 
 ### GenericNode API
 

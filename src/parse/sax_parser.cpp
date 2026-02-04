@@ -2,23 +2,10 @@
 
 #include "parse/_parse_macro.h"
 #include "parse/string_cursor.h"
+#include "parse/stream_cursor.h"
 
 namespace onyx::dynamic::parser {
 SaxParser::SaxParser(SaxListener& listener) : listener(listener) {}
-
-void SaxParser::parse(std::string_view input) {
-    std::vector<std::string_view> stack;
-    std::vector<std::string_view> attributeNames;
-    std::vector<std::pair<std::string_view, bool>> attributeValues;
-
-    using StringType = StringCursor::StringType;
-    StringCursor pos(input.data());
-
-    std::string_view root = ".empty";
-
-    stack.push_back(root);
-
-    skipWhitespace(pos);
 
 #define TEXT_ACTION(text, hasEntities, pos)                        \
     this->listener.onText(hasEntities ? text::expandEntities(text) \
@@ -75,6 +62,20 @@ void SaxParser::parse(std::string_view input) {
     }                                                             \
     stack.pop_back();
 
+void SaxParser::parse(std::string_view input) {
+    std::vector<std::string_view> stack;
+    std::vector<std::string_view> attributeNames;
+    std::vector<std::pair<std::string_view, bool>> attributeValues;
+
+    using StringType = StringCursor::StringType;
+    StringCursor pos(input.data());
+
+    std::string_view root = ".empty";
+
+    stack.push_back(root);
+
+    skipWhitespace(pos);
+
     this->listener.onStart();
     try {
         PARSE_BODY(true);
@@ -83,6 +84,39 @@ void SaxParser::parse(std::string_view input) {
     }
 
     this->listener.onEnd();
+
+    if (stack.size() != 1 || stack[0] != root) {
+        throw std::invalid_argument("Unclosed tags left");
+    }
+}
+
+void SaxParser::parse(std::istream& input) {
+    std::vector<std::string_view> stack;
+    std::vector<std::string_view> attributeNames;
+    std::vector<std::pair<std::string_view, bool>> attributeValues;
+
+    using StringType = StringCursor::StringType;
+    StreamCursor pos(input);
+
+    std::string_view root = ".empty";
+
+    stack.push_back(root);
+
+    skipWhitespace(pos);
+
+    this->listener.onStart();
+    try {
+        PARSE_BODY(true);
+    } catch (std::exception& e) {
+        this->listener.onException(e);
+    }
+
+    this->listener.onEnd();
+
+    if (stack.size() != 1 || stack[0] != root) {
+        throw std::invalid_argument("Unclosed tags left");
+    }
+}
 
 #undef TEXT_ACTION
 #undef COMMENT_ACTION
@@ -93,9 +127,4 @@ void SaxParser::parse(std::string_view input) {
 #undef XML_DECLARATION_ACTION
 #undef DOCTYPE_ACTION
 #undef CLOSE_ACTION
-
-    if (stack.size() != 1 || stack[0] != root) {
-        throw std::invalid_argument("Unclosed tags left");
-    }
-}
 }  // namespace onyx::dynamic::parser
