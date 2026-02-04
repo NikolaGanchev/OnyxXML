@@ -138,6 +138,10 @@ void pushData(std::vector<XPathObject>& data, double num) {
     data.emplace_back(num);
 }
 
+bool isReverseAxis(AXIS axis) {
+    return axis == AXIS::ANCESTOR || axis == AXIS::ANCESTOR_OR_SELF || axis == AXIS::PRECEDING || axis == AXIS::PRECEDING_SIBLING;
+}
+
 std::unique_ptr<Program> Compiler::compile() {
     // this is currently very wasteful on data; it will record the same string/number twice on different indices
     // this needs to be optimized in the future - TODO
@@ -362,13 +366,25 @@ std::unique_ptr<Program> Compiler::compile() {
 
                 // predicates must be handled one by one in separate loops
                 // each one of them is a resolveState of the step
+
+                // Crucially, ancestor::node()[1] returns the the first ancestor in reverse order,
+                // not in document order. This means it returns the parent, not the root.
+                // However, expressions force the sorting of the result into document order
+                // so, (ancestor::node())[1] will actually return the root.
+                // This means, after every step, a SORT instruction must be emitted
+                // Since only 4 axis generate the reverse order, this can be optimized.
+                // 'preceding', 'ancestor', 'ancestor-or-self' and 'preceding-sibling'.
                 if (currentCompileNode.resolveState == 0) {
                     pushInstruction(instructions, Instruction(OPCODE::LOAD_CONTEXT_NODE));
                     pushData(data, std::move(step->test));   
                     pushInstruction(instructions, Instruction(OPCODE::LOAD_CONSTANT, data.size() - 1));
-                    pushInstruction(instructions, Instruction(OPCODE::SELECT, resolveAxis(step->axis)));
+                    AXIS axis = resolveAxis(step->axis);
+                    pushInstruction(instructions, Instruction(OPCODE::SELECT, axis));
 
                     if (step->predicates.empty()) {
+                        if (isReverseAxis(axis)) {
+                            pushInstruction(instructions, Instruction(OPCODE::SORT));  
+                        }
                         stack.pop();
                         // exit early to avoid adding of first predicate
                         break;
@@ -395,6 +411,10 @@ std::unique_ptr<Program> Compiler::compile() {
                     // we have closed the predicate
                     // if there are no more predicates, we exit early
                     if (currentCompileNode.resolveState >= step->predicates.size()) {
+                        AXIS axis = resolveAxis(step->axis);
+                        if (isReverseAxis(axis)) {
+                            pushInstruction(instructions, Instruction(OPCODE::SORT));  
+                        }
                         stack.pop();
                         break;
                     }
@@ -417,15 +437,6 @@ std::unique_ptr<Program> Compiler::compile() {
 
                 // logic is very similar to Step
                 // The main difference is that we must resolve the expression
-                // Then, if the result is a nodeset, the expression modifies the order of nodesets
-                // Precisely, ancestor::node()[1] returns the the first ancestor in reverse order,
-                // not in document order. This means it returns the parent, not the root.
-                // However, expressions force the sorting of the result into document order
-                // so, (ancestor::node())[1] will actually return the root.
-                // This means, after every expression, a SORT instruction must be emitted
-                // Crucially, only the Virtual machine can track how a set is ordered, so this operation cannot
-                // be properly optimized away easily from the compiler side, despite only 4 axis generating reverse order:
-                // 'preceding', 'ancestor', 'ancestor-or-self' and 'preceding-sibling'.
 
                 // predicates must be handled one by one in separate loops
                 // each one of them is a resolveState of the expression
@@ -437,8 +448,6 @@ std::unique_ptr<Program> Compiler::compile() {
                     break;
                 } else if (currentCompileNode.resolveState == 1) {
                     // the subject is now visited
-                    pushInstruction(instructions, Instruction(OPCODE::SORT));
-
                     // If there are no predicates, we are finished
                     if (expression->predicates.empty()) {
                         stack.pop();

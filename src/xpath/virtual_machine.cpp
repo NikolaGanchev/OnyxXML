@@ -64,6 +64,18 @@ void VirtualMachine::DocumentOrder::buildIndex(Node* root) {
 }
 
 bool VirtualMachine::DocumentOrder::compare(Node* a, Node* b) {
+    if (a->getXPathType() == Node::XPathType::ATTRIBUTE) {
+        a = a->getParentNode();
+    }
+
+    if (b->getXPathType() == Node::XPathType::ATTRIBUTE) {
+        b = b->getParentNode();
+    }
+
+    if (a->getXPathType() == Node::XPathType::ROOT || b->getXPathType() == Node::XPathType::ROOT) {
+        return true;
+    }
+
     return documentOrderMap[a] < documentOrderMap[b];
 }
 
@@ -78,7 +90,8 @@ VirtualMachine::ExecutionContext::ExecutionContext()
 void VirtualMachine::DocumentOrder::normalizeDocumentOrderSet(
     std::vector<Node*>& nodeset) {
     std::sort(nodeset.begin(), nodeset.end(),
-              [this](Node* a, Node* b) { return this->compare(a, b); });
+              [this](Node* a, Node* b) { 
+                return this->compare(a, b); });
 
     nodeset.erase(std::unique(nodeset.begin(), nodeset.end()), nodeset.end());
 }
@@ -284,7 +297,7 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(Node* current, std::fu
                     ec.root.findRoot(context.contextSet[context.currentIndex]);
                     ec.order.buildIndex(ec.root.getDocumentRoot());
 
-                    ec.order.normalizeDocumentOrderSet(context.contextSet);
+                    ec.order.normalizeDocumentOrderSet(context.result);
                 }
 
                 ec.dataStack.push(XPathObject(context.result));
@@ -413,6 +426,27 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
                     AttributeViewNode tempAttr(contextNode, i);
 
                     if (nodeMatchesTest(&tempAttr, axis, nodeTest)) {
+                        
+                        // TODO AttributeViewNodes need to be pointer level identical for the union to work
+                        // This means we must return existing nodes
+                        // Currently, this is done using a slow linear search
+                        // This can be optimized heavily via a second structure or replacing the vector alltogether, but the memory impact needs to be considered
+                        bool found = false;
+                        for (size_t j = 0; j < ec.temporaryNodes.size(); j++) {
+                            if (ec.temporaryNodes[j]->getXPathType() == Node::XPathType::ATTRIBUTE) {
+                                AttributeViewNode* ptr = static_cast<AttributeViewNode*>(ec.temporaryNodes[j].get());
+                                if (ptr->getRealNode() == contextNode && ptr->getAttributeOffset() == i) {
+                                    nodeset.push_back(ptr);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (found) {
+                            continue;
+                        }
+
                         std::unique_ptr<AttributeViewNode> attrNode =
                             std::make_unique<AttributeViewNode>(contextNode, i);
                         Node* temp = attrNode.get();

@@ -2339,7 +2339,7 @@ TEST_CASE("XPath execute axis test") {
     Node* nodeD = nodeC->getChildren()[0];
     XPathQuery::Result resAnc = std::move(XPathQuery("ancestor::*").execute(nodeD));
     REQUIRE(resAnc.object.asNodeset().size() == 3);
-    REQUIRE(resAnc.object.asNodeset()[0]->getTagName() == "C");
+    REQUIRE(resAnc.object.asNodeset()[0]->getTagName() == "root");
 
     Node* nodeB = doc.getChildren()[0]->getChildren()[0];
     XPathQuery::Result resFoll = std::move(XPathQuery("following::*").execute(nodeB));
@@ -2457,6 +2457,51 @@ TEST_CASE("XPath execute complex path step predicates") {
     XPathQuery::Result res2 = std::move(XPathQuery("(/root/section/div)[2]").execute(&doc));
     REQUIRE(res2.object.asNodeset().size() == 1);
     REQUIRE(res2.object.asNodeset()[0]->getAttributeValue("class") == "b");
+}
+
+TEST_CASE("XPath execute maintains document order on paths with reverse axis") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("section", false, Attribute("id", "s1"),
+            GenericNode("div", false, Attribute("class", "a")),
+            GenericNode("div", false, Attribute("class", "b")),
+            GenericNode("div", false, Attribute("class", "a"))
+        ),
+        GenericNode("section", false, Attribute("id", "s2"),
+            GenericNode("div", false, Attribute("class", "a")),
+            GenericNode("div", false, Attribute("class", "b"))
+        )
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("//section[@id='s1']/div[@class = 'a']/ancestor::*").execute(&doc));
+    REQUIRE(res1.object.asNodeset().size() == 2);
+    REQUIRE(res1.object.asNodeset()[0]->getTagName() == "root");
+    REQUIRE(res1.object.asNodeset()[1]->getTagName() == "section");
+}
+
+TEST_CASE("XPath execute correctly unions AttributeViewNode") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("section", false, Attribute("id", "s1"),
+            GenericNode("div", false, Attribute("class", "a"), Attribute("id", "1")),
+            GenericNode("div", false, Attribute("class", "b"), Attribute("id", "2")),
+            GenericNode("div", false, Attribute("class", "a"), Attribute("id", "3"))
+        ),
+        GenericNode("section", false, Attribute("id", "s2"),
+            GenericNode("div", false, Attribute("class", "a"), Attribute("id", "4")),
+            GenericNode("div", false, Attribute("class", "b"), Attribute("id", "5"))
+        )
+    );
+
+    XPathQuery::Result res1 = std::move(XPathQuery("//@class[. = 'a'] | //@class[. = 'a']").execute(&doc));
+    REQUIRE(res1.object.asNodeset().size() == 3);
+    REQUIRE(res1.object.asNodeset()[0]->getParentNode()->getAttributeValue("id") == "1");
+    REQUIRE(res1.object.asNodeset()[1]->getParentNode()->getAttributeValue("id") == "3");
+    REQUIRE(res1.object.asNodeset()[2]->getParentNode()->getAttributeValue("id") == "4");
 }
 
 TEST_CASE("XPath execute multiple predicates") {
