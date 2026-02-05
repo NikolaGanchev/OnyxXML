@@ -2539,6 +2539,33 @@ TEST_CASE("XPath execute correctly unions AttributeViewNode") {
     REQUIRE(res1.object.asNodeset()[2]->getParentNode()->getAttributeValue("id") == "4");
 }
 
+TEST_CASE("XPath execute correctly orders AttributeViewNode and RootViewNode") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", false,
+        GenericNode("section", false, Attribute("id", "s1"),
+            GenericNode("div", false, Attribute("class", "a"), Attribute("id", "1")),
+            GenericNode("div", false, Attribute("class", "b"), Attribute("id", "2")),
+            GenericNode("div", false, Attribute("class", "a"), Attribute("id", "3"))
+        ),
+        GenericNode("section", false, Attribute("id", "s2"),
+            GenericNode("div", false, Attribute("class", "a"), Attribute("id", "4")),
+            GenericNode("div", false, Attribute("class", "b"), Attribute("id", "5"))
+        )
+    );
+
+    XPathQuery::Result res1 = XPathQuery("//div[@class='b'] | //@class[. = 'a'] | /ancestor::node()").execute(&doc);
+    REQUIRE(res1.object.asNodeset().size() == 6);
+    REQUIRE(res1.object.asNodeset()[0]->getChildrenCount() == 1);
+    REQUIRE(res1.object.asNodeset()[0]->getFirstChild()->getTagName() == "root");
+    REQUIRE(res1.object.asNodeset()[1]->getParentNode()->getAttributeValue("id") == "1");
+    REQUIRE(res1.object.asNodeset()[2]->getAttributeValue("id") == "2");
+    REQUIRE(res1.object.asNodeset()[3]->getParentNode()->getAttributeValue("id") == "3");
+    REQUIRE(res1.object.asNodeset()[4]->getParentNode()->getAttributeValue("id") == "4");
+    REQUIRE(res1.object.asNodeset()[5]->getAttributeValue("id") == "5");
+}
+
 TEST_CASE("XPath execute multiple predicates") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;

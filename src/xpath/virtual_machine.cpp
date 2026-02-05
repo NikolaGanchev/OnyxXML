@@ -72,9 +72,12 @@ bool VirtualMachine::DocumentOrder::compare(Node* a, Node* b) {
         b = b->getParentNode();
     }
 
-    if (a->getXPathType() == Node::XPathType::ROOT ||
-        b->getXPathType() == Node::XPathType::ROOT) {
+    if (a->getXPathType() == Node::XPathType::ROOT) {
         return true;
+    }
+
+    if (b->getXPathType() == Node::XPathType::ROOT) {
+        return false;
     }
 
     return documentOrderMap[a] < documentOrderMap[b];
