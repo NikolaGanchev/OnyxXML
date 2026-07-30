@@ -99,7 +99,7 @@ void SaxParser::parse(std::string_view input) {
 
     StringSaxParserPolicy policy{this->listener};
 
-    policy.stack.push_back(std::string(root));
+    policy.stack.push_back(root);
 
     skipWhitespace(pos);
 
