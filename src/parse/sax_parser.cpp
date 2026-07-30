@@ -19,12 +19,13 @@ void SaxParser::parse(std::string_view input) {
         using StringType = CursorType::StringType;
 
         ONYX_INLINE void textAction(StringType text, bool hasEntities,
-                               CursorType& cursor) {
+                                    CursorType& cursor) {
             this->listener.onText(hasEntities ? text::expandEntities(text)
                                               : std::string(text));
         }
 
-        ONYX_INLINE void commentAction(StringType commentText, CursorType& cursor) {
+        ONYX_INLINE void commentAction(StringType commentText,
+                                       CursorType& cursor) {
             this->listener.onComment(std::string(commentText));
         }
 
@@ -33,35 +34,35 @@ void SaxParser::parse(std::string_view input) {
         }
 
         ONYX_INLINE void instructionAction(StringType tagName,
-                                      StringType processingInstruction,
-                                      CursorType& cursor) {
+                                           StringType processingInstruction,
+                                           CursorType& cursor) {
             this->listener.onInstruction(std::string(tagName),
                                          std::string(processingInstruction));
         }
 
         ONYX_INLINE void attributeAction(StringType attributeName,
-                                    StringType attributeValue, bool hasEntities,
-                                    CursorType& cursor) {
+                                         StringType attributeValue,
+                                         bool hasEntities, CursorType& cursor) {
             attributeNames.push_back(attributeName);
             attributeValues.push_back(
                 std::make_pair(attributeValue, hasEntities));
         }
 
-        ONYX_INLINE void xmlDeclarationAction(StringType version,
-                                         StringType encoding, bool hasEncoding,
-                                         bool isStandalone, bool hasStandalone,
-                                         CursorType& cursor) {
+        ONYX_INLINE void xmlDeclarationAction(
+            StringType version, StringType encoding, bool hasEncoding,
+            bool isStandalone, bool hasStandalone, CursorType& cursor) {
             this->listener.onXMLDeclaration(std::string(version),
                                             std::string(encoding), hasEncoding,
                                             isStandalone, hasStandalone);
         }
 
-        ONYX_INLINE void doctypeAction(StringType doctypeText, CursorType& cursor) {
+        ONYX_INLINE void doctypeAction(StringType doctypeText,
+                                       CursorType& cursor) {
             this->listener.onDoctype(std::string(doctypeText));
         }
 
         ONYX_INLINE void openAction(StringType tagName, bool isSelfClosing,
-                               CursorType& cursor) {
+                                    CursorType& cursor) {
             std::vector<Attribute> attributes;
             for (int i = 0; i < attributeNames.size(); i++) {
                 attributes.emplace_back(
@@ -106,7 +107,8 @@ void SaxParser::parse(std::string_view input) {
     this->listener.onStart();
 
     try {
-        parseBody<true, StringType, StringCursor, StringSaxParserPolicy>(pos, policy);
+        parseBody<true, StringType, StringCursor, StringSaxParserPolicy>(
+            pos, policy);
     } catch (std::exception& e) {
         this->listener.onException(e);
     }
@@ -130,49 +132,51 @@ void SaxParser::parse(std::istream& input) {
         using StringType = StreamCursor::StringType;
 
         ONYX_INLINE void textAction(StringType&& text, bool hasEntities,
-                               CursorType& cursor) {
+                                    CursorType& cursor) {
             this->listener.onText(hasEntities ? text::expandEntities(text)
                                               : std::move(text));
         }
 
-        ONYX_INLINE void commentAction(StringType&& commentText, CursorType& cursor) {
+        ONYX_INLINE void commentAction(StringType&& commentText,
+                                       CursorType& cursor) {
             this->listener.onComment(std::move(commentText));
         }
 
-        ONYX_INLINE void cdataAction(StringType&& cdataText, CursorType& cursor) {
+        ONYX_INLINE void cdataAction(StringType&& cdataText,
+                                     CursorType& cursor) {
             this->listener.onCData(std::move(cdataText));
         }
 
         ONYX_INLINE void instructionAction(StringType&& tagName,
-                                      StringType&& processingInstruction,
-                                      CursorType& cursor) {
+                                           StringType&& processingInstruction,
+                                           CursorType& cursor) {
             this->listener.onInstruction(std::move(tagName),
                                          std::move(processingInstruction));
         }
 
         ONYX_INLINE void attributeAction(StringType&& attributeName,
-                                    StringType&& attributeValue, bool hasEntities,
-                                    CursorType& cursor) {
+                                         StringType&& attributeValue,
+                                         bool hasEntities, CursorType& cursor) {
             attributeNames.push_back(std::move(attributeName));
             attributeValues.push_back(
                 std::make_pair(std::move(attributeValue), hasEntities));
         }
 
-        ONYX_INLINE void xmlDeclarationAction(StringType&& version,
-                                         StringType&& encoding, bool hasEncoding,
-                                         bool isStandalone, bool hasStandalone,
-                                         CursorType& cursor) {
+        ONYX_INLINE void xmlDeclarationAction(
+            StringType&& version, StringType&& encoding, bool hasEncoding,
+            bool isStandalone, bool hasStandalone, CursorType& cursor) {
             this->listener.onXMLDeclaration(std::move(version),
                                             std::move(encoding), hasEncoding,
                                             isStandalone, hasStandalone);
         }
 
-        ONYX_INLINE void doctypeAction(StringType&& doctypeText, CursorType& cursor) {
+        ONYX_INLINE void doctypeAction(StringType&& doctypeText,
+                                       CursorType& cursor) {
             this->listener.onDoctype(std::move(doctypeText));
         }
 
         ONYX_INLINE void openAction(StringType&& tagName, bool isSelfClosing,
-                               CursorType& cursor) {
+                                    CursorType& cursor) {
             std::vector<Attribute> attributes;
             for (int i = 0; i < attributeNames.size(); i++) {
                 attributes.emplace_back(
@@ -216,11 +220,12 @@ void SaxParser::parse(std::istream& input) {
 
     this->listener.onStart();
     try {
-        parseBody<true, StringType, StreamCursor, StreamSaxParserPolicy>(pos, policy);
+        parseBody<true, StringType, StreamCursor, StreamSaxParserPolicy>(
+            pos, policy);
     } catch (std::exception& e) {
         this->listener.onException(e);
     }
-    
+
     if (policy.stack.size() != 1 || policy.stack[0] != root) {
         std::invalid_argument e("Unclosed tags left");
         this->listener.onException(e);

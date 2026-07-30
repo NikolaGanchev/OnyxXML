@@ -18,16 +18,17 @@
 namespace onyx::dynamic::parser {
 
 template <bool validate, typename CursorType>
-ONYX_INLINE void incrementPosIfEqualsOrThrow(CursorType& pos, char character, const char* exceptionString) {
+ONYX_INLINE void incrementPosIfEqualsOrThrow(CursorType& pos, char character,
+                                             const char* exceptionString) {
     if (validate && *pos != character) {
         throw std::invalid_argument(exceptionString);
     }
     pos++;
 }
 
-template <bool validate, typename StringType, typename CursorType, typename Policy>
-ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
-{
+template <bool validate, typename StringType, typename CursorType,
+          typename Policy>
+ONYX_INLINE void parseBody(CursorType& pos, Policy& policy) {
     bool firstTag = true;
     while (*pos != '\0') {
         /* Invariant - always at the start of either a tag or a sequence of
@@ -168,8 +169,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                     }
                     /* Invariant - pos at ?*/
                     if (pos.peek(1) != '>') {
-                        throw std::invalid_argument(
-                            "Unclosed XML declaration");
+                        throw std::invalid_argument("Unclosed XML declaration");
                     }
                     pos++;
                     if (*pos == '\0') {
@@ -208,8 +208,9 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                     bool isStandalone = (standalone[0] == 'y');
                     if (encoding.size() == 0) encoding = "UTF-8";
 
-                    policy.xmlDeclarationAction(std::move(version), std::move(encoding), hasEncoding,
-                                           isStandalone, hasStandalone, pos);
+                    policy.xmlDeclarationAction(
+                        std::move(version), std::move(encoding), hasEncoding,
+                        isStandalone, hasStandalone, pos);
                     continue;
                 }
             }
@@ -236,7 +237,8 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
             pos.advance(2);
 
             /* Invariant - just after processing instruction end */
-            policy.instructionAction(std::move(tagName), std::move(processingInstruction), pos);
+            policy.instructionAction(std::move(tagName),
+                                     std::move(processingInstruction), pos);
             firstTag = false;
             continue;
         } else if (*pos == '!') {
@@ -247,8 +249,8 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
             if (*pos == '-') {
                 pos++;
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, '-',
-                                                 "Premature end of comment");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, '-', "Premature end of comment");
                 /* Invariant - right after <!-- of comment */
                 if (validate && *pos == '\0') {
                     throw std::invalid_argument("Premature end of document");
@@ -278,12 +280,18 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 continue;
             } else if (*pos == '[') {
                 pos++;
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'C', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'D', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'A', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'T', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'A', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, '[', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'C', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'D', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'A', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'T', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'A', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, '[', "Premature end of CDATA section");
                 /* Invariant - right after <![CDATA[ */
                 if (validate && *pos == '\0') {
                     throw std::invalid_argument("Premature end of document");
@@ -309,13 +317,20 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 continue;
             } else if (*pos == 'D') {
                 pos++;
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'O', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'C', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'T', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'Y', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'P', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'E', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, ' ', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'O', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'C', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'T', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'Y', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'P', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, 'E', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(
+                    pos, ' ', "Premature end of DOCTYPE section");
 
                 pos.beginCapture();
 
@@ -419,8 +434,9 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                         "No whitespace after attribute closing quote");
                 }
 
-                policy.attributeAction(std::move(attributeName), std::move(attributeValue), hasEntities,
-                                 pos);
+                policy.attributeAction(std::move(attributeName),
+                                       std::move(attributeValue), hasEntities,
+                                       pos);
 
                 /* Continues to either >, /> or another attribute */
                 skipWhitespace(pos);
@@ -463,5 +479,5 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
             policy.closeAction(std::move(tagName), pos);
         }
     }
-}  
-}// namespace onyx::dynamic::parser
+}
+}  // namespace onyx::dynamic::parser
