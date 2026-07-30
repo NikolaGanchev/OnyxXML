@@ -25,7 +25,7 @@ namespace onyx::dynamic::parser {
     pos++;
 
 template <bool validate, typename StringType, typename CursorType, typename Policy>
-void parseBody(CursorType& pos, Policy& policy)
+ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 {
     bool firstTag = true;
     while (*pos != '\0') {

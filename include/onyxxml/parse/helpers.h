@@ -17,6 +17,14 @@
 #define ONYX_NOINLINE
 #endif
 
+#if defined(_MSC_VER)
+#define ONYX_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+#define ONYX_INLINE __attribute__((always_inline)) inline
+#else
+#define ONYX_INLINE inline
+#endif
+
 namespace onyx::dynamic::parser {
 
 bool isWhitespace(const char pos);
