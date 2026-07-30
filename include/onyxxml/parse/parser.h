@@ -17,12 +17,13 @@
 
 namespace onyx::dynamic::parser {
 
-#define INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, character, \
-                                         exceptionString)          \
-    if (validate && *pos != character) {                           \
-        throw std::invalid_argument(exceptionString);              \
-    }                                                              \
+template <bool validate, typename CursorType>
+ONYX_INLINE void incrementPosIfEqualsOrThrow(CursorType& pos, char character, const char* exceptionString) {
+    if (validate && *pos != character) {
+        throw std::invalid_argument(exceptionString);
+    }
     pos++;
+}
 
 template <bool validate, typename StringType, typename CursorType, typename Policy>
 ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
@@ -246,7 +247,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
             if (*pos == '-') {
                 pos++;
-                INCREMENT_POS_IF_EQUALS_OR_THROW(validate, pos, '-',
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, '-',
                                                  "Premature end of comment");
                 /* Invariant - right after <!-- of comment */
                 if (validate && *pos == '\0') {
@@ -277,18 +278,12 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 continue;
             } else if (*pos == '[') {
                 pos++;
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'C', "Premature end of CDATA section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'D', "Premature end of CDATA section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'A', "Premature end of CDATA section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'T', "Premature end of CDATA section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'A', "Premature end of CDATA section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, '[', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'C', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'D', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'A', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'T', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'A', "Premature end of CDATA section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, '[', "Premature end of CDATA section");
                 /* Invariant - right after <![CDATA[ */
                 if (validate && *pos == '\0') {
                     throw std::invalid_argument("Premature end of document");
@@ -314,20 +309,13 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 continue;
             } else if (*pos == 'D') {
                 pos++;
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'O', "Premature end of DOCTYPE section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'C', "Premature end of DOCTYPE section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'T', "Premature end of DOCTYPE section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'Y', "Premature end of DOCTYPE section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'P', "Premature end of DOCTYPE section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, 'E', "Premature end of DOCTYPE section");
-                INCREMENT_POS_IF_EQUALS_OR_THROW(
-                    validate, pos, ' ', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'O', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'C', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'T', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'Y', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'P', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, 'E', "Premature end of DOCTYPE section");
+                incrementPosIfEqualsOrThrow<validate, CursorType>(pos, ' ', "Premature end of DOCTYPE section");
 
                 pos.beginCapture();
 
