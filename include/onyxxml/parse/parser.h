@@ -53,7 +53,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
             StringType text = pos.getCaptured();
             pos.bringToCapture();
 
-            policy.textAction(text, hasEntities, pos);
+            policy.textAction(std::move(text), hasEntities, pos);
 
             continue;
         }
@@ -207,7 +207,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                     bool isStandalone = (standalone[0] == 'y');
                     if (encoding.size() == 0) encoding = "UTF-8";
 
-                    policy.xmlDeclarationAction(version, encoding, hasEncoding,
+                    policy.xmlDeclarationAction(std::move(version), std::move(encoding), hasEncoding,
                                            isStandalone, hasStandalone, pos);
                     continue;
                 }
@@ -235,7 +235,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
             pos.advance(2);
 
             /* Invariant - just after processing instruction end */
-            policy.instructionAction(tagName, processingInstruction, pos);
+            policy.instructionAction(std::move(tagName), std::move(processingInstruction), pos);
             firstTag = false;
             continue;
         } else if (*pos == '!') {
@@ -272,7 +272,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                         "-- inside of comment not allowed");
                 pos.bringToCapture();
                 pos++;
-                policy.commentAction(commentText, pos);
+                policy.commentAction(std::move(commentText), pos);
                 firstTag = false;
                 continue;
             } else if (*pos == '[') {
@@ -309,7 +309,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
                 pos.bringToCapture();
                 pos.advance(3);
-                policy.cdataAction(cdataText, pos);
+                policy.cdataAction(std::move(cdataText), pos);
                 firstTag = false;
                 continue;
             } else if (*pos == 'D') {
@@ -342,7 +342,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
                 pos.bringToCapture();
                 pos++;
-                policy.doctypeAction(doctypeText, pos);
+                policy.doctypeAction(std::move(doctypeText), pos);
                 firstTag = false;
                 continue;
             } else if (validate) {
@@ -431,7 +431,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                         "No whitespace after attribute closing quote");
                 }
 
-                policy.attributeAction(attributeName, attributeValue, hasEntities,
+                policy.attributeAction(std::move(attributeName), std::move(attributeValue), hasEntities,
                                  pos);
 
                 /* Continues to either >, /> or another attribute */
@@ -468,11 +468,11 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
         if (!isClosing) {
             /* Invariant - top stack node is always current parent */
             firstTag = false;
-            policy.openAction(tagName, isSelfClosing, pos);
+            policy.openAction(std::move(tagName), isSelfClosing, pos);
         } else {
             /* Invariant - when closing node, the current parent (stack top)
              * must be of the node type */
-            policy.closeAction(tagName, pos);
+            policy.closeAction(std::move(tagName), pos);
         }
     }
 }  
