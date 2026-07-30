@@ -5,6 +5,7 @@
 
 #include "helpers.h"
 #include "is_cursor.h"
+#include "is_parse_policy.h"
 #include "nodes/cdata_node.h"
 #include "nodes/comment_node.h"
 #include "nodes/doctype_node.h"
@@ -19,7 +20,9 @@ namespace onyx::dynamic::parser {
 
 template <bool validate, typename CursorType>
 ONYX_INLINE void incrementPosIfEqualsOrThrow(CursorType& pos, char character,
-                                             const char* exceptionString) {
+                                             const char* exceptionString)
+    requires(isCursor<CursorType>)
+{
     if (validate && *pos != character) {
         throw std::invalid_argument(exceptionString);
     }
@@ -28,7 +31,9 @@ ONYX_INLINE void incrementPosIfEqualsOrThrow(CursorType& pos, char character,
 
 template <bool validate, typename StringType, typename CursorType,
           typename Policy>
-ONYX_INLINE void parseBody(CursorType& pos, Policy& policy) {
+ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
+    requires(isCursor<CursorType>, isParserPolicy<Policy>)
+{
     bool firstTag = true;
     while (*pos != '\0') {
         /* Invariant - always at the start of either a tag or a sequence of
