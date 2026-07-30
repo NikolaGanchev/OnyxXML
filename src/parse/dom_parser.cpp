@@ -1,6 +1,5 @@
 #include "parse/dom_parser.h"
 
-#include "parse/_parse_macro.h"
 #include "parse/parser.h"
 #include "parse/stream_cursor.h"
 #include "parse/string_cursor.h"
@@ -213,7 +212,7 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
         inline void textAction(StringType text, bool hasEntities,
                                CursorType& cursor) {
             stack.back()->addChild(arena.allocate<tags::Text>(
-                hasEntities ? text::expandEntities(text) : text));
+                hasEntities ? text::expandEntities(text) : std::move(text)));
         }
 
         inline void commentAction(StringType commentText, CursorType& cursor) {
@@ -262,10 +261,10 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
             auto& attributes = newNode->attributes;
             for (int i = 0; i < attributeNames.size(); i++) {
                 attributes.emplace_back(
-                    attributeNames[i],
+                    std::move(attributeNames[i]),
                     attributeValues[i].second
                         ? text::expandEntities(attributeValues[i].first)
-                        : attributeValues[i].first);
+                        : std::move(attributeValues[i].first));
             }
 
             stack.back()->addChild(newNode);
