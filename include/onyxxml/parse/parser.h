@@ -19,14 +19,17 @@
 namespace onyx::dynamic::parser {
 
 template <bool validate, typename CursorType>
-ONYX_INLINE void incrementPosIfEqualsOrThrow(CursorType& pos, char character,
-                                             const char* exceptionString)
+ONYX_INLINE void readOrThrow(CursorType& pos, std::string_view expected,
+                             const char* exceptionString)
     requires(isCursor<CursorType>)
 {
-    if (validate && pos.current() != character) {
-        throw std::invalid_argument(exceptionString);
+    if (validate) {
+        if (!pos.consumeIfMatches(expected)) {
+            throw std::invalid_argument(exceptionString);
+        }
+    } else {
+        pos.advance(expected.size());
     }
-    pos.advance();
 }
 
 template <bool validate, typename StringType, typename CursorType,
@@ -263,8 +266,10 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
             if (pos.current() == '-') {
                 pos.advance();
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, '-', "Premature end of comment");
+                if (validate && pos.current() != '-') {
+                    throw std::invalid_argument("Premature end of comment");
+                }
+                pos.advance();
                 /* Invariant - right after <!-- of comment */
                 if (validate && pos.current() == '\0') {
                     throw std::invalid_argument("Premature end of document");
@@ -295,18 +300,8 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 continue;
             } else if (pos.current() == '[') {
                 pos.advance();
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'C', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'D', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'A', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'T', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'A', "Premature end of CDATA section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, '[', "Premature end of CDATA section");
+                readOrThrow<validate>(pos, "CDATA[",
+                                      "Premature end of CDATA section");
                 /* Invariant - right after <![CDATA[ */
                 if (validate && pos.current() == '\0') {
                     throw std::invalid_argument("Premature end of document");
@@ -332,20 +327,9 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 continue;
             } else if (pos.current() == 'D') {
                 pos.advance();
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'O', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'C', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'T', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'Y', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'P', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, 'E', "Premature end of DOCTYPE section");
-                incrementPosIfEqualsOrThrow<validate, CursorType>(
-                    pos, ' ', "Premature end of DOCTYPE section");
+
+                readOrThrow<validate>(pos, "OCTYPE ",
+                                      "Premature end of DOCTYPE section");
 
                 pos.beginCapture();
 
