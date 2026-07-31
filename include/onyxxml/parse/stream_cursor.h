@@ -8,15 +8,10 @@
 namespace onyx::dynamic::parser {
 /**
  * @brief A cursor built upon an std::istream
+ *
  */
 struct StreamCursor {
     using StringType = std::string;
-
-    /**
-     * @brief The stream
-     *
-     */
-    std::istream* stream;
 
     /**
      * @brief The raw buffer of the stream
@@ -43,12 +38,25 @@ struct StreamCursor {
     size_t captured;
 
     /**
+     * @brief Specifies what is the maximum byte value at which
+     * the internal buffer must make space by erasing old data. To facilitate
+     * erases, the buffer may hold twice that number of bytes.
+     */
+    size_t bufferThreshold;
+
+    /**
      * @brief Construct a new StreamCursor object
      *
      * @param is The input stream to wrap
+     * @param bufferThreshold The threshold for clearing old data
      */
-    StreamCursor(std::istream& is)
-        : stream(&is), pos(0), captured(0), buf(is.rdbuf()) {}
+    StreamCursor(std::istream& is, size_t bufferThreshold = 4096)
+        : pos(0),
+          captured(0),
+          buf(is.rdbuf()),
+          bufferThreshold(bufferThreshold) {
+        buffer.reserve(bufferThreshold * 2);
+    }
 
     /**
      * @brief Fills the internal buffer to the index
@@ -127,9 +135,14 @@ struct StreamCursor {
      */
     void bringToCapture() {
         pos = captured;
-        if (pos > 0) {
-            buffer.erase(buffer.begin(), buffer.begin() + pos);
-            captured -= pos;
+        if (pos >= bufferThreshold) {
+            size_t remaining = buffer.size() - pos;
+
+            if (remaining > 0) {
+                std::memmove(buffer.data(), buffer.data() + pos, remaining);
+            }
+            buffer.resize(remaining);
+            captured = 0;
             pos = 0;
         }
     }
