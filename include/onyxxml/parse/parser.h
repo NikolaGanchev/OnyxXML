@@ -32,7 +32,12 @@ ONYX_INLINE void incrementPosIfEqualsOrThrow(CursorType& pos, char character,
 template <bool validate, typename StringType, typename CursorType,
           typename Policy>
 ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
-    requires(isCursor<CursorType>, isParserPolicy<Policy>)
+    /* In GCC 15.1 and older MSVC versions, having
+        `isCursor<CursorType>, isParserPolicy<Policy>`
+        with a comma instead of `&&` actually causes an internal compiler error.
+        Discovered via trial and error.
+    */
+    requires(isCursor<CursorType> && isParserPolicy<Policy>)
 {
     bool firstTag = true;
     while (*pos != '\0') {
