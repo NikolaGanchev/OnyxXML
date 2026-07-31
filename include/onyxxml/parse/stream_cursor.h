@@ -90,33 +90,21 @@ struct StreamCursor {
      *
      * @return char
      */
-    char operator*() { return getAt(pos); }
+    char current() { return getAt(pos); };
 
     /**
      * @brief Return the char at captured
      *
      * @return char
      */
-    char operator&() { return getAt(captured); }
-
-    /**
-     * @brief Postfix increment. Advances the pos.
-     *
-     */
-    void operator++(int) { pos++; }
-
-    /**
-     * @brief Prefix increment. Advances the captured.
-     *
-     */
-    void operator++() { captured++; }
+    char captureCurrent() { return getAt(captured); };
 
     /**
      * @brief Advances the pos.
      *
      * @param toAdvance
      */
-    void advance(int toAdvance) { pos += toAdvance; }
+    void advance(int toAdvance = 1) { pos += toAdvance; }
 
     /**
      * @brief Look ahead relative to captured
@@ -131,7 +119,7 @@ struct StreamCursor {
      *
      * @param toAdvance
      */
-    void captureAdvance(int toAdvance) { captured += toAdvance; }
+    void captureAdvance(int toAdvance = 1) { captured += toAdvance; }
 
     /**
      * @brief Brings ptr to the captured position and clears consumed buffer

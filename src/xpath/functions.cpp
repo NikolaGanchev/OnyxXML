@@ -265,7 +265,9 @@ std::string normalizeSpace(const std::string& str) {
 
     parser::StringCursor pos(str.data());
 
-    while (*pos != '\0' && parser::isWhitespace(*pos)) pos++;
+    while (pos.current() != '\0' && parser::isWhitespace(pos.current())) {
+        pos.advance();
+    }
 
     pos.beginCapture();
 

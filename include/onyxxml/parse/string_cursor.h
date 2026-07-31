@@ -41,33 +41,21 @@ struct StringCursor {
      *
      * @return char
      */
-    char operator*() const { return *ptr; }
+    char current() const { return *ptr; };
 
     /**
      * @brief Return the current capture char
      *
      * @return char
      */
-    char operator&() const { return *captured; }
-
-    /**
-     * @brief Postfix increment. Advances the capture by one
-     *
-     */
-    void operator++(int) { ptr++; }
-
-    /**
-     * @brief Prefix increment. Advances the cursor by one
-     *
-     */
-    void operator++() { captured++; }
+    char captureCurrent() { return *captured; };
 
     /**
      * @brief Advances the cursor. Does not check for bounds.
      *
      * @param toAdvance
      */
-    void advance(int toAdvance) { ptr += toAdvance; }
+    void advance(int toAdvance = 1) { ptr += toAdvance; }
 
     /**
      * @brief Look ahead in the capture. Does not check for bounds.
@@ -82,7 +70,7 @@ struct StringCursor {
      * Moves the capture.
      *
      */
-    void captureAdvance(int toAdvance) { captured += toAdvance; }
+    void captureAdvance(int toAdvance = 1) { captured += toAdvance; }
 
     /**
      * @brief Brings the cursor to the capture position.

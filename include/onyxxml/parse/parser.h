@@ -23,10 +23,10 @@ ONYX_INLINE void incrementPosIfEqualsOrThrow(CursorType& pos, char character,
                                              const char* exceptionString)
     requires(isCursor<CursorType>)
 {
-    if (validate && *pos != character) {
+    if (validate && pos.current() != character) {
         throw std::invalid_argument(exceptionString);
     }
-    pos++;
+    pos.advance();
 }
 
 template <bool validate, typename StringType, typename CursorType,
@@ -40,26 +40,26 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
     requires(isCursor<CursorType> && isParserPolicy<Policy>)
 {
     bool firstTag = true;
-    while (*pos != '\0') {
+    while (pos.current() != '\0') {
         /* Invariant - always at the start of either a tag or a sequence of
          * text */
-        if (*pos != '<') {
+        if (pos.current() != '<') {
             pos.beginCapture();
             bool hasEntities = false;
             bool end = false;
-            while (&pos != '<') {
-                if (&pos == '\0') {
-                    while (*pos != '\0') {
-                        if (validate && !isWhitespace(*pos))
+            while (pos.captureCurrent() != '<') {
+                if (pos.captureCurrent() == '\0') {
+                    while (pos.current() != '\0') {
+                        if (validate && !isWhitespace(pos.current()))
                             throw std::invalid_argument(
                                 "Invalid end after tag open");
-                        pos++;
+                        pos.advance();
                     }
                     end = true;
                     break;
                 }
-                if (&pos == '&') hasEntities = true;
-                ++pos;
+                if (pos.captureCurrent() == '&') hasEntities = true;
+                pos.captureAdvance();
             }
             if (end) break;
             StringType text = pos.getCaptured();
@@ -71,16 +71,16 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
         }
 
         /* Invariant - always in tag name */
-        pos++;
+        pos.advance();
 
-        if (validate && *pos == '\0') {
+        if (validate && pos.current() == '\0') {
             throw std::invalid_argument("Premature end of document");
         }
 
-        if (*pos == '?') {
+        if (pos.current() == '?') {
             /* Invariant - at processing directive */
-            pos++;
-            if (validate && *pos == '\0') {
+            pos.advance();
+            if (validate && pos.current() == '\0') {
                 throw std::invalid_argument("Premature end of document");
             }
             StringType tagName = readName(pos);
@@ -103,13 +103,13 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                     StringType version, encoding, standalone;
 
                     /* Walk through all pseudo-attributes in the xml decl */
-                    while (*pos != '\0' && *pos != '?') {
+                    while (pos.current() != '\0' && pos.current() != '?') {
                         /* skip whitespace */
                         skipWhitespace(pos);
-                        if (*pos == '?') {
+                        if (pos.current() == '?') {
                             break;
                         }
-                        if (*pos == '\0') {
+                        if (pos.current() == '\0') {
                             throw std::invalid_argument(
                                 "Premature end of document");
                         }
@@ -124,39 +124,43 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
                         /* expect '=' */
                         skipWhitespace(pos);
-                        if (validate && *pos != '=') {
+                        if (validate && pos.current() != '=') {
                             throw std::invalid_argument(
                                 "No '=' after XML declaration attribute "
                                 "name");
                         }
-                        pos++;
-                        if (*pos == '\0') {
+                        pos.advance();
+                        if (pos.current() == '\0') {
                             throw std::invalid_argument(
                                 "Premature end of document");
                         }
 
                         skipWhitespace(pos);
-                        if (validate && (*pos != '"' && *pos != '\'')) {
+                        if (validate &&
+                            (pos.current() != '"' && pos.current() != '\'')) {
                             throw std::invalid_argument(
                                 "XML declaration attribute value not quoted");
                         }
-                        char quote = *pos;
-                        pos++;
+                        char quote = pos.current();
+                        pos.advance();
 
                         pos.beginCapture();
-                        while (&pos != '\0' && &pos != '?' && &pos != quote) {
-                            ++pos;
+                        while (pos.captureCurrent() != '\0' &&
+                               pos.captureCurrent() != '?' &&
+                               pos.captureCurrent() != quote) {
+                            pos.captureAdvance();
                         }
-                        if (validate &&
-                            (&pos == '?' || &pos == '\0' || &pos != quote)) {
+                        if (validate && (pos.captureCurrent() == '?' ||
+                                         pos.captureCurrent() == '\0' ||
+                                         pos.captureCurrent() != quote)) {
                             throw std::invalid_argument(
                                 "Unterminated XML declaration attribute "
                                 "value");
                         }
                         StringType val = pos.getCaptured();
                         pos.bringToCapture();
-                        pos++; /* skip closing quote */
-                        if (*pos == '\0') {
+                        pos.advance(); /* skip closing quote */
+                        if (pos.current() == '\0') {
                             throw std::invalid_argument(
                                 "Premature end of document");
                         }
@@ -181,12 +185,12 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                     if (pos.peek(1) != '>') {
                         throw std::invalid_argument("Unclosed XML declaration");
                     }
-                    pos++;
-                    if (*pos == '\0') {
+                    pos.advance();
+                    if (pos.current() == '\0') {
                         throw std::invalid_argument(
                             "Premature end of document");
                     }
-                    pos++;
+                    pos.advance();
 
                     /* enforce presence and legality */
                     if (!hasVersion) {
@@ -224,19 +228,19 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                     continue;
                 }
             }
-            if (validate && (*pos != ' ' || pos.peek(1) == '\0')) {
+            if (validate && (pos.current() != ' ' || pos.peek(1) == '\0')) {
                 throw std::invalid_argument(
                     "No space between processing instruction target and "
                     "processing instruction content");
             }
-            pos++;
+            pos.advance();
 
             pos.beginCapture();
 
-            while (!(&pos == '?' && pos.capturePeek(1) != '\0' &&
-                     pos.capturePeek(1) == '>')) {
-                ++pos;
-                if (validate && &pos == '\0')
+            while (!(pos.captureCurrent() == '?' &&
+                     pos.capturePeek(1) != '\0' && pos.capturePeek(1) == '>')) {
+                pos.captureAdvance();
+                if (validate && pos.captureCurrent() == '\0')
                     throw std::invalid_argument(
                         "Invalid processing instruction without ending");
             }
@@ -251,26 +255,27 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                                      std::move(processingInstruction), pos);
             firstTag = false;
             continue;
-        } else if (*pos == '!') {
-            pos++;
-            if (validate && *pos == '\0') {
+        } else if (pos.current() == '!') {
+            pos.advance();
+            if (validate && pos.current() == '\0') {
                 throw std::invalid_argument("Premature end of <! tag");
             }
 
-            if (*pos == '-') {
-                pos++;
+            if (pos.current() == '-') {
+                pos.advance();
                 incrementPosIfEqualsOrThrow<validate, CursorType>(
                     pos, '-', "Premature end of comment");
                 /* Invariant - right after <!-- of comment */
-                if (validate && *pos == '\0') {
+                if (validate && pos.current() == '\0') {
                     throw std::invalid_argument("Premature end of document");
                 }
                 pos.beginCapture();
 
-                while (!(&pos == '-' && pos.capturePeek(1) != '\0' &&
+                while (!(pos.captureCurrent() == '-' &&
+                         pos.capturePeek(1) != '\0' &&
                          pos.capturePeek(1) == '-')) {
-                    ++pos;
-                    if (validate && &pos == '\0')
+                    pos.captureAdvance();
+                    if (validate && pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
                             "Invalid comment without ending");
                 }
@@ -280,16 +285,16 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 pos.captureAdvance(2);
 
                 /* Invariant - either at error state or at > */
-                if (validate && &pos != '>')
+                if (validate && pos.captureCurrent() != '>')
                     throw std::invalid_argument(
                         "-- inside of comment not allowed");
                 pos.bringToCapture();
-                pos++;
+                pos.advance();
                 policy.commentAction(std::move(commentText), pos);
                 firstTag = false;
                 continue;
-            } else if (*pos == '[') {
-                pos++;
+            } else if (pos.current() == '[') {
+                pos.advance();
                 incrementPosIfEqualsOrThrow<validate, CursorType>(
                     pos, 'C', "Premature end of CDATA section");
                 incrementPosIfEqualsOrThrow<validate, CursorType>(
@@ -303,17 +308,17 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 incrementPosIfEqualsOrThrow<validate, CursorType>(
                     pos, '[', "Premature end of CDATA section");
                 /* Invariant - right after <![CDATA[ */
-                if (validate && *pos == '\0') {
+                if (validate && pos.current() == '\0') {
                     throw std::invalid_argument("Premature end of document");
                 }
                 pos.beginCapture();
 
-                while (!(&pos == ']' && pos.capturePeek(1) != '\0' &&
-                         pos.capturePeek(1) == ']' &&
-                         pos.capturePeek(2) != '\0' &&
-                         pos.capturePeek(2) == '>')) {
-                    ++pos;
-                    if (validate && &pos == '\0')
+                while (!(
+                    pos.captureCurrent() == ']' && pos.capturePeek(1) != '\0' &&
+                    pos.capturePeek(1) == ']' && pos.capturePeek(2) != '\0' &&
+                    pos.capturePeek(2) == '>')) {
+                    pos.captureAdvance();
+                    if (validate && pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
                             "Invalid CDATA without ending");
                 }
@@ -325,8 +330,8 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 policy.cdataAction(std::move(cdataText), pos);
                 firstTag = false;
                 continue;
-            } else if (*pos == 'D') {
-                pos++;
+            } else if (pos.current() == 'D') {
+                pos.advance();
                 incrementPosIfEqualsOrThrow<validate, CursorType>(
                     pos, 'O', "Premature end of DOCTYPE section");
                 incrementPosIfEqualsOrThrow<validate, CursorType>(
@@ -344,9 +349,9 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
                 pos.beginCapture();
 
-                while (&pos != '>') {
-                    ++pos;
-                    if (validate && &pos == '\0')
+                while (pos.captureCurrent() != '>') {
+                    pos.captureAdvance();
+                    if (validate && pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
                             "Invalid DOCTYPE without ending");
                 }
@@ -354,7 +359,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 StringType doctypeText = pos.getCaptured();
 
                 pos.bringToCapture();
-                pos++;
+                pos.advance();
                 policy.doctypeAction(std::move(doctypeText), pos);
                 firstTag = false;
                 continue;
@@ -363,11 +368,11 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
             }
         }
 
-        bool isClosing = (*pos == '/');
+        bool isClosing = (pos.current() == '/');
 
-        if (isClosing) pos++;
+        if (isClosing) pos.advance();
 
-        if (validate && *pos == '\0') {
+        if (validate && pos.current() == '\0') {
             throw std::invalid_argument("Premature end of document");
         }
 
@@ -378,18 +383,18 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
         }
         pos.advance(tagName.size());
 
-        bool couldHaveAttributes = isWhitespace(*pos) && !isClosing;
+        bool couldHaveAttributes = isWhitespace(pos.current()) && !isClosing;
 
         /* Invariant - pos always after tag name end */
         skipWhitespace(pos);
 
-        if (validate && *pos == '\0') {
+        if (validate && pos.current() == '\0') {
             throw std::invalid_argument("Premature end of document");
         }
 
         if (couldHaveAttributes) {
             /* Invariant - either at start of attribute or at > */
-            while (*pos != '>' && *pos != '/') {
+            while (pos.current() != '>' && pos.current() != '/') {
                 StringType attributeName = readName(pos);
                 if (attributeName.empty()) {
                     throw std::invalid_argument("Invalid non-closing tag");
@@ -400,46 +405,47 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                 skipWhitespace(pos);
 
                 /* Invariant - at = or error state */
-                if (validate && (*pos == '\0' || *pos != '=')) {
+                if (validate &&
+                    (pos.current() == '\0' || pos.current() != '=')) {
                     throw std::invalid_argument("No = after attribute");
                 }
-                pos++;
+                pos.advance();
                 /* Invariant - after attribute = */
                 skipWhitespace(pos);
                 char attributeQuote = '\0';
-                if (validate && *pos == '\0') {
+                if (validate && pos.current() == '\0') {
                     throw std::invalid_argument("Premature end at attribute");
                 }
 
-                if (*pos == '\'' || *pos == '\"') {
-                    attributeQuote = *pos;
+                if (pos.current() == '\'' || pos.current() == '\"') {
+                    attributeQuote = pos.current();
                 } else if (validate) {
                     throw std::invalid_argument(
                         "No quote (\" or \') after attribute =");
                 }
-                pos++;
+                pos.advance();
 
                 /* Invariant - after attribute value opening quote */
                 pos.beginCapture();
                 bool hasEntities = false;
-                while (&pos != attributeQuote) {
-                    if (validate && &pos == '\0')
+                while (pos.captureCurrent() != attributeQuote) {
+                    if (validate && pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
                             "Improperly closed attribute value");
-                    if (&pos == '&') hasEntities = true;
-                    ++pos;
+                    if (pos.captureCurrent() == '&') hasEntities = true;
+                    pos.captureAdvance();
                 }
                 StringType attributeValue = pos.getCaptured();
                 pos.bringToCapture();
 
                 /* Invariant - pos is at closing quote */
-                pos++;
+                pos.advance();
 
                 /* Invariant - pos is just after closing quote */
                 /* Allows non-standard <tagName name="value"/> where the
                  * backslash is exactly after the quote */
-                if (validate && !isWhitespace(*pos) && *pos != '>' &&
-                    *pos != '/') {
+                if (validate && !isWhitespace(pos.current()) &&
+                    pos.current() != '>' && pos.current() != '/') {
                     throw std::invalid_argument(
                         "No whitespace after attribute closing quote");
                 }
@@ -450,7 +456,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
                 /* Continues to either >, /> or another attribute */
                 skipWhitespace(pos);
-                if (validate && *pos == '\0') {
+                if (validate && pos.current() == '\0') {
                     throw std::invalid_argument(
                         "Premature end after attribute");
                 }
@@ -459,20 +465,20 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
         bool isSelfClosing = false;
         /* Invariant - pos is always at / or > */
-        if (*pos == '>') {
-            pos++;
-        } else if (*pos == '/') {
+        if (pos.current() == '>') {
+            pos.advance();
+        } else if (pos.current() == '/') {
             if (validate && isClosing) {
                 throw std::invalid_argument(
                     "Trying to double-close closing tag");
             }
-            pos++;
-            if (validate && *pos != '>') {
+            pos.advance();
+            if (validate && pos.current() != '>') {
                 throw std::invalid_argument(
                     "Invalid tag close - must have > after /");
             }
             isSelfClosing = true;
-            pos++;
+            pos.advance();
         } else if (validate) {
             throw std::invalid_argument("No tag close for tag " +
                                         std::string(tagName));

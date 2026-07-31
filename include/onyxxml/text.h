@@ -54,42 +54,47 @@ uint32_t getUnicodeCodepoint(const char* read);
  * @return uint32_t The codepoint if the sequence is valid, otherwise 0.
  */
 template <typename Cursor>
-uint32_t getUnicodeCodepoint(Cursor& c) requires (parser::isCursor<Cursor>) {
+uint32_t getUnicodeCodepoint(Cursor& c)
+    requires(parser::isCursor<Cursor>)
+{
     uint32_t codepoint = 0;
-    
-    if (*c == '\0') return 0;
+
+    if (c.current() == '\0') return 0;
 
     // 1-byte ASCII character (0xxxxxxx)
-    if (static_cast<unsigned char>(*c) < 128) {
-        codepoint = static_cast<unsigned char>(*c);
+    if (static_cast<unsigned char>(c.current()) < 128) {
+        codepoint = static_cast<unsigned char>(c.current());
     }
     // 2-byte sequence (110xxxxx 10xxxxxx)
-    else if ((static_cast<unsigned char>(*c) >> 5) == 0x6) {
+    else if ((static_cast<unsigned char>(c.current()) >> 5) == 0x6) {
         if (static_cast<unsigned char>(c.peek(1)) != '\0') {
-            codepoint = ((static_cast<unsigned char>(*c) & 0x1F) << 6) |
-                        (static_cast<unsigned char>(c.peek(1)) & 0x3F);
-            
+            codepoint =
+                ((static_cast<unsigned char>(c.current()) & 0x1F) << 6) |
+                (static_cast<unsigned char>(c.peek(1)) & 0x3F);
+
             c.advance(1);
         }
     }
     // 3-byte sequence (1110xxxx 10xxxxxx 10xxxxxx)
-    else if ((static_cast<unsigned char>(*c) >> 4) == 0xE) {
+    else if ((static_cast<unsigned char>(c.current()) >> 4) == 0xE) {
         if (static_cast<unsigned char>(c.peek(2)) != '\0') {
-            codepoint = ((static_cast<unsigned char>(*c) & 0x0F) << 12) |
-                        ((static_cast<unsigned char>(c.peek(1)) & 0x3F) << 6) |
-                        (static_cast<unsigned char>(c.peek(2)) & 0x3F);
+            codepoint =
+                ((static_cast<unsigned char>(c.current()) & 0x0F) << 12) |
+                ((static_cast<unsigned char>(c.peek(1)) & 0x3F) << 6) |
+                (static_cast<unsigned char>(c.peek(2)) & 0x3F);
 
             c.advance(2);
         }
     }
     // 4-byte sequence (11110xxx 10xxxxxx 10xxxxxx 10xxxxxx)
-    else if ((static_cast<unsigned char>(*c) >> 3) == 0x1E) {
+    else if ((static_cast<unsigned char>(c.current()) >> 3) == 0x1E) {
         if (static_cast<unsigned char>(c.peek(3)) != '\0') {
-            codepoint = ((static_cast<unsigned char>(*c) & 0x07) << 18) |
-                        ((static_cast<unsigned char>(c.peek(1)) & 0x3F) << 12) |
-                        ((static_cast<unsigned char>(c.peek(2)) & 0x3F) << 6) |
-                        (static_cast<unsigned char>(c.peek(3)) & 0x3F);
-            
+            codepoint =
+                ((static_cast<unsigned char>(c.current()) & 0x07) << 18) |
+                ((static_cast<unsigned char>(c.peek(1)) & 0x3F) << 12) |
+                ((static_cast<unsigned char>(c.peek(2)) & 0x3F) << 6) |
+                (static_cast<unsigned char>(c.peek(3)) & 0x3F);
+
             c.advance(3);
         }
     }

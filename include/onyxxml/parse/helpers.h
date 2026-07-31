@@ -33,8 +33,8 @@ template <typename Cursor>
 ONYX_NOINLINE void skipWhitespace(Cursor& pos)
     requires(isCursor<Cursor>)
 {
-    while (*pos != '\0' && isWhitespace(*pos)) {
-        pos++;
+    while (pos.current() != '\0' && isWhitespace(pos.current())) {
+        pos.advance();
     }
 }
 
@@ -49,9 +49,10 @@ template <typename Cursor>
 ONYX_NOINLINE bool isNameStartChar(Cursor& ch)
     requires(isCursor<Cursor>)
 {
-    if ((unsigned char)*ch < 128) [[likely]] {
-        return (*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z') ||
-               *ch == '_' || *ch == ':';
+    if ((unsigned char)ch.current() < 128) [[likely]] {
+        return (ch.current() >= 'A' && ch.current() <= 'Z') ||
+               (ch.current() >= 'a' && ch.current() <= 'z') ||
+               ch.current() == '_' || ch.current() == ':';
     }
     uint32_t codepoint = handleUnicodeChar(ch);
     return (codepoint >= 0xC0 && codepoint <= 0xD6) ||
@@ -72,10 +73,12 @@ template <typename Cursor>
 ONYX_NOINLINE bool isNameChar(Cursor& ch)
     requires(isCursor<Cursor>)
 {
-    if ((unsigned char)*ch < 128) [[likely]] {
-        return (*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z') ||
-               (*ch >= '0' && *ch <= '9') || *ch == '_' || *ch == ':' ||
-               *ch == '-' || *ch == '.';
+    if ((unsigned char)ch.current() < 128) [[likely]] {
+        return (ch.current() >= 'A' && ch.current() <= 'Z') ||
+               (ch.current() >= 'a' && ch.current() <= 'z') ||
+               (ch.current() >= '0' && ch.current() <= '9') ||
+               ch.current() == '_' || ch.current() == ':' ||
+               ch.current() == '-' || ch.current() == '.';
     }
     uint32_t codepoint = handleUnicodeChar(ch);
     return codepoint == 0xB7 || (codepoint >= 0xC0 && codepoint <= 0xD6) ||
@@ -103,9 +106,10 @@ template <typename Cursor>
 ONYX_NOINLINE bool isNCNameStartChar(Cursor& ch)
     requires(isCursor<Cursor>)
 {
-    if ((unsigned char)*ch < 128) [[likely]] {
-        return (*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z') ||
-               *ch == '_';
+    if ((unsigned char)ch.current() < 128) [[likely]] {
+        return (ch.current() >= 'A' && ch.current() <= 'Z') ||
+               (ch.current() >= 'a' && ch.current() <= 'z') ||
+               ch.current() == '_';
     }
     uint32_t codepoint = handleUnicodeChar(ch);
     return (codepoint >= 0xC0 && codepoint <= 0xD6) ||
@@ -131,10 +135,12 @@ template <typename Cursor>
 ONYX_NOINLINE bool isNCNameChar(Cursor& ch)
     requires(isCursor<Cursor>)
 {
-    if ((unsigned char)*ch < 128) [[likely]] {
-        return (*ch >= 'A' && *ch <= 'Z') || (*ch >= 'a' && *ch <= 'z') ||
-               (*ch >= '0' && *ch <= '9') || *ch == '_' || *ch == '-' ||
-               *ch == '.';
+    if ((unsigned char)ch.current() < 128) [[likely]] {
+        return (ch.current() >= 'A' && ch.current() <= 'Z') ||
+               (ch.current() >= 'a' && ch.current() <= 'z') ||
+               (ch.current() >= '0' && ch.current() <= '9') ||
+               ch.current() == '_' || ch.current() == '-' ||
+               ch.current() == '.';
     }
     uint32_t codepoint = handleUnicodeChar(ch);
     return codepoint == 0xB7 || (codepoint >= 0xC0 && codepoint <= 0xD6) ||
@@ -165,9 +171,9 @@ ONYX_NOINLINE typename Cursor::StringType readName(Cursor& pos)
         pos.swapDefault();
         return typename Cursor::StringType();
     }
-    pos++;
+    pos.advance();
     while (isNameChar(pos)) {
-        pos++;
+        pos.advance();
     }
     pos.swapDefault();
 
@@ -184,9 +190,9 @@ ONYX_NOINLINE typename Cursor::StringType readNCName(Cursor& pos)
         pos.swapDefault();
         return typename Cursor::StringType();
     }
-    pos++;
+    pos.advance();
     while (isNCNameChar(pos)) {
-        pos++;
+        pos.advance();
     }
     pos.swapDefault();
 
@@ -209,20 +215,20 @@ ONYX_NOINLINE typename Cursor::StringType readQName(Cursor& pos)
         pos.swapDefault();
         return typename Cursor::StringType();
     }
-    pos++;
+    pos.advance();
     while (isNCNameChar(pos)) {
-        pos++;
+        pos.advance();
     }
     // read second nc name
-    if (*pos == ':') {
-        pos++;
+    if (pos.current() == ':') {
+        pos.advance();
         if (!isNCNameStartChar(pos)) {
             pos.swapDefault();
             return typename Cursor::StringType();
         }
-        pos++;
+        pos.advance();
         while (isNCNameChar(pos)) {
-            pos++;
+            pos.advance();
         }
     }
     pos.swapDefault();

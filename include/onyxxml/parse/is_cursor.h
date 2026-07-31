@@ -7,12 +7,10 @@ template <typename T>
 concept isCursor = requires(T t, int i) {
     typename T::StringType;
     { t.peek(i) } -> std::same_as<char>;
-    { *t } -> std::same_as<char>;
-    { &t } -> std::same_as<char>;
+    { t.current() } -> std::same_as<char>;
+    { t.captureCurrent() } -> std::same_as<char>;
     { t.capturePeek(i) } -> std::same_as<char>;
     t.getCaptured();
-    t++;
-    ++t;
     t.advance(i);
     t.captureAdvance(i);
     t.bringToCapture();

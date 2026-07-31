@@ -41,14 +41,15 @@ bool Lexer::expectingOperator() {
 }
 
 std::string_view captureLiteral(parser::StringCursor& cursor) {
-    char quote = *cursor;
-    cursor++;
+    char quote = cursor.current();
+    cursor.advance();
     cursor.beginCapture();
-    while (&cursor != '\0' && &cursor != quote) {
-        ++cursor;
+    while (cursor.captureCurrent() != '\0' &&
+           cursor.captureCurrent() != quote) {
+        cursor.captureAdvance();
     }
 
-    if (&cursor == '\0') {
+    if (cursor.captureCurrent() == '\0') {
         throw std::runtime_error("Reached end of XPath during literal parsing");
     }
 
@@ -59,8 +60,10 @@ std::string_view captureNumber(parser::StringCursor& cursor) {
     bool foundDot = false;
 
     cursor.beginCapture();
-    while (&cursor != '\0' && (&cursor == '.' || parser::isDigit(&cursor))) {
-        if (&cursor == '.') {
+    while (cursor.captureCurrent() != '\0' &&
+           (cursor.captureCurrent() == '.' ||
+            parser::isDigit(cursor.captureCurrent()))) {
+        if (cursor.captureCurrent() == '.') {
             if (!foundDot) {
                 foundDot = true;
             } else {
@@ -68,7 +71,7 @@ std::string_view captureNumber(parser::StringCursor& cursor) {
             }
         }
 
-        ++cursor;
+        cursor.captureAdvance();
     }
 
     return cursor.getCaptured();
@@ -78,7 +81,7 @@ std::string_view captureNumber(parser::StringCursor& cursor) {
 const Lexer::Token& Lexer::nextToken() {
     // Invariant: begins at next token
 
-    if (*cursor == '\0') {
+    if (cursor.current() == '\0') {
         static Token emptyToken;
         emptyToken.type = Lexer::TokenType::END;
         return emptyToken;
@@ -86,26 +89,26 @@ const Lexer::Token& Lexer::nextToken() {
 
     Token token;
 
-    switch (*cursor) {
+    switch (cursor.current()) {
         // Operators
         case '(': {
             token.type = Lexer::TokenType::OPENING_PAREN;
-            cursor++;
+            cursor.advance();
             break;
         }
         case ')': {
             token.type = Lexer::TokenType::CLOSING_PAREN;
-            cursor++;
+            cursor.advance();
             break;
         }
         case '[': {
             token.type = Lexer::TokenType::OPENING_BRACKET;
-            cursor++;
+            cursor.advance();
             break;
         }
         case ']': {
             token.type = Lexer::TokenType::CLOSING_BRACKET;
-            cursor++;
+            cursor.advance();
             break;
         }
         case '.': {
@@ -129,17 +132,17 @@ const Lexer::Token& Lexer::nextToken() {
             }
 
             token.type = Lexer::TokenType::DOT;
-            cursor++;
+            cursor.advance();
             break;
         }
         case '@': {
             token.type = Lexer::TokenType::AT;
-            cursor++;
+            cursor.advance();
             break;
         }
         case ',': {
             token.type = Lexer::TokenType::COMMA;
-            cursor++;
+            cursor.advance();
             break;
         }
         case ':': {
@@ -165,12 +168,12 @@ const Lexer::Token& Lexer::nextToken() {
             }
 
             token.type = Lexer::TokenType::SLASH;
-            cursor++;
+            cursor.advance();
             break;
         }
         case '|': {
             token.type = Lexer::TokenType::PIPE;
-            cursor++;
+            cursor.advance();
             break;
         }
         case '*': {
@@ -180,15 +183,15 @@ const Lexer::Token& Lexer::nextToken() {
                 token.type = Lexer::TokenType::NAME_TEST;
             }
             token.value = "*";
-            cursor++;
+            cursor.advance();
             break;
         }
         case '+':
         case '-':
         case '=': {
             token.type = Lexer::TokenType::OPERATOR;
-            token.value = *cursor;
-            cursor++;
+            token.value = cursor.current();
+            cursor.advance();
             break;
         }
         case '!': {
@@ -209,15 +212,15 @@ const Lexer::Token& Lexer::nextToken() {
             if (cursor.peek(1) != '\0') {
                 if (cursor.peek(1) == '=') {
                     token.type = Lexer::TokenType::OPERATOR;
-                    token.value = std::string(1, *cursor) + "=";
+                    token.value = std::string(1, cursor.current()) + "=";
                     cursor.advance(2);
                     break;
                 }
             }
 
             token.type = Lexer::TokenType::OPERATOR;
-            token.value = *cursor;
-            cursor++;
+            token.value = cursor.current();
+            cursor.advance();
             break;
         }
         // Literal
@@ -227,13 +230,13 @@ const Lexer::Token& Lexer::nextToken() {
             token.value = captureLiteral(cursor);
             cursor.bringToCapture();
             // Skip closing quote
-            cursor++;
+            cursor.advance();
             break;
         }
         // Variable reference
         case '$': {
             token.type = Lexer::TokenType::VARIABLE_REFERENCE;
-            cursor++;
+            cursor.advance();
             token.value = parser::readQName(cursor);
             if (token.value.empty()) {
                 throw std::runtime_error(
@@ -247,7 +250,7 @@ const Lexer::Token& Lexer::nextToken() {
         // OperatorName ('and' | 'or' | 'mod' | 'div')
         default: {
             // Number
-            if (parser::isDigit(*cursor)) {
+            if (parser::isDigit(cursor.current())) {
                 token.type = Lexer::TokenType::NUMBER;
                 token.value = captureNumber(cursor);
                 cursor.bringToCapture();
@@ -282,7 +285,7 @@ const Lexer::Token& Lexer::nextToken() {
 
                 cursor.advance(token.value.size());
 
-                if (*cursor == ':') {
+                if (cursor.current() == ':') {
                     // NameTest special case
                     if (cursor.peek(1) == '*') {
                         token.type = Lexer::TokenType::NAME_TEST;
@@ -332,7 +335,7 @@ const Lexer::Token& Lexer::nextToken() {
             }
 
             // NodeType and FunctionName
-            if (*cursor == '(') {
+            if (cursor.current() == '(') {
                 if (token.value == "comment" || token.value == "text" ||
                     token.value == "processing-instruction" ||
                     token.value == "node") {
@@ -341,13 +344,14 @@ const Lexer::Token& Lexer::nextToken() {
 
                     token.type = Lexer::TokenType::NODE_TYPE;
                     token.value += '(';
-                    cursor++;
+                    cursor.advance();
                     parser::skipWhitespace(cursor);
 
                     // Special case - processing-instruction can have a literal
                     // inside the parenthesis
                     if (isProcessingInstruction) {
-                        if (*cursor == '\'' || *cursor == '"') {
+                        if (cursor.current() == '\'' ||
+                            cursor.current() == '"') {
                             token.value += "'";
                             // Even if this is empty, it is a special behaviour
                             // processing-instruction('') only catches
@@ -361,19 +365,19 @@ const Lexer::Token& Lexer::nextToken() {
                             cursor.bringToCapture();
                             // The cursor is at the end quote and needs to
                             // advance
-                            cursor++;
+                            cursor.advance();
                             // There can be whitespace here
                             parser::skipWhitespace(cursor);
                         }
                     }
 
-                    if (*cursor != ')') {
+                    if (cursor.current() != ')') {
                         throw std::runtime_error(
                             "Missing closing bracket of node type");
                     }
 
                     token.value += ")";
-                    cursor++;
+                    cursor.advance();
 
                     break;
                 } else {
