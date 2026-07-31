@@ -100,5 +100,24 @@ struct StringCursor {
     std::string_view getCaptured() const {
         return std::string_view(ptr, captured - ptr);
     }
+
+    /**
+     * @brief Checks if the upcoming characters match the expected string.
+     * If they do, move the cursor past them and return true.
+     *
+     * @param expected
+     * @return true
+     * @return false
+     */
+    bool consumeIfMatches(std::string_view expected) {
+        for (size_t i = 0; i < expected.size(); i++) {
+            if (ptr[i] == '\0' || ptr[i] != expected[i]) {
+                return false;
+            }
+        }
+
+        ptr += expected.size();
+        return true;
+    }
 };
-}
+}  // namespace onyx::dynamic::parser

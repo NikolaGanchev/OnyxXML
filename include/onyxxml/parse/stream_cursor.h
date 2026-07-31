@@ -156,5 +156,24 @@ struct StreamCursor {
         fillTo(captured - 1);
         return std::string(buffer.begin() + pos, buffer.begin() + captured);
     }
+
+    /**
+     * @brief Checks if the upcoming characters match the expected string.
+     * If they do, move the cursor past them and return true.
+     *
+     * @param expected
+     * @return true
+     * @return false
+     */
+    bool consumeIfMatches(std::string_view expected) {
+        if (!fillTo(pos + expected.size() - 1)) return false;
+
+        if (std::string_view(buffer.data() + pos, expected.size()) ==
+            expected) {
+            pos += expected.size();
+            return true;
+        }
+        return false;
+    }
 };
 }  // namespace onyx::dynamic::parser
