@@ -8,8 +8,7 @@ namespace onyx::dynamic::parser {
 
 Arena DomParser::parseDryRun(std::string_view input) {
     struct DomDryRunParserPolicy {
-        std::vector<size_t> stack;
-        std::hash<std::string_view> hasher;
+        std::vector<std::string_view> stack;
         Arena::Builder builder;
 
         using CursorType = StringCursor;
@@ -55,13 +54,12 @@ Arena DomParser::parseDryRun(std::string_view input) {
                                     CursorType& cursor) {
             builder.preallocate<tags::GenericNode>();
             if (!isSelfClosing) {
-                stack.push_back(hasher(tagName));
+                stack.push_back(tagName);
             }
         }
 
         ONYX_INLINE void closeAction(StringType tagName, CursorType& cursor) {
-            size_t thisNode = stack.back();
-            if (thisNode != hasher(tagName)) {
+            if (stack.back() != tagName) {
                 throw std::invalid_argument("Closing unopened tag");
             }
             if (stack.size() == 1) {
@@ -81,7 +79,7 @@ Arena DomParser::parseDryRun(std::string_view input) {
 
     std::string_view root = ".empty";
 
-    policy.stack.push_back(policy.hasher(root));
+    policy.stack.push_back(root);
 
     skipWhitespace(pos);
 
@@ -89,7 +87,7 @@ Arena DomParser::parseDryRun(std::string_view input) {
                                                                      policy);
 
     // Invariant - stack may only contain the root
-    if (policy.stack.size() != 1 || policy.stack[0] != policy.hasher(root)) {
+    if (policy.stack.size() != 1 || policy.stack[0] != root) {
         throw std::invalid_argument("Unclosed tags left");
     }
 
