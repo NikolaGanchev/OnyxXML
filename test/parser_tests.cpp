@@ -490,8 +490,19 @@ TEST_CASE(
 
     std::string input = "<tag></tag><?xml ?>";
     std::stringstream inputStream(input);
-    std::string message = "XML declaration is only allowed at the first position "
-                        "in the prologue";
+    std::string message =
+        "XML declaration is only allowed at the first position "
+        "in the prologue";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE("DomParser throws \"Multiple XML declarations found\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<?xml version=\"1.0\"?><?xml version=\"1.0\"?>";
+    std::stringstream inputStream(input);
+    std::string message = "Multiple XML declarations found";
     REQUIRE_THROWS_WITH(DomParser::parse(input), message);
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
@@ -501,8 +512,9 @@ TEST_CASE("DomParser throws \"Missing space after PI target\"") {
 
     std::string input = "<?pi?>";
     std::stringstream inputStream(input);
-    std::string message = "No space between processing instruction target and "
-                        "processing instruction content";
+    std::string message =
+        "No space between processing instruction target and "
+        "processing instruction content";
     REQUIRE_THROWS_WITH(DomParser::parse(input), message);
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
@@ -817,7 +829,7 @@ class SaxListenerLogger : public virtual onyx::parser::SaxListener {
     std::ostream& os;
 
    public:
-    SaxListenerLogger(std::ostream& os): os(os) {}
+    SaxListenerLogger(std::ostream& os) : os(os) {}
 
     void onStart() override {
         os << "Start\n";
@@ -840,19 +852,18 @@ class SaxListenerLogger : public virtual onyx::parser::SaxListener {
     }
 
     void onInstruction(std::string tag, std::string instruction) override {
-        os << "Instruction Tag: " << tag
-                  << "\n\tInstruction: " << instruction << "\n";
+        os << "Instruction Tag: " << tag << "\n\tInstruction: " << instruction
+           << "\n";
         eventCount++;
     }
 
     void onTagOpen(std::string name, bool isSelfClosing,
                    std::vector<onyx::dynamic::Attribute> attributes) override {
-        os << "Tag open: " << name
-                  << "\n\tisSelfClosing: " << isSelfClosing << "\n";
+        os << "Tag open: " << name << "\n\tisSelfClosing: " << isSelfClosing
+           << "\n";
         for (size_t i = 0; i < attributes.size(); i++) {
             os << "\tAttribute Name: " << attributes[i].getName()
-                      << " | Attribute Value: " << attributes[i].getValue()
-                      << "\n";
+               << " | Attribute Value: " << attributes[i].getValue() << "\n";
         }
 
         eventCount++;
@@ -868,8 +879,8 @@ class SaxListenerLogger : public virtual onyx::parser::SaxListener {
                           bool hasEncoding, bool isStandalone,
                           bool hasStandalone) override {
         os << "XML Declaration: \t" << "\tVersion: " << version
-                  << "\n\tEncoding: " << encoding
-                  << "\n\tisStandalone: " << isStandalone << "\n";
+           << "\n\tEncoding: " << encoding
+           << "\n\tisStandalone: " << isStandalone << "\n";
         eventCount++;
     }
 
@@ -924,7 +935,7 @@ TEST_CASE("SAXParser parses complex XML") {
 
 TEST_CASE("SAXParser parses complex XML stream") {
     using namespace onyx::parser;
-    
+
     std::stringstream input;
     input.str(
         "<html lang=\"en\" theme=\"dark\"><head><meta charset=\"UTF-8\"/><meta "

@@ -43,6 +43,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
     requires(isCursor<CursorType> && isParserPolicy<Policy>)
 {
     bool firstTag = true;
+    bool foundXmlDeclaration = false;
     while (pos.current() != '\0') {
         /* Invariant - always at the start of either a tag or a sequence of
          * text */
@@ -99,6 +100,12 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                         "XML declaration is only allowed at the first "
                         "position in the prologue");
                 } else {
+                    if (foundXmlDeclaration) {
+                        throw std::invalid_argument(
+                            "Multiple XML declarations found");
+                    } else {
+                        foundXmlDeclaration = true;
+                    }
                     /* Invariant - right after xml tag */
                     bool hasVersion = false;
                     bool hasEncoding = false;
