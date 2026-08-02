@@ -435,6 +435,15 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                         "No whitespace after attribute closing quote");
                 }
 
+                if (validate) {
+                    for (size_t i = 0; i < attributeNames.size(); i++) {
+                        if (attributeNames[i] == attributeName) {
+                            throw std::invalid_argument(
+                                "Duplicate attribute name");
+                        }
+                    }
+                }
+
                 attributeNames.push_back(std::move(attributeName));
                 attributeValues.push_back(
                     std::make_pair(std::move(attributeValue), hasEntities));

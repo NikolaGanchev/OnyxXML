@@ -821,6 +821,16 @@ TEST_CASE("DomParser throws \"Invalid XML declaration attribute 'extra'\"") {
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
+TEST_CASE("DomParser throws \"Duplicate attribute name\"") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div name=\"value\" name2=\"value\" name=\"value1\"></div>";
+    std::stringstream inputStream(xml);
+    std::string message = "Duplicate attribute name";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
 #include <iostream>
 
 class SaxListenerLogger : public virtual onyx::parser::SaxListener {
