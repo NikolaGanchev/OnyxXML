@@ -7,6 +7,7 @@
 #include <variant>
 
 #include "parse/helpers.h"
+#include "parse/string_cursor.h"
 
 namespace onyx::dynamic::xpath::functions {
 

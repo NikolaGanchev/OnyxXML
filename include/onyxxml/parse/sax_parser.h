@@ -1,8 +1,8 @@
 #pragma once
 
 #include <istream>
-
-#include "../node.h"
+#include <vector>
+#include "attribute.h"
 
 namespace onyx::dynamic::parser {
 /**

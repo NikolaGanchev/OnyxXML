@@ -1,13 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <istream>
-#include <string_view>
-#include <utility>
 
 #include "../text.h"
 #include "is_cursor.h"
-#include "string_cursor.h"
 
 #if defined(_MSC_VER)
 #define ONYX_NOINLINE __declspec(noinline)

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <istream>
-#include <stack>
 
 #include "../arena.h"
 #include "../node.h"

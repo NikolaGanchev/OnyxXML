@@ -6,15 +6,6 @@
 #include "helpers.h"
 #include "is_cursor.h"
 #include "is_parse_policy.h"
-#include "nodes/cdata_node.h"
-#include "nodes/comment_node.h"
-#include "nodes/doctype_node.h"
-#include "nodes/empty_node.h"
-#include "nodes/generic_node.h"
-#include "nodes/processing_instruction_node.h"
-#include "nodes/text_node.h"
-#include "nodes/xml_declaration_node.h"
-#include "text.h"
 
 namespace onyx::dynamic::parser {
 

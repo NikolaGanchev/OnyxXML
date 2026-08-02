@@ -1,6 +1,6 @@
 #pragma once
 
-#include <concepts>
+#include <string_view>
 
 namespace onyx::dynamic::parser {
 template <typename T>
