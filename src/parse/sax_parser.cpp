@@ -12,8 +12,6 @@ void SaxParser::parse(std::string_view input) {
     struct StringSaxParserPolicy {
         SaxListener& listener;
         std::vector<std::string_view> stack;
-        std::vector<std::string_view> attributeNames;
-        std::vector<std::pair<std::string_view, bool>> attributeValues;
 
         using CursorType = StringCursor;
         using StringType = CursorType::StringType;
@@ -40,14 +38,6 @@ void SaxParser::parse(std::string_view input) {
                                          std::string(processingInstruction));
         }
 
-        ONYX_INLINE void attributeAction(StringType attributeName,
-                                         StringType attributeValue,
-                                         bool hasEntities, CursorType& cursor) {
-            attributeNames.push_back(attributeName);
-            attributeValues.push_back(
-                std::make_pair(attributeValue, hasEntities));
-        }
-
         ONYX_INLINE void xmlDeclarationAction(
             StringType version, StringType encoding, bool hasEncoding,
             bool isStandalone, bool hasStandalone, CursorType& cursor) {
@@ -61,8 +51,11 @@ void SaxParser::parse(std::string_view input) {
             this->listener.onDoctype(std::string(doctypeText));
         }
 
-        ONYX_INLINE void openAction(StringType tagName, bool isSelfClosing,
-                                    CursorType& cursor) {
+        ONYX_INLINE void openAction(
+            StringType tagName, bool isSelfClosing,
+            std::vector<StringType> attributeNames,
+            std::vector<std::pair<StringType, bool>> attributeValues,
+            CursorType& cursor) {
             std::vector<Attribute> attributes;
             for (int i = 0; i < attributeNames.size(); i++) {
                 attributes.emplace_back(
@@ -125,8 +118,6 @@ void SaxParser::parse(std::istream& input) {
     struct StreamSaxParserPolicy {
         SaxListener& listener;
         std::vector<std::string> stack;
-        std::vector<std::string> attributeNames;
-        std::vector<std::pair<std::string, bool>> attributeValues;
 
         using CursorType = StreamCursor;
         using StringType = StreamCursor::StringType;
@@ -154,14 +145,6 @@ void SaxParser::parse(std::istream& input) {
                                          std::move(processingInstruction));
         }
 
-        ONYX_INLINE void attributeAction(StringType&& attributeName,
-                                         StringType&& attributeValue,
-                                         bool hasEntities, CursorType& cursor) {
-            attributeNames.push_back(std::move(attributeName));
-            attributeValues.push_back(
-                std::make_pair(std::move(attributeValue), hasEntities));
-        }
-
         ONYX_INLINE void xmlDeclarationAction(
             StringType&& version, StringType&& encoding, bool hasEncoding,
             bool isStandalone, bool hasStandalone, CursorType& cursor) {
@@ -175,8 +158,11 @@ void SaxParser::parse(std::istream& input) {
             this->listener.onDoctype(std::move(doctypeText));
         }
 
-        ONYX_INLINE void openAction(StringType&& tagName, bool isSelfClosing,
-                                    CursorType& cursor) {
+        ONYX_INLINE void openAction(
+            StringType&& tagName, bool isSelfClosing,
+            std::vector<StringType> attributeNames,
+            std::vector<std::pair<StringType, bool>> attributeValues,
+            CursorType& cursor) {
             std::vector<Attribute> attributes;
             for (int i = 0; i < attributeNames.size(); i++) {
                 attributes.emplace_back(

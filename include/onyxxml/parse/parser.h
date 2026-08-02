@@ -44,6 +44,9 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 {
     bool firstTag = true;
     bool foundXmlDeclaration = false;
+    struct EmptyStruct {};
+    std::vector<StringType> attributeNames;
+    std::vector<std::pair<StringType, bool>> attributeValues;
     while (pos.current() != '\0') {
         /* Invariant - always at the start of either a tag or a sequence of
          * text */
@@ -441,9 +444,9 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                         "No whitespace after attribute closing quote");
                 }
 
-                policy.attributeAction(std::move(attributeName),
-                                       std::move(attributeValue), hasEntities,
-                                       pos);
+                attributeNames.push_back(std::move(attributeName));
+                attributeValues.push_back(
+                    std::make_pair(std::move(attributeValue), hasEntities));
 
                 /* Continues to either >, /> or another attribute */
                 skipWhitespace(pos);
@@ -479,7 +482,10 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
         if (!isClosing) {
             /* Invariant - top stack node is always current parent */
             firstTag = false;
-            policy.openAction(std::move(tagName), isSelfClosing, pos);
+            policy.openAction(std::move(tagName), isSelfClosing, attributeNames,
+                              attributeValues, pos);
+            attributeNames.resize(0);
+            attributeValues.resize(0);
         } else {
             /* Invariant - when closing node, the current parent (stack top)
              * must be of the node type */

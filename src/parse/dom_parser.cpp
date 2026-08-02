@@ -34,11 +34,6 @@ Arena DomParser::parseDryRun(std::string_view input) {
             builder.preallocate<tags::ProcessingInstruction>();
         }
 
-        ONYX_INLINE void attributeAction(StringType attributeName,
-                                         StringType attributeValue,
-                                         bool hasEntities, CursorType& cursor) {
-        }
-
         ONYX_INLINE void xmlDeclarationAction(
             StringType version, StringType encoding, bool hasEncoding,
             bool isStandalone, bool hasStandalone, CursorType& cursor) {
@@ -50,8 +45,11 @@ Arena DomParser::parseDryRun(std::string_view input) {
             builder.preallocate<tags::Doctype>();
         }
 
-        ONYX_INLINE void openAction(StringType tagName, bool isSelfClosing,
-                                    CursorType& cursor) {
+        ONYX_INLINE void openAction(
+            StringType tagName, bool isSelfClosing,
+            std::vector<StringType> attributeNames,
+            std::vector<std::pair<StringType, bool>> attributeValues,
+            CursorType& cursor) {
             builder.preallocate<tags::GenericNode>();
             if (!isSelfClosing) {
                 stack.push_back(tagName);
@@ -98,8 +96,6 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
     struct DomStringParserPolicy {
         Arena arena;
         std::vector<Node*> stack;
-        std::vector<std::string_view> attributeNames;
-        std::vector<std::pair<std::string_view, bool>> attributeValues;
 
         using CursorType = StringCursor;
         using StringType = CursorType::StringType;
@@ -128,14 +124,6 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
                 std::string(tagName), std::string(processingInstruction)));
         }
 
-        ONYX_INLINE void attributeAction(StringType attributeName,
-                                         StringType attributeValue,
-                                         bool hasEntities, CursorType& cursor) {
-            attributeNames.push_back(attributeName);
-            attributeValues.push_back(
-                std::make_pair(attributeValue, hasEntities));
-        }
-
         ONYX_INLINE void xmlDeclarationAction(
             StringType version, StringType encoding, bool hasEncoding,
             bool isStandalone, bool hasStandalone, CursorType& cursor) {
@@ -150,8 +138,11 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
                 arena.allocate<tags::Doctype>(std::string(doctypeText)));
         }
 
-        ONYX_INLINE void openAction(StringType tagName, bool isSelfClosing,
-                                    CursorType& cursor) {
+        ONYX_INLINE void openAction(
+            StringType tagName, bool isSelfClosing,
+            std::vector<StringType> attributeNames,
+            std::vector<std::pair<StringType, bool>> attributeValues,
+            CursorType& cursor) {
             Node* newNode = arena.allocate<tags::GenericNode>(
                 std::string(tagName), isSelfClosing);
 
@@ -208,8 +199,6 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
     struct DomStreamParserPolicy {
         PagedArena arena;
         std::vector<Node*> stack;
-        std::vector<std::string> attributeNames;
-        std::vector<std::pair<std::string, bool>> attributeValues;
 
         using CursorType = StreamCursor;
         using StringType = CursorType::StringType;
@@ -239,14 +228,6 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
                 std::move(tagName), processingInstruction));
         }
 
-        ONYX_INLINE void attributeAction(StringType&& attributeName,
-                                         StringType&& attributeValue,
-                                         bool hasEntities, CursorType& cursor) {
-            attributeNames.push_back(std::move(attributeName));
-            attributeValues.push_back(
-                std::make_pair(std::move(attributeValue), hasEntities));
-        }
-
         ONYX_INLINE void xmlDeclarationAction(
             StringType&& version, StringType&& encoding, bool hasEncoding,
             bool isStandalone, bool hasStandalone, CursorType& cursor) {
@@ -261,8 +242,11 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
                 arena.allocate<tags::Doctype>(std::move(doctypeText)));
         }
 
-        ONYX_INLINE void openAction(StringType&& tagName, bool isSelfClosing,
-                                    CursorType& cursor) {
+        ONYX_INLINE void openAction(
+            StringType&& tagName, bool isSelfClosing,
+            std::vector<StringType> attributeNames,
+            std::vector<std::pair<StringType, bool>> attributeValues,
+            CursorType& cursor) {
             Node* newNode = arena.allocate<tags::GenericNode>(
                 std::move(tagName), isSelfClosing);
 
