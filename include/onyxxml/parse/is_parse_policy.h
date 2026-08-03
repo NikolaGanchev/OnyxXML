@@ -9,8 +9,8 @@ concept isParserPolicy = requires(
     T t, typename T::StringType&& text, typename T::StringType&& tagName,
     typename T::StringType&& version, typename T::StringType&& encoding,
     bool hasEntities, bool hasEncoding, bool isStandalone, bool hasStandalone,
-    bool isSelfClosing, std::vector<typename T::StringType> attributeNames,
-    std::vector<std::pair<typename T::StringType, bool>> attributeValues,
+    bool isSelfClosing, std::vector<typename T::StringType>& attributeNames,
+    std::vector<std::pair<typename T::StringType, bool>>& attributeValues,
     typename T::CursorType& cursor) {
     typename T::StringType;
     typename T::CursorType;

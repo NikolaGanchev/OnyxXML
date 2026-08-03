@@ -53,8 +53,8 @@ void SaxParser::parse(std::string_view input) {
 
         ONYX_INLINE void openAction(
             StringType tagName, bool isSelfClosing,
-            std::vector<StringType> attributeNames,
-            std::vector<std::pair<StringType, bool>> attributeValues,
+            std::vector<StringType>& attributeNames,
+            std::vector<std::pair<StringType, bool>>& attributeValues,
             CursorType& cursor) {
             std::vector<Attribute> attributes;
             for (int i = 0; i < attributeNames.size(); i++) {
@@ -68,8 +68,6 @@ void SaxParser::parse(std::string_view input) {
             if (!isSelfClosing) {
                 stack.push_back(tagName);
             }
-            attributeNames.clear();
-            attributeValues.clear();
             this->listener.onTagOpen(std::string(tagName), isSelfClosing,
                                      std::move(attributes));
         }
@@ -160,8 +158,8 @@ void SaxParser::parse(std::istream& input) {
 
         ONYX_INLINE void openAction(
             StringType&& tagName, bool isSelfClosing,
-            std::vector<StringType> attributeNames,
-            std::vector<std::pair<StringType, bool>> attributeValues,
+            std::vector<StringType>& attributeNames,
+            std::vector<std::pair<StringType, bool>>& attributeValues,
             CursorType& cursor) {
             std::vector<Attribute> attributes;
             for (int i = 0; i < attributeNames.size(); i++) {
@@ -175,8 +173,6 @@ void SaxParser::parse(std::istream& input) {
             if (!isSelfClosing) {
                 stack.push_back(tagName);
             }
-            attributeNames.clear();
-            attributeValues.clear();
             this->listener.onTagOpen(std::move(tagName), isSelfClosing,
                                      std::move(attributes));
         }

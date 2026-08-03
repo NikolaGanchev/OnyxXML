@@ -57,8 +57,8 @@ Arena DomParser::parseDryRun(std::string_view input) {
 
         ONYX_INLINE void openAction(
             StringType tagName, bool isSelfClosing,
-            std::vector<StringType> attributeNames,
-            std::vector<std::pair<StringType, bool>> attributeValues,
+            std::vector<StringType>& attributeNames,
+            std::vector<std::pair<StringType, bool>>& attributeValues,
             CursorType& cursor) {
             builder.preallocate<tags::GenericNode>();
             if (!isSelfClosing) {
@@ -150,8 +150,8 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
 
         ONYX_INLINE void openAction(
             StringType tagName, bool isSelfClosing,
-            std::vector<StringType> attributeNames,
-            std::vector<std::pair<StringType, bool>> attributeValues,
+            std::vector<StringType>& attributeNames,
+            std::vector<std::pair<StringType, bool>>& attributeValues,
             CursorType& cursor) {
             Node* newNode = arena.allocate<tags::GenericNode>(
                 std::string(tagName), isSelfClosing);
@@ -169,8 +169,6 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
             if (!isSelfClosing) {
                 stack.push_back(newNode);
             }
-            attributeNames.clear();
-            attributeValues.clear();
         }
 
         inline void closeAction(StringType tagName, CursorType& cursor) {
@@ -254,8 +252,8 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
 
         ONYX_INLINE void openAction(
             StringType&& tagName, bool isSelfClosing,
-            std::vector<StringType> attributeNames,
-            std::vector<std::pair<StringType, bool>> attributeValues,
+            std::vector<StringType>& attributeNames,
+            std::vector<std::pair<StringType, bool>>& attributeValues,
             CursorType& cursor) {
             Node* newNode = arena.allocate<tags::GenericNode>(
                 std::move(tagName), isSelfClosing);
@@ -273,9 +271,6 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
             if (!isSelfClosing) {
                 stack.push_back(newNode);
             }
-
-            attributeNames.clear();
-            attributeValues.clear();
         }
 
         ONYX_INLINE void closeAction(StringType&& tagName, CursorType& cursor) {
