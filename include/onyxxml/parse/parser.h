@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -521,6 +522,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     }
                 }
 
+                if constexpr (Config::validate) {
+                    if (attributeNames.size() >= Config::maxAttributeCount) {
+                        throw std::invalid_argument(
+                            "Tag has too many attributes");
+                    }
+                }
                 attributeNames.push_back(std::move(attributeName));
                 attributeValues.push_back(
                     std::make_pair(std::move(attributeValue), hasEntities));

@@ -1,9 +1,10 @@
 #include "parse/sax_parser.h"
 
+#include <limits>
+
 #include "parse/parser.h"
 #include "parse/stream_cursor.h"
 #include "parse/string_cursor.h"
-
 
 namespace onyx::dynamic::parser {
 
@@ -12,6 +13,8 @@ SaxParser::SaxParser(SaxListener& listener) : listener(listener) {}
 struct ValidatingConfig {
     constexpr static bool validate = true;
     constexpr static bool validateDuplicateAttributes = true;
+    constexpr static size_t maxAttributeCount =
+        std::numeric_limits<size_t>::max();
 };
 
 void SaxParser::parse(std::string_view input) {

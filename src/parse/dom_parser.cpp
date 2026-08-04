@@ -1,6 +1,7 @@
 #include "parse/dom_parser.h"
 
-#include <functional>
+#include <cstddef>
+#include <limits>
 #include <string_view>
 
 #include "nodes/cdata_node.h"
@@ -22,16 +23,22 @@ namespace onyx::dynamic::parser {
 struct DryRunConfig {
     constexpr static bool validate = true;
     constexpr static bool validateDuplicateAttributes = true;
+    constexpr static size_t maxAttributeCount =
+        std::numeric_limits<size_t>::max();
 };
 
 struct ValidatingConfig {
     constexpr static bool validate = true;
     constexpr static bool validateDuplicateAttributes = true;
+    constexpr static size_t maxAttributeCount =
+        std::numeric_limits<size_t>::max();
 };
 
 struct NonValidatingConfig {
     constexpr static bool validate = false;
     constexpr static bool validateDuplicateAttributes = false;
+    constexpr static size_t maxAttributeCount =
+        std::numeric_limits<size_t>::max();
 };
 
 Arena DomParser::parseDryRun(std::string_view input) {
