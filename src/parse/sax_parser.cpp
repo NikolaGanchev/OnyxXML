@@ -11,42 +11,48 @@ SaxParser::SaxParser(SaxListener& listener) : listener(listener) {}
 void SaxParser::parse(std::string_view input) {
     struct StringSaxParserPolicy {
         SaxListener& listener;
-        std::vector<std::string_view> stack;
+        std::string_view root = ".empty";
 
         using CursorType = StringCursor;
         using StringType = CursorType::StringType;
+        using StackType = std::string_view;
+        using Stack = std::vector<StackType>;
 
         ONYX_INLINE void textAction(StringType text, bool hasEntities,
-                                    CursorType& cursor) {
+                                    Stack& stack, CursorType& cursor) {
             this->listener.onText(hasEntities ? text::expandEntities(text)
                                               : std::string(text));
         }
 
-        ONYX_INLINE void commentAction(StringType commentText,
+        ONYX_INLINE void commentAction(StringType commentText, Stack& stack,
                                        CursorType& cursor) {
             this->listener.onComment(std::string(commentText));
         }
 
-        ONYX_INLINE void cdataAction(StringType cdataText, CursorType& cursor) {
+        ONYX_INLINE void cdataAction(StringType cdataText, Stack& stack,
+                                     CursorType& cursor) {
             this->listener.onCData(std::string(cdataText));
         }
 
         ONYX_INLINE void instructionAction(StringType tagName,
                                            StringType processingInstruction,
-                                           CursorType& cursor) {
+                                           Stack& stack, CursorType& cursor) {
             this->listener.onInstruction(std::string(tagName),
                                          std::string(processingInstruction));
         }
 
-        ONYX_INLINE void xmlDeclarationAction(
-            StringType version, StringType encoding, bool hasEncoding,
-            bool isStandalone, bool hasStandalone, CursorType& cursor) {
+        ONYX_INLINE void xmlDeclarationAction(StringType version,
+                                              StringType encoding,
+                                              bool hasEncoding,
+                                              bool isStandalone,
+                                              bool hasStandalone, Stack& stack,
+                                              CursorType& cursor) {
             this->listener.onXMLDeclaration(std::string(version),
                                             std::string(encoding), hasEncoding,
                                             isStandalone, hasStandalone);
         }
 
-        ONYX_INLINE void doctypeAction(StringType doctypeText,
+        ONYX_INLINE void doctypeAction(StringType doctypeText, Stack& stack,
                                        CursorType& cursor) {
             this->listener.onDoctype(std::string(doctypeText));
         }
@@ -55,7 +61,7 @@ void SaxParser::parse(std::string_view input) {
             StringType tagName, bool isSelfClosing,
             std::vector<StringType>& attributeNames,
             std::vector<std::pair<StringType, bool>>& attributeValues,
-            CursorType& cursor) {
+            Stack& stack, CursorType& cursor) {
             std::vector<Attribute> attributes;
             for (int i = 0; i < attributeNames.size(); i++) {
                 attributes.emplace_back(
@@ -72,40 +78,37 @@ void SaxParser::parse(std::string_view input) {
                                      std::move(attributes));
         }
 
-        ONYX_INLINE void closeAction(StringType tagName, CursorType& cursor) {
-            std::string_view thisNode = stack.back();
-            if (thisNode != tagName) {
-                throw std::invalid_argument("Closing unopened tag");
-            }
-            if (stack.size() == 1) {
-                throw std::invalid_argument("Closing non-existent tags");
-            }
+        ONYX_INLINE void closeAction(StringType tagName, Stack& stack,
+                                     CursorType& cursor) {
             stack.pop_back();
+        }
+
+        ONYX_INLINE void initStack(std::vector<StackType>& stack) {
+            stack.push_back(root);
+        }
+
+        ONYX_INLINE bool equalStackElementToTag(StackType& el,
+                                                StringType& tag) {
+            return el == tag;
+        }
+
+        ONYX_INLINE bool isStackRoot(StackType& stackElement) {
+            return stackElement == root;
         }
     };
 
     using StringType = StringCursor::StringType;
     StringCursor pos(input.data());
 
-    std::string_view root = ".empty";
-
     StringSaxParserPolicy policy{this->listener};
-
-    policy.stack.push_back(root);
 
     skipWhitespace(pos);
 
     this->listener.onStart();
 
     try {
-        parseBody<true, StringType, StringCursor, StringSaxParserPolicy>(
-            pos, policy);
+        parseBody<true, StringSaxParserPolicy>(pos, policy);
     } catch (std::exception& e) {
-        this->listener.onException(e);
-    }
-
-    if (policy.stack.size() != 1 || policy.stack[0] != root) {
-        std::invalid_argument e("Unclosed tags left");
         this->listener.onException(e);
     }
 
@@ -116,42 +119,48 @@ void SaxParser::parse(std::istream& input) {
     struct StreamSaxParserPolicy {
         SaxListener& listener;
         std::vector<std::string> stack;
+        std::string_view root = ".empty";
 
         using CursorType = StreamCursor;
         using StringType = StreamCursor::StringType;
+        using StackType = std::string;
+        using Stack = std::vector<StackType>;
 
         ONYX_INLINE void textAction(StringType&& text, bool hasEntities,
-                                    CursorType& cursor) {
+                                    Stack& stack, CursorType& cursor) {
             this->listener.onText(hasEntities ? text::expandEntities(text)
                                               : std::move(text));
         }
 
-        ONYX_INLINE void commentAction(StringType&& commentText,
+        ONYX_INLINE void commentAction(StringType&& commentText, Stack& stack,
                                        CursorType& cursor) {
             this->listener.onComment(std::move(commentText));
         }
 
-        ONYX_INLINE void cdataAction(StringType&& cdataText,
+        ONYX_INLINE void cdataAction(StringType&& cdataText, Stack& stack,
                                      CursorType& cursor) {
             this->listener.onCData(std::move(cdataText));
         }
 
         ONYX_INLINE void instructionAction(StringType&& tagName,
                                            StringType&& processingInstruction,
-                                           CursorType& cursor) {
+                                           Stack& stack, CursorType& cursor) {
             this->listener.onInstruction(std::move(tagName),
                                          std::move(processingInstruction));
         }
 
-        ONYX_INLINE void xmlDeclarationAction(
-            StringType&& version, StringType&& encoding, bool hasEncoding,
-            bool isStandalone, bool hasStandalone, CursorType& cursor) {
+        ONYX_INLINE void xmlDeclarationAction(StringType&& version,
+                                              StringType&& encoding,
+                                              bool hasEncoding,
+                                              bool isStandalone,
+                                              bool hasStandalone, Stack& stack,
+                                              CursorType& cursor) {
             this->listener.onXMLDeclaration(std::move(version),
                                             std::move(encoding), hasEncoding,
                                             isStandalone, hasStandalone);
         }
 
-        ONYX_INLINE void doctypeAction(StringType&& doctypeText,
+        ONYX_INLINE void doctypeAction(StringType&& doctypeText, Stack& stack,
                                        CursorType& cursor) {
             this->listener.onDoctype(std::move(doctypeText));
         }
@@ -160,7 +169,7 @@ void SaxParser::parse(std::istream& input) {
             StringType&& tagName, bool isSelfClosing,
             std::vector<StringType>& attributeNames,
             std::vector<std::pair<StringType, bool>>& attributeValues,
-            CursorType& cursor) {
+            Stack& stack, CursorType& cursor) {
             std::vector<Attribute> attributes;
             for (int i = 0; i < attributeNames.size(); i++) {
                 attributes.emplace_back(
@@ -177,39 +186,36 @@ void SaxParser::parse(std::istream& input) {
                                      std::move(attributes));
         }
 
-        ONYX_INLINE void closeAction(StringType&& tagName, CursorType& cursor) {
-            std::string_view thisNode = stack.back();
-            if (thisNode != tagName) {
-                throw std::invalid_argument("Closing unopened tag");
-            }
-            if (stack.size() == 1) {
-                throw std::invalid_argument("Closing non-existent tags");
-            }
+        ONYX_INLINE void closeAction(StringType&& tagName, Stack& stack,
+                                     CursorType& cursor) {
             stack.pop_back();
+        }
+
+        ONYX_INLINE void initStack(std::vector<StackType>& stack) {
+            stack.push_back(std::string(root));
+        }
+
+        ONYX_INLINE bool equalStackElementToTag(StackType& el,
+                                                StringType& tag) {
+            return el == tag;
+        }
+
+        ONYX_INLINE bool isStackRoot(StackType& stackElement) {
+            return stackElement == root;
         }
     };
 
     using StringType = StreamCursor::StringType;
     StreamCursor pos(input);
 
-    std::string_view root = ".empty";
-
     StreamSaxParserPolicy policy{this->listener};
-
-    policy.stack.push_back(std::string(root));
 
     skipWhitespace(pos);
 
     this->listener.onStart();
     try {
-        parseBody<true, StringType, StreamCursor, StreamSaxParserPolicy>(
-            pos, policy);
+        parseBody<true, StreamSaxParserPolicy>(pos, policy);
     } catch (std::exception& e) {
-        this->listener.onException(e);
-    }
-
-    if (policy.stack.size() != 1 || policy.stack[0] != root) {
-        std::invalid_argument e("Unclosed tags left");
         this->listener.onException(e);
     }
 

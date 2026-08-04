@@ -1,8 +1,7 @@
 #include "parse/dom_parser.h"
 
-#include "parse/parser.h"
-#include "parse/stream_cursor.h"
-#include "parse/string_cursor.h"
+#include <functional>
+#include <string_view>
 
 #include "nodes/cdata_node.h"
 #include "nodes/comment_node.h"
@@ -12,45 +11,55 @@
 #include "nodes/processing_instruction_node.h"
 #include "nodes/text_node.h"
 #include "nodes/xml_declaration_node.h"
+#include "parse/helpers.h"
+#include "parse/parser.h"
+#include "parse/stream_cursor.h"
+#include "parse/string_cursor.h"
 #include "text.h"
 
 namespace onyx::dynamic::parser {
 
 Arena DomParser::parseDryRun(std::string_view input) {
     struct DomDryRunParserPolicy {
-        std::vector<std::string_view> stack;
         Arena::Builder builder;
+        std::string_view root = ".empty";
 
         using CursorType = StringCursor;
         using StringType = CursorType::StringType;
+        using StackType = std::string_view;
+        using Stack = std::vector<StackType>;
 
         ONYX_INLINE void textAction(StringType text, bool hasEntities,
-                                    CursorType& cursor) {
+                                    Stack& stack, CursorType& cursor) {
             builder.preallocate<tags::Text>();
         }
 
-        ONYX_INLINE void commentAction(StringType commentText,
+        ONYX_INLINE void commentAction(StringType commentText, Stack& stack,
                                        CursorType& cursor) {
             builder.preallocate<tags::Comment>();
         }
 
-        ONYX_INLINE void cdataAction(StringType cdataText, CursorType& cursor) {
+        ONYX_INLINE void cdataAction(StringType cdataText, Stack& stack,
+                                     CursorType& cursor) {
             builder.preallocate<tags::CData>();
         }
 
         ONYX_INLINE void instructionAction(StringType tagName,
                                            StringType processingInstruction,
-                                           CursorType& cursor) {
+                                           Stack& stack, CursorType& cursor) {
             builder.preallocate<tags::ProcessingInstruction>();
         }
 
-        ONYX_INLINE void xmlDeclarationAction(
-            StringType version, StringType encoding, bool hasEncoding,
-            bool isStandalone, bool hasStandalone, CursorType& cursor) {
+        ONYX_INLINE void xmlDeclarationAction(StringType version,
+                                              StringType encoding,
+                                              bool hasEncoding,
+                                              bool isStandalone,
+                                              bool hasStandalone, Stack& stack,
+                                              CursorType& cursor) {
             builder.preallocate<tags::XmlDeclaration>();
         }
 
-        ONYX_INLINE void doctypeAction(StringType doctypeText,
+        ONYX_INLINE void doctypeAction(StringType doctypeText, Stack& stack,
                                        CursorType& cursor) {
             builder.preallocate<tags::Doctype>();
         }
@@ -59,21 +68,30 @@ Arena DomParser::parseDryRun(std::string_view input) {
             StringType tagName, bool isSelfClosing,
             std::vector<StringType>& attributeNames,
             std::vector<std::pair<StringType, bool>>& attributeValues,
-            CursorType& cursor) {
+            std::vector<StackType>& stack, CursorType& cursor) {
             builder.preallocate<tags::GenericNode>();
             if (!isSelfClosing) {
                 stack.push_back(tagName);
             }
         }
 
-        ONYX_INLINE void closeAction(StringType tagName, CursorType& cursor) {
-            if (stack.back() != tagName) {
-                throw std::invalid_argument("Closing unopened tag");
-            }
-            if (stack.size() == 1) {
-                throw std::invalid_argument("Closing non-existent tags");
-            }
+        ONYX_INLINE void closeAction(StringType tagName,
+                                     std::vector<StackType>& stack,
+                                     CursorType& cursor) {
             stack.pop_back();
+        }
+
+        ONYX_INLINE void initStack(std::vector<StackType>& stack) {
+            stack.push_back(root);
+        }
+
+        ONYX_INLINE bool equalStackElementToTag(StackType& el,
+                                                StringType& tag) {
+            return el == tag;
+        }
+
+        ONYX_INLINE bool isStackRoot(StackType& stackElement) {
+            return stackElement == root;
         }
     };
 
@@ -85,19 +103,9 @@ Arena DomParser::parseDryRun(std::string_view input) {
     // Root
     policy.builder.preallocate<tags::EmptyNode>();
 
-    std::string_view root = ".empty";
-
-    policy.stack.push_back(root);
-
     skipWhitespace(pos);
 
-    parseBody<true, StringType, StringCursor, DomDryRunParserPolicy>(pos,
-                                                                     policy);
-
-    // Invariant - stack may only contain the root
-    if (policy.stack.size() != 1 || policy.stack[0] != root) {
-        throw std::invalid_argument("Unclosed tags left");
-    }
+    parseBody<true, DomDryRunParserPolicy>(pos, policy);
 
     return policy.builder.build();
 }
@@ -105,44 +113,51 @@ Arena DomParser::parseDryRun(std::string_view input) {
 ParseResult<Arena> DomParser::parse(std::string_view input) {
     struct DomStringParserPolicy {
         Arena arena;
-        std::vector<Node*> stack;
 
         using CursorType = StringCursor;
         using StringType = CursorType::StringType;
+        using StackType = Node*;
+        using Stack = std::vector<StackType>;
+
+        Node* root = arena.allocate<tags::EmptyNode>();
 
         ONYX_INLINE void textAction(StringType text, bool hasEntities,
-                                    CursorType& cursor) {
+                                    Stack& stack, CursorType& cursor) {
             stack.back()->addChild(arena.allocate<tags::Text>(
                 hasEntities ? text::expandEntities(text) : std::string(text)));
         }
 
-        ONYX_INLINE void commentAction(StringType commentText,
+        ONYX_INLINE void commentAction(StringType commentText, Stack& stack,
                                        CursorType& cursor) {
             stack.back()->addChild(
                 arena.allocate<tags::Comment>(std::string(commentText)));
         }
 
-        ONYX_INLINE void cdataAction(StringType cdataText, CursorType& cursor) {
+        ONYX_INLINE void cdataAction(StringType cdataText, Stack& stack,
+                                     CursorType& cursor) {
             stack.back()->addChild(
                 arena.allocate<tags::CData>(std::string(cdataText)));
         }
 
         ONYX_INLINE void instructionAction(StringType tagName,
                                            StringType processingInstruction,
-                                           CursorType& cursor) {
+                                           Stack& stack, CursorType& cursor) {
             stack.back()->addChild(arena.allocate<tags::ProcessingInstruction>(
                 std::string(tagName), std::string(processingInstruction)));
         }
 
-        ONYX_INLINE void xmlDeclarationAction(
-            StringType version, StringType encoding, bool hasEncoding,
-            bool isStandalone, bool hasStandalone, CursorType& cursor) {
+        ONYX_INLINE void xmlDeclarationAction(StringType version,
+                                              StringType encoding,
+                                              bool hasEncoding,
+                                              bool isStandalone,
+                                              bool hasStandalone, Stack& stack,
+                                              CursorType& cursor) {
             stack.back()->addChild(arena.allocate<tags::XmlDeclaration>(
                 std::string(version), std::string(encoding), hasEncoding,
                 isStandalone, hasStandalone, false));
         }
 
-        ONYX_INLINE void doctypeAction(StringType doctypeText,
+        ONYX_INLINE void doctypeAction(StringType doctypeText, Stack& stack,
                                        CursorType& cursor) {
             stack.back()->addChild(
                 arena.allocate<tags::Doctype>(std::string(doctypeText)));
@@ -152,7 +167,7 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
             StringType tagName, bool isSelfClosing,
             std::vector<StringType>& attributeNames,
             std::vector<std::pair<StringType, bool>>& attributeValues,
-            CursorType& cursor) {
+            Stack& stack, CursorType& cursor) {
             Node* newNode = arena.allocate<tags::GenericNode>(
                 std::string(tagName), isSelfClosing);
 
@@ -171,8 +186,22 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
             }
         }
 
-        inline void closeAction(StringType tagName, CursorType& cursor) {
+        ONYX_INLINE void closeAction(StringType tagName, Stack& stack,
+                                     CursorType& cursor) {
             stack.pop_back();
+        }
+
+        ONYX_INLINE void initStack(std::vector<StackType>& stack) {
+            stack.push_back(root);
+        }
+
+        ONYX_INLINE bool equalStackElementToTag(StackType& el,
+                                                StringType& tag) {
+            return el->getTagName() == tag;
+        }
+
+        ONYX_INLINE bool isStackRoot(StackType& stackElement) {
+            return stackElement == root;
         }
     };
 
@@ -181,49 +210,43 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
 
     DomStringParserPolicy policy{std::move(parseDryRun(input))};
 
-    Node* root = policy.arena.allocate<tags::EmptyNode>();
-
-    policy.stack.push_back(root);
-
     skipWhitespace(pos);
 
-    parseBody<false, StringType, StringCursor, DomStringParserPolicy>(pos,
-                                                                      policy);
+    parseBody<false, DomStringParserPolicy>(pos, policy);
 
-    // Invariant - stack may only contain the root
-    if (policy.stack.size() != 1 || policy.stack[0] != root) {
-        throw std::invalid_argument("Unclosed tags left");
+    if (policy.root->getChildrenCount() == 1) {
+        Node* newRoot =
+            policy.root->removeChild(policy.root->getChildren()[0]).release();
+        policy.root = std::move(newRoot);
     }
 
-    if (root->getChildrenCount() == 1) {
-        Node* newRoot = root->removeChild(root->getChildren()[0]).release();
-        root = std::move(newRoot);
-    }
-
-    return ParseResult{std::move(policy.arena), root};
+    return ParseResult{std::move(policy.arena), policy.root};
 }
 
 ParseResult<PagedArena> DomParser::parse(std::istream& input) {
     struct DomStreamParserPolicy {
         PagedArena arena;
-        std::vector<Node*> stack;
 
         using CursorType = StreamCursor;
         using StringType = CursorType::StringType;
+        using StackType = Node*;
+        using Stack = std::vector<StackType>;
+
+        Node* root = arena.allocate<tags::EmptyNode>();
 
         ONYX_INLINE void textAction(StringType&& text, bool hasEntities,
-                                    CursorType& cursor) {
+                                    Stack& stack, CursorType& cursor) {
             stack.back()->addChild(arena.allocate<tags::Text>(
                 hasEntities ? text::expandEntities(text) : std::move(text)));
         }
 
-        ONYX_INLINE void commentAction(StringType&& commentText,
+        ONYX_INLINE void commentAction(StringType&& commentText, Stack& stack,
                                        CursorType& cursor) {
             stack.back()->addChild(
                 arena.allocate<tags::Comment>(std::move(commentText)));
         }
 
-        ONYX_INLINE void cdataAction(StringType&& cdataText,
+        ONYX_INLINE void cdataAction(StringType&& cdataText, Stack& stack,
                                      CursorType& cursor) {
             stack.back()->addChild(
                 arena.allocate<tags::CData>(std::move(cdataText)));
@@ -231,20 +254,23 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
 
         ONYX_INLINE void instructionAction(StringType&& tagName,
                                            StringType&& processingInstruction,
-                                           CursorType& cursor) {
+                                           Stack& stack, CursorType& cursor) {
             stack.back()->addChild(arena.allocate<tags::ProcessingInstruction>(
                 std::move(tagName), processingInstruction));
         }
 
-        ONYX_INLINE void xmlDeclarationAction(
-            StringType&& version, StringType&& encoding, bool hasEncoding,
-            bool isStandalone, bool hasStandalone, CursorType& cursor) {
+        ONYX_INLINE void xmlDeclarationAction(StringType&& version,
+                                              StringType&& encoding,
+                                              bool hasEncoding,
+                                              bool isStandalone,
+                                              bool hasStandalone, Stack& stack,
+                                              CursorType& cursor) {
             stack.back()->addChild(arena.allocate<tags::XmlDeclaration>(
                 std::move(version), std::move(encoding), hasEncoding,
                 isStandalone, hasStandalone, false));
         }
 
-        ONYX_INLINE void doctypeAction(StringType&& doctypeText,
+        ONYX_INLINE void doctypeAction(StringType&& doctypeText, Stack& stack,
                                        CursorType& cursor) {
             stack.back()->addChild(
                 arena.allocate<tags::Doctype>(std::move(doctypeText)));
@@ -254,7 +280,7 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
             StringType&& tagName, bool isSelfClosing,
             std::vector<StringType>& attributeNames,
             std::vector<std::pair<StringType, bool>>& attributeValues,
-            CursorType& cursor) {
+            Stack& stack, CursorType& cursor) {
             Node* newNode = arena.allocate<tags::GenericNode>(
                 std::move(tagName), isSelfClosing);
 
@@ -273,15 +299,22 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
             }
         }
 
-        ONYX_INLINE void closeAction(StringType&& tagName, CursorType& cursor) {
-            Node* thisNode = stack.back();
-            if (thisNode->getTagName() != tagName) {
-                throw std::invalid_argument("Closing unopened tag");
-            }
-            if (stack.size() == 1) {
-                throw std::invalid_argument("Closing non-existent tags");
-            }
+        ONYX_INLINE void closeAction(StringType&& tagName, Stack& stack,
+                                     CursorType& cursor) {
             stack.pop_back();
+        }
+
+        ONYX_INLINE void initStack(std::vector<StackType>& stack) {
+            stack.push_back(root);
+        }
+
+        ONYX_INLINE bool equalStackElementToTag(StackType& el,
+                                                StringType& tag) {
+            return el->getTagName() == tag;
+        }
+
+        ONYX_INLINE bool isStackRoot(StackType& stackElement) {
+            return stackElement == root;
         }
     };
 
@@ -290,25 +323,16 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
 
     DomStreamParserPolicy policy{};
 
-    Node* root = policy.arena.allocate<tags::EmptyNode>();
-
-    policy.stack.push_back(root);
-
     skipWhitespace(pos);
 
-    parseBody<true, StringType, StreamCursor, DomStreamParserPolicy>(pos,
-                                                                     policy);
+    parseBody<true, DomStreamParserPolicy>(pos, policy);
 
-    // Invariant - stack may only contain the root
-    if (policy.stack.size() != 1 || policy.stack[0] != root) {
-        throw std::invalid_argument("Unclosed tags left");
+    if (policy.root->getChildrenCount() == 1) {
+        Node* newRoot =
+            policy.root->removeChild(policy.root->getChildren()[0]).release();
+        policy.root = std::move(newRoot);
     }
 
-    if (root->getChildrenCount() == 1) {
-        Node* newRoot = root->removeChild(root->getChildren()[0]).release();
-        root = std::move(newRoot);
-    }
-
-    return ParseResult{std::move(policy.arena), root};
+    return ParseResult{std::move(policy.arena), policy.root};
 }
 }  // namespace onyx::dynamic::parser

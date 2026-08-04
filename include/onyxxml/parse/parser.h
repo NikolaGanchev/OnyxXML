@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <utility>
 #include <vector>
 
@@ -23,21 +24,24 @@ ONYX_INLINE void readOrThrow(CursorType& pos, std::string_view expected,
     }
 }
 
-template <bool validate, typename StringType, typename CursorType,
-          typename Policy>
-ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
+template <bool validate, typename Policy>
+ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
     /* In GCC 15.1 and older MSVC versions, having
         `isCursor<CursorType>, isParserPolicy<Policy>`
         with a comma instead of `&&` actually causes an internal compiler error.
         Discovered via trial and error.
     */
-    requires(isCursor<CursorType> && isParserPolicy<Policy>)
+    requires(isCursor<typename Policy::CursorType> && isParserPolicy<Policy>)
 {
+    using StringType = typename Policy::StringType;
+    using StackType = typename Policy::StackType;
     bool firstTag = true;
     bool foundXmlDeclaration = false;
     struct EmptyStruct {};
     std::vector<StringType> attributeNames;
     std::vector<std::pair<StringType, bool>> attributeValues;
+    std::vector<StackType> stack;
+    policy.initStack(stack);
     while (pos.current() != '\0') {
         /* Invariant - always at the start of either a tag or a sequence of
          * text */
@@ -63,7 +67,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
             StringType text = pos.getCaptured();
             pos.bringToCapture();
 
-            policy.textAction(std::move(text), hasEntities, pos);
+            policy.textAction(std::move(text), hasEntities, stack, pos);
 
             continue;
         }
@@ -228,7 +232,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
                     policy.xmlDeclarationAction(
                         std::move(version), std::move(encoding), hasEncoding,
-                        isStandalone, hasStandalone, pos);
+                        isStandalone, hasStandalone, stack, pos);
                     continue;
                 }
             }
@@ -256,7 +260,8 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
             /* Invariant - just after processing instruction end */
             policy.instructionAction(std::move(tagName),
-                                     std::move(processingInstruction), pos);
+                                     std::move(processingInstruction), stack,
+                                     pos);
             firstTag = false;
             continue;
         } else if (pos.current() == '!') {
@@ -296,7 +301,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
                         "-- inside of comment not allowed");
                 pos.bringToCapture();
                 pos.advance();
-                policy.commentAction(std::move(commentText), pos);
+                policy.commentAction(std::move(commentText), stack, pos);
                 firstTag = false;
                 continue;
             } else if (pos.current() == '[') {
@@ -323,7 +328,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
                 pos.bringToCapture();
                 pos.advance(3);
-                policy.cdataAction(std::move(cdataText), pos);
+                policy.cdataAction(std::move(cdataText), stack, pos);
                 firstTag = false;
                 continue;
             } else if (pos.current() == 'D') {
@@ -345,7 +350,7 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
 
                 pos.bringToCapture();
                 pos.advance();
-                policy.doctypeAction(std::move(doctypeText), pos);
+                policy.doctypeAction(std::move(doctypeText), stack, pos);
                 firstTag = false;
                 continue;
             } else if (validate) {
@@ -483,14 +488,24 @@ ONYX_INLINE void parseBody(CursorType& pos, Policy& policy)
             /* Invariant - top stack node is always current parent */
             firstTag = false;
             policy.openAction(std::move(tagName), isSelfClosing, attributeNames,
-                              attributeValues, pos);
+                              attributeValues, stack, pos);
             attributeNames.resize(0);
             attributeValues.resize(0);
         } else {
             /* Invariant - when closing node, the current parent (stack top)
              * must be of the node type */
-            policy.closeAction(std::move(tagName), pos);
+            if (!policy.equalStackElementToTag(stack.back(), tagName)) {
+                throw std::invalid_argument("Closing unopened tag");
+            }
+            if (stack.size() == 1) {
+                throw std::invalid_argument("Closing non-existent tags");
+            }
+            policy.closeAction(std::move(tagName), stack, pos);
         }
+    }
+
+    if (stack.size() != 1 || !policy.isStackRoot(stack[0])) {
+        throw std::invalid_argument("Unclosed tags left");
     }
 }
 }  // namespace onyx::dynamic::parser
