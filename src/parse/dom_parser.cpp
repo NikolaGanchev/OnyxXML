@@ -19,6 +19,18 @@
 
 namespace onyx::dynamic::parser {
 
+struct DryRunConfig {
+    constexpr static bool validate = true;
+};
+
+struct ValidatingConfig {
+    constexpr static bool validate = true;
+};
+
+struct NonValidatingConfig {
+    constexpr static bool validate = false;
+};
+
 Arena DomParser::parseDryRun(std::string_view input) {
     struct DomDryRunParserPolicy {
         Arena::Builder builder;
@@ -105,7 +117,7 @@ Arena DomParser::parseDryRun(std::string_view input) {
 
     skipWhitespace(pos);
 
-    parseBody<true, DomDryRunParserPolicy>(pos, policy);
+    parseBody<DryRunConfig, DomDryRunParserPolicy>(pos, policy);
 
     return policy.builder.build();
 }
@@ -212,7 +224,7 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
 
     skipWhitespace(pos);
 
-    parseBody<false, DomStringParserPolicy>(pos, policy);
+    parseBody<NonValidatingConfig, DomStringParserPolicy>(pos, policy);
 
     if (policy.root->getChildrenCount() == 1) {
         Node* newRoot =
@@ -325,7 +337,7 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
 
     skipWhitespace(pos);
 
-    parseBody<true, DomStreamParserPolicy>(pos, policy);
+    parseBody<ValidatingConfig, DomStreamParserPolicy>(pos, policy);
 
     if (policy.root->getChildrenCount() == 1) {
         Node* newRoot =

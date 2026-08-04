@@ -4,9 +4,14 @@
 #include "parse/stream_cursor.h"
 #include "parse/string_cursor.h"
 
+
 namespace onyx::dynamic::parser {
 
 SaxParser::SaxParser(SaxListener& listener) : listener(listener) {}
+
+struct ValidatingConfig {
+    constexpr static bool validate = true;
+};
 
 void SaxParser::parse(std::string_view input) {
     struct StringSaxParserPolicy {
@@ -107,7 +112,7 @@ void SaxParser::parse(std::string_view input) {
     this->listener.onStart();
 
     try {
-        parseBody<true, StringSaxParserPolicy>(pos, policy);
+        parseBody<ValidatingConfig, StringSaxParserPolicy>(pos, policy);
     } catch (std::exception& e) {
         this->listener.onException(e);
     }
@@ -214,7 +219,7 @@ void SaxParser::parse(std::istream& input) {
 
     this->listener.onStart();
     try {
-        parseBody<true, StreamSaxParserPolicy>(pos, policy);
+        parseBody<ValidatingConfig, StreamSaxParserPolicy>(pos, policy);
     } catch (std::exception& e) {
         this->listener.onException(e);
     }

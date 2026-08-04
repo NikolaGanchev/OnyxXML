@@ -1,12 +1,12 @@
 #pragma once
 
-#include <concepts>
 #include <utility>
 #include <vector>
 
 #include "helpers.h"
 #include "is_cursor.h"
 #include "is_parse_policy.h"
+#include "is_parser_config.h"
 
 namespace onyx::dynamic::parser {
 
@@ -24,14 +24,15 @@ ONYX_INLINE void readOrThrow(CursorType& pos, std::string_view expected,
     }
 }
 
-template <bool validate, typename Policy>
+template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
     /* In GCC 15.1 and older MSVC versions, having
         `isCursor<CursorType>, isParserPolicy<Policy>`
         with a comma instead of `&&` actually causes an internal compiler error.
         Discovered via trial and error.
     */
-    requires(isCursor<typename Policy::CursorType> && isParserPolicy<Policy>)
+    requires(isCursor<typename Policy::CursorType> && isParserPolicy<Policy> &&
+             isParserConfig<Config>)
 {
     using StringType = typename Policy::StringType;
     using StackType = typename Policy::StackType;
@@ -52,9 +53,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
             while (pos.captureCurrent() != '<') {
                 if (pos.captureCurrent() == '\0') {
                     while (pos.current() != '\0') {
-                        if (validate && !isWhitespace(pos.current()))
-                            throw std::invalid_argument(
-                                "Invalid end after tag open");
+                        if constexpr (Config::validate) {
+                            if (!isWhitespace(pos.current())) {
+                                throw std::invalid_argument(
+                                    "Invalid end after tag open");
+                            }
+                        }
                         pos.advance();
                     }
                     end = true;
@@ -75,19 +79,25 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
         /* Invariant - always in tag name */
         pos.advance();
 
-        if (validate && pos.current() == '\0') {
-            throw std::invalid_argument("Premature end of document");
+        if constexpr (Config::validate) {
+            if (pos.current() == '\0') {
+                throw std::invalid_argument("Premature end of document");
+            }
         }
 
         if (pos.current() == '?') {
             /* Invariant - at processing directive */
             pos.advance();
-            if (validate && pos.current() == '\0') {
-                throw std::invalid_argument("Premature end of document");
+            if constexpr (Config::validate) {
+                if (pos.current() == '\0') {
+                    throw std::invalid_argument("Premature end of document");
+                }
             }
             StringType tagName = readName(pos);
-            if (validate && tagName.empty()) {
-                throw std::invalid_argument("Invalid tag name");
+            if constexpr (Config::validate) {
+                if (tagName.empty()) {
+                    throw std::invalid_argument("Invalid tag name");
+                }
             }
             pos.advance(tagName.size());
             /* Invariant - after tag name */
@@ -124,18 +134,22 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
                         /* read attribute name */
                         StringType attrName = readName(pos);
-                        if (validate && attrName.empty()) {
-                            throw std::invalid_argument(
-                                "Invalid XML declaration attribute name");
+                        if constexpr (Config::validate) {
+                            if (attrName.empty()) {
+                                throw std::invalid_argument(
+                                    "Invalid XML declaration attribute name");
+                            }
                         }
                         pos.advance(attrName.size());
 
                         /* expect '=' */
                         skipWhitespace(pos);
-                        if (validate && pos.current() != '=') {
-                            throw std::invalid_argument(
-                                "No '=' after XML declaration attribute "
-                                "name");
+                        if constexpr (Config::validate) {
+                            if (pos.current() != '=') {
+                                throw std::invalid_argument(
+                                    "No '=' after XML declaration attribute "
+                                    "name");
+                            }
                         }
                         pos.advance();
                         if (pos.current() == '\0') {
@@ -144,10 +158,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                         }
 
                         skipWhitespace(pos);
-                        if (validate &&
-                            (pos.current() != '"' && pos.current() != '\'')) {
-                            throw std::invalid_argument(
-                                "XML declaration attribute value not quoted");
+                        if constexpr (Config::validate) {
+                            if ((pos.current() != '"' &&
+                                 pos.current() != '\'')) {
+                                throw std::invalid_argument(
+                                    "XML declaration attribute value not "
+                                    "quoted");
+                            }
                         }
                         char quote = pos.current();
                         pos.advance();
@@ -158,12 +175,14 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                                pos.captureCurrent() != quote) {
                             pos.captureAdvance();
                         }
-                        if (validate && (pos.captureCurrent() == '?' ||
-                                         pos.captureCurrent() == '\0' ||
-                                         pos.captureCurrent() != quote)) {
-                            throw std::invalid_argument(
-                                "Unterminated XML declaration attribute "
-                                "value");
+                        if constexpr (Config::validate) {
+                            if ((pos.captureCurrent() == '?' ||
+                                 pos.captureCurrent() == '\0' ||
+                                 pos.captureCurrent() != quote)) {
+                                throw std::invalid_argument(
+                                    "Unterminated XML declaration attribute "
+                                    "value");
+                            }
                         }
                         StringType val = pos.getCaptured();
                         pos.bringToCapture();
@@ -182,11 +201,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                         } else if (attrName == "standalone") {
                             standalone = val;
                             hasStandalone = true;
-                        } else if (validate) {
-                            throw std::invalid_argument(
-                                std::string(
-                                    "Invalid XML declaration attribute '") +
-                                std::string(attrName) + "'");
+                        } else {
+                            if constexpr (Config::validate) {
+                                throw std::invalid_argument(
+                                    std::string(
+                                        "Invalid XML declaration attribute '") +
+                                    std::string(attrName) + "'");
+                            }
                         }
                     }
                     /* Invariant - pos at ?*/
@@ -205,27 +226,35 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                         throw std::invalid_argument(
                             "XML declaration must include version");
                     }
-                    if (validate && version != "1.0" && version != "1.1") {
-                        throw std::invalid_argument(
-                            "Unsupported XML version, must be '1.0' or "
-                            "'1.1'");
+                    if constexpr (Config::validate) {
+                        if (version != "1.0" && version != "1.1") {
+                            throw std::invalid_argument(
+                                "Unsupported XML version, must be '1.0' or "
+                                "'1.1'");
+                        }
                     }
                     /* encoding is optional in 1.0, but if present must match
                      * NMTOKEN */
-                    if (hasEncoding && validate) {
-                        /* simple check: no spaces, starts with letter */
-                        if (encoding.empty() || !isalpha(encoding[0]))
-                            throw std::invalid_argument(
-                                "Invalid encoding in XML declaration");
+                    if constexpr (Config::validate) {
+                        if (hasEncoding) {
+                            /* simple check: no spaces, starts with letter */
+                            if (encoding.empty() || !isalpha(encoding[0]))
+                                throw std::invalid_argument(
+                                    "Invalid encoding in XML declaration");
+                        }
                     }
                     /* standalone defaults to "no" if not present */
                     if (!hasStandalone) {
                         standalone = "no";
-                    } else if (validate && standalone != "yes" &&
-                               standalone != "no") {
-                        throw std::invalid_argument(
-                            "Invalid standalone value, must be 'yes' or "
-                            "'no'");
+                    } else {
+                        if constexpr (Config::validate) {
+                            if (standalone != "yes" && standalone != "no") {
+                                throw std::invalid_argument(
+                                    "Invalid standalone value, must be 'yes' "
+                                    "or "
+                                    "'no'");
+                            }
+                        }
                     }
                     bool isStandalone = (standalone[0] == 'y');
                     if (encoding.size() == 0) encoding = "UTF-8";
@@ -236,10 +265,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     continue;
                 }
             }
-            if (validate && (pos.current() != ' ' || pos.peek(1) == '\0')) {
-                throw std::invalid_argument(
-                    "No space between processing instruction target and "
-                    "processing instruction content");
+            if constexpr (Config::validate) {
+                if ((pos.current() != ' ' || pos.peek(1) == '\0')) {
+                    throw std::invalid_argument(
+                        "No space between processing instruction target and "
+                        "processing instruction content");
+                }
             }
             pos.advance();
 
@@ -248,9 +279,11 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
             while (!(pos.captureCurrent() == '?' &&
                      pos.capturePeek(1) != '\0' && pos.capturePeek(1) == '>')) {
                 pos.captureAdvance();
-                if (validate && pos.captureCurrent() == '\0')
-                    throw std::invalid_argument(
-                        "Invalid processing instruction without ending");
+                if constexpr (Config::validate) {
+                    if (pos.captureCurrent() == '\0')
+                        throw std::invalid_argument(
+                            "Invalid processing instruction without ending");
+                }
             }
 
             StringType processingInstruction = pos.getCaptured();
@@ -266,19 +299,26 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
             continue;
         } else if (pos.current() == '!') {
             pos.advance();
-            if (validate && pos.current() == '\0') {
-                throw std::invalid_argument("Premature end of <! tag");
+            if constexpr (Config::validate) {
+                if (pos.current() == '\0') {
+                    throw std::invalid_argument("Premature end of <! tag");
+                }
             }
 
             if (pos.current() == '-') {
                 pos.advance();
-                if (validate && pos.current() != '-') {
-                    throw std::invalid_argument("Premature end of comment");
+                if constexpr (Config::validate) {
+                    if (pos.current() != '-') {
+                        throw std::invalid_argument("Premature end of comment");
+                    }
                 }
                 pos.advance();
                 /* Invariant - right after <!-- of comment */
-                if (validate && pos.current() == '\0') {
-                    throw std::invalid_argument("Premature end of document");
+                if constexpr (Config::validate) {
+                    if (pos.current() == '\0') {
+                        throw std::invalid_argument(
+                            "Premature end of document");
+                    }
                 }
                 pos.beginCapture();
 
@@ -286,9 +326,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                          pos.capturePeek(1) != '\0' &&
                          pos.capturePeek(1) == '-')) {
                     pos.captureAdvance();
-                    if (validate && pos.captureCurrent() == '\0')
-                        throw std::invalid_argument(
-                            "Invalid comment without ending");
+                    if constexpr (Config::validate) {
+                        if (pos.captureCurrent() == '\0') {
+                            throw std::invalid_argument(
+                                "Invalid comment without ending");
+                        }
+                    }
                 }
 
                 StringType commentText = pos.getCaptured();
@@ -296,9 +339,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 pos.captureAdvance(2);
 
                 /* Invariant - either at error state or at > */
-                if (validate && pos.captureCurrent() != '>')
-                    throw std::invalid_argument(
-                        "-- inside of comment not allowed");
+                if constexpr (Config::validate) {
+                    if (pos.captureCurrent() != '>') {
+                        throw std::invalid_argument(
+                            "-- inside of comment not allowed");
+                    }
+                }
                 pos.bringToCapture();
                 pos.advance();
                 policy.commentAction(std::move(commentText), stack, pos);
@@ -306,11 +352,14 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 continue;
             } else if (pos.current() == '[') {
                 pos.advance();
-                readOrThrow<validate>(pos, "CDATA[",
-                                      "Premature end of CDATA section");
+                readOrThrow<Config::validate>(pos, "CDATA[",
+                                              "Premature end of CDATA section");
                 /* Invariant - right after <![CDATA[ */
-                if (validate && pos.current() == '\0') {
-                    throw std::invalid_argument("Premature end of document");
+                if constexpr (Config::validate) {
+                    if (pos.current() == '\0') {
+                        throw std::invalid_argument(
+                            "Premature end of document");
+                    }
                 }
                 pos.beginCapture();
 
@@ -319,9 +368,11 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     pos.capturePeek(1) == ']' && pos.capturePeek(2) != '\0' &&
                     pos.capturePeek(2) == '>')) {
                     pos.captureAdvance();
-                    if (validate && pos.captureCurrent() == '\0')
-                        throw std::invalid_argument(
-                            "Invalid CDATA without ending");
+                    if constexpr (Config::validate) {
+                        if (pos.captureCurrent() == '\0')
+                            throw std::invalid_argument(
+                                "Invalid CDATA without ending");
+                    }
                 }
 
                 StringType cdataText = pos.getCaptured();
@@ -334,16 +385,19 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
             } else if (pos.current() == 'D') {
                 pos.advance();
 
-                readOrThrow<validate>(pos, "OCTYPE ",
-                                      "Premature end of DOCTYPE section");
+                readOrThrow<Config::validate>(
+                    pos, "OCTYPE ", "Premature end of DOCTYPE section");
 
                 pos.beginCapture();
 
                 while (pos.captureCurrent() != '>') {
                     pos.captureAdvance();
-                    if (validate && pos.captureCurrent() == '\0')
-                        throw std::invalid_argument(
-                            "Invalid DOCTYPE without ending");
+                    if constexpr (Config::validate) {
+                        if (pos.captureCurrent() == '\0') {
+                            throw std::invalid_argument(
+                                "Invalid DOCTYPE without ending");
+                        }
+                    }
                 }
 
                 StringType doctypeText = pos.getCaptured();
@@ -353,23 +407,28 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 policy.doctypeAction(std::move(doctypeText), stack, pos);
                 firstTag = false;
                 continue;
-            } else if (validate) {
-                throw std::invalid_argument("Tag name cannot contain '!'");
+            } else {
+                if constexpr (Config::validate) {
+                    throw std::invalid_argument("Tag name cannot contain '!'");
+                }
             }
         }
 
         bool isClosing = (pos.current() == '/');
 
         if (isClosing) pos.advance();
-
-        if (validate && pos.current() == '\0') {
-            throw std::invalid_argument("Premature end of document");
+        if constexpr (Config::validate) {
+            if (pos.current() == '\0') {
+                throw std::invalid_argument("Premature end of document");
+            }
         }
 
         /* Invariant - pos always at tag name start */
         StringType tagName = readName(pos);
-        if (validate && tagName.empty()) {
-            throw std::invalid_argument("Invalid tag name");
+        if constexpr (Config::validate) {
+            if (tagName.empty()) {
+                throw std::invalid_argument("Invalid tag name");
+            }
         }
         pos.advance(tagName.size());
 
@@ -377,9 +436,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
         /* Invariant - pos always after tag name end */
         skipWhitespace(pos);
-
-        if (validate && pos.current() == '\0') {
-            throw std::invalid_argument("Premature end of document");
+        if constexpr (Config::validate) {
+            if (pos.current() == '\0') {
+                throw std::invalid_argument("Premature end of document");
+            }
         }
 
         if (couldHaveAttributes) {
@@ -395,23 +455,29 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 skipWhitespace(pos);
 
                 /* Invariant - at = or error state */
-                if (validate &&
-                    (pos.current() == '\0' || pos.current() != '=')) {
-                    throw std::invalid_argument("No = after attribute");
+                if constexpr (Config::validate) {
+                    if ((pos.current() == '\0' || pos.current() != '=')) {
+                        throw std::invalid_argument("No = after attribute");
+                    }
                 }
                 pos.advance();
                 /* Invariant - after attribute = */
                 skipWhitespace(pos);
                 char attributeQuote = '\0';
-                if (validate && pos.current() == '\0') {
-                    throw std::invalid_argument("Premature end at attribute");
+                if constexpr (Config::validate) {
+                    if (pos.current() == '\0') {
+                        throw std::invalid_argument(
+                            "Premature end at attribute");
+                    }
                 }
 
                 if (pos.current() == '\'' || pos.current() == '\"') {
                     attributeQuote = pos.current();
-                } else if (validate) {
-                    throw std::invalid_argument(
-                        "No quote (\" or \') after attribute =");
+                } else {
+                    if constexpr (Config::validate) {
+                        throw std::invalid_argument(
+                            "No quote (\" or \') after attribute =");
+                    }
                 }
                 pos.advance();
 
@@ -419,9 +485,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 pos.beginCapture();
                 bool hasEntities = false;
                 while (pos.captureCurrent() != attributeQuote) {
-                    if (validate && pos.captureCurrent() == '\0')
-                        throw std::invalid_argument(
-                            "Improperly closed attribute value");
+                    if constexpr (Config::validate) {
+                        if (pos.captureCurrent() == '\0') {
+                            throw std::invalid_argument(
+                                "Improperly closed attribute value");
+                        }
+                    }
                     if (pos.captureCurrent() == '&') hasEntities = true;
                     pos.captureAdvance();
                 }
@@ -434,13 +503,15 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 /* Invariant - pos is just after closing quote */
                 /* Allows non-standard <tagName name="value"/> where the
                  * backslash is exactly after the quote */
-                if (validate && !isWhitespace(pos.current()) &&
-                    pos.current() != '>' && pos.current() != '/') {
-                    throw std::invalid_argument(
-                        "No whitespace after attribute closing quote");
+                if constexpr (Config::validate) {
+                    if (!isWhitespace(pos.current()) && pos.current() != '>' &&
+                        pos.current() != '/') {
+                        throw std::invalid_argument(
+                            "No whitespace after attribute closing quote");
+                    }
                 }
 
-                if (validate) {
+                if constexpr (Config::validate) {
                     for (size_t i = 0; i < attributeNames.size(); i++) {
                         if (attributeNames[i] == attributeName) {
                             throw std::invalid_argument(
@@ -455,9 +526,11 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
                 /* Continues to either >, /> or another attribute */
                 skipWhitespace(pos);
-                if (validate && pos.current() == '\0') {
-                    throw std::invalid_argument(
-                        "Premature end after attribute");
+                if constexpr (Config::validate) {
+                    if (pos.current() == '\0') {
+                        throw std::invalid_argument(
+                            "Premature end after attribute");
+                    }
                 }
             }
         }
@@ -467,20 +540,26 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
         if (pos.current() == '>') {
             pos.advance();
         } else if (pos.current() == '/') {
-            if (validate && isClosing) {
-                throw std::invalid_argument(
-                    "Trying to double-close closing tag");
+            if constexpr (Config::validate) {
+                if (isClosing) {
+                    throw std::invalid_argument(
+                        "Trying to double-close closing tag");
+                }
             }
             pos.advance();
-            if (validate && pos.current() != '>') {
-                throw std::invalid_argument(
-                    "Invalid tag close - must have > after /");
+            if constexpr (Config::validate) {
+                if (pos.current() != '>') {
+                    throw std::invalid_argument(
+                        "Invalid tag close - must have > after /");
+                }
             }
             isSelfClosing = true;
             pos.advance();
-        } else if (validate) {
-            throw std::invalid_argument("No tag close for tag " +
-                                        std::string(tagName));
+        } else {
+            if constexpr (Config::validate) {
+                throw std::invalid_argument("No tag close for tag " +
+                                            std::string(tagName));
+            }
         }
 
         /* Invariant - pos always after valid tag close */
