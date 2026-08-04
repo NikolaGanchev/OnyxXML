@@ -21,14 +21,17 @@ namespace onyx::dynamic::parser {
 
 struct DryRunConfig {
     constexpr static bool validate = true;
+    constexpr static bool validateDuplicateAttributes = true;
 };
 
 struct ValidatingConfig {
     constexpr static bool validate = true;
+    constexpr static bool validateDuplicateAttributes = true;
 };
 
 struct NonValidatingConfig {
     constexpr static bool validate = false;
+    constexpr static bool validateDuplicateAttributes = false;
 };
 
 Arena DomParser::parseDryRun(std::string_view input) {

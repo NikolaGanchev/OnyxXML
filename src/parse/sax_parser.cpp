@@ -11,6 +11,7 @@ SaxParser::SaxParser(SaxListener& listener) : listener(listener) {}
 
 struct ValidatingConfig {
     constexpr static bool validate = true;
+    constexpr static bool validateDuplicateAttributes = true;
 };
 
 void SaxParser::parse(std::string_view input) {

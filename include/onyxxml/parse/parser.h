@@ -511,7 +511,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     }
                 }
 
-                if constexpr (Config::validate) {
+                if constexpr (Config::validate &&
+                              Config::validateDuplicateAttributes) {
                     for (size_t i = 0; i < attributeNames.size(); i++) {
                         if (attributeNames[i] == attributeName) {
                             throw std::invalid_argument(
