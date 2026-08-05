@@ -824,9 +824,47 @@ TEST_CASE("DomParser throws \"Invalid XML declaration attribute 'extra'\"") {
 TEST_CASE("DomParser throws \"Duplicate attribute name\"") {
     using namespace onyx::parser;
 
-    std::string xml = "<div name=\"value\" name2=\"value\" name=\"value1\"></div>";
+    std::string xml =
+        "<div name=\"value\" name2=\"value\" name=\"value1\"></div>";
     std::stringstream inputStream(xml);
     std::string message = "Duplicate attribute name";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE("DomParser throws \"Multiple Document Type Declarations found\"") {
+    using namespace onyx::parser;
+
+    std::string xml = "<!DOCTYPE ><!DOCTYPE >";
+    std::stringstream inputStream(xml);
+    std::string message = "Multiple Document Type Declarations found";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"XML declaration is only allowed at the first position "
+    "in the prologue\" when before XML declaration") {
+    using namespace onyx::parser;
+
+    std::string xml = "<!DOCTYPE ><?xml version=\"1.0\"?>";
+    std::stringstream inputStream(xml);
+    std::string message =
+        "XML declaration is only allowed at the first position in the prologue";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document Type Declaration is only allowed before all "
+    "XML elements except the XML declaration\" when after first element") {
+    using namespace onyx::parser;
+
+    std::string xml = "<?xml version=\"1.0\"?><div></div><!DOCTYPE >";
+    std::stringstream inputStream(xml);
+    std::string message =
+        "Document Type Declaration is only allowed before all XML elements "
+        "except the XML declaration";
     REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }

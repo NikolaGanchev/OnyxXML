@@ -39,6 +39,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
     using StackType = typename Policy::StackType;
     bool firstTag = true;
     bool foundXmlDeclaration = false;
+    bool foundDoctype = false;
     struct EmptyStruct {};
     std::vector<StringType> attributeNames;
     std::vector<std::pair<StringType, bool>> attributeValues;
@@ -388,6 +389,19 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
                 readOrThrow<Config::validate>(
                     pos, "OCTYPE ", "Premature end of DOCTYPE section");
+
+                if (foundDoctype) {
+                    throw std::invalid_argument(
+                        "Multiple Document Type Declarations found");
+                } else {
+                    foundDoctype = true;
+                }
+
+                if (!firstTag) {
+                    throw std::invalid_argument(
+                        "Document Type Declaration is only allowed before all "
+                        "XML elements except the XML declaration");
+                }
 
                 pos.beginCapture();
 
