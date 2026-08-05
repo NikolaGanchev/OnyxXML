@@ -195,14 +195,46 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                         }
 
                         if (attrName == "version") {
+                            if (hasVersion) {
+                                throw std::invalid_argument(
+                                    "XML Declaration 'version' declared more "
+                                    "than once");
+                            }
                             version = val;
                             hasVersion = true;
                         } else if (attrName == "encoding") {
+                            if (hasEncoding) {
+                                throw std::invalid_argument(
+                                    "XML Declaration 'encoding' declared more "
+                                    "than once");
+                            }
                             encoding = val;
                             hasEncoding = true;
+                            if (!hasVersion) {
+                                throw std::invalid_argument(
+                                    "XML Declaration cannot declare 'encoding' "
+                                    "before 'version'");
+                            }
+                            if (hasStandalone) {
+                                throw std::invalid_argument(
+                                    "XML Declaration cannot declare "
+                                    "'standalone' before 'encoding' when "
+                                    "'encoding' is present");
+                            }
                         } else if (attrName == "standalone") {
+                            if (hasStandalone) {
+                                throw std::invalid_argument(
+                                    "XML Declaration 'standalone' declared "
+                                    "more than once");
+                            }
                             standalone = val;
                             hasStandalone = true;
+                            if (!hasVersion) {
+                                throw std::invalid_argument(
+                                    "XML Declaration cannot declare "
+                                    "'standalone' "
+                                    "before 'version'");
+                            }
                         } else {
                             if constexpr (Config::validate) {
                                 throw std::invalid_argument(

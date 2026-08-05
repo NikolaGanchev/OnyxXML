@@ -742,7 +742,7 @@ TEST_CASE("DomParser throws \"Tag name cannot contain '!'\"") {
 TEST_CASE("DomParser throws \"XML declaration must include version\"") {
     using namespace onyx::parser;
 
-    std::string xml = "<?xml encoding=\"UTF-8\"?>";
+    std::string xml = "<?xml ?>";
     std::stringstream inputStream(xml);
     std::string message = "XML declaration must include version";
     REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
@@ -817,6 +817,84 @@ TEST_CASE("DomParser throws \"Invalid XML declaration attribute 'extra'\"") {
     std::string xml = "<?xml version=\"1.0\" extra=\"oops\"?>";
     std::stringstream inputStream(xml);
     std::string message = "Invalid XML declaration attribute 'extra'";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"XML Declaration 'version' declared more than once\"") {
+    using namespace onyx::parser;
+
+    std::string xml = "<?xml version=\"1.0\" version=\"1.1\"?>";
+    std::stringstream inputStream(xml);
+    std::string message = "XML Declaration 'version' declared more than once";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"XML Declaration 'encoding' declared more than once\"") {
+    using namespace onyx::parser;
+
+    std::string xml =
+        "<?xml version=\"1.0\" encoding=\"utf-8\" encoding=\"utf-8\"?>";
+    std::stringstream inputStream(xml);
+    std::string message = "XML Declaration 'encoding' declared more than once";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"XML Declaration 'standalone' declared more than "
+    "once\"") {
+    using namespace onyx::parser;
+
+    std::string xml =
+        "<?xml version=\"1.0\" standalone=\"yes\" standalone=\"yes\"?>";
+    std::stringstream inputStream(xml);
+    std::string message =
+        "XML Declaration 'standalone' declared more than once";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"XML Declaration cannot declare 'encoding' before "
+    "'version'\"") {
+    using namespace onyx::parser;
+
+    std::string xml = "<?xml encoding=\"utf-8\"?>";
+    std::stringstream inputStream(xml);
+    std::string message =
+        "XML Declaration cannot declare 'encoding' before 'version'";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"XML Declaration cannot declare 'standalone' before "
+    "'encoding' when 'encoding' is present\"") {
+    using namespace onyx::parser;
+
+    std::string xml =
+        "<?xml version=\"1.0\" standalone=\"yes\" encoding=\"utf-8\"?>";
+    std::stringstream inputStream(xml);
+    std::string message =
+        "XML Declaration cannot declare 'standalone' before 'encoding' when "
+        "'encoding' is present";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"XML Declaration cannot declare 'standalone' before "
+    "'version'\"") {
+    using namespace onyx::parser;
+
+    std::string xml = "<?xml standalone=\"yes\"?>";
+    std::stringstream inputStream(xml);
+    std::string message =
+        "XML Declaration cannot declare 'standalone' before 'version'";
     REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
