@@ -609,6 +609,16 @@ TEST_CASE("DomParser throws \"Improperly closed attribute value\"") {
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
+TEST_CASE("DomParser throws \"Cannot have '<' inside of attribute value\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<tag attr=\"val<ue\"";
+    std::stringstream inputStream(input);
+    std::string message = "Cannot have '<' inside of attribute value";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
 TEST_CASE("DomParser throws \"No whitespace after closing attribute quote\"") {
     using namespace onyx::parser;
 

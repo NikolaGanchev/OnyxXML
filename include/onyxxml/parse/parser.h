@@ -537,6 +537,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                             throw std::invalid_argument(
                                 "Improperly closed attribute value");
                         }
+                        if (pos.captureCurrent() == '<') {
+                            throw std::invalid_argument(
+                                "Cannot have '<' inside of attribute value");
+                        }
                     }
                     if (pos.captureCurrent() == '&') hasEntities = true;
                     pos.captureAdvance();
