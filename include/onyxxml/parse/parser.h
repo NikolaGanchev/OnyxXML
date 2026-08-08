@@ -25,6 +25,74 @@ ONYX_INLINE void readOrThrow(CursorType& pos, std::string_view expected,
     }
 }
 
+template <bool validate, typename CursorType>
+ONYX_INLINE void readUntil(CursorType& pos, unsigned char a) {
+    if constexpr (validate) {
+        while (pos.captureCurrent() != '\0' &&
+           pos.captureCurrent() != a) {
+            pos.captureAdvance();
+        }
+    } else {
+        while (pos.captureCurrent() != a) {
+            pos.captureAdvance();
+        }
+    }
+}
+
+template <bool validate, typename CursorType>
+ONYX_INLINE void readUntilEitherOf2(CursorType& pos, unsigned char a, unsigned char b) {
+    if constexpr (validate) {
+        while (pos.captureCurrent() != '\0' &&
+            pos.captureCurrent() != a &&
+            pos.captureCurrent() != b) {
+            pos.captureAdvance();
+        }
+    } else {
+        while (pos.captureCurrent() != a &&
+            pos.captureCurrent() != b) {
+            pos.captureAdvance();
+        }
+    }
+}
+
+template <bool validate, typename CursorType>
+ONYX_INLINE void readUntilEitherOf3(CursorType& pos, unsigned char a, unsigned char b, unsigned char c) {
+    if constexpr (validate) {
+        while (pos.captureCurrent() != '\0' &&
+            pos.captureCurrent() != a &&
+            pos.captureCurrent() != b &&
+            pos.captureCurrent() != c) {
+            pos.captureAdvance();
+        }
+    } else {
+        while (pos.captureCurrent() != a &&
+            pos.captureCurrent() != b &&
+            pos.captureCurrent() != c) {
+            pos.captureAdvance();
+        }
+    }
+}
+
+template <bool validate, typename CursorType>
+ONYX_INLINE void readUntilEitherOf4(CursorType& pos, unsigned char a, unsigned char b, unsigned char c, unsigned char d) {
+    if constexpr (validate) {
+        while (pos.captureCurrent() != '\0' &&
+            pos.captureCurrent() != a &&
+            pos.captureCurrent() != b &&
+            pos.captureCurrent() != c &&
+            pos.captureCurrent() != d) {
+            pos.captureAdvance();
+        }
+    } else {
+        while (pos.captureCurrent() != a &&
+            pos.captureCurrent() != b &&
+            pos.captureCurrent() != c &&
+            pos.captureCurrent() != d) {
+            pos.captureAdvance();
+        }
+    }
+}
+
 template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
     /* In GCC 15.1 and older MSVC versions, having
@@ -49,31 +117,47 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
         /* Invariant - always at the start of either a tag or a sequence of
          * text */
         if (pos.current() != '<') {
+            // In text
             pos.beginCapture();
-            bool hasEntities = false;
+            bool requiresExpansion = false;
             bool end = false;
+            // This is always validating. Otherwise, the document would have no point to end.
+            readUntilEitherOf3<true>(pos, '<', '&', '\r');
             while (pos.captureCurrent() != '<') {
                 if (pos.captureCurrent() == '\0') {
-                    while (pos.current() != '\0') {
-                        if constexpr (Config::validate) {
+                    // If we find the end of the document, one of the following must be true:
+                    // 1) We are in a tag contents and found the end of the document. Then, the stack will catch this.
+                    // 2) We are between sibling tags. But, if they have a common parent, the document cannot end here and the stack will catch this, since the parent is not closed.
+                    // Them being top level siblings is a contradiction since the second sibling must be after the text, yet there is nothing after the text.
+                    // 3) The text is before the beginning of the document, i.e., the first tag. This is generally malformed XML, due to the rule of the root element, but is allowed by default here to support top level text. This behavior should be controlled via a config option.
+                    // 4) The text is after the last element. Then, whitespace is explicitly allowed. Since this segment is not consumed and anything other than whitespace is an exception, it does not need to be specially validated or expanded.
+                    // Thus, it can keep the simple while loop.
+                    if (firstTag && !foundXmlDeclaration && !foundDoctype) {
+                        // This is a special exception to allow top level text by itself, since the parser already allows text before the first element
+                        // This will take the text and send it to textAction directly, instead of validating it is whitespace.
+                        // TODO: Add config option to change this behavior
+                        break;
+                    }
+                    if constexpr (Config::validate) {
+                        while (pos.current() != '\0') {
                             if (!isWhitespace(pos.current())) {
                                 throw std::invalid_argument(
                                     "Invalid end after tag open");
                             }
+                            pos.advance();
                         }
-                        pos.advance();
                     }
                     end = true;
                     break;
                 }
-                if (pos.captureCurrent() == '&') hasEntities = true;
+                if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\r') requiresExpansion = true;
                 pos.captureAdvance();
             }
             if (end) break;
             StringType text = pos.getCaptured();
             pos.bringToCapture();
 
-            policy.textAction(std::move(text), hasEntities, stack, pos);
+            policy.textAction(std::move(text), requiresExpansion, stack, pos);
 
             continue;
         }
@@ -177,10 +261,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     pos.advance();
 
                     pos.beginCapture();
-                    while (pos.captureCurrent() != '\0' &&
-                           pos.captureCurrent() != '?' &&
-                           pos.captureCurrent() != quote) {
-                        pos.captureAdvance();
+                    if constexpr (Config::validate) {
+                        readUntilEitherOf2<Config::validate>(pos, '?', quote);
+                    } else {
+                        readUntil<Config::validate>(pos, quote);
                     }
                     if constexpr (Config::validate) {
                         if ((pos.captureCurrent() == '?' ||
@@ -332,9 +416,17 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
             pos.beginCapture();
 
-            while (!(pos.captureCurrent() == '?' &&
-                     pos.capturePeek(1) != '\0' && pos.capturePeek(1) == '>')) {
+            readUntil<Config::validate>(pos, '?');
+
+            if constexpr (Config::validate) {
+                if (pos.captureCurrent() == '\0')
+                    throw std::invalid_argument(
+                        "Invalid processing instruction without ending");
+            }
+
+            while (pos.capturePeek(1) != '\0' && pos.capturePeek(1) != '>') {
                 pos.captureAdvance();
+                readUntil<Config::validate>(pos, '?');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
@@ -378,10 +470,18 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 pos.beginCapture();
 
-                while (!(pos.captureCurrent() == '-' &&
-                         pos.capturePeek(1) != '\0' &&
-                         pos.capturePeek(1) == '-')) {
+                readUntil<Config::validate>(pos, '-');
+                if constexpr (Config::validate) {
+                    if (pos.captureCurrent() == '\0') {
+                        throw std::invalid_argument(
+                            "Invalid comment without ending");
+                    }
+                }
+                // Found singular '-'
+                // Loop continues until finding '--'
+                while (pos.capturePeek(1) != '\0' && pos.capturePeek(1) != '-') {
                     pos.captureAdvance();
+                    readUntil<Config::validate>(pos, '-');
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0') {
                             throw std::invalid_argument(
@@ -419,11 +519,18 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 pos.beginCapture();
 
-                while (!(
-                    pos.captureCurrent() == ']' && pos.capturePeek(1) != '\0' &&
-                    pos.capturePeek(1) == ']' && pos.capturePeek(2) != '\0' &&
-                    pos.capturePeek(2) == '>')) {
+                readUntil<Config::validate>(pos, ']');
+                if constexpr (Config::validate) {
+                    if (pos.captureCurrent() == '\0')
+                        throw std::invalid_argument(
+                            "Invalid CDATA without ending");
+                }
+                // Found single ']'
+                // Loop continues until finding ']]>'
+                while (pos.capturePeek(1) != '\0' && pos.capturePeek(1) != ']'
+                        && pos.capturePeek(2) != '\0' && pos.capturePeek(2) != '>') {
                     pos.captureAdvance();
+                    readUntil<Config::validate>(pos, ']');
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0')
                             throw std::invalid_argument(
@@ -461,13 +568,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
                 pos.beginCapture();
 
-                while (pos.captureCurrent() != '>') {
-                    pos.captureAdvance();
-                    if constexpr (Config::validate) {
-                        if (pos.captureCurrent() == '\0') {
-                            throw std::invalid_argument(
-                                "Invalid DOCTYPE without ending");
-                        }
+                // Warning - some valid DOCTYPE declarations may contain '>' inside of quotes. Currently, this implementation would fail on them.
+                readUntil<Config::validate>(pos, '>');
+                if constexpr (Config::validate) {
+                    if (pos.captureCurrent() == '\0') {
+                        throw std::invalid_argument(
+                            "Invalid DOCTYPE without ending");
                     }
                 }
 
@@ -556,7 +662,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
                 /* Invariant - after attribute value opening quote */
                 pos.beginCapture();
-                bool hasEntities = false;
+                bool requiresExpansion = false;
+                if constexpr (Config::validate) {
+                    readUntilEitherOf4<Config::validate>(pos, attributeQuote, '<', '&', '\n');
+                } else {
+                    readUntilEitherOf3<Config::validate>(pos, attributeQuote, '&', '\n');
+                }
+                
                 while (pos.captureCurrent() != attributeQuote) {
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0') {
@@ -568,8 +680,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                                 "Cannot have '<' inside of attribute value");
                         }
                     }
-                    if (pos.captureCurrent() == '&') hasEntities = true;
+                    if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\n') requiresExpansion = true;
                     pos.captureAdvance();
+                    if constexpr (Config::validate) {
+                        readUntilEitherOf4<Config::validate>(pos, attributeQuote, '<', '&', '\n');
+                    } else {
+                        readUntilEitherOf3<Config::validate>(pos, attributeQuote, '&', '\n');
+                    }
                 }
                 StringType attributeValue = pos.getCaptured();
                 pos.bringToCapture();
@@ -606,7 +723,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 attributeNames.push_back(std::move(attributeName));
                 attributeValues.push_back(
-                    std::make_pair(std::move(attributeValue), hasEntities));
+                    std::make_pair(std::move(attributeValue), requiresExpansion));
 
                 /* Continues to either >, /> or another attribute */
                 skipWhitespace(pos);

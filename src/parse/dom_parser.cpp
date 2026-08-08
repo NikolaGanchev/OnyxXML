@@ -51,7 +51,7 @@ Arena DomParser::parseDryRun(std::string_view input) {
         using StackType = std::string_view;
         using Stack = std::vector<StackType>;
 
-        ONYX_INLINE void textAction(StringType text, bool hasEntities,
+        ONYX_INLINE void textAction(StringType text, bool requiresExpansion,
                                     Stack& stack, CursorType& cursor) {
             builder.preallocate<tags::Text>();
         }
@@ -143,10 +143,10 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
 
         Node* root = arena.allocate<tags::EmptyNode>();
 
-        ONYX_INLINE void textAction(StringType text, bool hasEntities,
+        ONYX_INLINE void textAction(StringType text, bool requiresExpansion,
                                     Stack& stack, CursorType& cursor) {
             stack.back()->addChild(arena.allocate<tags::Text>(
-                hasEntities ? text::expandEntities(text) : std::string(text)));
+                requiresExpansion ? text::expandEntities(text) : std::string(text)));
         }
 
         ONYX_INLINE void commentAction(StringType commentText, Stack& stack,
@@ -256,10 +256,10 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
 
         Node* root = arena.allocate<tags::EmptyNode>();
 
-        ONYX_INLINE void textAction(StringType&& text, bool hasEntities,
+        ONYX_INLINE void textAction(StringType&& text, bool requiresExpansion,
                                     Stack& stack, CursorType& cursor) {
             stack.back()->addChild(arena.allocate<tags::Text>(
-                hasEntities ? text::expandEntities(text) : std::move(text)));
+                requiresExpansion ? text::expandEntities(text) : std::move(text)));
         }
 
         ONYX_INLINE void commentAction(StringType&& commentText, Stack& stack,

@@ -27,9 +27,9 @@ void SaxParser::parse(std::string_view input) {
         using StackType = std::string_view;
         using Stack = std::vector<StackType>;
 
-        ONYX_INLINE void textAction(StringType text, bool hasEntities,
+        ONYX_INLINE void textAction(StringType text, bool requiresExpansion,
                                     Stack& stack, CursorType& cursor) {
-            this->listener.onText(hasEntities ? text::expandEntities(text)
+            this->listener.onText(requiresExpansion ? text::expandEntities(text)
                                               : std::string(text));
         }
 
@@ -135,9 +135,9 @@ void SaxParser::parse(std::istream& input) {
         using StackType = std::string;
         using Stack = std::vector<StackType>;
 
-        ONYX_INLINE void textAction(StringType&& text, bool hasEntities,
+        ONYX_INLINE void textAction(StringType&& text, bool requiresExpansion,
                                     Stack& stack, CursorType& cursor) {
-            this->listener.onText(hasEntities ? text::expandEntities(text)
+            this->listener.onText(requiresExpansion ? text::expandEntities(text)
                                               : std::move(text));
         }
 
