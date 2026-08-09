@@ -304,67 +304,97 @@ TEST_CASE("Multiple replacements in sequence", "[replaceSequences]") {
     REQUIRE(replaceSequences(input, dict) == expected);
 }
 
-TEST_CASE("No entities: returns original string", "[expandEntities]") {
+TEST_CASE("No entities: returns original string",
+          "[expandEntitiesAndNormalizeEol]") {
     using namespace onyx::text;
     std::string input = "Hello, World!";
-    REQUIRE(expandEntities(input) == input);
+    REQUIRE(expandEntitiesAndNormalizeEol(input, {}, '\n') == input);
 }
 
-TEST_CASE("Named entities: basic XML escapes", "[expandEntities]") {
+TEST_CASE("Named entities: basic XML escapes",
+          "[expandEntitiesAndNormalizeEol]") {
     using namespace onyx::text;
-    REQUIRE(expandEntities("&lt;&gt;&amp;&quot;&apos;") ==
-            std::string("<>&\"'"));
+    REQUIRE(expandEntitiesAndNormalizeEol("&lt;&gt;&amp;&quot;&apos;", {},
+                                          '\n') == std::string("<>&\"'"));
 }
 
-TEST_CASE("Mixed content with named entities", "[expandEntities]") {
+TEST_CASE("Mixed content with named entities",
+          "[expandEntitiesAndNormalizeEol]") {
     using namespace onyx::text;
     std::string input = "1 &lt; 2 &amp;&amp; 3 &gt; 2";
     std::string expected = "1 < 2 && 3 > 2";
-    REQUIRE(expandEntities(input) == expected);
+    REQUIRE(expandEntitiesAndNormalizeEol(input, {}, '\n') == expected);
 }
 
-TEST_CASE("Decimal numeric entities", "[expandEntities]") {
+TEST_CASE("Decimal numeric entities", "[expandEntitiesAndNormalizeEol]") {
     using namespace onyx::text;
     std::string input = "&#65;&#66;&#67;";  // A B C
     std::string expected = "ABC";
-    REQUIRE(expandEntities(input) == expected);
+    REQUIRE(expandEntitiesAndNormalizeEol(input, {}, '\n') == expected);
 }
 
-TEST_CASE("Hex numeric entities", "[expandEntities]") {
+TEST_CASE("Hex numeric entities", "[expandEntitiesAndNormalizeEol]") {
     using namespace onyx::text;
     std::string input = "&#x41;&#x42;&#x43;";  // A B C
     std::string expected = "ABC";
-    REQUIRE(expandEntities(input) == expected);
+    REQUIRE(expandEntitiesAndNormalizeEol(input, {}, '\n') == expected);
 }
 
-TEST_CASE("Mixed decimal, hex, and named entities", "[expandEntities]") {
+TEST_CASE("Mixed decimal, hex, and named entities",
+          "[expandEntitiesAndNormalizeEol]") {
     using namespace onyx::text;
     // &x26 is an invalid entity
-    REQUIRE_THROWS_WITH(expandEntities("X &lt; &#60; &amp; # &x26;"),
+    REQUIRE_THROWS_WITH(
+        expandEntitiesAndNormalizeEol("X &lt; &#60; &amp; # &x26;", {}, '\n'),
+        "& outside of entities not allowed.");
+}
+
+TEST_CASE("Invalid or unterminated entities throw",
+          "[expandEntitiesAndNormalizeEol]") {
+    using namespace onyx::text;
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol(
+                            "&unknown; &incomplete &amp something;", {}, '\n'),
+                        "& outside of entities not allowed.");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol(
+                            "&unknown; &amp &amp; something;", {}, '\n'),
                         "& outside of entities not allowed.");
 }
 
-TEST_CASE("Invalid or unterminated entities throw", "[expandEntities]") {
+TEST_CASE("expandEntities expands \\r to \\n",
+          "[expandEntitiesAndNormalizeEol]") {
     using namespace onyx::text;
-    REQUIRE_THROWS_WITH(expandEntities("&unknown; &incomplete &amp something;"),
-                        "& outside of entities not allowed.");
-    REQUIRE_THROWS_WITH(expandEntities("&unknown; &amp &amp; something;"),
-                        "& outside of entities not allowed.");
+    REQUIRE(
+        expandEntitiesAndNormalizeEol("Some text \r other text.", {}, '\n') ==
+        std::string("Some text \n other text."));
+    REQUIRE(
+        expandEntitiesAndNormalizeEol("Some text other text.\r", {}, '\n') ==
+        std::string("Some text other text.\n"));
 }
 
-TEST_CASE("expandEntities expands \\r to \\n", "[expandEntities]") {
+TEST_CASE("expandEntities expands \\r\\n to \\n",
+          "[expandEntitiesAndNormalizeEol]") {
     using namespace onyx::text;
-    REQUIRE(expandEntities("Some text \r other text.") ==
+    REQUIRE(
+        expandEntitiesAndNormalizeEol("Some text \r\n other text.", {}, '\n') ==
+        std::string("Some text \n other text."));
+    REQUIRE(
+        expandEntitiesAndNormalizeEol("Some text other text.\r\n", {}, '\n') ==
+        std::string("Some text other text.\n"));
+}
+
+TEST_CASE("expandText expands \\r to \\n", "[expandText]") {
+    using namespace onyx::text;
+    REQUIRE(expandText("Some text \r other text.") ==
             std::string("Some text \n other text."));
-    REQUIRE(expandEntities("Some text other text.\r") ==
+    REQUIRE(expandText("Some text other text.\r") ==
             std::string("Some text other text.\n"));
 }
 
-TEST_CASE("expandEntities expands \\r\\n to \\n", "[expandEntities]") {
+TEST_CASE("expandText expands \\r\\n to \\n", "[expandText]") {
     using namespace onyx::text;
-    REQUIRE(expandEntities("Some text \r\n other text.") ==
+    REQUIRE(expandText("Some text \r\n other text.") ==
             std::string("Some text \n other text."));
-    REQUIRE(expandEntities("Some text other text.\r\n") ==
+    REQUIRE(expandText("Some text other text.\r\n") ==
             std::string("Some text other text.\n"));
 }
 

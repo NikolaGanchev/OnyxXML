@@ -6,6 +6,7 @@
 #include "parse/parser.h"
 #include "parse/stream_cursor.h"
 #include "parse/string_cursor.h"
+#include "text.h"
 
 namespace onyx::dynamic::parser {
 
@@ -105,7 +106,7 @@ void SaxParser::parse(std::string_view input) {
                                              TextTransformationMode ttm) {
             switch (ttm) {
                 case TextTransformationMode::TEXT:
-                    return text::expandEntities(text);
+                    return text::expandText(text);
                 case TextTransformationMode::ATTRIBUTE:
                     return text::expandAttributeValue(text);
                 case TextTransformationMode::EOL_ONLY:
@@ -224,7 +225,7 @@ void SaxParser::parse(std::istream& input) {
                                              TextTransformationMode ttm) {
             switch (ttm) {
                 case TextTransformationMode::TEXT:
-                    return text::expandEntities(std::move(text));
+                    return text::expandText(std::move(text));
                 case TextTransformationMode::ATTRIBUTE:
                     return text::expandAttributeValue(std::move(text));
                 case TextTransformationMode::EOL_ONLY:

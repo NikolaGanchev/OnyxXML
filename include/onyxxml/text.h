@@ -159,12 +159,28 @@ std::string replaceSequences(
         dictionary);
 
 /**
- * @brief Expands XML entities in a text string.
+ * @brief Normalizes XML entities and EOL in a text string. Any character except
+ * '\r' in the eolTable becomes eolChar.
+ * '\r' becomes eolChar no matter the table, thus it can be included or not, and
+ * if followed by '\n', becomes a single eolChar.
+ *
+ * This function does everything for performance reasons.
+ *
+ * @param input
+ * @param eolTable
+ * @return std::string
+ */
+std::string expandEntitiesAndNormalizeEol(std::string_view input,
+                                          const std::array<bool, 128>& eolTable,
+                                          unsigned char eolChar);
+
+/**
+ * @brief Expand attributes in text
  *
  * @param input
  * @return std::string
  */
-std::string expandEntities(std::string_view input);
+std::string expandText(std::string_view input);
 
 /**
  * @brief Expands XML entities in an attribute, including turning whitespace

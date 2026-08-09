@@ -152,7 +152,9 @@ std::string escape(const std::string& str,
     return escaped;
 }
 
-std::string expandEntities(std::string_view input) {
+std::string expandEntitiesAndNormalizeEol(std::string_view input,
+                                          const std::array<bool, 128>& eolTable,
+                                          unsigned char eolChar) {
     std::string output;
     output.reserve(input.size() * 6 / 5);
     static constexpr std::array<std::pair<std::string_view, char32_t>, 5>
@@ -316,12 +318,21 @@ std::string expandEntities(std::string_view input) {
             if (pos > lastCopyPos) {
                 output.append(lastCopyPos, pos - lastCopyPos);
             }
-            output.push_back('\n');
+            output.push_back(eolChar);
             pos++;
             if (pos < end &&
                 *pos == '\n') {  // Check boundary for p before dereferencing
                 pos++;
             }
+            lastCopyPos = pos;
+            goto cont;
+        } else if (eolTable[*pos]) {
+            // Copy the segment of normal characters found before the '\r'
+            if (pos > lastCopyPos) {
+                output.append(lastCopyPos, pos - lastCopyPos);
+            }
+            output.push_back(eolChar);
+            pos++;
             lastCopyPos = pos;
             goto cont;
         }
@@ -340,200 +351,27 @@ std::string expandEntities(std::string_view input) {
     return output;
 }
 
+std::string expandText(std::string_view input) {
+    static constexpr std::array<bool, 128> eolTable = []() {
+        std::array<bool, 128> table{};
+        table['\n'] = true;
+        table['\r'] = true;
+        return table;
+    }();
+
+    return expandEntitiesAndNormalizeEol(input, eolTable, '\n');
+}
+
 std::string expandAttributeValue(std::string_view input) {
-    std::string output;
-    output.reserve(input.size() * 6 / 5);
-    static constexpr std::array<std::pair<std::string_view, char32_t>, 5>
-        namedEntities = {{{"lt", '<'},
-                          {"gt", '>'},
-                          {"amp", '&'},
-                          {"apos", '\''},
-                          {"quot", '"'}}};
+    static constexpr std::array<bool, 128> eolTable = []() {
+        std::array<bool, 128> table{};
+        table['\n'] = true;
+        table['\t'] = true;
+        table['\r'] = true;
+        return table;
+    }();
 
-    const char* pos = input.data();
-    const char* end = pos + input.size();
-    const char* lastCopyPos =
-        pos;  // Pointer to the start of the current chunk of characters
-
-    while (pos < end) {
-        if (*pos == '&') {
-            // Copy the segment of characters found before the '&'
-            if (pos > lastCopyPos) {
-                output.append(lastCopyPos, pos - lastCopyPos);
-            }
-
-            const char* lookAhead = pos + 1;
-            // Max entity length: &#x10FFFF; (9 chars + x), &apos; (4 chars)
-            // Entities most probably shouldn't go for more than 12 characters
-            const char* searchLimit = std::min(end, lookAhead + 12);
-            const char* semicolonPos = std::find(lookAhead, searchLimit, ';');
-
-            if (semicolonPos != searchLimit && *semicolonPos == ';') {
-                // An entity candidate was found: `&token;`
-                std::string_view token(lookAhead, semicolonPos - lookAhead);
-
-                for (auto const& [name, code] : namedEntities) {
-                    if (token == name) {
-                        // UTF-8 encode code point 0x00--0x7F
-                        output.push_back(static_cast<char>(code));
-                        pos = semicolonPos + 1;
-                        lastCopyPos = pos;
-                        goto cont;
-                    }
-                }
-
-                // Numeric Entity
-                if (!token.empty() && token[0] == '#') {
-                    bool isHex = token.length() > 1 &&
-                                 (token[1] == 'x' || token[1] == 'X');
-                    uint32_t codepoint = 0;
-                    const char* numStartPtr = token.data() + (isHex ? 2 : 1);
-                    const char* numEndPtr = token.data() + token.length();
-                    bool validNumericFormat = true;
-
-                    if (numStartPtr >=
-                        numEndPtr) {  // Empty numeric part (e.g., &#; or &#x;)
-                        validNumericFormat = false;
-                    } else {
-                        for (const char* currentNumChar = numStartPtr;
-                             currentNumChar < numEndPtr; ++currentNumChar) {
-                            char c = *currentNumChar;
-                            uint32_t digit = 0;
-                            if (c >= '0' && c <= '9') {
-                                digit = c - '0';
-                            } else if (isHex && c >= 'a' && c <= 'f') {
-                                digit = 10 + (c - 'a');
-                            } else if (isHex && c >= 'A' && c <= 'F') {
-                                digit = 10 + (c - 'A');
-                            } else {
-                                validNumericFormat = false;
-                                break;
-                            }
-
-                            // Basic overflow check
-                            // This check primarily prevents overflow if parsing
-                            // garbage input that would result in a very large
-                            // number before hitting non-digit.
-                            if (isHex) {
-                                if (codepoint > (0x10FFFF / 16)) {
-                                    validNumericFormat = false;
-                                    break;
-                                }
-                                codepoint = (codepoint << 4) | digit;
-                            } else {
-                                if (codepoint > (0x10FFFF / 10)) {
-                                    validNumericFormat = false;
-                                    break;
-                                }
-                                codepoint = codepoint * 10 + digit;
-                            }
-                        }
-                    }
-
-                    if (validNumericFormat) {
-                        // Convert entity to unicode
-                        char buf[4];  // Max 4 bytes for UTF-8
-                        char bytesWritten = 0;
-                        if (codepoint <= 0x7F) {
-                            buf[0] = static_cast<char>(codepoint);
-                            bytesWritten = 1;
-                        } else if (codepoint <= 0x7FF) {
-                            buf[0] = static_cast<char>(0xC0 | (codepoint >> 6));
-                            buf[1] =
-                                static_cast<char>(0x80 | (codepoint & 0x3F));
-                            bytesWritten = 2;
-                        } else if (codepoint <= 0xFFFF) {
-                            // Exclude surrogate pairs (0xD800-0xDFFF) as they
-                            // are not valid Unicode scalar values
-                            if (!(codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
-                                buf[0] =
-                                    static_cast<char>(0xE0 | (codepoint >> 12));
-                                buf[1] = static_cast<char>(
-                                    0x80 | ((codepoint >> 6) & 0x3F));
-                                buf[2] = static_cast<char>(0x80 |
-                                                           (codepoint & 0x3F));
-                                bytesWritten = 3;
-                            }
-                        } else if (codepoint <= 0x10FFFF) {
-                            buf[0] =
-                                static_cast<char>(0xF0 | (codepoint >> 18));
-                            buf[1] = static_cast<char>(
-                                0x80 | ((codepoint >> 12) & 0x3F));
-                            buf[2] = static_cast<char>(
-                                0x80 | ((codepoint >> 6) & 0x3F));
-                            buf[3] =
-                                static_cast<char>(0x80 | (codepoint & 0x3F));
-                            bytesWritten = 4;
-                        }
-
-                        if (bytesWritten > 0) {
-                            output.append(buf, bytesWritten);
-                            pos = semicolonPos + 1;  // Advance past the entity
-                            lastCopyPos = pos;       // Reset last_copy_pos
-                            goto cont;
-                        }
-                    } else {
-                        // There was &, but no ; was found. This is a critical
-                        // mistake requiring an exception.
-                        throw std::invalid_argument(
-                            "& outside of entities not allowed.");
-                    }
-                } else {
-                    // There was &, but no ; was found. This is a critical
-                    // mistake requiring an exception.
-                    throw std::invalid_argument(
-                        "& outside of entities not allowed.");
-                }
-
-                // If no named or valid numeric entity was found, copy the
-                // original text including '&'
-                output.append(pos, semicolonPos + 1 - pos);
-
-                // Advance past the entity
-                pos = semicolonPos + 1;
-                lastCopyPos = pos;
-                goto cont;
-            } else {
-                // There was &, but no ; was found. This is a critical mistake
-                // requiring an exception.
-                throw std::invalid_argument(
-                    "& outside of entities not allowed.");
-            }
-        } else if (*pos == '\r') {
-            // Copy the segment of normal characters found before the '\r'
-            if (pos > lastCopyPos) {
-                output.append(lastCopyPos, pos - lastCopyPos);
-            }
-            output.push_back(' ');
-            pos++;
-            if (pos < end &&
-                *pos == '\n') {  // Check boundary for p before dereferencing
-                pos++;
-            }
-            lastCopyPos = pos;
-            goto cont;
-        } else if (*pos == '\n' || *pos == '\t') {
-            if (pos > lastCopyPos) {
-                output.append(lastCopyPos, pos - lastCopyPos);
-            }
-            output.push_back(' ');
-            pos++;
-            lastCopyPos = pos;
-            goto cont;
-        }
-        // If it's a normal character, just advance the pointer for later
-        // bulk copy
-        pos++;
-
-    cont:;  // Label for goto
-    }
-
-    // After the loop, copy any remaining characters
-    if (pos > lastCopyPos) {
-        output.append(lastCopyPos, pos - lastCopyPos);
-    }
-
-    return output;
+    return expandEntitiesAndNormalizeEol(input, eolTable, ' ');
 }
 
 std::string expandEOLOnly(std::string_view input) {

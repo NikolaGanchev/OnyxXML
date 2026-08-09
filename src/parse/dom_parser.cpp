@@ -230,7 +230,7 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
                                              TextTransformationMode ttm) {
             switch (ttm) {
                 case TextTransformationMode::TEXT:
-                    return text::expandEntities(text);
+                    return text::expandText(text);
                 case TextTransformationMode::ATTRIBUTE:
                     return text::expandAttributeValue(text);
                 case TextTransformationMode::EOL_ONLY:
@@ -353,7 +353,7 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
                                              TextTransformationMode ttm) {
             switch (ttm) {
                 case TextTransformationMode::TEXT:
-                    return text::expandEntities(std::move(text));
+                    return text::expandText(std::move(text));
                 case TextTransformationMode::ATTRIBUTE:
                     return text::expandAttributeValue(std::move(text));
                 case TextTransformationMode::EOL_ONLY:
