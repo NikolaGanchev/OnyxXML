@@ -155,14 +155,33 @@ ONYX_INLINE void validateXMLChar(unsigned char current, CursorType& pos) {
         "Document contains invalid utf-8 starting byte");
 }
 
-template <bool validate, typename CursorType, typename... Chars>
+template <typename CursorType>
+ONYX_INLINE void validateCDataEnding(CursorType& pos) {
+    if (pos.captureCurrent() == ']') [[unlikely]] {
+        if (pos.capturePeek(1) != '\0' && pos.capturePeek(1) == ']' &&
+            pos.capturePeek(2) != '\0' && pos.capturePeek(2) == '>') {
+            throw std::invalid_argument(
+                "']]>' is forbidden outside of CDATA ending "
+                "sequences");
+        }
+    }
+}
+
+template <bool validate, bool shouldValidateCDataEndings = true,
+          typename CursorType, typename... Chars>
 ONYX_INLINE void readUntilAnyOf(CursorType& pos, Chars... targets) {
     unsigned char current = pos.captureCurrent();
     if constexpr (validate) {
+        if constexpr (shouldValidateCDataEndings) {
+            validateCDataEnding(pos);
+        }
         validateXMLChar(current, pos);
         while (current != '\0' && (... && (current != targets))) {
             pos.captureAdvance();
             current = pos.captureCurrent();
+            if constexpr (shouldValidateCDataEndings) {
+                validateCDataEnding(pos);
+            }
             validateXMLChar(current, pos);
         }
     } else {
@@ -648,7 +667,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
                 TextTransformationMode transformationMode =
                     TextTransformationMode::NONE;
-                readUntilAnyOf<Config::validate>(pos, ']', '\r');
+                readUntilAnyOf<Config::validate, false>(pos, ']', '\r');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
@@ -663,7 +682,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                         transformationMode = TextTransformationMode::EOL_ONLY;
                     }
                     pos.captureAdvance();
-                    readUntilAnyOf<Config::validate>(pos, ']', '\r');
+                    readUntilAnyOf<Config::validate, false>(pos, ']', '\r');
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0')
                             throw std::invalid_argument(

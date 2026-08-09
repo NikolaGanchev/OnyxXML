@@ -823,6 +823,19 @@ TEST_CASE("DomParser throws \"Premature end of CDATA section\"") {
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
+TEST_CASE(
+    "DomParser throws \"CDATA ending sequence forbidden outside of CDATA "
+    "ending sequences\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<div>]]></div>";
+    std::stringstream inputStream(input);
+    std::string message =
+        "']]>' is forbidden outside of CDATA ending sequences";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
 TEST_CASE("DomParser throws \"Invalid CDATA without ending\"") {
     using namespace onyx::parser;
 
