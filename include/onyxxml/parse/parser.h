@@ -71,9 +71,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
             TextTransformationMode transformationMode =
                 TextTransformationMode::NONE;
             bool end = false;
-            // This is always validating. Otherwise, the document would have no
-            // point to end.
-            readUntilAnyOf<true>(pos, '<', '&', '\r');
+            readUntilAnyOf<Config::validate>(pos, '\0', '<', '&', '\r');
             while (pos.captureCurrent() != '<') {
                 if (pos.captureCurrent() == '\0') {
                     // If we find the end of the document, one of the following
@@ -124,6 +122,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\r')
                     transformationMode = TextTransformationMode::TEXT;
                 pos.captureAdvance();
+                readUntilAnyOf<Config::validate>(pos, '\0', '<', '&', '\r');
             }
             if (end) break;
             CursorStringType text = pos.getCaptured();
