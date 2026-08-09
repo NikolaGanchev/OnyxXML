@@ -382,6 +382,124 @@ TEST_CASE("expandEntities expands \\r\\n to \\n",
         std::string("Some text other text.\n"));
 }
 
+TEST_CASE(
+    "Numeric entities resolving to forbidden ASCII control characters throw",
+    "[expandEntitiesAndNormalizeEol]") {
+    using namespace onyx::text;
+
+    // 0x00 (Null)
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#0;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#x00;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+
+    // 0x0B (Vertical Tab) - inside the forbidden 0x00-0x1F block
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#11;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#x0B;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+
+    // 0x1F (Information Separator One) - upper bound of forbidden ASCII
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#31;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#x1F;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+}
+
+TEST_CASE("Numeric entities resolving to UTF-16 Surrogate Blocks throw",
+          "[expandEntitiesAndNormalizeEol]") {
+    using namespace onyx::text;
+
+    // 0xD800 (Start of High Surrogates)
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#55296;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#xD800;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+
+    // 0xDBFF (End of High Surrogates)
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#xDBFF;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+
+    // 0xDC00 (Start of Low Surrogates)
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#xDC00;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+
+    // 0xDFFF (End of Low Surrogates)
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#57343;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#xDFFF;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+}
+
+TEST_CASE("Numeric entities resolving to restricted U+FFFE or U+FFFF throw",
+          "[expandEntitiesAndNormalizeEol]") {
+    using namespace onyx::text;
+
+    // 0xFFFE
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#65534;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#xFFFE;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+
+    // 0xFFFF
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#65535;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#xFFFF;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+}
+
+TEST_CASE("Numeric entities resolving to out-of-bounds Unicode throw",
+          "[expandEntitiesAndNormalizeEol]") {
+    using namespace onyx::text;
+
+    // 0x110000 (Outside the maximum valid Unicode scalar U+10FFFF)
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#1114112;", {}, '\n'),
+                        "Numeric entity resolves to an invalid XML character");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#x110000;", {}, '\n'),
+                        "& outside of entities not allowed.");
+    REQUIRE_THROWS_WITH(expandEntitiesAndNormalizeEol("&#xFFFFFFFF;", {}, '\n'),
+                        "& outside of entities not allowed.");
+}
+
+TEST_CASE("Numeric entities resolving to boundary valid XML characters succeed",
+          "[expandEntitiesAndNormalizeEol]") {
+    using namespace onyx::text;
+
+    // Allowed Control Characters (Tab, LF, CR)
+    REQUIRE(expandEntitiesAndNormalizeEol("&#x09;", {}, '\n') == "\t");
+    REQUIRE(expandEntitiesAndNormalizeEol("&#x0A;", {}, '\n') == "\n");
+    REQUIRE(expandEntitiesAndNormalizeEol("&#x0D;", {}, '\n') == "\r");
+
+    // 0x20 (Space) - Lower bound of standard printable characters
+    REQUIRE(expandEntitiesAndNormalizeEol("&#x20;", {}, '\n') == " ");
+
+    // 0xD7FF - Character immediately preceding the Surrogate Block
+    // UTF-8 encoding for U+D7FF is ED 9F BF
+    REQUIRE(expandEntitiesAndNormalizeEol("&#xD7FF;", {}, '\n') ==
+            "\xED\x9F\xBF");
+
+    // 0xE000 - Character immediately following the Surrogate Block
+    // UTF-8 encoding for U+E000 is EE 80 80
+    REQUIRE(expandEntitiesAndNormalizeEol("&#xE000;", {}, '\n') ==
+            "\xEE\x80\x80");
+
+    // 0xFFFD (Replacement Character) - Character immediately preceding
+    // FFFE/FFFF restriction
+    // UTF-8 encoding for U+FFFD is EF BF BD
+    REQUIRE(expandEntitiesAndNormalizeEol("&#xFFFD;", {}, '\n') ==
+            "\xEF\xBF\xBD");
+
+    // 0x10000 - Character immediately following FFFE/FFFF restriction
+    // UTF-8 encoding for U+10000 is F0 90 80 80
+    REQUIRE(expandEntitiesAndNormalizeEol("&#x10000;", {}, '\n') ==
+            "\xF0\x90\x80\x80");
+
+    // 0x10FFFF - The absolute maximum valid Unicode character
+    // UTF-8 encoding for U+10FFFF is F4 8F BF BF
+    REQUIRE(expandEntitiesAndNormalizeEol("&#x10FFFF;", {}, '\n') ==
+            "\xF4\x8F\xBF\xBF");
+}
+
 TEST_CASE("expandText expands \\r to \\n", "[expandText]") {
     using namespace onyx::text;
     REQUIRE(expandText("Some text \r other text.") ==

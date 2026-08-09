@@ -245,6 +245,18 @@ std::string expandEntitiesAndNormalizeEol(std::string_view input,
                     }
 
                     if (validNumericFormat) {
+                        bool isValidXmlChar =
+                            (codepoint == 0x09) || (codepoint == 0x0A) ||
+                            (codepoint == 0x0D) ||
+                            (codepoint >= 0x20 && codepoint <= 0xD7FF) ||
+                            (codepoint >= 0xE000 && codepoint <= 0xFFFD) ||
+                            (codepoint >= 0x10000 && codepoint <= 0x10FFFF);
+
+                        if (!isValidXmlChar) {
+                            throw std::invalid_argument(
+                                "Numeric entity resolves to an invalid XML "
+                                "character");
+                        }
                         // Convert entity to unicode
                         char buf[4];  // Max 4 bytes for UTF-8
                         char bytesWritten = 0;
@@ -257,17 +269,13 @@ std::string expandEntitiesAndNormalizeEol(std::string_view input,
                                 static_cast<char>(0x80 | (codepoint & 0x3F));
                             bytesWritten = 2;
                         } else if (codepoint <= 0xFFFF) {
-                            // Exclude surrogate pairs (0xD800-0xDFFF) as they
-                            // are not valid Unicode scalar values
-                            if (!(codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
-                                buf[0] =
-                                    static_cast<char>(0xE0 | (codepoint >> 12));
-                                buf[1] = static_cast<char>(
-                                    0x80 | ((codepoint >> 6) & 0x3F));
-                                buf[2] = static_cast<char>(0x80 |
-                                                           (codepoint & 0x3F));
-                                bytesWritten = 3;
-                            }
+                            buf[0] =
+                                static_cast<char>(0xE0 | (codepoint >> 12));
+                            buf[1] = static_cast<char>(
+                                0x80 | ((codepoint >> 6) & 0x3F));
+                            buf[2] =
+                                static_cast<char>(0x80 | (codepoint & 0x3F));
+                            bytesWritten = 3;
                         } else if (codepoint <= 0x10FFFF) {
                             buf[0] =
                                 static_cast<char>(0xF0 | (codepoint >> 18));
