@@ -2,6 +2,7 @@
 
 #include "catch2/catch_all.hpp"
 #include "onyx.h"
+#include "text.h"
 
 TEST_CASE("Escapes complex html", "[escape]") {
     using namespace onyx::text;
@@ -351,7 +352,7 @@ TEST_CASE("Invalid or unterminated entities throw", "[expandEntities]") {
                         "& outside of entities not allowed.");
 }
 
-TEST_CASE("Expands \\r to \\n", "[expandEntities]") {
+TEST_CASE("expandEntities expands \\r to \\n", "[expandEntities]") {
     using namespace onyx::text;
     REQUIRE(expandEntities("Some text \r other text.") ==
             std::string("Some text \n other text."));
@@ -359,10 +360,68 @@ TEST_CASE("Expands \\r to \\n", "[expandEntities]") {
             std::string("Some text other text.\n"));
 }
 
-TEST_CASE("Expands \\r\\n to \\n", "[expandEntities]") {
+TEST_CASE("expandEntities expands \\r\\n to \\n", "[expandEntities]") {
     using namespace onyx::text;
     REQUIRE(expandEntities("Some text \r\n other text.") ==
             std::string("Some text \n other text."));
     REQUIRE(expandEntities("Some text other text.\r\n") ==
             std::string("Some text other text.\n"));
+}
+
+TEST_CASE("expandEOLOnly expands \\r to \\n", "[expandEOLOnly]") {
+    using namespace onyx::text;
+    REQUIRE(expandEOLOnly("Some text \r other text.") ==
+            std::string("Some text \n other text."));
+    REQUIRE(expandEOLOnly("Some text other text.\r") ==
+            std::string("Some text other text.\n"));
+}
+
+TEST_CASE("expandEOLOnly expands \\r\\n to \\n", "[expandEOLOnly]") {
+    using namespace onyx::text;
+    REQUIRE(expandEOLOnly("Some text \r\n other text.") ==
+            std::string("Some text \n other text."));
+    REQUIRE(expandEOLOnly("Some text other text.\r\n") ==
+            std::string("Some text other text.\n"));
+}
+
+TEST_CASE("expandAttributeValue expands \\r to ' '", "[expandAttributeValue]") {
+    using namespace onyx::text;
+    REQUIRE(expandAttributeValue("Some text \r other text.") ==
+            std::string("Some text   other text."));
+    REQUIRE(expandAttributeValue("Some text other text.\r") ==
+            std::string("Some text other text. "));
+}
+
+TEST_CASE("expandAttributeValue expands \\r\\n to ' '",
+          "[expandAttributeValue]") {
+    using namespace onyx::text;
+    REQUIRE(expandAttributeValue("Some text \r\n other text.") ==
+            std::string("Some text   other text."));
+    REQUIRE(expandAttributeValue("Some text other text.\r\n") ==
+            std::string("Some text other text. "));
+}
+
+TEST_CASE("expandAttributeValue expands \\t to ' '", "[expandAttributeValue]") {
+    using namespace onyx::text;
+    REQUIRE(expandAttributeValue("Some text \t other text.") ==
+            std::string("Some text   other text."));
+    REQUIRE(expandAttributeValue("Some text other text.\t") ==
+            std::string("Some text other text. "));
+}
+
+TEST_CASE("expandAttributeValue expands \\n to ' '", "[expandAttributeValue]") {
+    using namespace onyx::text;
+    REQUIRE(expandAttributeValue("Some text \n other text.") ==
+            std::string("Some text   other text."));
+    REQUIRE(expandAttributeValue("Some text other text.\n") ==
+            std::string("Some text other text. "));
+}
+
+TEST_CASE("expandAttributeValue expands complex sequence properly",
+          "[expandAttributeValue]") {
+    using namespace onyx::text;
+    REQUIRE(expandAttributeValue("Some text \r\r\n\t\n other text.") ==
+            std::string("Some text      other text."));
+    REQUIRE(expandAttributeValue("Some text other text.\r\r\n\t\n") ==
+            std::string("Some text other text.    "));
 }

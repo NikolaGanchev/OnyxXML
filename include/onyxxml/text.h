@@ -165,5 +165,27 @@ std::string replaceSequences(
  * @return std::string
  */
 std::string expandEntities(std::string_view input);
+
+/**
+ * @brief Expands XML entities in an attribute, including turning whitespace
+ * characters into ' ' (whitespace).
+ *
+ * Note: The XML spec requires that '\r\n'
+ * turn into '\n' before attribute values are normalized. This means that:
+ * '\r', '\n', '\t' and '\r\n' all transform to ' ' (whitespace).
+ *
+ * @param input
+ * @return std::string
+ */
+std::string expandAttributeValue(std::string_view input);
+
+/**
+ * @brief Expands EOL in a text string, according to XML rules, turning '\r\n'
+ * and '\r' into '\n'.
+ *
+ * @param input
+ * @return std::string
+ */
+std::string expandEOLOnly(std::string_view input);
 }  // namespace text
 }  // namespace onyx::dynamic
