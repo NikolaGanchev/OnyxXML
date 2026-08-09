@@ -1069,6 +1069,196 @@ TEST_CASE(
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
+TEST_CASE(
+    "DomParser throws \"Document contains forbidden ASCII character\" on "
+    "forbidden ASCII characters") {
+    using namespace onyx::parser;
+
+    std::string invalidXMLAsciiChars =
+        "\x01\x02\x03\x04\x05\x06\x07\x08"
+        "\x0B\x0C"
+        "\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E"
+        "\x1F";  // excludes 0x0 ('\0'), 0x09 ('\t'), 0x0A ('\n') and 0X0D
+                 // ('\r')
+
+    for (size_t i = 0; i < invalidXMLAsciiChars.size(); i++) {
+        std::string xml = {'<', 'd', 'i', 'v', '>', invalidXMLAsciiChars[i],
+                           '<', '/', 'd', 'i', 'v', '>'};
+        std::stringstream inputStream(xml);
+        std::string message = "Document contains forbidden ASCII character";
+        INFO((int)invalidXMLAsciiChars[i]);
+        REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+        REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+    }
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains truncated or malformed utf-8\" on 2 "
+    "byte malformed") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xC2\x20</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message = "Document contains truncated or malformed utf-8";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains truncated or malformed utf-8\" on 3 "
+    "byte malformed") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xE1\x80\x20</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message = "Document contains truncated or malformed utf-8";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains truncated or malformed utf-8\" on 3 "
+    "bytes malformed with second byte failure") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xEF\x20\x80</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message = "Document contains truncated or malformed utf-8";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains truncated or malformed utf-8\" on 4 "
+    "bytes") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xF0\x90\x20\x80</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message = "Document contains truncated or malformed utf-8";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains truncated or malformed utf-8\" on 4 "
+    "bytes  alformed with second byte failure") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xF1\x20\x80\x80</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message = "Document contains truncated or malformed utf-8";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains invalid utf-8 starting byte\" on 2 "
+    "bytes overlong encoding") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xC0\x80</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message = "Document contains invalid utf-8 starting byte";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains overlong utf-8 encoding\" on 3 "
+    "bytes") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xE0\x80\x80</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message = "Document contains overlong utf-8 encoding";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains overlong utf-8 encoding\" on 4 "
+    "bytes") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xF0\x80\x80\x80</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message = "Document contains overlong utf-8 encoding";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains forbidden character from surrogate "
+    "block\"") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xED\xA0\x80</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message =
+        "Document contains forbidden character from surrogate block";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains restricted U+FFFE or U+FFFF\"") {
+    using namespace onyx::parser;
+
+    std::string xmlFFFE = "<div>\xEF\xBF\xBE</div>";
+    std::string xmlFFFF = "<div>\xEF\xBF\xBF</div>";
+
+    std::stringstream inputStreamFFFE(xmlFFFE);
+    std::stringstream inputStreamFFFF(xmlFFFF);
+    std::string message = "Document contains restricted U+FFFE or U+FFFF";
+    REQUIRE_THROWS_WITH(DomParser::parse(xmlFFFE), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(xmlFFFF), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStreamFFFE), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStreamFFFF), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains utf-8 character out of bounds\"") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>\xF4\x90\x80\x80</div>";
+
+    std::stringstream inputStream(xml);
+    std::string message = "Document contains utf-8 character out of bounds";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Document contains invalid utf-8 starting byte\"") {
+    using namespace onyx::parser;
+
+    std::string invalidUtfStartingChars =
+        "\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F"
+        "\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\x9B\x9C\x9D\x9E\x9F"
+        "\xA0\xA1\xA2\xA3\xA4\xA5\xA6\xA7\xA8\xA9\xAA\xAB\xAC\xAD\xAE\xAF"
+        "\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\xBA\xBB\xBC\xBD\xBE\xBF"
+        "\xC0\xC1\xF5\xF6\xF7\xF8\xF9\xFA\xFB\xFC\xFD\xFE\xFF";
+
+    for (size_t i = 0; i < invalidUtfStartingChars.size(); i++) {
+        std::string xml = {'<', 'd', 'i', 'v', '>', invalidUtfStartingChars[i],
+                           '<', '/', 'd', 'i', 'v', '>'};
+        std::stringstream inputStream(xml);
+        std::string message = "Document contains invalid utf-8 starting byte";
+        REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+        REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+    }
+}
+
 #include <iostream>
 
 class SaxListenerLogger : public virtual onyx::parser::SaxListener {

@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -27,16 +29,146 @@ ONYX_INLINE void readOrThrow(CursorType& pos, std::string_view expected,
     }
 }
 
+constexpr auto isValidByte = [] {
+    std::array<bool, 128> arr{};
+    arr[0x00] = true;  // '\t'
+    arr[0x09] = true;  // '\t'
+    arr[0x0A] = true;  // '\n'
+    arr[0x0D] = true;  // '\r'
+
+    for (int i = 0x20; i < 128; ++i) {
+        arr[i] = true;
+    }
+
+    return arr;
+}();
+
+template <typename CursorType>
+ONYX_INLINE void validateXMLChar(unsigned char current, CursorType& pos) {
+    // 1 byte sequence, i.e., ASCII
+    // Range: 0x00 - 0x7F
+    if (current <= 0x7F) [[likely]] {
+        if (!isValidByte[current]) [[unlikely]] {
+            throw std::invalid_argument(
+                "Document contains forbidden ASCII character");
+        }
+        return;
+    }
+
+    // 2 byte sequence
+    // Range: 0xC2 - 0xDF
+    if (current >= 0xC2 && current <= 0xDF) {
+        pos.captureAdvance();
+        unsigned char b2 = pos.captureCurrent();
+        if (b2 < 0x80 || b2 > 0xBF) [[unlikely]] {
+            throw std::invalid_argument(
+                "Document contains truncated or malformed utf-8");
+        }
+        return;
+    }
+
+    // 3 byte sequence
+    // Range: 0xE0 - 0xEF
+    if (current >= 0xE0 && current <= 0xEF) {
+        pos.captureAdvance();
+        unsigned char b2 = pos.captureCurrent();
+        pos.captureAdvance();
+        unsigned char b3 = pos.captureCurrent();
+
+        if (b3 < 0x80 || b3 > 0xBF) [[unlikely]] {
+            throw std::invalid_argument(
+                "Document contains truncated or malformed utf-8");
+        }
+
+        if (current == 0xE0) [[unlikely]] {
+            // Overlong encoding of 2 byte characters
+            if (b2 < 0xA0 || b2 > 0xBF) [[unlikely]] {
+                throw std::invalid_argument(
+                    "Document contains overlong utf-8 encoding");
+            }
+        } else if (current == 0xED) [[unlikely]] {
+            // Surrogate blocks (U+D800 - U+DFFF) are forbidden in XML
+            if (b2 < 0x80 || b2 > 0x9F) [[unlikely]] {
+                throw std::invalid_argument(
+                    "Document contains forbidden character from surrogate "
+                    "block");
+            }
+        } else if (current == 0xEF) [[unlikely]] {
+            if (b2 < 0x80 || b2 > 0xBF) [[unlikely]] {
+                throw std::invalid_argument(
+                    "Document contains truncated or malformed utf-8");
+            }
+            // U+FFFE and U+FFFF are forbidden in XML
+            if (b2 == 0xBF && (b3 == 0xBE || b3 == 0xBF)) [[unlikely]] {
+                throw std::invalid_argument(
+                    "Document contains restricted U+FFFE or U+FFFF");
+            }
+        } else {
+            // Standard 3 byte sequences (0xE1-0xEC, 0xEE)
+            if (b2 < 0x80 || b2 > 0xBF) [[unlikely]] {
+                throw std::invalid_argument(
+                    "Document contains truncated or malformed utf-8");
+            }
+        }
+        return;
+    }
+
+    // 4 byte sequence
+    // Range: 0xF0 - 0xF4
+    if (current >= 0xF0 && current <= 0xF4) {
+        pos.captureAdvance();
+        unsigned char b2 = pos.captureCurrent();
+        pos.captureAdvance();
+        unsigned char b3 = pos.captureCurrent();
+        pos.captureAdvance();
+        unsigned char b4 = pos.captureCurrent();
+
+        if (b3 < 0x80 || b3 > 0xBF || b4 < 0x80 || b4 > 0xBF) [[unlikely]] {
+            throw std::invalid_argument(
+                "Document contains truncated or malformed utf-8");
+        }
+
+        if (current == 0xF0) [[unlikely]] {
+            // Overlong encoding of 3 byte character
+            if (b2 < 0x90 || b2 > 0xBF) [[unlikely]] {
+                throw std::invalid_argument(
+                    "Document contains overlong utf-8 encoding");
+            }
+        } else if (current == 0xF4) [[unlikely]] {
+            // Character above U+10FFFF
+            if (b2 < 0x80 || b2 > 0x8F) [[unlikely]] {
+                throw std::invalid_argument(
+                    "Document contains utf-8 character out of bounds");
+            }
+        } else {
+            // Standard 4 byte sequence (0xF1-0xF3)
+            if (b2 < 0x80 || b2 > 0xBF) [[unlikely]] {
+                throw std::invalid_argument(
+                    "Document contains truncated or malformed utf-8");
+            }
+        }
+        return;
+    }
+
+    // invalid starting byte (0x80-0xBF, 0xC0-0xC1, 0xF5-0xFF)
+    throw std::invalid_argument(
+        "Document contains invalid utf-8 starting byte");
+}
+
 template <bool validate, typename CursorType, typename... Chars>
 ONYX_INLINE void readUntilAnyOf(CursorType& pos, Chars... targets) {
+    unsigned char current = pos.captureCurrent();
     if constexpr (validate) {
-        while (pos.captureCurrent() != '\0' &&
-               (... && (pos.captureCurrent() != targets))) {
+        validateXMLChar(current, pos);
+        while (current != '\0' && (... && (current != targets))) {
             pos.captureAdvance();
+            current = pos.captureCurrent();
+            validateXMLChar(current, pos);
         }
     } else {
-        while ((... && (pos.captureCurrent() != targets))) {
+        while ((... && (current != targets))) {
             pos.captureAdvance();
+            current = pos.captureCurrent();
         }
     }
 }
