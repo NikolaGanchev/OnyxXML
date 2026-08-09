@@ -2,6 +2,13 @@
 #include <sstream>
 
 #include "catch2/catch_all.hpp"
+#include "nodes/cdata_node.h"
+#include "nodes/comment_node.h"
+#include "nodes/doctype_node.h"
+#include "nodes/empty_node.h"
+#include "nodes/generic_node.h"
+#include "nodes/processing_instruction_node.h"
+#include "nodes/text_node.h"
 #include "onyx.h"
 
 TEST_CASE("DomParser works") {
@@ -120,6 +127,111 @@ TEST_CASE("DomParser expands entities in attribute values") {
         GenericNode("body", false,
                     GenericNode("div", false, Text(" Hello"),
                                 GenericNode("span", false), Text("World! ")))};
+
+    ParseResult pr = DomParser::parse(input);
+    ParseResult prStream = DomParser::parse(inputStream);
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser properly normalizes text in doctype declaration") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input = "<!DOCTYPE &apos \n \r\n \t &apos;>";
+    std::stringstream inputStream(input);
+
+    Doctype output{"&apos \n \n \t &apos;"};
+
+    ParseResult pr = DomParser::parse(input);
+    ParseResult prStream = DomParser::parse(inputStream);
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser properly normalizes text in comment") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input =
+        "<!--This is a comment "
+        "with invalid entities &apos that should not error, valid entities "
+        "apos&; that should not expand, and newlines \r\n \r \n that should be "
+        "normalized-->";
+
+    std::stringstream inputStream(input);
+
+    Comment output{
+        "This is a comment with invalid entities &apos that should "
+        "not error, valid entities apos&; that should not expand, "
+        "and newlines \n \n \n that should be normalized"};
+
+    ParseResult pr = DomParser::parse(input);
+    ParseResult prStream = DomParser::parse(inputStream);
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser properly normalizes text in processing instruction") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input =
+        "<?pi Inside processing instructions, invalid entities "
+        "&apos also should not error, valid entities apos&; should not expand "
+        "and newlines \r\n \r \n should be normalized?>";
+    std::stringstream inputStream(input);
+
+    ProcessingInstruction output{
+        "pi",
+        "Inside processing instructions, invalid entities &apos also "
+        "should not error, valid entities apos&; should not expand and "
+        "newlines \n \n \n should be normalized"};
+
+    ParseResult pr = DomParser::parse(input);
+    ParseResult prStream = DomParser::parse(inputStream);
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser properly normalizes complex text") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input =
+        "<!DOCTYPE &apos \n \r\n &apos;><html theme=\"dark\r\n\" "
+        "lang='\ten\n'><body><div> "
+        "Hello<span>\r\n\n\r\r\n</span>World! "
+        "\n<![CDATA[&apos\t\r\n\n&apos;]]></div></body><!--This is a comment "
+        "with invalid entities &apos that should not error, valid entities "
+        "apos&; that should not expand, and newlines \r\n \r \n that should be "
+        "normalized--><?pi Inside processing instructions, invalid entities "
+        "&apos also should not error, valid entities apos&; should not expand "
+        "and newlines \r\n \r \n should be normalized?></html>";
+    std::stringstream inputStream(input);
+
+    EmptyNode output{
+        Doctype("&apos \n \n &apos;"),
+        GenericNode(
+            "html", false, Attribute("theme", "dark "),
+            Attribute("lang", " en "),
+            GenericNode(
+                "body", false,
+                GenericNode("div", false, Text(" Hello"),
+                            GenericNode("span", false, Text("\n\n\n\n")),
+                            Text("World! \n"), CData("&apos\t\n\n&apos;"))),
+            Comment("This is a comment with invalid entities &apos that should "
+                    "not error, valid entities apos&; that should not expand, "
+                    "and newlines \n \n \n that should be normalized"),
+            ProcessingInstruction(
+                "pi",
+                "Inside processing instructions, invalid entities &apos also "
+                "should not error, valid entities apos&; should not expand and "
+                "newlines \n \n \n should be normalized"))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
