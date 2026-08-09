@@ -375,13 +375,13 @@ TEST_CASE("DomParser works with comments") {
     using namespace onyx::parser;
 
     std::string input =
-        "<html theme=\"dark\"><!--This is a comment!--><body><div> "
+        "<html theme=\"dark\"><!--This is a comment\r-!--><body><div> "
         "Hello<span></span>World! </div></body></html>";
     std::stringstream inputStream(input);
 
     GenericNode output{
         "html", false, Attribute("theme", "dark"),
-        Comment("This is a comment!"),
+        Comment("This is a comment\n-!"),
         GenericNode("body", false,
                     GenericNode("div", false, Text(" Hello"),
                                 GenericNode("span", false), Text("World! ")))};
@@ -401,12 +401,12 @@ TEST_CASE("DomParser works with processing instructions") {
 
     std::string input =
         "<root lang=\"en\"><?templater doSomething 5 > 4 "
-        "somethingElse?></root>";
+        "\r?somethingElse?></root>";
     std::stringstream inputStream(input);
 
-    GenericNode output{
-        "root", false, Attribute("lang", "en"),
-        ProcessingInstruction("templater", "doSomething 5 > 4 somethingElse")};
+    GenericNode output{"root", false, Attribute("lang", "en"),
+                       ProcessingInstruction(
+                           "templater", "doSomething 5 > 4 \n?somethingElse")};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
@@ -423,12 +423,14 @@ TEST_CASE("DomParser works with CDATA") {
 
     std::string input =
         "<root lang=\"en\"><![CDATA[<someElement> This is some literal text, "
-        "in which & and <, > can safely be written!]]></root>";
+        "in which & and <, > can safely be written! Also, a]>, ]a>, ]], aa> "
+        "will not end this section.]]></root>";
     std::stringstream inputStream(input);
 
     GenericNode output{"root", false, Attribute("lang", "en"),
                        CData("<someElement> This is some literal text, in "
-                             "which & and <, > can safely be written!")};
+                             "which & and <, > can safely be written! Also, "
+                             "a]>, ]a>, ]], aa> will not end this section.")};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);

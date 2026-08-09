@@ -534,7 +534,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                         "Invalid processing instruction without ending");
             }
 
-            while (pos.capturePeek(1) != '>') {
+            while (
+                !(pos.captureCurrent() == '?' && pos.capturePeek(1) == '>')) {
                 if (pos.captureCurrent() == '\r') {
                     transformationMode = TextTransformationMode::EOL_ONLY;
                 }
@@ -598,7 +599,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 // Found singular '-'
                 // Loop continues until finding '--'
-                while (pos.capturePeek(1) != '-') {
+                while (!(pos.captureCurrent() == '-' &&
+                         pos.capturePeek(1) == '-')) {
                     if (pos.captureCurrent() == '\r') {
                         transformationMode = TextTransformationMode::EOL_ONLY;
                     }
@@ -654,9 +656,9 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 // Found single ']'
                 // Loop continues until finding ']]>'
-                while (pos.capturePeek(1) != ']' &&
-                       pos.capturePeek(2) != '\0' &&
-                       pos.capturePeek(2) != '>') {
+                while (!(
+                    pos.captureCurrent() == ']' && pos.capturePeek(1) == ']' &&
+                    pos.capturePeek(2) != '\0' && pos.capturePeek(2) == '>')) {
                     if (pos.captureCurrent() == '\r') {
                         transformationMode = TextTransformationMode::EOL_ONLY;
                     }
@@ -720,9 +722,11 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     transformationMode = TextTransformationMode::EOL_ONLY;
                     pos.captureAdvance();
                     readUntilAnyOf<Config::validate>(pos, '>', '\r');
-                    if (pos.captureCurrent() == '\0') {
-                        throw std::invalid_argument(
-                            "Invalid DOCTYPE without ending");
+                    if constexpr (Config::validate) {
+                        if (pos.captureCurrent() == '\0') {
+                            throw std::invalid_argument(
+                                "Invalid DOCTYPE without ending");
+                        }
                     }
                 }
 
