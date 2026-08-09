@@ -8,6 +8,7 @@
 #include "is_cursor.h"
 #include "is_parse_policy.h"
 #include "is_parser_config.h"
+#include "text_transformation_mode.h"
 
 namespace onyx::dynamic::parser {
 
@@ -28,8 +29,7 @@ ONYX_INLINE void readOrThrow(CursorType& pos, std::string_view expected,
 template <bool validate, typename CursorType>
 ONYX_INLINE void readUntil(CursorType& pos, unsigned char a) {
     if constexpr (validate) {
-        while (pos.captureCurrent() != '\0' &&
-           pos.captureCurrent() != a) {
+        while (pos.captureCurrent() != '\0' && pos.captureCurrent() != a) {
             pos.captureAdvance();
         }
     } else {
@@ -40,54 +40,49 @@ ONYX_INLINE void readUntil(CursorType& pos, unsigned char a) {
 }
 
 template <bool validate, typename CursorType>
-ONYX_INLINE void readUntilEitherOf2(CursorType& pos, unsigned char a, unsigned char b) {
+ONYX_INLINE void readUntilEitherOf2(CursorType& pos, unsigned char a,
+                                    unsigned char b) {
     if constexpr (validate) {
-        while (pos.captureCurrent() != '\0' &&
-            pos.captureCurrent() != a &&
-            pos.captureCurrent() != b) {
+        while (pos.captureCurrent() != '\0' && pos.captureCurrent() != a &&
+               pos.captureCurrent() != b) {
             pos.captureAdvance();
         }
     } else {
-        while (pos.captureCurrent() != a &&
-            pos.captureCurrent() != b) {
+        while (pos.captureCurrent() != a && pos.captureCurrent() != b) {
             pos.captureAdvance();
         }
     }
 }
 
 template <bool validate, typename CursorType>
-ONYX_INLINE void readUntilEitherOf3(CursorType& pos, unsigned char a, unsigned char b, unsigned char c) {
+ONYX_INLINE void readUntilEitherOf3(CursorType& pos, unsigned char a,
+                                    unsigned char b, unsigned char c) {
     if constexpr (validate) {
-        while (pos.captureCurrent() != '\0' &&
-            pos.captureCurrent() != a &&
-            pos.captureCurrent() != b &&
-            pos.captureCurrent() != c) {
+        while (pos.captureCurrent() != '\0' && pos.captureCurrent() != a &&
+               pos.captureCurrent() != b && pos.captureCurrent() != c) {
             pos.captureAdvance();
         }
     } else {
-        while (pos.captureCurrent() != a &&
-            pos.captureCurrent() != b &&
-            pos.captureCurrent() != c) {
+        while (pos.captureCurrent() != a && pos.captureCurrent() != b &&
+               pos.captureCurrent() != c) {
             pos.captureAdvance();
         }
     }
 }
 
 template <bool validate, typename CursorType>
-ONYX_INLINE void readUntilEitherOf4(CursorType& pos, unsigned char a, unsigned char b, unsigned char c, unsigned char d) {
+ONYX_INLINE void readUntilEitherOf4(CursorType& pos, unsigned char a,
+                                    unsigned char b, unsigned char c,
+                                    unsigned char d) {
     if constexpr (validate) {
-        while (pos.captureCurrent() != '\0' &&
-            pos.captureCurrent() != a &&
-            pos.captureCurrent() != b &&
-            pos.captureCurrent() != c &&
-            pos.captureCurrent() != d) {
+        while (pos.captureCurrent() != '\0' && pos.captureCurrent() != a &&
+               pos.captureCurrent() != b && pos.captureCurrent() != c &&
+               pos.captureCurrent() != d) {
             pos.captureAdvance();
         }
     } else {
-        while (pos.captureCurrent() != a &&
-            pos.captureCurrent() != b &&
-            pos.captureCurrent() != c &&
-            pos.captureCurrent() != d) {
+        while (pos.captureCurrent() != a && pos.captureCurrent() != b &&
+               pos.captureCurrent() != c && pos.captureCurrent() != d) {
             pos.captureAdvance();
         }
     }
@@ -104,13 +99,14 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
              isParserConfig<Config>)
 {
     using StringType = typename Policy::StringType;
+    using CursorStringType = typename Policy::CursorType::StringType;
     using StackType = typename Policy::StackType;
     bool firstTag = true;
     bool foundXmlDeclaration = false;
     bool foundDoctype = false;
     struct EmptyStruct {};
     std::vector<StringType> attributeNames;
-    std::vector<std::pair<StringType, bool>> attributeValues;
+    std::vector<StringType> attributeValues;
     std::vector<StackType> stack;
     policy.initStack(stack);
     while (pos.current() != '\0') {
@@ -119,22 +115,44 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
         if (pos.current() != '<') {
             // In text
             pos.beginCapture();
-            bool requiresExpansion = false;
+            TextTransformationMode transformationMode =
+                TextTransformationMode::NONE;
             bool end = false;
-            // This is always validating. Otherwise, the document would have no point to end.
+            // This is always validating. Otherwise, the document would have no
+            // point to end.
             readUntilEitherOf3<true>(pos, '<', '&', '\r');
             while (pos.captureCurrent() != '<') {
                 if (pos.captureCurrent() == '\0') {
-                    // If we find the end of the document, one of the following must be true:
-                    // 1) We are in a tag contents and found the end of the document. Then, the stack will catch this.
-                    // 2) We are between sibling tags. But, if they have a common parent, the document cannot end here and the stack will catch this, since the parent is not closed.
-                    // Them being top level siblings is a contradiction since the second sibling must be after the text, yet there is nothing after the text.
-                    // 3) The text is before the beginning of the document, i.e., the first tag. This is generally malformed XML, due to the rule of the root element, but is allowed by default here to support top level text. This behavior should be controlled via a config option.
-                    // 4) The text is after the last element. Then, whitespace is explicitly allowed. Since this segment is not consumed and anything other than whitespace is an exception, it does not need to be specially validated or expanded.
-                    // Thus, it can keep the simple while loop.
+                    // If we find the end of the document, one of the following
+                    // must be true:
+                    // 1) We are in a tag contents and found the
+                    // end of the document. Then, the stack will catch this.
+                    //
+                    // 2) We are between sibling tags. But, if they have a
+                    // common parent, the document cannot end here and the stack
+                    // will catch this, since the parent is not closed. Them
+                    // being top level siblings is a contradiction since the
+                    // second sibling must be after the text, yet there is
+                    // nothing after the text.
+                    //
+                    // 3) The text is before the beginning of the document,
+                    // i.e., the first tag. This is generally malformed XML, due
+                    // to the rule of the root element, but is allowed by
+                    // default here to support top level text. This behavior
+                    // should be controlled via a config option.
+                    //
+                    // 4) The text is after the last element.
+                    // Then, whitespace is explicitly allowed. Since this
+                    // segment is not consumed and anything other than
+                    // whitespace is an exception, it does not need to be
+                    // specially validated or expanded. Thus, it can keep the
+                    // simple while loop.
                     if (firstTag && !foundXmlDeclaration && !foundDoctype) {
-                        // This is a special exception to allow top level text by itself, since the parser already allows text before the first element
-                        // This will take the text and send it to textAction directly, instead of validating it is whitespace.
+                        // This is a special exception to allow top level text
+                        // by itself, since the parser already allows text
+                        // before the first element This will take the text and
+                        // send it to textAction directly, instead of validating
+                        // it is whitespace.
                         // TODO: Add config option to change this behavior
                         break;
                     }
@@ -150,14 +168,17 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     end = true;
                     break;
                 }
-                if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\r') requiresExpansion = true;
+                if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\r')
+                    transformationMode = TextTransformationMode::TEXT;
                 pos.captureAdvance();
             }
             if (end) break;
-            StringType text = pos.getCaptured();
+            CursorStringType text = pos.getCaptured();
             pos.bringToCapture();
 
-            policy.textAction(std::move(text), requiresExpansion, stack, pos);
+            policy.textAction(std::move(policy.transformText(
+                                  std::move(text), transformationMode)),
+                              stack, pos);
 
             continue;
         }
@@ -179,7 +200,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     throw std::invalid_argument("Premature end of document");
                 }
             }
-            StringType tagName = readName(pos);
+            CursorStringType tagName = readName(pos);
             if constexpr (Config::validate) {
                 if (tagName.empty()) {
                     throw std::invalid_argument("Invalid tag name");
@@ -206,7 +227,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 bool hasVersion = false;
                 bool hasEncoding = false;
                 bool hasStandalone = false;
-                StringType version, encoding, standalone;
+                CursorStringType version, encoding, standalone;
 
                 /* Walk through all pseudo-attributes in the xml declaration */
                 while (pos.current() != '\0' && pos.current() != '?') {
@@ -223,7 +244,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     }
 
                     /* read attribute name */
-                    StringType attrName = readName(pos);
+                    CursorStringType attrName = readName(pos);
                     if constexpr (Config::validate) {
                         if (attrName.empty()) {
                             throw std::invalid_argument(
@@ -275,7 +296,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                                 "value");
                         }
                     }
-                    StringType val = pos.getCaptured();
+                    CursorStringType val = pos.getCaptured();
                     pos.bringToCapture();
                     pos.advance(); /* skip closing quote */
                     if constexpr (Config::validate) {
@@ -401,8 +422,11 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 if (encoding.size() == 0) encoding = "UTF-8";
 
                 policy.xmlDeclarationAction(
-                    std::move(version), std::move(encoding), hasEncoding,
-                    isStandalone, hasStandalone, stack, pos);
+                    std::move(policy.transformText(
+                        std::move(version), TextTransformationMode::NONE)),
+                    std::move(policy.transformText(
+                        std::move(encoding), TextTransformationMode::NONE)),
+                    hasEncoding, isStandalone, hasStandalone, stack, pos);
                 continue;
             }
             if constexpr (Config::validate) {
@@ -416,7 +440,9 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
             pos.beginCapture();
 
-            readUntil<Config::validate>(pos, '?');
+            TextTransformationMode transformationMode =
+                TextTransformationMode::NONE;
+            readUntilEitherOf2<Config::validate>(pos, '?', '\r');
 
             if constexpr (Config::validate) {
                 if (pos.captureCurrent() == '\0')
@@ -424,9 +450,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                         "Invalid processing instruction without ending");
             }
 
-            while (pos.capturePeek(1) != '\0' && pos.capturePeek(1) != '>') {
+            while (pos.capturePeek(1) != '>') {
+                if (pos.captureCurrent() == '\r') {
+                    transformationMode = TextTransformationMode::EOL_ONLY;
+                }
                 pos.captureAdvance();
-                readUntil<Config::validate>(pos, '?');
+                readUntilEitherOf2<Config::validate>(pos, '?', '\r');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
@@ -434,15 +463,19 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
             }
 
-            StringType processingInstruction = pos.getCaptured();
+            CursorStringType processingInstruction = pos.getCaptured();
 
             pos.bringToCapture();
             pos.advance(2);
 
             /* Invariant - just after processing instruction end */
-            policy.instructionAction(std::move(tagName),
-                                     std::move(processingInstruction), stack,
-                                     pos);
+            policy.instructionAction(
+                std::move(policy.transformText(std::move(tagName),
+                                               TextTransformationMode::NONE)),
+                std::move(
+                    policy.transformText(std::move(processingInstruction),
+                                         TextTransformationMode::EOL_ONLY)),
+                stack, pos);
             firstTag = false;
             continue;
         } else if (pos.current() == '!') {
@@ -470,7 +503,9 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 pos.beginCapture();
 
-                readUntil<Config::validate>(pos, '-');
+                TextTransformationMode transformationMode =
+                    TextTransformationMode::NONE;
+                readUntilEitherOf2<Config::validate>(pos, '-', '\r');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0') {
                         throw std::invalid_argument(
@@ -479,9 +514,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 // Found singular '-'
                 // Loop continues until finding '--'
-                while (pos.capturePeek(1) != '\0' && pos.capturePeek(1) != '-') {
+                while (pos.capturePeek(1) != '-') {
+                    if (pos.captureCurrent() == '\r') {
+                        transformationMode = TextTransformationMode::EOL_ONLY;
+                    }
                     pos.captureAdvance();
-                    readUntil<Config::validate>(pos, '-');
+                    readUntilEitherOf2<Config::validate>(pos, '-', '\r');
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0') {
                             throw std::invalid_argument(
@@ -490,7 +528,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     }
                 }
 
-                StringType commentText = pos.getCaptured();
+                CursorStringType commentText = pos.getCaptured();
 
                 pos.captureAdvance(2);
 
@@ -503,7 +541,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 pos.bringToCapture();
                 pos.advance();
-                policy.commentAction(std::move(commentText), stack, pos);
+                policy.commentAction(
+                    std::move(policy.transformText(std::move(commentText),
+                                                   transformationMode)),
+                    stack, pos);
                 firstTag = false;
                 continue;
             } else if (pos.current() == '[') {
@@ -519,7 +560,9 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 pos.beginCapture();
 
-                readUntil<Config::validate>(pos, ']');
+                TextTransformationMode transformationMode =
+                    TextTransformationMode::NONE;
+                readUntilEitherOf2<Config::validate>(pos, ']', '\r');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
@@ -527,10 +570,14 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                 }
                 // Found single ']'
                 // Loop continues until finding ']]>'
-                while (pos.capturePeek(1) != '\0' && pos.capturePeek(1) != ']'
-                        && pos.capturePeek(2) != '\0' && pos.capturePeek(2) != '>') {
+                while (pos.capturePeek(1) != ']' &&
+                       pos.capturePeek(2) != '\0' &&
+                       pos.capturePeek(2) != '>') {
+                    if (pos.captureCurrent() == '\r') {
+                        transformationMode = TextTransformationMode::EOL_ONLY;
+                    }
                     pos.captureAdvance();
-                    readUntil<Config::validate>(pos, ']');
+                    readUntilEitherOf2<Config::validate>(pos, ']', '\r');
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0')
                             throw std::invalid_argument(
@@ -538,11 +585,14 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     }
                 }
 
-                StringType cdataText = pos.getCaptured();
+                CursorStringType cdataText = pos.getCaptured();
 
                 pos.bringToCapture();
                 pos.advance(3);
-                policy.cdataAction(std::move(cdataText), stack, pos);
+                policy.cdataAction(
+                    std::move(policy.transformText(std::move(cdataText),
+                                                   transformationMode)),
+                    stack, pos);
                 firstTag = false;
                 continue;
             } else if (pos.current() == 'D') {
@@ -568,8 +618,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
                 pos.beginCapture();
 
-                // Warning - some valid DOCTYPE declarations may contain '>' inside of quotes. Currently, this implementation would fail on them.
-                readUntil<Config::validate>(pos, '>');
+                // Warning - some valid DOCTYPE declarations may contain '>'
+                // inside of quotes. Currently, this implementation would fail
+                // on them.
+                readUntilEitherOf2<Config::validate>(pos, '>', '\r');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0') {
                         throw std::invalid_argument(
@@ -577,11 +629,26 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     }
                 }
 
-                StringType doctypeText = pos.getCaptured();
+                TextTransformationMode transformationMode =
+                    TextTransformationMode::NONE;
+                while (pos.captureCurrent() != '>') {
+                    // Always at '\r' here if not at '>'
+                    transformationMode = TextTransformationMode::EOL_ONLY;
+                    readUntilEitherOf2<Config::validate>(pos, '>', '\r');
+                    if (pos.captureCurrent() == '\0') {
+                        throw std::invalid_argument(
+                            "Invalid DOCTYPE without ending");
+                    }
+                }
+
+                CursorStringType doctypeText = pos.getCaptured();
 
                 pos.bringToCapture();
                 pos.advance();
-                policy.doctypeAction(std::move(doctypeText), stack, pos);
+                policy.doctypeAction(
+                    std::move(policy.transformText(std::move(doctypeText),
+                                                   transformationMode)),
+                    stack, pos);
                 firstTag = false;
                 continue;
             } else {
@@ -601,7 +668,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
         }
 
         /* Invariant - pos always at tag name start */
-        StringType tagName = readName(pos);
+        CursorStringType tagName = readName(pos);
         if constexpr (Config::validate) {
             if (tagName.empty()) {
                 throw std::invalid_argument("Invalid tag name");
@@ -622,7 +689,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
         if (couldHaveAttributes) {
             /* Invariant - either at start of attribute or at > */
             while (pos.current() != '>' && pos.current() != '/') {
-                StringType attributeName = readName(pos);
+                CursorStringType attributeName = readName(pos);
                 if constexpr (Config::validate) {
                     if (attributeName.empty()) {
                         throw std::invalid_argument("Invalid non-closing tag");
@@ -662,13 +729,17 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
 
                 /* Invariant - after attribute value opening quote */
                 pos.beginCapture();
-                bool requiresExpansion = false;
+                TextTransformationMode transformationMode =
+                    TextTransformationMode::NONE;
                 if constexpr (Config::validate) {
-                    readUntilEitherOf4<Config::validate>(pos, attributeQuote, '<', '&', '\n');
+                    // TODO must be \r or \n or \t
+                    readUntilEitherOf4<Config::validate>(pos, attributeQuote,
+                                                         '<', '&', '\r');
                 } else {
-                    readUntilEitherOf3<Config::validate>(pos, attributeQuote, '&', '\n');
+                    readUntilEitherOf3<Config::validate>(pos, attributeQuote,
+                                                         '&', '\r');
                 }
-                
+
                 while (pos.captureCurrent() != attributeQuote) {
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0') {
@@ -680,15 +751,19 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                                 "Cannot have '<' inside of attribute value");
                         }
                     }
-                    if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\n') requiresExpansion = true;
+                    if (pos.captureCurrent() == '&' ||
+                        pos.captureCurrent() == '\r')
+                        transformationMode = TextTransformationMode::ATTRIBUTE;
                     pos.captureAdvance();
                     if constexpr (Config::validate) {
-                        readUntilEitherOf4<Config::validate>(pos, attributeQuote, '<', '&', '\n');
+                        readUntilEitherOf4<Config::validate>(
+                            pos, attributeQuote, '<', '&', '\n');
                     } else {
-                        readUntilEitherOf3<Config::validate>(pos, attributeQuote, '&', '\n');
+                        readUntilEitherOf3<Config::validate>(
+                            pos, attributeQuote, '&', '\n');
                     }
                 }
-                StringType attributeValue = pos.getCaptured();
+                CursorStringType attributeValue = pos.getCaptured();
                 pos.bringToCapture();
 
                 /* Invariant - pos is at closing quote */
@@ -721,9 +796,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                             "Tag has too many attributes");
                     }
                 }
-                attributeNames.push_back(std::move(attributeName));
-                attributeValues.push_back(
-                    std::make_pair(std::move(attributeValue), requiresExpansion));
+                attributeNames.push_back(std::move(policy.transformText(
+                    std::move(attributeName), TextTransformationMode::NONE)));
+                attributeValues.push_back(std::move(policy.transformText(
+                    std::move(attributeValue), transformationMode)));
 
                 /* Continues to either >, /> or another attribute */
                 skipWhitespace(pos);
@@ -767,8 +843,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
         if (!isClosing) {
             /* Invariant - top stack node is always current parent */
             firstTag = false;
-            policy.openAction(std::move(tagName), isSelfClosing, attributeNames,
-                              attributeValues, stack, pos);
+            policy.openAction(
+                std::move(policy.transformText(std::move(tagName),
+                                               TextTransformationMode::NONE)),
+                isSelfClosing, attributeNames, attributeValues, stack, pos);
             attributeNames.resize(0);
             attributeValues.resize(0);
         } else {
@@ -782,7 +860,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                     throw std::invalid_argument("Closing non-existent tags");
                 }
             }
-            policy.closeAction(std::move(tagName), stack, pos);
+            policy.closeAction(
+                std::move(policy.transformText(std::move(tagName),
+                                               TextTransformationMode::NONE)),
+                stack, pos);
         }
     }
     if constexpr (Config::validate) {

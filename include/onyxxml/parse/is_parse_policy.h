@@ -4,20 +4,24 @@
 #include <utility>
 #include <vector>
 
+#include "text_transformation_mode.h"
+
 namespace onyx::dynamic::parser {
 template <typename T>
 concept isParserPolicy = requires(
     T t, typename T::StringType&& text, typename T::StringType&& tagName,
     typename T::StringType&& version, typename T::StringType&& encoding,
-    bool requiresExpansion, bool hasEncoding, bool isStandalone, bool hasStandalone,
-    bool isSelfClosing, std::vector<typename T::StringType>& attributeNames,
-    std::vector<std::pair<typename T::StringType, bool>>& attributeValues,
+    bool hasEncoding, bool isStandalone, bool hasStandalone, bool isSelfClosing,
+    std::vector<typename T::StringType>& attributeNames,
+    std::vector<typename T::StringType>& attributeValues,
     std::vector<typename T::StackType>& stack, T::StackType& stackElement,
-    T::StringType& tag, typename T::CursorType& cursor) {
+    typename T::CursorType::StringType& tag, typename T::CursorType& cursor,
+    typename T::CursorType::StringType&& cursorString,
+    TextTransformationMode textTransformationMode) {
     typename T::StringType;
     typename T::CursorType;
     typename T::StackType;
-    t.textAction(std::move(text), requiresExpansion, stack, cursor);
+    t.textAction(std::move(text), stack, cursor);
     t.commentAction(std::move(text), stack, cursor);
     t.cdataAction(std::move(text), stack, cursor);
     t.instructionAction(std::move(tagName), std::move(text), stack, cursor);
@@ -30,5 +34,8 @@ concept isParserPolicy = requires(
     t.initStack(stack);
     { t.equalStackElementToTag(stackElement, tag) } -> std::same_as<bool>;
     { t.isStackRoot(stackElement) } -> std::same_as<bool>;
+    {
+        t.transformText(std::move(text), textTransformationMode)
+    } -> std::same_as<typename T::StringType>;
 };
 }  // namespace onyx::dynamic::parser
