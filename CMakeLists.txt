@@ -5,6 +5,7 @@ project ("OnyxXML" VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project documentation" ON)
+option(OnyxXML_USE_ICONV "Enable Iconv support" OFF)
 
 
 if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -19,6 +20,7 @@ if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.cpp" PARENT_SCOPE)
     set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.py" PARENT_SCOPE)
 else()
+    set(OnyxXML_USE_ICONV ON)
     set(OnyxXML_XML_CPP_CODEGEN_SOURCE "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.cpp")
     set(OnyxXML_XML_PYTHON_CODEGEN_SCRIPT "${PROJECT_SOURCE_DIR}/src/generate_tags_classes.py")
 endif()
@@ -120,8 +122,6 @@ if(BUILD_TESTING)
 
 endif()
 
-
-
 ################################################################################
 #
 # Targets
@@ -143,6 +143,28 @@ endif()
 if(ENABLE_DOCUMENTATION)
     message(STATUS "Documentation building is enabled")
     add_subdirectory("docs")
+endif()
+
+# Natively, OnyxXML can only parse UTF-8 encoded text.
+# Of course, real world XML may not always be encoded in UTF-8. 
+# At the very least, per the XML specification, a compliant parser needs to not only support UTF-8,
+# but also UTF-16BE and UTF-16LE. 
+# Reasonably, a parser should also support a multitude of other encodings.
+# It is impossible for OnyxXML to correctly support every usable encoding from the last 70 years by itself,
+# thus iconv is needed.
+# If OnyxXML_USE_ICONV is set but iconv is not found, an error will be thrown.
+# If OnyxXML_USE_ICONV is not set, iconv will not be included. 
+# If iconv is not included, any attempt at transcoding of a string, mainly by the XML parser, from one to another encoding, will throw an exception.
+if(OnyxXML_USE_ICONV)
+
+    find_package(Iconv)
+
+    if(NOT Iconv_FOUND)
+        message(FATAL_ERROR "iconv requested but not found")
+    endif()
+
+    target_link_libraries(OnyxXML PRIVATE Iconv::Iconv)
+    target_compile_definitions(OnyxXML PRIVATE ICONV_AVAILABLE)
 endif()
 
 target_include_directories(OnyxXML
