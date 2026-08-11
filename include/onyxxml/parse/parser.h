@@ -45,7 +45,8 @@ constexpr auto isValidByte = [] {
 }();
 
 template <typename CursorType>
-ONYX_INLINE void validateXMLChar(unsigned char current, CursorType& pos) {
+ONYX_INLINE void validateXMLChar(unsigned char current, CursorType& pos,
+                                 bool validateUTF8 = true) {
     // 1 byte sequence, i.e., ASCII
     // Range: 0x00 - 0x7F
     if (current <= 0x7F) {
@@ -60,10 +61,12 @@ ONYX_INLINE void validateXMLChar(unsigned char current, CursorType& pos) {
     // Range: 0xC2 - 0xDF
     if (current >= 0xC2 && current <= 0xDF) {
         pos.captureAdvance();
-        unsigned char b2 = pos.captureCurrent();
-        if (b2 < 0x80 || b2 > 0xBF) {
-            throw std::invalid_argument(
-                "Document contains truncated or malformed utf-8");
+        if (validateUTF8) {
+            unsigned char b2 = pos.captureCurrent();
+            if (b2 < 0x80 || b2 > 0xBF) {
+                throw std::invalid_argument(
+                    "Document contains truncated or malformed utf-8");
+            }
         }
         return;
     }
@@ -75,6 +78,15 @@ ONYX_INLINE void validateXMLChar(unsigned char current, CursorType& pos) {
         unsigned char b2 = pos.captureCurrent();
         pos.captureAdvance();
         unsigned char b3 = pos.captureCurrent();
+
+        if (!validateUTF8) {
+            // U+FFFE and U+FFFF are forbidden in XML
+            if (current == 0xEF && b2 == 0xBF && (b3 == 0xBE || b3 == 0xBF)) {
+                throw std::invalid_argument(
+                    "Document contains restricted U+FFFE or U+FFFF");
+            }
+            return;
+        }
 
         if (b3 < 0x80 || b3 > 0xBF) {
             throw std::invalid_argument(
@@ -124,28 +136,30 @@ ONYX_INLINE void validateXMLChar(unsigned char current, CursorType& pos) {
         pos.captureAdvance();
         unsigned char b4 = pos.captureCurrent();
 
-        if (b3 < 0x80 || b3 > 0xBF || b4 < 0x80 || b4 > 0xBF) {
-            throw std::invalid_argument(
-                "Document contains truncated or malformed utf-8");
-        }
-
-        if (current == 0xF0) {
-            // Overlong encoding of 3 byte character
-            if (b2 < 0x90 || b2 > 0xBF) {
-                throw std::invalid_argument(
-                    "Document contains overlong utf-8 encoding");
-            }
-        } else if (current == 0xF4) {
-            // Character above U+10FFFF
-            if (b2 < 0x80 || b2 > 0x8F) {
-                throw std::invalid_argument(
-                    "Document contains utf-8 character out of bounds");
-            }
-        } else {
-            // Standard 4 byte sequence (0xF1-0xF3)
-            if (b2 < 0x80 || b2 > 0xBF) {
+        if (validateUTF8) {
+            if (b3 < 0x80 || b3 > 0xBF || b4 < 0x80 || b4 > 0xBF) {
                 throw std::invalid_argument(
                     "Document contains truncated or malformed utf-8");
+            }
+
+            if (current == 0xF0) {
+                // Overlong encoding of 3 byte character
+                if (b2 < 0x90 || b2 > 0xBF) {
+                    throw std::invalid_argument(
+                        "Document contains overlong utf-8 encoding");
+                }
+            } else if (current == 0xF4) {
+                // Character above U+10FFFF
+                if (b2 < 0x80 || b2 > 0x8F) {
+                    throw std::invalid_argument(
+                        "Document contains utf-8 character out of bounds");
+                }
+            } else {
+                // Standard 4 byte sequence (0xF1-0xF3)
+                if (b2 < 0x80 || b2 > 0xBF) {
+                    throw std::invalid_argument(
+                        "Document contains truncated or malformed utf-8");
+                }
             }
         }
         return;
@@ -538,7 +552,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     std::move(policy.transformText(
                         std::move(version), TextTransformationMode::NONE)),
                     std::move(policy.transformText(
-                        std::move(encoding), TextTransformationMode::NONE)),
+                        std::move(encoding),
+                        TextTransformationMode::UPPERCASE)),
                     hasEncoding, isStandalone, hasStandalone, stack, pos);
                 continue;
             }

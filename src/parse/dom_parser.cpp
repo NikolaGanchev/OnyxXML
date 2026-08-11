@@ -238,6 +238,11 @@ ParseResult<Arena> DomParser::parse(std::string_view input,
                     return text::expandEOLOnly(text);
                 case TextTransformationMode::NONE:
                     return std::string(text);
+                case TextTransformationMode::UPPERCASE:
+                    std::string str(text);
+                    std::transform(str.begin(), str.end(), str.begin(),
+                                   toupper);
+                    return str;
             }
             return std::string(text);
         }
@@ -362,6 +367,10 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
                 case TextTransformationMode::EOL_ONLY:
                     return text::expandEOLOnly(std::move(text));
                 case TextTransformationMode::NONE:
+                    return text;
+                case TextTransformationMode::UPPERCASE:
+                    std::transform(text.begin(), text.end(), text.begin(),
+                                   toupper);
                     return text;
             }
             return text;

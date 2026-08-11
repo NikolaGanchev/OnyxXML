@@ -479,6 +479,24 @@ TEST_CASE("DomParser works with XML declarations with encoding") {
     REQUIRE(output.deepEquals(*prStream.root));
 }
 
+TEST_CASE("DomParser works with different encoding capitalizations") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input = "<?xml version=\"1.1\" encoding=\"uTf-8\"?>";
+    std::stringstream inputStream(input);
+
+    XmlDeclaration output("1.1", "UTF-8", true, false, false, false);
+
+    ParseResult pr = DomParser::parse(input, "utf-8");
+    ParseResult prStream = DomParser::parse(inputStream, "UtF-8");
+
+    INFO(output.serialize());
+    INFO(pr.root->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
 TEST_CASE("DomParser works with XML declarations with standalone") {
     using namespace onyx::tags;
     using namespace onyx::parser;
@@ -1172,7 +1190,7 @@ TEST_CASE(
 
 TEST_CASE(
     "DomParser throws \"Document contains truncated or malformed utf-8\" on 4 "
-    "bytes  alformed with second byte failure") {
+    "bytes malformed with second byte failure") {
     using namespace onyx::parser;
 
     std::string xml = "<div>\xF1\x20\x80\x80</div>";

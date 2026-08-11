@@ -1,5 +1,6 @@
 #include "parse/sax_parser.h"
 
+#include <algorithm>
 #include <limits>
 #include <string>
 
@@ -113,6 +114,11 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
                     return text::expandEOLOnly(text);
                 case TextTransformationMode::NONE:
                     return std::string(text);
+                case TextTransformationMode::UPPERCASE:
+                    std::string str(std::move(text));
+                    std::transform(str.begin(), str.end(), str.begin(),
+                                   toupper);
+                    return str;
             }
 
             return std::string(text);
@@ -232,6 +238,10 @@ void SaxParser::parse(std::istream& input, std::string encoding) {
                 case TextTransformationMode::EOL_ONLY:
                     return text::expandEOLOnly(std::move(text));
                 case TextTransformationMode::NONE:
+                    return text;
+                case TextTransformationMode::UPPERCASE:
+                    std::transform(text.begin(), text.end(), text.begin(),
+                                   toupper);
                     return text;
             }
 

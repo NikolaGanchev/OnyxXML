@@ -24,6 +24,11 @@ enum class TextTransformationMode {
      */
     EOL_ONLY,
     /**
+     * @brief Converts lowercase ASCII to uppercase ASCII
+     *
+     */
+    UPPERCASE,
+    /**
      * @brief No transformation required or applicable
      *
      */
