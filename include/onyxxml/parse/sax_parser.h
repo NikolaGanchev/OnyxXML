@@ -2,6 +2,7 @@
 
 #include <istream>
 #include <vector>
+
 #include "attribute.h"
 
 namespace onyx::dynamic::parser {
@@ -108,9 +109,16 @@ class SaxParser {
      * @brief Parse an XML string
      *
      * @param input
+     * @param encoding
      */
-    void parse(std::string_view input);
+    void parse(std::string_view input, std::string encoding = "UTF-8");
 
-    void parse(std::istream& input);
+    /**
+     * @brief Parse an XML stream
+     *
+     * @param input
+     * @param encoding
+     */
+    void parse(std::istream& input, std::string encoding = "UTF-8");
 };
 }  // namespace onyx::dynamic::parser

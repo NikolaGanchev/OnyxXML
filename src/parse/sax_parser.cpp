@@ -19,7 +19,7 @@ struct ValidatingConfig {
         std::numeric_limits<size_t>::max();
 };
 
-void SaxParser::parse(std::string_view input) {
+void SaxParser::parse(std::string_view input, std::string encoding) {
     struct StringSaxParserPolicy {
         SaxListener& listener;
         std::string_view root = ".empty";
@@ -129,7 +129,8 @@ void SaxParser::parse(std::string_view input) {
     this->listener.onStart();
 
     try {
-        parseBody<ValidatingConfig, StringSaxParserPolicy>(pos, policy);
+        parseBody<ValidatingConfig, StringSaxParserPolicy>(pos, policy,
+                                                           encoding);
     } catch (std::exception& e) {
         this->listener.onException(e);
     }
@@ -137,7 +138,7 @@ void SaxParser::parse(std::string_view input) {
     this->listener.onEnd();
 }
 
-void SaxParser::parse(std::istream& input) {
+void SaxParser::parse(std::istream& input, std::string encoding) {
     struct StreamSaxParserPolicy {
         SaxListener& listener;
         std::vector<std::string> stack;
@@ -247,7 +248,8 @@ void SaxParser::parse(std::istream& input) {
 
     this->listener.onStart();
     try {
-        parseBody<ValidatingConfig, StreamSaxParserPolicy>(pos, policy);
+        parseBody<ValidatingConfig, StreamSaxParserPolicy>(pos, policy,
+                                                           encoding);
     } catch (std::exception& e) {
         this->listener.onException(e);
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cctype>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -193,7 +194,8 @@ ONYX_INLINE void readUntilAnyOf(CursorType& pos, Chars... targets) {
 }
 
 template <typename Config, typename Policy>
-ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
+ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
+                           std::string givenEncoding)
     /* In GCC 15.1 and older MSVC versions, having
         `isCursor<CursorType>, isParserPolicy<Policy>`
         with a comma instead of `&&` actually causes an internal compiler error.
@@ -506,6 +508,14 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy)
                         if (encoding.empty() || !isalpha(encoding[0]))
                             throw std::invalid_argument(
                                 "Invalid encoding in XML declaration");
+                        for (size_t i = 0; i < encoding.size(); i++) {
+                            if (std::toupper(encoding[i]) !=
+                                toupper(givenEncoding[i])) {
+                                throw std::invalid_argument(
+                                    "Declared encoding does not match given "
+                                    "encoding");
+                            }
+                        }
                     }
                 }
                 /* standalone defaults to "no" if not present */

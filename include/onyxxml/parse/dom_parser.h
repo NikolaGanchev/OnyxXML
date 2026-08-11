@@ -80,26 +80,31 @@ class DomParser {
      * @brief Runs the parser, validating and allocating the exact Arena memory.
      *
      * @param input
+     * @param encoding
      * @return Arena
      */
-    static Arena parseDryRun(std::string_view input);
+    static Arena parseDryRun(std::string_view input, std::string encoding);
 
    public:
     /**
      * @brief Parse an XML string
      *
      * @param input
+     * @param encoding
      * @return ParseResult
      */
-    static ParseResult<Arena> parse(std::string_view input);
+    static ParseResult<Arena> parse(std::string_view input,
+                                    std::string encoding = "UTF-8");
 
     /**
      * @brief Parse an XML stream
      *
      * @param input
+     * @param encoding
      * @return NodeHandle
      */
-    static ParseResult<PagedArena> parse(std::istream& input);
+    static ParseResult<PagedArena> parse(std::istream& input,
+                                         std::string encoding = "UTF-8");
 };
 
 template <typename ArenaType>

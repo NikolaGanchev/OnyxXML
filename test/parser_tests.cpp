@@ -470,8 +470,8 @@ TEST_CASE("DomParser works with XML declarations with encoding") {
 
     XmlDeclaration output("1.1", "ISO-8859-1", true, false, false, false);
 
-    ParseResult pr = DomParser::parse(input);
-    ParseResult prStream = DomParser::parse(inputStream);
+    ParseResult pr = DomParser::parse(input, "ISO-8859-1");
+    ParseResult prStream = DomParser::parse(inputStream, "ISO-8859-1");
 
     INFO(output.serialize());
     INFO(pr.root->serialize());
@@ -933,6 +933,17 @@ TEST_CASE("DomParser throws \"Invalid encoding in XML declaration\"") {
     std::string xml = "<?xml version=\"1.0\" encoding=\"123-UTF\"?>";
     std::stringstream inputStream(xml);
     std::string message = "Invalid encoding in XML declaration";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Declared encoding does not match given encoding\"") {
+    using namespace onyx::parser;
+
+    std::string xml = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>";
+    std::stringstream inputStream(xml);
+    std::string message = "Declared encoding does not match given encoding";
     REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }

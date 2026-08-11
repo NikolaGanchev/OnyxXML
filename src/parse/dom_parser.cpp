@@ -41,7 +41,7 @@ struct NonValidatingConfig {
         std::numeric_limits<size_t>::max();
 };
 
-Arena DomParser::parseDryRun(std::string_view input) {
+Arena DomParser::parseDryRun(std::string_view input, std::string encoding) {
     struct DomDryRunParserPolicy {
         Arena::Builder builder;
         std::string_view root = ".empty";
@@ -132,12 +132,13 @@ Arena DomParser::parseDryRun(std::string_view input) {
 
     skipWhitespace(pos);
 
-    parseBody<DryRunConfig, DomDryRunParserPolicy>(pos, policy);
+    parseBody<DryRunConfig, DomDryRunParserPolicy>(pos, policy, encoding);
 
     return policy.builder.build();
 }
 
-ParseResult<Arena> DomParser::parse(std::string_view input) {
+ParseResult<Arena> DomParser::parse(std::string_view input,
+                                    std::string encoding) {
     struct DomStringParserPolicy {
         Arena arena;
 
@@ -245,11 +246,12 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
     using StringType = StringCursor::StringType;
     StringCursor pos(input.data());
 
-    DomStringParserPolicy policy{std::move(parseDryRun(input))};
+    DomStringParserPolicy policy{std::move(parseDryRun(input, encoding))};
 
     skipWhitespace(pos);
 
-    parseBody<NonValidatingConfig, DomStringParserPolicy>(pos, policy);
+    parseBody<NonValidatingConfig, DomStringParserPolicy>(pos, policy,
+                                                          encoding);
 
     if (policy.root->getChildrenCount() == 1) {
         Node* newRoot =
@@ -260,7 +262,8 @@ ParseResult<Arena> DomParser::parse(std::string_view input) {
     return ParseResult{std::move(policy.arena), policy.root};
 }
 
-ParseResult<PagedArena> DomParser::parse(std::istream& input) {
+ParseResult<PagedArena> DomParser::parse(std::istream& input,
+                                         std::string encoding) {
     struct DomStreamParserPolicy {
         PagedArena arena;
 
@@ -372,7 +375,7 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input) {
 
     skipWhitespace(pos);
 
-    parseBody<ValidatingConfig, DomStreamParserPolicy>(pos, policy);
+    parseBody<ValidatingConfig, DomStreamParserPolicy>(pos, policy, encoding);
 
     if (policy.root->getChildrenCount() == 1) {
         Node* newRoot =
