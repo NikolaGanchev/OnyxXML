@@ -24,3 +24,5 @@ use_tags_file(OnyxXML_unit-tests "${CMAKE_CURRENT_SOURCE_DIR}/tags.txt" ON)
 
 # Automatically register all tests
 catch_discover_tests(OnyxXML_unit-tests)
+
+target_compile_definitions(OnyxXML_unit-tests PRIVATE ICONV_AVAILABLE)

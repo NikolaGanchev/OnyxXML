@@ -6,6 +6,13 @@
 #include <sstream>
 #include <unordered_map>
 
+#if ICONV_AVAILABLE
+#include <iconv.h>
+
+#include <cstring>
+
+#endif
+
 namespace onyx::dynamic::text {
 
 // Escapes a given string so that it is safe for use in HTML contexts.
@@ -635,5 +642,66 @@ std::string replaceSequences(
     escaped.resize(write - escaped.data());
 
     return escaped;
+}
+
+std::optional<std::string> transcodeToUtf8(std::string_view str,
+                                           const std::string& from) {
+    if (str.empty()) return std::nullopt;
+    if (from == "UTF-8" || from == "ASCII") return std::nullopt;
+#if ICONV_AVAILABLE
+    iconv_t cd = iconv_open("UTF-8", from.c_str());
+    if (cd == (iconv_t)-1) {
+        throw std::runtime_error(
+            "Failed to initialize iconv_open for target encoding");
+    }
+
+    struct IconvCloser {
+        iconv_t cd;
+        ~IconvCloser() { iconv_close(cd); }
+    } closer{cd};
+
+    // POSIX iconv takes `char **` for the input buffer, but promises not to
+    // modify the memory.
+    char* inbuf = const_cast<char*>(str.data());
+    size_t inbytesLeft = str.size();
+
+    std::string result;
+    size_t currentCapacity = inbytesLeft + (inbytesLeft / 2) + 1;
+    result.resize(currentCapacity);
+
+    size_t bytesWrittenTotal = 0;
+
+    while (inbytesLeft > 0) {
+        char* outbuf = &result[bytesWrittenTotal];
+        size_t bytesLeft = currentCapacity - bytesWrittenTotal;
+
+        size_t res = iconv(cd, &inbuf, &inbytesLeft, &outbuf, &bytesLeft);
+
+        size_t bytesWrittenThisPass =
+            (currentCapacity - bytesWrittenTotal) - bytesLeft;
+        bytesWrittenTotal += bytesWrittenThisPass;
+
+        if (res == (size_t)-1) {
+            if (errno == E2BIG) {
+                currentCapacity = currentCapacity + (currentCapacity / 2) + 1;
+                result.resize(currentCapacity);
+                continue;
+            } else if (errno == EILSEQ) {
+                throw std::runtime_error("Invalid multibyte sequence in input");
+            } else if (errno == EINVAL) {
+                throw std::runtime_error(
+                    "Incomplete multibyte sequence in input");
+            } else {
+                throw std::runtime_error("Unknown transcoding error");
+            }
+        }
+    }
+
+    result.resize(bytesWrittenTotal);
+
+    return result;
+#else
+    throw std::runtime_error("Trying to transcode at runtime without iconv");
+#endif
 }
 }  // namespace onyx::dynamic::text

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "node.h"
 #include "parse/is_cursor.h"
 
@@ -203,5 +205,16 @@ std::string expandAttributeValue(std::string_view input);
  * @return std::string
  */
 std::string expandEOLOnly(std::string_view input);
+
+/**
+ * @brief Transcodes a string from an encoding to UTF-8. Uses iconv.
+ * If a string is transcoded, it will have been validated.
+ *
+ * @param str
+ * @param from The encoding from which to transcode, in uppercase
+ * @return std::optional<std::string> Returns the string if it is transcoded
+ */
+std::optional<std::string> transcodeToUtf8(std::string_view str,
+                                           const std::string& from);
 }  // namespace text
 }  // namespace onyx::dynamic

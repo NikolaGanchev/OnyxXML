@@ -1,4 +1,5 @@
 #include <chrono>
+#include <optional>
 
 #include "catch2/catch_all.hpp"
 #include "onyx.h"
@@ -572,4 +573,124 @@ TEST_CASE("expandAttributeValue expands complex sequence properly",
             std::string("Some text      other text."));
     REQUIRE(expandAttributeValue("Some text other text.\r\r\n\t\n") ==
             std::string("Some text other text.    "));
+}
+
+TEST_CASE("Empty string returns nullopt without allocation",
+          "[transcodeToUtf8]") {
+    using namespace onyx::text;
+    REQUIRE(transcodeToUtf8("", "ISO-8859-1") == std::nullopt);
+    REQUIRE(transcodeToUtf8("", "UTF-8") == std::nullopt);
+}
+
+TEST_CASE("UTF-8 encoding triggers fast path", "[transcodeToUtf8]") {
+    using namespace onyx::text;
+    std::string input = "Hello, World!";
+
+    REQUIRE(transcodeToUtf8(input, "UTF-8") == std::nullopt);
+}
+
+TEST_CASE("ASCII encoding triggers fast path", "[transcodeToUtf8]") {
+    using namespace onyx::text;
+    std::string input = "Standard ASCII text";
+    REQUIRE(transcodeToUtf8(input, "ASCII") == std::nullopt);
+}
+
+TEST_CASE("Transcodes ISO-8859-1 (Latin-1) to UTF-8", "[transcodeToUtf8]") {
+    using namespace onyx::text;
+    // 'café' in ISO-8859-1: c a f \xE9
+    std::string input = "caf\xE9";
+    std::string expected = "caf\xC3\xA9";
+
+    std::optional<std::string> result = transcodeToUtf8(input, "ISO-8859-1");
+    REQUIRE(result.has_value());
+    REQUIRE(result.value() == expected);
+}
+
+TEST_CASE("Transcodes UTF-16LE to UTF-8", "[transcodeToUtf8]") {
+    using namespace onyx::text;
+    // "ABC" in UTF-16LE is \x41\x00 \x42\x00 \x43\x00
+    std::string input = {'\x41', '\x00', '\x42', '\x00', '\x43', '\x00'};
+    std::string expected = "ABC";
+
+    std::optional<std::string> result =
+        transcodeToUtf8(std::string_view(input.data(), 6), "UTF-16LE");
+    REQUIRE(result.has_value());
+    REQUIRE(result.value() == expected);
+}
+
+TEST_CASE("Dynamically expands buffer when E2BIG is triggered",
+          "[transcodeToUtf8]") {
+    using namespace onyx::text;
+
+    // Create a string of 1000 ISO-8859-1 'é' characters
+    // Initial capacity guess is 1500 bytes
+    // The actual UTF-8 output will be 2000 bytes
+    // This guarantees the E2BIG continuation loop will execute and resize
+    // safely
+    std::string input(1000, '\xE9');
+
+    std::string expected;
+    expected.reserve(2000);
+    for (int i = 0; i < 1000; i++) {
+        expected += "\xC3\xA9";
+    }
+
+    std::optional<std::string> result = transcodeToUtf8(input, "ISO-8859-1");
+    REQUIRE(result.has_value());
+    REQUIRE(result.value().size() == 2000);
+    REQUIRE(result.value() == expected);
+}
+
+TEST_CASE("Throws runtime_error on unknown or invalid encoding",
+          "[transcodeToUtf8]") {
+    using namespace onyx::text;
+    std::string input = "Some text";
+
+    REQUIRE_THROWS_WITH(
+        transcodeToUtf8(input, "EXAMPLE-ENCODING"),
+        Catch::Matchers::ContainsSubstring("Failed to initialize iconv_open"));
+}
+
+TEST_CASE("Throws runtime_error on incomplete multibyte sequence",
+          "[transcodeToUtf8]") {
+    using namespace onyx::text;
+    // Missing the trailing \x00 for the final UTF-16 character
+    std::string input = "\x41\x00\x42";
+
+    REQUIRE_THROWS_WITH(
+        transcodeToUtf8(std::string_view(input.data(), 3), "UTF-16LE"),
+        "Incomplete multibyte sequence in input");
+}
+
+TEST_CASE("Throws runtime_error on invalid multibyte sequence",
+          "[transcodeToUtf8]") {
+    using namespace onyx::text;
+    // \xFF is not a valid starting byte in UTF-8.
+    std::string input = "\xFF\xFF\xFF";
+
+    REQUIRE_THROWS_WITH(
+        transcodeToUtf8(input, "EUC-JP"),
+        Catch::Matchers::ContainsSubstring("Invalid multibyte sequence"));
+}
+
+TEST_CASE("Transcodes 1 million characters in under 150ms",
+          "[transcodeToUtf8]") {
+    using namespace onyx::text;
+    using std::chrono::duration;
+    using std::chrono::high_resolution_clock;
+
+    // 1 million ISO-8859-1 'é' characters
+    std::string input(1'000'000, '\xE9');
+
+    INFO("String size: " << input.size());
+
+    auto t1 = high_resolution_clock::now();
+    std::optional<std::string> result = transcodeToUtf8(input, "ISO-8859-1");
+    auto t2 = high_resolution_clock::now();
+
+    duration<double, std::milli> time = t2 - t1;
+
+    REQUIRE(result.has_value());
+    REQUIRE(result.value().size() == 2'000'000);
+    REQUIRE(time.count() < 150.0);
 }
