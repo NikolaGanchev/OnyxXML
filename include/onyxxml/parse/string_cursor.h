@@ -8,10 +8,12 @@ namespace onyx::dynamic::parser {
  */
 struct StringCursor {
     using StringType = std::string_view;
+
     /**
      * @brief The current position in the string
      *
      */
+
     const char* ptr;
     /**
      * @brief A position ahead in the string
@@ -20,11 +22,19 @@ struct StringCursor {
     const char* captured;
 
     /**
+     * @brief The end of the string
+     *
+     */
+    const char* end;
+
+    /**
      * @brief Construct a new StringCursor object
      *
      * @param p
+     * @param encoding The encoding of the string p points towards
      */
-    StringCursor(const char* p) : ptr(p), captured(p) {}
+    StringCursor(std::string_view str)
+        : ptr(str.data()), captured(str.data()), end(str.data() + str.size()) {}
 
     /**
      * @brief Look ahead in the cursor. Does not check for bounds.
@@ -108,8 +118,12 @@ struct StringCursor {
      * @return false
      */
     bool consumeIfMatches(std::string_view expected) {
+        if (static_cast<size_t>(end - ptr) < expected.size()) {
+            return false;
+        }
+
         for (size_t i = 0; i < expected.size(); i++) {
-            if (ptr[i] == '\0' || ptr[i] != expected[i]) {
+            if (ptr[i] != expected[i]) {
                 return false;
             }
         }
@@ -117,5 +131,8 @@ struct StringCursor {
         ptr += expected.size();
         return true;
     }
+
+    bool isEOF() const { return ptr >= end; }
 };
 }  // namespace onyx::dynamic::parser
+//  onyx::dynamic::parser

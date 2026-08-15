@@ -75,6 +75,16 @@ struct StreamCursor {
     }
 
     /**
+     * @brief Checks whether the cursor is at (or past) the end of the
+     * stream.
+     *
+     * @return true if there is no character available at the current
+     * position
+     * @return false otherwise
+     */
+    bool isEOF() { return !fillTo(pos); }
+
+    /**
      * @brief Get the character at the index
      *
      * @param index
@@ -179,6 +189,7 @@ struct StreamCursor {
      * @return false
      */
     bool consumeIfMatches(std::string_view expected) {
+        if (expected.empty()) return true;
         if (!fillTo(pos + expected.size() - 1)) return false;
 
         if (std::string_view(buffer.data() + pos, expected.size()) ==

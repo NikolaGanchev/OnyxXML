@@ -16,6 +16,7 @@ target_sources(
         "index_tests.cpp"
         "parser_tests.cpp"
         "xpath_tests.cpp"
+        cursor_tests.cpp
 )
 
 include(../cmake/functions/use_tags_file.cmake)
