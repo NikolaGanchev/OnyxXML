@@ -522,6 +522,11 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                         if (encoding.empty() || !isalpha(encoding[0]))
                             throw std::invalid_argument(
                                 "Invalid encoding in XML declaration");
+                        if (encoding.size() != givenEncoding.size()) {
+                            throw std::invalid_argument(
+                                "Declared encoding does not match given "
+                                "encoding");
+                        }
                         for (size_t i = 0; i < encoding.size(); i++) {
                             if (std::toupper(encoding[i]) !=
                                 toupper(givenEncoding[i])) {
