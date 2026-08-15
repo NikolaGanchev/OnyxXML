@@ -2,8 +2,16 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 #include <string_view>
 #include <vector>
+
+#if ICONV_AVAILABLE
+#include <iconv.h>
+
+#include <cerrno>
+
+#endif
 
 namespace onyx::dynamic::parser {
 /**
@@ -13,6 +21,15 @@ namespace onyx::dynamic::parser {
 struct StreamCursor {
     using StringType = std::string;
 
+    /**
+     * @brief The encoding of the stream
+     *
+     */
+    std::string inputEncoding;
+
+#if ICONV_AVAILABLE
+    iconv_t cd;
+#endif
     /**
      * @brief The raw buffer of the stream
      *
@@ -24,6 +41,13 @@ struct StreamCursor {
      *
      */
     std::vector<char> buffer;
+
+    /**
+     * @brief A buffer for holding raw bytes from the stream that haven't been
+     * fully transcoded yet
+     *
+     */
+    std::vector<char> rawBuffer;
 
     /**
      * @brief The pointer to the position in the buffer
@@ -48,15 +72,31 @@ struct StreamCursor {
      * @brief Construct a new StreamCursor object
      *
      * @param is The input stream to wrap
+     * @param inputEncoding The encoding of the stream
      * @param bufferThreshold The threshold for clearing old data
      */
     StreamCursor(std::istream& is, size_t bufferThreshold = 4096)
         : pos(0),
           captured(0),
           buf(is.rdbuf()),
+          inputEncoding("UTF-8"),
           bufferThreshold(bufferThreshold) {
         buffer.reserve(bufferThreshold * 2);
+#if ICONV_AVAILABLE
+        this->cd = (iconv_t)-1;
+#endif
     }
+
+    ~StreamCursor() {
+#if ICONV_AVAILABLE
+        if (cd != (iconv_t)-1) {
+            iconv_close(cd);
+        }
+#endif
+    }
+
+    StreamCursor(const StreamCursor&) = delete;
+    StreamCursor& operator=(const StreamCursor&) = delete;
 
     /**
      * @brief Fills the internal buffer to the index
@@ -67,9 +107,58 @@ struct StreamCursor {
      */
     bool fillTo(size_t index) {
         while (buffer.size() <= index) {
-            int c = buf->sbumpc();
-            if (c == std::char_traits<char>::eof()) return false;
-            buffer.push_back(static_cast<char>(c));
+            if (!transcoding) {
+                int c = buf->sbumpc();
+                if (c == std::char_traits<char>::eof()) return false;
+                buffer.push_back(static_cast<char>(c));
+            } else {
+#if ICONV_AVAILABLE
+                int c = buf->sbumpc();
+                if (c == std::char_traits<char>::eof() && rawBuffer.empty()) {
+                    return false;
+                }
+
+                if (c != std::char_traits<char>::eof()) {
+                    rawBuffer.push_back(static_cast<char>(c));
+                }
+
+                char* inbuf = rawBuffer.data();
+                size_t inbytesLeft = rawBuffer.size();
+
+                char outChunk[32];
+                char* outbuf = outChunk;
+                size_t outbytesLeft = sizeof(outChunk);
+
+                size_t res =
+                    iconv(cd, &inbuf, &inbytesLeft, &outbuf, &outbytesLeft);
+
+                if (res == (size_t)-1) {
+                    if (errno == EINVAL) {
+                        // Incomplete sequence. Loop again.
+                        if (c == std::char_traits<char>::eof()) {
+                            throw std::invalid_argument(
+                                "Incomplete byte sequence at EOF");
+                        }
+                        continue;
+                    } else {
+                        throw std::runtime_error(
+                            "iconv stream conversion failed");
+                    }
+                }
+
+                size_t converted = sizeof(outChunk) - outbytesLeft;
+                if (converted > 0) {
+                    buffer.insert(buffer.end(), outChunk, outChunk + converted);
+                }
+
+                size_t consumed = rawBuffer.size() - inbytesLeft;
+                if (consumed > 0) {
+                    rawBuffer.erase(rawBuffer.begin(),
+                                    rawBuffer.begin() + consumed);
+                }
+
+#endif
+            }
         }
         return true;
     }
@@ -199,5 +288,71 @@ struct StreamCursor {
         }
         return false;
     }
+
+    /**
+     * @brief Sets the encoding of the input.
+     *
+     * If the new encoding is the same as the input encoding.
+     *
+     * The stream will transcode on the fly as it fills its internal
+     * buffers.
+     *
+     * Upon calling this function, the internal buffer will be flushed.
+     *
+     * Transcoding can only happen if the capture is empty and there is no
+     * recorded lookahead.
+     *
+     * @param newEncoding
+     * @return true
+     * @return false
+     */
+    bool setInputEncoding(std::string newInputEncoding) {
+        if (pos != captured) {
+            throw std::runtime_error(
+                "Cannot change encoding while capture is active");
+        }
+
+        if (buffer.size() != pos) {
+            throw std::runtime_error(
+                "Cannot change encoding with unconsumed decoded lookahead "
+                "past pos");
+        }
+
+        if (!rawBuffer.empty()) {
+            throw std::runtime_error(
+                "Cannot change encoding mid multi byte sequence");
+        }
+
+#if ICONV_AVAILABLE
+        iconv_t newCd = iconv_open("UTF-8", newInputEncoding.c_str());
+        if (newCd == (iconv_t)-1) {
+            throw std::runtime_error("Failed to initialize iconv_open for " +
+                                     newInputEncoding);
+        }
+
+        if (cd != (iconv_t)-1) {
+            iconv_close(cd);
+        }
+        cd = newCd;
+
+        inputEncoding = std::move(newInputEncoding);
+        transcoding = inputEncoding != "UTF-8";
+
+        buffer.clear();
+        pos = 0;
+        captured = 0;
+        return transcoding;
+#else
+        throw std::runtime_error(
+            "Trying to transcode at runtime without iconv");
+#endif
+    }
+
+   private:
+    /**
+     * @brief Whether the cursor is actively transcoding
+     *
+     */
+    bool transcoding = false;
 };
 }  // namespace onyx::dynamic::parser

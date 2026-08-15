@@ -170,3 +170,148 @@ TEST_CASE(
     streamCursor.advance(2);
     REQUIRE(streamCursor.isEOF());
 }
+
+TEST_CASE(
+    "setInputEncoding returns false when the requested encoding matches the "
+    "current one") {
+    std::string text = "test string";
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE(streamCursor.current() == 't');
+    streamCursor.advance();
+    streamCursor.beginCapture();
+    REQUIRE_FALSE(streamCursor.setInputEncoding("UTF-8"));
+    REQUIRE(streamCursor.inputEncoding == "UTF-8");
+    REQUIRE(streamCursor.current() == 'e');
+}
+
+TEST_CASE(
+    "setInputEncoding transcodes a single byte encoding to UTF-8 on the "
+    "fly") {
+    std::string text = "caf\xE9";
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE(streamCursor.setInputEncoding("ISO-8859-1"));
+    REQUIRE(streamCursor.inputEncoding == "ISO-8859-1");
+
+    streamCursor.beginCapture();
+    streamCursor.captureAdvance(5);
+    REQUIRE(streamCursor.getCaptured() == "caf\xC3\xA9");
+}
+
+TEST_CASE(
+    "setInputEncoding transcodes a multi byte encoding character by "
+    "character") {
+    std::string text = {'\x41', '\x00', '\x42', '\x00', '\x43', '\x00'};
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE(streamCursor.setInputEncoding("UTF-16LE"));
+
+    REQUIRE(streamCursor.current() == 'A');
+    streamCursor.advance();
+    REQUIRE(streamCursor.current() == 'B');
+    streamCursor.advance();
+    REQUIRE(streamCursor.current() == 'C');
+    streamCursor.advance();
+    REQUIRE(streamCursor.isEOF());
+}
+
+TEST_CASE(
+    "consumeIfMatches operates on transcoded characters rather than raw "
+    "bytes") {
+    std::string text = "caf\xE9 latte";
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE(streamCursor.setInputEncoding("ISO-8859-1"));
+    REQUIRE(streamCursor.consumeIfMatches("caf\xC3\xA9"));
+    REQUIRE(streamCursor.current() == ' ');
+}
+
+TEST_CASE(
+    "isEOF accounts for the transcoded output length rather than the raw "
+    "byte count") {
+    std::string text = "caf\xE9";
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE(streamCursor.setInputEncoding("ISO-8859-1"));
+    REQUIRE_FALSE(streamCursor.isEOF());
+
+    streamCursor.advance(5);
+    REQUIRE(streamCursor.isEOF());
+}
+
+TEST_CASE("setInputEncoding throws while a capture is active") {
+    std::string text = "test string";
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    streamCursor.beginCapture();
+    streamCursor.captureAdvance(3);
+
+    REQUIRE_THROWS_WITH(streamCursor.setInputEncoding("ISO-8859-1"),
+                        "Cannot change encoding while capture is active");
+}
+
+TEST_CASE(
+    "setInputEncoding throws when there is unconsumed decoded lookahead "
+    "past pos") {
+    std::string text = "test string";
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    streamCursor.peek(3);
+
+    REQUIRE_THROWS_WITH(
+        streamCursor.setInputEncoding("ISO-8859-1"),
+        "Cannot change encoding with unconsumed decoded lookahead past pos");
+}
+
+TEST_CASE("setInputEncoding throws for an unknown or invalid encoding name") {
+    std::string text = "test string";
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE_THROWS_WITH(
+        streamCursor.setInputEncoding("EXAMPLE-ENCODING"),
+        Catch::Matchers::ContainsSubstring("Failed to initialize iconv_open"));
+}
+
+TEST_CASE("An incomplete multi byte sequence at the end of the stream throws") {
+    std::string text = {'\x42'};
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE(streamCursor.setInputEncoding("UTF-16LE"));
+    REQUIRE_THROWS_WITH(streamCursor.current(),
+                        "Incomplete byte sequence at EOF");
+}
+
+TEST_CASE(
+    "setInputEncoding throws when an incomplete multi byte sequence is "
+    "still pending") {
+    std::string text = {'\x42'};
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE(streamCursor.setInputEncoding("UTF-16LE"));
+    REQUIRE_THROWS_WITH(streamCursor.current(),
+                        "Incomplete byte sequence at EOF");
+
+    REQUIRE_THROWS_WITH(streamCursor.setInputEncoding("ISO-8859-1"),
+                        "Cannot change encoding mid multi byte sequence");
+}
