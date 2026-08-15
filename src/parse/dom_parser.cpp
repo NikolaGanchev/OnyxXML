@@ -120,6 +120,11 @@ Arena DomParser::parseDryRun(std::string_view input, std::string encoding) {
                                              TextTransformationMode ttm) {
             return text;
         }
+
+        ONYX_INLINE bool foundEncoding(CursorType::StringType&& text,
+                                       CursorType& cursor) {
+            return true;
+        }
     };
 
     using StringType = StringCursor::StringType;
@@ -245,6 +250,11 @@ ParseResult<Arena> DomParser::parse(std::string_view input,
                     return str;
             }
             return std::string(text);
+        }
+
+        ONYX_INLINE bool foundEncoding(CursorType::StringType&& text,
+                                       CursorType& cursor) {
+            return true;
         }
     };
 
@@ -374,6 +384,11 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
                     return text;
             }
             return text;
+        }
+
+        ONYX_INLINE bool foundEncoding(CursorType::StringType&& text,
+                                       CursorType& cursor) {
+            return true;
         }
     };
 

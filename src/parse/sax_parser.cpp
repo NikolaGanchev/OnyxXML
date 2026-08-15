@@ -123,6 +123,11 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
 
             return std::string(text);
         }
+
+        ONYX_INLINE bool foundEncoding(CursorType::StringType&& text,
+                                       CursorType& cursor) {
+            return true;
+        }
     };
 
     using StringType = StringCursor::StringType;
@@ -246,6 +251,11 @@ void SaxParser::parse(std::istream& input, std::string encoding) {
             }
 
             return text;
+        }
+
+        ONYX_INLINE bool foundEncoding(CursorType::StringType&& text,
+                                       CursorType& cursor) {
+            return true;
         }
     };
 

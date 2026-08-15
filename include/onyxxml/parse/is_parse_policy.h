@@ -28,6 +28,8 @@ concept isParserPolicy = requires(
     t.xmlDeclarationAction(std::move(version), std::move(encoding), hasEncoding,
                            isStandalone, hasStandalone, stack, cursor);
     t.doctypeAction(std::move(text), stack, cursor);
+    // The return value of foundEncoding decides whether to continue parsing
+    { t.foundEncoding(std::move(text), cursor) } -> std::same_as<bool>;
     t.openAction(std::move(tagName), isSelfClosing, attributeNames,
                  attributeValues, stack, cursor);
     t.closeAction(std::move(tagName), stack, cursor);
