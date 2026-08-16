@@ -1,9 +1,12 @@
 #include "parse/dom_parser.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <limits>
+#include <optional>
 #include <string_view>
 
+#include "arena.h"
 #include "nodes/cdata_node.h"
 #include "nodes/comment_node.h"
 #include "nodes/doctype_node.h"
@@ -41,10 +44,15 @@ struct NonValidatingConfig {
         std::numeric_limits<size_t>::max();
 };
 
-Arena DomParser::parseDryRun(std::string_view input, std::string encoding) {
+std::pair<Arena, std::optional<std::string>> DomParser::parseDryRun(
+    std::string_view input, std::string encoding) {
     struct DomDryRunParserPolicy {
         Arena::Builder builder;
         std::string_view root = ".empty";
+        std::string encoding;
+        std::string_view input;
+        std::optional<std::string> transcodedString;
+        bool alreadyTranscoded = false;
 
         using CursorType = StringCursor;
         using StringType = CursorType::StringType;
@@ -121,25 +129,71 @@ Arena DomParser::parseDryRun(std::string_view input, std::string encoding) {
             return text;
         }
 
-        ONYX_INLINE bool foundEncoding(CursorType::StringType&& text,
-                                       CursorType& cursor) {
-            return true;
+        ONYX_INLINE bool foundEncoding(
+            CursorType::StringType&& discoveredEncoding, CursorType& cursor,
+            bool& validateUTF8) {
+            if (encoding != "") {
+                if (discoveredEncoding != encoding) {
+                    throw std::invalid_argument(
+                        "Declared encoding does not match given encoding");
+                }
+            }
+
+            encoding = std::move(discoveredEncoding);
+
+            if (alreadyTranscoded) {
+                return true;
+            }
+
+            std::optional<std::string> res =
+                text::transcodeToUtf8(input, encoding);
+
+            if (!res.has_value()) return true;
+
+            transcodedString = std::move(res);
+
+            return false;
         }
     };
 
     using StringType = StringCursor::StringType;
-    StringCursor pos(input.data());
+    StringCursor pos(input);
 
-    DomDryRunParserPolicy policy{};
+    DomDryRunParserPolicy policy{.encoding = encoding, .input = input};
 
     // Root
     policy.builder.preallocate<tags::EmptyNode>();
 
     skipWhitespace(pos);
 
-    parseBody<DryRunConfig, DomDryRunParserPolicy>(pos, policy, encoding);
+    parseBody<DryRunConfig, DomDryRunParserPolicy>(pos, policy);
 
-    return policy.builder.build();
+    std::optional<std::string> transcodedString =
+        std::move(policy.transcodedString);
+
+    DomDryRunParserPolicy policyTranscoded{};
+
+    if (transcodedString.has_value()) {
+        StringCursor posTranscoded(transcodedString->data());
+
+        policyTranscoded.encoding = policy.encoding;
+        policyTranscoded.input = transcodedString->data();
+        policyTranscoded.alreadyTranscoded = true;
+
+        // Root
+        policyTranscoded.builder.preallocate<tags::EmptyNode>();
+
+        skipWhitespace(posTranscoded);
+
+        parseBody<DryRunConfig, DomDryRunParserPolicy>(posTranscoded,
+                                                       policyTranscoded, false);
+    }
+
+    Arena arena(std::move(transcodedString.has_value()
+                              ? policyTranscoded.builder.build()
+                              : policy.builder.build()));
+
+    return std::make_pair(std::move(arena), std::move(transcodedString));
 }
 
 ParseResult<Arena> DomParser::parse(std::string_view input,
@@ -253,20 +307,27 @@ ParseResult<Arena> DomParser::parse(std::string_view input,
         }
 
         ONYX_INLINE bool foundEncoding(CursorType::StringType&& text,
-                                       CursorType& cursor) {
+                                       CursorType& cursor, bool& validateUTF8) {
             return true;
         }
     };
 
-    using StringType = StringCursor::StringType;
-    StringCursor pos(input.data());
+    std::pair<Arena, std::optional<std::string>> dryRunResult =
+        std::move(parseDryRun(input, encoding));
 
-    DomStringParserPolicy policy{std::move(parseDryRun(input, encoding))};
+    if (dryRunResult.second.has_value()) {
+        // Safe because the transcoded string is UTF-8 and has no '\0' bytes
+        // outside the end of the string
+        input = dryRunResult.second->data();
+    }
+    using StringType = StringCursor::StringType;
+    StringCursor pos(input);
+
+    DomStringParserPolicy policy{std::move(dryRunResult.first)};
 
     skipWhitespace(pos);
 
-    parseBody<NonValidatingConfig, DomStringParserPolicy>(pos, policy,
-                                                          encoding);
+    parseBody<NonValidatingConfig, DomStringParserPolicy>(pos, policy);
 
     if (policy.root->getChildrenCount() == 1) {
         Node* newRoot =
@@ -281,6 +342,7 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
                                          std::string encoding) {
     struct DomStreamParserPolicy {
         PagedArena arena;
+        std::string_view encoding;
 
         using CursorType = StreamCursor;
         using StringType = CursorType::StringType;
@@ -386,8 +448,20 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
             return text;
         }
 
-        ONYX_INLINE bool foundEncoding(CursorType::StringType&& text,
-                                       CursorType& cursor) {
+        ONYX_INLINE bool foundEncoding(
+            CursorType::StringType&& discoveredEncoding, CursorType& cursor,
+            bool& validateUTF8) {
+            if (encoding != "") {
+                if (discoveredEncoding != encoding) {
+                    throw std::invalid_argument(
+                        "Declared encoding does not match given encoding");
+                }
+
+                return true;
+            }
+
+            validateUTF8 = !cursor.setInputEncoding(discoveredEncoding);
+
             return true;
         }
     };
@@ -395,11 +469,11 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
     using StringType = StreamCursor::StringType;
     StreamCursor pos(input);
 
-    DomStreamParserPolicy policy{};
+    DomStreamParserPolicy policy{.encoding = encoding};
 
     skipWhitespace(pos);
 
-    parseBody<ValidatingConfig, DomStreamParserPolicy>(pos, policy, encoding);
+    parseBody<ValidatingConfig, DomStreamParserPolicy>(pos, policy);
 
     if (policy.root->getChildrenCount() == 1) {
         Node* newRoot =

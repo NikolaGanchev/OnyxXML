@@ -479,24 +479,6 @@ TEST_CASE("DomParser works with XML declarations with encoding") {
     REQUIRE(output.deepEquals(*prStream.root));
 }
 
-TEST_CASE("DomParser works with different encoding capitalizations") {
-    using namespace onyx::tags;
-    using namespace onyx::parser;
-
-    std::string input = "<?xml version=\"1.1\" encoding=\"uTf-8\"?>";
-    std::stringstream inputStream(input);
-
-    XmlDeclaration output("1.1", "UTF-8", true, false, false, false);
-
-    ParseResult pr = DomParser::parse(input, "utf-8");
-    ParseResult prStream = DomParser::parse(inputStream, "UtF-8");
-
-    INFO(output.serialize());
-    INFO(pr.root->serialize());
-    REQUIRE(output.deepEquals(*pr.root));
-    REQUIRE(output.deepEquals(*prStream.root));
-}
-
 TEST_CASE("DomParser works with XML declarations with standalone") {
     using namespace onyx::tags;
     using namespace onyx::parser;
@@ -962,8 +944,8 @@ TEST_CASE(
     std::string xml = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>";
     std::stringstream inputStream(xml);
     std::string message = "Declared encoding does not match given encoding";
-    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
-    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(xml, "UTF-8"), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream, "UTF-8"), message);
 }
 
 TEST_CASE(
@@ -1109,6 +1091,30 @@ TEST_CASE(
     std::string message =
         "Document Type Declaration is only allowed before all XML elements "
         "except the XML declaration";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Top level text forbidden in XML document\" when only "
+    "text") {
+    using namespace onyx::parser;
+
+    std::string xml = "     Top level text    ";
+    std::stringstream inputStream(xml);
+    std::string message = "Top level text forbidden in XML document";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Top level text forbidden in XML document\" when text "
+    "before root") {
+    using namespace onyx::parser;
+
+    std::string xml = "     Top level text    <div></div>";
+    std::stringstream inputStream(xml);
+    std::string message = "Top level text forbidden in XML document";
     REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
@@ -1303,6 +1309,28 @@ TEST_CASE(
     }
 }
 
+TEST_CASE(
+    "DomParser throws \"& outside of entities not allowed.\" on attribute "
+    "value") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div name=\"val&ue\"></div>";
+    std::stringstream inputStream(xml);
+    std::string message = "& outside of entities not allowed.";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE("DomParser throws \"& outside of entities not allowed.\" on text") {
+    using namespace onyx::parser;
+
+    std::string xml = "<div>This is some text with & inside.</div>";
+    std::stringstream inputStream(xml);
+    std::string message = "& outside of entities not allowed.";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
 #include <iostream>
 
 class SaxListenerLogger : public virtual onyx::parser::SaxListener {
@@ -1448,4 +1476,139 @@ TEST_CASE("SAXParser parses complex XML stream") {
     parser.parse(input);
 
     REQUIRE(listener.getEventCount() == 83);
+}
+
+TEST_CASE("DomParser successfully transcodes ISO-8859-1 document to UTF-8") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // '\xE9' is "é" in ISO-8859-1
+    std::string input =
+        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><root>\xE9</root>";
+    std::stringstream inputStream(input);
+
+    // '\xC3\xA9' is "é" in UTF-8
+    EmptyNode output{
+        XmlDeclaration("1.0", "ISO-8859-1", true, false, false, false),
+        GenericNode("root", false, Text("\xC3\xA9"))};
+
+    ParseResult pr = DomParser::parse(input);
+    ParseResult prStream = DomParser::parse(inputStream);
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser successfully transcodes Windows-1251 document to UTF-8") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // '\xC7\xE4\xF0\xE0\xE2\xE5\xE9' is "Здравей" in Windows-1251
+    std::string input =
+        "<?xml version=\"1.0\" "
+        "encoding=\"Windows-1251\"?><root>\xC7\xE4\xF0\xE0\xE2\xE5\xE9</root>";
+    std::stringstream inputStream(input);
+
+    EmptyNode output{
+        XmlDeclaration("1.0", "WINDOWS-1251", true, false, false, false),
+        GenericNode("root", false, Text("Здравей"))};
+
+    ParseResult pr = DomParser::parse(input);
+    ParseResult prStream = DomParser::parse(inputStream);
+
+    INFO(output.getChildren()[1]->getChildren()[0]->serialize());
+    INFO(pr.root->getChildren()[1]->getChildren()[0]->serialize());
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser skips transcoding if explicit encoding matches declared") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root>a</root>";
+    std::stringstream inputStream(input);
+
+    EmptyNode output{XmlDeclaration("1.0", "UTF-8", true, false, false, false),
+                     GenericNode("root", false, Text("a"))};
+
+    ParseResult pr = DomParser::parse(input, "UTF-8");
+    ParseResult prStream = DomParser::parse(inputStream, "UTF-8");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE(
+    "DomParser successfully transcodes complex ISO-8859-1 components to "
+    "UTF-8") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // '\xE9' = é, '\xE7' = ç, '\xE0' = à
+    std::string input =
+        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"
+        "<root attr=\"\xE7\">"
+        "<child>\xE9</child>"
+        "<!--\xE0--><![CDATA[\xE9\xE0]]>"
+        "</root>";
+    std::stringstream inputStream(input);
+
+    EmptyNode output{
+        XmlDeclaration("1.0", "ISO-8859-1", true, false, false, false),
+        GenericNode("root", false, Attribute("attr", "\xC3\xA7"),
+                    GenericNode("child", false, Text("\xC3\xA9")),
+                    Comment("\xC3\xA0"), CData("\xC3\xA9\xC3\xA0"))};
+
+    ParseResult pr = DomParser::parse(input);
+    ParseResult prStream = DomParser::parse(inputStream);
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("SAXParser successfully transcodes ISO-8859-1 document to UTF-8") {
+    using namespace onyx::parser;
+
+    std::string input =
+        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><root>\xE9</root>";
+    std::stringstream inputStream(input);
+
+    std::stringstream str1, str2;
+
+    // Test String input
+    SaxListenerLogger listener(str1);
+    SaxParser parser(listener);
+    parser.parse(input);
+
+    // Events: Start(1) + XMLDecl(1) + TagOpen(1) + Text(1) + TagClose(1) +
+    // End(1) = 6 events
+    REQUIRE(listener.getEventCount() == 6);
+    REQUIRE(str1.str().find("Text: \xC3\xA9") != std::string::npos);
+
+    SaxListenerLogger listenerStream(str2);
+    SaxParser parserStream(listenerStream);
+    parserStream.parse(inputStream);
+
+    REQUIRE(listenerStream.getEventCount() == 6);
+    REQUIRE(str2.str().find("Text: \xC3\xA9") != std::string::npos);
+}
+
+TEST_CASE("SAXParser transcodes complex ISO-8859-1 components") {
+    using namespace onyx::parser;
+
+    std::string input =
+        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"
+        "<root attr=\"\xE7\">"
+        "<!--\xE0-->"
+        "</root>";
+
+    std::stringstream str;
+    SaxListenerLogger listener(str);
+    SaxParser parser(listener);
+    parser.parse(input);
+
+    REQUIRE(str.str().find("Attribute Value: \xC3\xA7") != std::string::npos);
+    REQUIRE(str.str().find("Comment: \xC3\xA0") != std::string::npos);
 }

@@ -108,17 +108,33 @@ class SaxParser {
     /**
      * @brief Parse an XML string
      *
-     * @param input
-     * @param encoding
-     */
-    void parse(std::string_view input, std::string encoding = "UTF-8");
-
-    /**
-     * @brief Parse an XML stream
+     * If a non-empty encoding string is passed, it will be validated against
+     * the declared document encoding.
+     *
+     * If an empty encoding string is passed,
+     * the parser will presume UTF-8 until an XML declaration with an encoding
+     * tag is found. It will automatically transcode the document to that
+     * encoding and read it.
      *
      * @param input
      * @param encoding
      */
-    void parse(std::istream& input, std::string encoding = "UTF-8");
+    void parse(std::string_view input, std::string encoding = "");
+
+    /**
+     * @brief Parse an XML stream
+     *
+     * If a non-empty encoding string is passed, it will be validated against
+     * the declared document encoding.
+     *
+     * If an empty encoding string is passed,
+     * the parser will presume UTF-8 until an XML declaration with an encoding
+     * tag is found. It will automatically transcode the document to that
+     * encoding and read it.
+     *
+     * @param input
+     * @param encoding
+     */
+    void parse(std::istream& input, std::string encoding = "");
 };
 }  // namespace onyx::dynamic::parser

@@ -292,8 +292,6 @@ struct StreamCursor {
     /**
      * @brief Sets the encoding of the input.
      *
-     * If the new encoding is the same as the input encoding.
-     *
      * The stream will transcode on the fly as it fills its internal
      * buffers.
      *
@@ -302,9 +300,9 @@ struct StreamCursor {
      * Transcoding can only happen if the capture is empty and there is no
      * recorded lookahead.
      *
-     * @param newEncoding
-     * @return true
-     * @return false
+     * @param newInputEncoding
+     * @return true Transcoding is being done after this call
+     * @return false Transcoding is not being done after this call
      */
     bool setInputEncoding(std::string newInputEncoding) {
         if (pos != captured) {

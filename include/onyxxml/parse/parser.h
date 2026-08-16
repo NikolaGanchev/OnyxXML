@@ -184,20 +184,21 @@ ONYX_INLINE void validateCDataEnding(CursorType& pos) {
 
 template <bool validate, bool shouldValidateCDataEndings = true,
           typename CursorType, typename... Chars>
-ONYX_INLINE void readUntilAnyOf(CursorType& pos, Chars... targets) {
+ONYX_INLINE void readUntilAnyOf(CursorType& pos, bool validateUTF8,
+                                Chars... targets) {
     unsigned char current = pos.captureCurrent();
     if constexpr (validate) {
         if constexpr (shouldValidateCDataEndings) {
             validateCDataEnding(pos);
         }
-        validateXMLChar(current, pos);
+        validateXMLChar(current, pos, validateUTF8);
         while (current != '\0' && (... && (current != targets))) {
             pos.captureAdvance();
             current = pos.captureCurrent();
             if constexpr (shouldValidateCDataEndings) {
                 validateCDataEnding(pos);
             }
-            validateXMLChar(current, pos);
+            validateXMLChar(current, pos, validateUTF8);
         }
     } else {
         while ((... && (current != targets))) {
@@ -209,7 +210,7 @@ ONYX_INLINE void readUntilAnyOf(CursorType& pos, Chars... targets) {
 
 template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
-                           std::string givenEncoding)
+                           bool validateUTF8 = true)
     /* In GCC 15.1 and older MSVC versions, having
         `isCursor<CursorType>, isParserPolicy<Policy>`
         with a comma instead of `&&` actually causes an internal compiler error.
@@ -234,11 +235,16 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
          * text */
         if (pos.current() != '<') {
             // In text
+            if (firstTag && !foundXmlDeclaration && !foundDoctype) {
+                throw std::invalid_argument(
+                    "Top level text forbidden in XML document");
+            }
             pos.beginCapture();
             TextTransformationMode transformationMode =
                 TextTransformationMode::NONE;
             bool end = false;
-            readUntilAnyOf<Config::validate>(pos, '\0', '<', '&', '\r');
+            readUntilAnyOf<Config::validate>(pos, validateUTF8, '\0', '<', '&',
+                                             '\r');
             while (pos.captureCurrent() != '<') {
                 if (pos.captureCurrent() == '\0') {
                     // If we find the end of the document, one of the following
@@ -254,10 +260,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     // nothing after the text.
                     //
                     // 3) The text is before the beginning of the document,
-                    // i.e., the first tag. This is generally malformed XML, due
-                    // to the rule of the root element, but is allowed by
-                    // default here to support top level text. This behavior
-                    // should be controlled via a config option.
+                    // i.e., the first tag. This is malformed XML, due
+                    // to the rule of the root element.
                     //
                     // 4) The text is after the last element.
                     // Then, whitespace is explicitly allowed. Since this
@@ -265,15 +269,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     // whitespace is an exception, it does not need to be
                     // specially validated or expanded. Thus, it can keep the
                     // simple while loop.
-                    if (firstTag && !foundXmlDeclaration && !foundDoctype) {
-                        // This is a special exception to allow top level text
-                        // by itself, since the parser already allows text
-                        // before the first element This will take the text and
-                        // send it to textAction directly, instead of validating
-                        // it is whitespace.
-                        // TODO: Add config option to change this behavior
-                        break;
-                    }
+
                     if constexpr (Config::validate) {
                         while (pos.current() != '\0') {
                             if (!isWhitespace(pos.current())) {
@@ -289,7 +285,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\r')
                     transformationMode = TextTransformationMode::TEXT;
                 pos.captureAdvance();
-                readUntilAnyOf<Config::validate>(pos, '\0', '<', '&', '\r');
+                readUntilAnyOf<Config::validate>(pos, validateUTF8, '\0', '<',
+                                                 '&', '\r');
             }
             if (end) break;
             CursorStringType text = pos.getCaptured();
@@ -312,7 +309,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
         }
 
         if (pos.current() == '?') {
-            /* Invariant - at processing directive */
+            /* Invariant - at processing instruction */
             pos.advance();
             if constexpr (Config::validate) {
                 if (pos.current() == '\0') {
@@ -402,9 +399,11 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
 
                     pos.beginCapture();
                     if constexpr (Config::validate) {
-                        readUntilAnyOf<Config::validate>(pos, '?', quote);
+                        readUntilAnyOf<Config::validate>(pos, validateUTF8, '?',
+                                                         quote);
                     } else {
-                        readUntilAnyOf<Config::validate>(pos, quote);
+                        readUntilAnyOf<Config::validate>(pos, validateUTF8,
+                                                         quote);
                     }
                     if constexpr (Config::validate) {
                         if ((pos.captureCurrent() == '?' ||
@@ -499,6 +498,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     }
                 }
                 pos.advance();
+                pos.beginCapture();  // Synchronize capture and current
 
                 /* enforce presence and legality */
                 if constexpr (Config::validate) {
@@ -522,18 +522,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                         if (encoding.empty() || !isalpha(encoding[0]))
                             throw std::invalid_argument(
                                 "Invalid encoding in XML declaration");
-                        if (encoding.size() != givenEncoding.size()) {
-                            throw std::invalid_argument(
-                                "Declared encoding does not match given "
-                                "encoding");
-                        }
-                        for (size_t i = 0; i < encoding.size(); i++) {
-                            if (std::toupper(encoding[i]) !=
-                                toupper(givenEncoding[i])) {
-                                throw std::invalid_argument(
-                                    "Declared encoding does not match given "
-                                    "encoding");
-                            }
+                        CursorStringType encodingCopy = encoding;
+                        if (!policy.foundEncoding(
+                                std::move(policy.transformText(
+                                    std::move(encodingCopy),
+                                    TextTransformationMode::UPPERCASE)),
+                                pos, validateUTF8)) {
+                            return;
                         }
                     }
                 }
@@ -575,7 +570,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
 
             TextTransformationMode transformationMode =
                 TextTransformationMode::NONE;
-            readUntilAnyOf<Config::validate>(pos, '?', '\r');
+            readUntilAnyOf<Config::validate>(pos, validateUTF8, '?', '\r');
 
             if constexpr (Config::validate) {
                 if (pos.captureCurrent() == '\0')
@@ -589,7 +584,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     transformationMode = TextTransformationMode::EOL_ONLY;
                 }
                 pos.captureAdvance();
-                readUntilAnyOf<Config::validate>(pos, '?', '\r');
+                readUntilAnyOf<Config::validate>(pos, validateUTF8, '?', '\r');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
@@ -639,7 +634,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
 
                 TextTransformationMode transformationMode =
                     TextTransformationMode::NONE;
-                readUntilAnyOf<Config::validate>(pos, '-', '\r');
+                readUntilAnyOf<Config::validate>(pos, validateUTF8, '-', '\r');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0') {
                         throw std::invalid_argument(
@@ -654,7 +649,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                         transformationMode = TextTransformationMode::EOL_ONLY;
                     }
                     pos.captureAdvance();
-                    readUntilAnyOf<Config::validate>(pos, '-', '\r');
+                    readUntilAnyOf<Config::validate>(pos, validateUTF8, '-',
+                                                     '\r');
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0') {
                             throw std::invalid_argument(
@@ -697,7 +693,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
 
                 TextTransformationMode transformationMode =
                     TextTransformationMode::NONE;
-                readUntilAnyOf<Config::validate, false>(pos, ']', '\r');
+                readUntilAnyOf<Config::validate, false>(pos, validateUTF8, ']',
+                                                        '\r');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0')
                         throw std::invalid_argument(
@@ -712,7 +709,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                         transformationMode = TextTransformationMode::EOL_ONLY;
                     }
                     pos.captureAdvance();
-                    readUntilAnyOf<Config::validate, false>(pos, ']', '\r');
+                    readUntilAnyOf<Config::validate, false>(pos, validateUTF8,
+                                                            ']', '\r');
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0')
                             throw std::invalid_argument(
@@ -756,7 +754,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 // Warning - some valid DOCTYPE declarations may contain '>'
                 // inside of quotes. Currently, this implementation would fail
                 // on them.
-                readUntilAnyOf<Config::validate>(pos, '>', '\r');
+                readUntilAnyOf<Config::validate>(pos, validateUTF8, '>', '\r');
                 if constexpr (Config::validate) {
                     if (pos.captureCurrent() == '\0') {
                         throw std::invalid_argument(
@@ -770,7 +768,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     // Always at '\r' here if not at '>'
                     transformationMode = TextTransformationMode::EOL_ONLY;
                     pos.captureAdvance();
-                    readUntilAnyOf<Config::validate>(pos, '>', '\r');
+                    readUntilAnyOf<Config::validate>(pos, validateUTF8, '>',
+                                                     '\r');
                     if constexpr (Config::validate) {
                         if (pos.captureCurrent() == '\0') {
                             throw std::invalid_argument(
@@ -870,11 +869,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 TextTransformationMode transformationMode =
                     TextTransformationMode::NONE;
                 if constexpr (Config::validate) {
-                    readUntilAnyOf<Config::validate>(pos, attributeQuote, '<',
-                                                     '&', '\r', '\n', '\t');
-                } else {
-                    readUntilAnyOf<Config::validate>(pos, attributeQuote, '&',
+                    readUntilAnyOf<Config::validate>(pos, validateUTF8,
+                                                     attributeQuote, '<', '&',
                                                      '\r', '\n', '\t');
+                } else {
+                    readUntilAnyOf<Config::validate>(pos, validateUTF8,
+                                                     attributeQuote, '&', '\r',
+                                                     '\n', '\t');
                 }
 
                 while (pos.captureCurrent() != attributeQuote) {
@@ -895,11 +896,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                         transformationMode = TextTransformationMode::ATTRIBUTE;
                     pos.captureAdvance();
                     if constexpr (Config::validate) {
-                        readUntilAnyOf<Config::validate>(
-                            pos, attributeQuote, '<', '&', '\r', '\n', '\t');
-                    } else {
-                        readUntilAnyOf<Config::validate>(pos, attributeQuote,
+                        readUntilAnyOf<Config::validate>(pos, validateUTF8,
+                                                         attributeQuote, '<',
                                                          '&', '\r', '\n', '\t');
+                    } else {
+                        readUntilAnyOf<Config::validate>(pos, validateUTF8,
+                                                         attributeQuote, '&',
+                                                         '\r', '\n', '\t');
                     }
                 }
                 CursorStringType attributeValue = pos.getCaptured();

@@ -17,7 +17,7 @@ concept isParserPolicy = requires(
     std::vector<typename T::StackType>& stack, T::StackType& stackElement,
     typename T::CursorType::StringType& tag, typename T::CursorType& cursor,
     typename T::CursorType::StringType&& cursorString,
-    TextTransformationMode textTransformationMode) {
+    TextTransformationMode textTransformationMode, bool& validateUTF8) {
     typename T::StringType;
     typename T::CursorType;
     typename T::StackType;
@@ -29,7 +29,11 @@ concept isParserPolicy = requires(
                            isStandalone, hasStandalone, stack, cursor);
     t.doctypeAction(std::move(text), stack, cursor);
     // The return value of foundEncoding decides whether to continue parsing
-    { t.foundEncoding(std::move(text), cursor) } -> std::same_as<bool>;
+    // Calling this contractually requires that there is no loaded lookahead and
+    // that the capture and current are synchronized
+    {
+        t.foundEncoding(std::move(text), cursor, validateUTF8)
+    } -> std::same_as<bool>;
     t.openAction(std::move(tagName), isSelfClosing, attributeNames,
                  attributeValues, stack, cursor);
     t.closeAction(std::move(tagName), stack, cursor);
