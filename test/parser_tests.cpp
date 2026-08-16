@@ -1412,7 +1412,7 @@ TEST_CASE("SAXParser parses complex XML") {
 
     parser.parse(input);
 
-    REQUIRE(listener.getEventCount() == 53);
+    REQUIRE(listener.getEventCount() == 83);
 }
 
 TEST_CASE("SAXParser parses complex XML stream") {
@@ -1447,5 +1447,5 @@ TEST_CASE("SAXParser parses complex XML stream") {
 
     parser.parse(input);
 
-    REQUIRE(listener.getEventCount() == 53);
+    REQUIRE(listener.getEventCount() == 83);
 }

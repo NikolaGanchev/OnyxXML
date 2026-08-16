@@ -88,6 +88,7 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
         ONYX_INLINE void closeAction(StringType&& tagName, Stack& stack,
                                      CursorType& cursor) {
             stack.pop_back();
+            this->listener.onTagClose(std::move(tagName));
         }
 
         ONYX_INLINE void initStack(std::vector<StackType>& stack) {
@@ -218,6 +219,7 @@ void SaxParser::parse(std::istream& input, std::string encoding) {
         ONYX_INLINE void closeAction(StringType&& tagName, Stack& stack,
                                      CursorType& cursor) {
             stack.pop_back();
+            this->listener.onTagClose(std::move(tagName));
         }
 
         ONYX_INLINE void initStack(std::vector<StackType>& stack) {
