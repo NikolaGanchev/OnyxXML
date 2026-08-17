@@ -334,7 +334,7 @@ struct StreamCursor {
         cd = newCd;
 
         inputEncoding = std::move(newInputEncoding);
-        transcoding = inputEncoding != "UTF-8";
+        transcoding = inputEncoding != "UTF-8" && inputEncoding != "ASCII";
 
         buffer.clear();
         pos = 0;
