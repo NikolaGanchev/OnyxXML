@@ -19,6 +19,7 @@
 #include "parse/parser.h"
 #include "parse/stream_cursor.h"
 #include "parse/string_cursor.h"
+#include "parse/text_transformation_mode.h"
 #include "text.h"
 
 namespace onyx::dynamic::parser {
@@ -138,6 +139,8 @@ std::pair<Arena, std::optional<std::string>> DomParser::parseDryRun(
                     throw std::invalid_argument(
                         "Declared encoding does not match given encoding");
                 }
+
+                return true;
             }
 
             encoding = std::move(enc);
@@ -156,7 +159,14 @@ std::pair<Arena, std::optional<std::string>> DomParser::parseDryRun(
             return false;
         }
     };
+    std::optional<std::string> transcodedString;
+    if (!encoding.empty()) {
+        transcodedString = text::transcodeToUtf8(input, encoding);
 
+        if (transcodedString.has_value()) {
+            input = transcodedString->data();
+        }
+    }
     using StringType = StringCursor::StringType;
     StringCursor pos(input);
 
@@ -167,14 +177,17 @@ std::pair<Arena, std::optional<std::string>> DomParser::parseDryRun(
 
     skipWhitespace(pos);
 
-    parseBody<DryRunConfig, DomDryRunParserPolicy>(pos, policy);
+    parseBody<DryRunConfig, DomDryRunParserPolicy>(
+        pos, policy, !transcodedString.has_value());
 
-    std::optional<std::string> transcodedString =
-        std::move(policy.transcodedString);
+    if (encoding.empty()) {
+        transcodedString = std::move(policy.transcodedString);
+    }
 
     DomDryRunParserPolicy policyTranscoded{};
 
-    if (transcodedString.has_value()) {
+    bool hasFoundEncoding = encoding.empty() && transcodedString.has_value();
+    if (hasFoundEncoding) {
         StringCursor posTranscoded(transcodedString->data());
 
         policyTranscoded.encoding = policy.encoding;
@@ -190,9 +203,8 @@ std::pair<Arena, std::optional<std::string>> DomParser::parseDryRun(
                                                        policyTranscoded, false);
     }
 
-    Arena arena(std::move(transcodedString.has_value()
-                              ? policyTranscoded.builder.build()
-                              : policy.builder.build()));
+    Arena arena(std::move(hasFoundEncoding ? policyTranscoded.builder.build()
+                                           : policy.builder.build()));
 
     return std::make_pair(std::move(arena), std::move(transcodedString));
 }
@@ -466,11 +478,17 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
     using StringType = StreamCursor::StringType;
     StreamCursor pos(input);
 
+    bool validateUTF8 = true;
+    if (!encoding.empty()) {
+        validateUTF8 = !pos.setInputEncoding(encoding);
+    }
+
     DomStreamParserPolicy policy{.encoding = encoding};
 
     skipWhitespace(pos);
 
-    parseBody<ValidatingConfig, DomStreamParserPolicy>(pos, policy);
+    parseBody<ValidatingConfig, DomStreamParserPolicy>(pos, policy,
+                                                       validateUTF8);
 
     if (policy.root->getChildrenCount() == 1) {
         Node* newRoot =

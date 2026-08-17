@@ -453,10 +453,6 @@ TEST_CASE("DomParser works with XML declarations") {
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
 
-    INFO(output.serialize());
-    INFO(pr.root->serialize());
-    INFO(dynamic_cast<XmlDeclaration*>(pr.root)->getStandalone());
-    INFO(dynamic_cast<XmlDeclaration*>(pr.root)->getEncoding());
     REQUIRE(output.deepEquals(*pr.root));
     REQUIRE(output.deepEquals(*prStream.root));
 }
@@ -1493,10 +1489,15 @@ TEST_CASE("DomParser successfully transcodes ISO-8859-1 document to UTF-8") {
         GenericNode("root", false, Text("\xC3\xA9"))};
 
     ParseResult pr = DomParser::parse(input);
+    ParseResult prExplicit = DomParser::parse(input, "ISO-8859-1");
     ParseResult prStream = DomParser::parse(inputStream);
+    inputStream.str(input);
+    ParseResult prStreamExplicit = DomParser::parse(inputStream, "ISO-8859-1");
 
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prExplicit.root));
     REQUIRE(output.deepEquals(*prStream.root));
+    REQUIRE(output.deepEquals(*prStreamExplicit.root));
 }
 
 TEST_CASE("DomParser successfully transcodes Windows-1251 document to UTF-8") {
@@ -1514,12 +1515,16 @@ TEST_CASE("DomParser successfully transcodes Windows-1251 document to UTF-8") {
         GenericNode("root", false, Text("Здравей"))};
 
     ParseResult pr = DomParser::parse(input);
+    ParseResult prExplicit = DomParser::parse(input, "WINDOWS-1251");
     ParseResult prStream = DomParser::parse(inputStream);
+    inputStream.str(input);
+    ParseResult prStreamExplicit =
+        DomParser::parse(inputStream, "WINDOWS-1251");
 
-    INFO(output.getChildren()[1]->getChildren()[0]->serialize());
-    INFO(pr.root->getChildren()[1]->getChildren()[0]->serialize());
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prExplicit.root));
     REQUIRE(output.deepEquals(*prStream.root));
+    REQUIRE(output.deepEquals(*prStreamExplicit.root));
 }
 
 TEST_CASE("DomParser skips transcoding if explicit encoding matches declared") {
@@ -1562,13 +1567,20 @@ TEST_CASE(
                     Comment("\xC3\xA0"), CData("\xC3\xA9\xC3\xA0"))};
 
     ParseResult pr = DomParser::parse(input);
+    ParseResult prExplicit = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
+    inputStream.str(input);
+    ParseResult prStreamExplicit = DomParser::parse(inputStream);
 
     REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prExplicit.root));
     REQUIRE(output.deepEquals(*prStream.root));
+    REQUIRE(output.deepEquals(*prStreamExplicit.root));
 }
 
-TEST_CASE("SAXParser successfully transcodes ISO-8859-1 document to UTF-8") {
+TEST_CASE(
+    "SAXParser successfully transcodes ISO-8859-1 document to UTF-8 with "
+    "inferred encoding") {
     using namespace onyx::parser;
 
     std::string input =
@@ -1577,7 +1589,6 @@ TEST_CASE("SAXParser successfully transcodes ISO-8859-1 document to UTF-8") {
 
     std::stringstream str1, str2;
 
-    // Test String input
     SaxListenerLogger listener(str1);
     SaxParser parser(listener);
     parser.parse(input);
@@ -1590,6 +1601,34 @@ TEST_CASE("SAXParser successfully transcodes ISO-8859-1 document to UTF-8") {
     SaxListenerLogger listenerStream(str2);
     SaxParser parserStream(listenerStream);
     parserStream.parse(inputStream);
+
+    REQUIRE(listenerStream.getEventCount() == 6);
+    REQUIRE(str2.str().find("Text: \xC3\xA9") != std::string::npos);
+}
+
+TEST_CASE(
+    "SAXParser successfully transcodes ISO-8859-1 document to UTF-8 with "
+    "explicit encoding") {
+    using namespace onyx::parser;
+
+    std::string input =
+        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><root>\xE9</root>";
+    std::stringstream inputStream(input);
+
+    std::stringstream str1, str2;
+
+    SaxListenerLogger listener(str1);
+    SaxParser parser(listener);
+    parser.parse(input, "ISO-8859-1");
+
+    // Events: Start(1) + XMLDecl(1) + TagOpen(1) + Text(1) + TagClose(1) +
+    // End(1) = 6 events
+    REQUIRE(listener.getEventCount() == 6);
+    REQUIRE(str1.str().find("Text: \xC3\xA9") != std::string::npos);
+
+    SaxListenerLogger listenerStream(str2);
+    SaxParser parserStream(listenerStream);
+    parserStream.parse(inputStream, "ISO-8859-1");
 
     REQUIRE(listenerStream.getEventCount() == 6);
     REQUIRE(str2.str().find("Text: \xC3\xA9") != std::string::npos);
