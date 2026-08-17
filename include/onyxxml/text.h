@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <optional>
 
 #include "node.h"
@@ -216,5 +217,33 @@ std::string expandEOLOnly(std::string_view input);
  */
 std::optional<std::string> transcodeToUtf8(std::string_view str,
                                            const std::string& from);
+
+/**
+ * @brief Transforms an ASCII string to uppercase independently of any locale.
+ *
+ * @param stringToUppercase
+ * @return std::string
+ */
+inline void transformAsciiToUpper(std::string& stringToUppercase) {
+    for (size_t i = 0; i < stringToUppercase.size(); i++) {
+        unsigned char c = stringToUppercase[i];
+        stringToUppercase[i] = (c >= 'a' && c <= 'z') ? c - 32 : c;
+    }
+}
+
+/**
+ * @brief Converts an ASCII string to uppercase independently of any locale.
+ *
+ * @param stringToUppercase
+ * @return std::string
+ */
+inline std::string asciiToUpper(std::string_view stringToUppercase) {
+    std::string res;
+    res.reserve(stringToUppercase.size());
+    for (unsigned char c : stringToUppercase) {
+        res.push_back((c >= 'a' && c <= 'z') ? c - 32 : c);
+    }
+    return res;
+}
 }  // namespace text
 }  // namespace onyx::dynamic

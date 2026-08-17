@@ -132,14 +132,15 @@ std::pair<Arena, std::optional<std::string>> DomParser::parseDryRun(
         ONYX_INLINE bool foundEncoding(
             CursorType::StringType&& discoveredEncoding, CursorType& cursor,
             bool& validateUTF8) {
+            std::string enc = text::asciiToUpper(discoveredEncoding);
             if (encoding != "") {
-                if (discoveredEncoding != encoding) {
+                if (enc != encoding) {
                     throw std::invalid_argument(
                         "Declared encoding does not match given encoding");
                 }
             }
 
-            encoding = std::move(discoveredEncoding);
+            encoding = std::move(enc);
 
             if (alreadyTranscoded) {
                 return true;
@@ -298,10 +299,7 @@ ParseResult<Arena> DomParser::parse(std::string_view input,
                 case TextTransformationMode::NONE:
                     return std::string(text);
                 case TextTransformationMode::UPPERCASE:
-                    std::string str(text);
-                    std::transform(str.begin(), str.end(), str.begin(),
-                                   toupper);
-                    return str;
+                    return text::asciiToUpper(text);
             }
             return std::string(text);
         }
@@ -441,8 +439,7 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
                 case TextTransformationMode::NONE:
                     return text;
                 case TextTransformationMode::UPPERCASE:
-                    std::transform(text.begin(), text.end(), text.begin(),
-                                   toupper);
+                    text::transformAsciiToUpper(text);
                     return text;
             }
             return text;
