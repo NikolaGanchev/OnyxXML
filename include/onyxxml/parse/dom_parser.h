@@ -1,11 +1,11 @@
 #pragma once
 
 #include <istream>
-#include <optional>
 
 #include "../arena.h"
 #include "../node.h"
 #include "../paged_arena.h"
+#include "parse/encoding_string_state.h"
 
 namespace onyx::dynamic::parser {
 class DomParser;
@@ -93,7 +93,7 @@ class DomParser {
      * @param encoding
      * @return std::pair<Arena, std::optional<std::string>>
      */
-    static std::pair<Arena, std::optional<std::string>> parseDryRun(
+    static std::pair<Arena, EncodingStringState> parseDryRun(
         std::string_view input, std::string encoding);
 
    public:
