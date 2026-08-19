@@ -1,10 +1,11 @@
 #include "parse/sax_parser.h"
 
-#include <algorithm>
 #include <limits>
 #include <string>
 #include <string_view>
 
+#include "parse/encoding_controller.h"
+#include "parse/encoding_string_state.h"
 #include "parse/parser.h"
 #include "parse/stream_cursor.h"
 #include "parse/string_cursor.h"
@@ -25,10 +26,8 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
     struct StringSaxParserPolicy {
         SaxListener& listener;
         std::string_view root = ".empty";
-        std::string encoding;
-        std::string_view input;
-        std::optional<std::string> transcodedString;
-        bool alreadyTranscoded = false;
+        EncodingController& ec;
+        EncodingStringState& inputState;
 
         using CursorType = StringCursor;
         using StringType = std::string;
@@ -130,83 +129,55 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
         ONYX_INLINE bool foundEncoding(
             CursorType::StringType&& discoveredEncoding, CursorType& cursor,
             bool& validateUTF8) {
-            if (!encoding.empty()) {
-                if (discoveredEncoding != encoding) {
-                    throw std::invalid_argument(
-                        "Declared encoding does not match given encoding");
-                }
+            EncodingController::ParserAction action =
+                ec.foundEncoding(discoveredEncoding, true);
 
-                return true;
+            if (action == EncodingController::ParserAction::RESTART) {
+                return false;
             }
 
-            encoding = std::move(discoveredEncoding);
-
-            if (alreadyTranscoded) {
-                return true;
-            }
-
-            std::optional<std::string> res =
-                text::transcodeToUtf8(input, encoding);
-
-            if (!res.has_value()) return true;
-
-            transcodedString = std::move(res);
-
+            validateUTF8 = ec.validate;
             // It is only safe to stop parsing because it is guarantee no events
             // could have been triggered before the XML declaration except the
             // onStart event
-            return false;
+            return true;
         }
     };
 
-    std::optional<std::string> transcodedString;
-    if (!encoding.empty()) {
-        transcodedString = text::transcodeToUtf8(input, encoding);
+    EncodingStringState inputState(input);
 
-        if (transcodedString.has_value()) {
-            input = transcodedString->data();
+    SaxListener& listener = this->listener;
+    auto parseLocal = [&inputState, &listener](EncodingController& ec) {
+        using StringType = StringCursor::StringType;
+        StringCursor pos(inputState.getInput());
+
+        StringSaxParserPolicy policy{
+            .listener = listener, .ec = ec, .inputState = inputState};
+
+        if (ec.parseCallCount == 1) {
+            listener.onStart();
         }
-    }
-
-    using StringType = StringCursor::StringType;
-    StringCursor pos(input);
-
-    StringSaxParserPolicy policy{
-        .listener = this->listener, .encoding = encoding, .input = input};
-
-    this->listener.onStart();
-
-    try {
-        parseBody<ValidatingConfig, StringSaxParserPolicy>(
-            pos, policy, !transcodedString.has_value());
-    } catch (std::exception& e) {
-        this->listener.onException(e);
-    }
-
-    if (encoding.empty()) {
-        transcodedString = std::move(policy.transcodedString);
-    }
-    bool hasFoundEncoding = encoding.empty() && transcodedString.has_value();
-    if (hasFoundEncoding) {
-        StringCursor posTranscoded(transcodedString->data());
-
-        StringSaxParserPolicy policyTranscoded = {
-            .listener = this->listener,
-            .encoding = policy.encoding,
-            .input = transcodedString->data(),
-            .alreadyTranscoded = true};
-
-        skipWhitespace(posTranscoded);
 
         try {
-            parseBody<ValidatingConfig, StringSaxParserPolicy>(
-                posTranscoded, policyTranscoded, false);
+            parseBody<ValidatingConfig, StringSaxParserPolicy>(pos, policy,
+                                                               ec.validate);
         } catch (std::exception& e) {
-            this->listener.onException(e);
+            listener.onException(e);
         }
-    }
 
-    this->listener.onEnd();
+        if (!ec.waitingParseDueToRestart) {
+            listener.onEnd();
+        }
+    };
+
+    auto transcode = [&inputState](EncodingController& ec) -> bool {
+        return inputState.transcodeToUTF8(ec.encoding);
+    };
+
+    EncodingController encodingController(parseLocal, transcode);
+    encodingController.begin(encoding);
+
+    encodingController.triggerParseIfWaiting();
 }
 
 void SaxParser::parse(std::istream& input, std::string encoding) {
@@ -214,7 +185,7 @@ void SaxParser::parse(std::istream& input, std::string encoding) {
         SaxListener& listener;
         std::vector<std::string> stack;
         std::string_view root = ".empty";
-        std::string_view encoding;
+        EncodingController& ec;
 
         using CursorType = StreamCursor;
         using StringType = StreamCursor::StringType;
@@ -317,15 +288,9 @@ void SaxParser::parse(std::istream& input, std::string encoding) {
         ONYX_INLINE bool foundEncoding(
             CursorType::StringType&& discoveredEncoding, CursorType& cursor,
             bool& validateUTF8) {
-            if (!encoding.empty()) {
-                if (discoveredEncoding != encoding) {
-                    throw std::invalid_argument(
-                        "Declared encoding does not match given encoding");
-                }
-            }
+            ec.foundEncoding(discoveredEncoding, false);
 
-            validateUTF8 = !cursor.setInputEncoding(discoveredEncoding);
-
+            validateUTF8 = ec.validate;
             return true;
         }
     };
@@ -333,24 +298,28 @@ void SaxParser::parse(std::istream& input, std::string encoding) {
     using StringType = StreamCursor::StringType;
     StreamCursor pos(input);
 
-    bool validateUTF8 = true;
-    if (!encoding.empty()) {
-        validateUTF8 = !pos.setInputEncoding(encoding);
-    }
+    SaxListener& listener = this->listener;
+    auto parseLocal = [&pos, &listener](EncodingController& ec) {
+        StreamSaxParserPolicy policy{.listener = listener, .ec = ec};
 
-    StreamSaxParserPolicy policy{.listener = this->listener,
-                                 .encoding = encoding};
+        skipWhitespace(pos);
 
-    skipWhitespace(pos);
+        listener.onStart();
+        try {
+            parseBody<ValidatingConfig, StreamSaxParserPolicy>(pos, policy,
+                                                               ec.validate);
+        } catch (std::exception& e) {
+            listener.onException(e);
+        }
 
-    this->listener.onStart();
-    try {
-        parseBody<ValidatingConfig, StreamSaxParserPolicy>(pos, policy,
-                                                           validateUTF8);
-    } catch (std::exception& e) {
-        this->listener.onException(e);
-    }
+        listener.onEnd();
+    };
 
-    this->listener.onEnd();
+    auto transcode = [&pos](EncodingController& ec) -> bool {
+        return pos.setInputEncoding(ec.encoding);
+    };
+
+    EncodingController encodingController(parseLocal, transcode);
+    encodingController.begin(encoding);
 }
 }  // namespace onyx::dynamic::parser
