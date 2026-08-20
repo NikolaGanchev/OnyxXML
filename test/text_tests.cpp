@@ -3,6 +3,7 @@
 
 #include "catch2/catch_all.hpp"
 #include "onyx.h"
+#include "parse/string_cursor.h"
 #include "text.h"
 
 TEST_CASE("Escapes complex html", "[escape]") {
@@ -693,4 +694,235 @@ TEST_CASE("Transcodes 1 million characters in under 150ms",
     REQUIRE(result.has_value());
     REQUIRE(result.value().size() == 2'000'000);
     REQUIRE(time.count() < 150.0);
+}
+
+TEST_CASE(
+    "Autodetection returns END_OF_FILE when cursor has fewer than 4 bytes",
+    "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    StringCursor pos("<");
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding.empty());
+    REQUIRE(result == XmlEncodingAutodetectionResult::END_OF_FILE);
+}
+
+TEST_CASE("Detects UCS-4BE BOM and advances cursor",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\x00', '\x00', '\xFE', '\xFF', '<'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UCS-4BE");
+    REQUIRE(result == XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+    REQUIRE(pos.current() == '<');
+}
+
+TEST_CASE("Detects UCS-4LE BOM and advances cursor",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\xFF', '\xFE', '\x00', '\x00', '<'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UCS-4LE");
+    REQUIRE(result == XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+    REQUIRE(pos.current() == '<');
+}
+
+TEST_CASE("Detects UTF-8 BOM and advances cursor", "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\xEF', '\xBB', '\xBF', '<'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UTF-8");
+    REQUIRE(result == XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+    REQUIRE(pos.current() == '<');
+}
+
+TEST_CASE("Detects UTF-16BE BOM and advances cursor",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\xFE', '\xFF', '\x00', '<'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UTF-16BE");
+    REQUIRE(result == XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+    REQUIRE(pos.current() == '\0');
+}
+
+TEST_CASE("Detects UTF-16LE BOM and advances cursor",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\xFF', '\xFE', '<', '\x00'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UTF-16LE");
+    REQUIRE(result == XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+    REQUIRE(pos.current() == '<');
+}
+
+TEST_CASE("Detects UCS-4BE family without BOM and leaves cursor unmoved",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\x00', '\x00', '\x00', '\x3C'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UCS-4BE");
+    REQUIRE(result == XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+    REQUIRE(pos.current() == '\0');
+}
+
+TEST_CASE("Detects UCS-4LE family without BOM and leaves cursor unmoved",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\x3C', '\x00', '\x00', '\x00'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UCS-4LE");
+    REQUIRE(result == XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+    REQUIRE(pos.current() == '\x3C');
+}
+
+TEST_CASE("Detects UTF-16BE family without BOM and leaves cursor unmoved",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\x00', '\x3C', '\x00', '\x3F'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UTF-16BE");
+    REQUIRE(result == XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+    REQUIRE(pos.current() == '\0');
+}
+
+TEST_CASE("Detects UTF-16LE family without BOM and leaves cursor unmoved",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\x3C', '\x00', '\x3F', '\x00'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UTF-16LE");
+    REQUIRE(result == XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+    REQUIRE(pos.current() == '\x3C');
+}
+
+TEST_CASE(
+    "Detects UTF-8 family based on XML declaration start and leaves cursor "
+    "unmoved",
+    "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = "<?xm";
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UTF-8");
+    REQUIRE(result == XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+    REQUIRE(pos.current() == '<');
+}
+
+TEST_CASE("Detects IBM037 (EBCDIC) family and leaves cursor unmoved",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = {'\x4C', '\x6F', '\xA7', '\x94'};
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "IBM037");
+    REQUIRE(result == XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+    REQUIRE(pos.current() == '\x4C');
+}
+
+TEST_CASE("Throws exception on unsupported unusual UCS-4 octet orders (2143)",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data1 = {'\x00', '\x00', '\xFF', '\xFE'};
+    StringCursor pos1(data1);
+    REQUIRE_THROWS_WITH(
+        autodetectXmlEncoding(pos1),
+        "Autodetection detected unsupported UCS-4 unusual octet order (2143)");
+
+    std::string data2 = {'\x00', '\x00', '\x3C', '\x00'};
+    StringCursor pos2(data2);
+    REQUIRE_THROWS_WITH(
+        autodetectXmlEncoding(pos2),
+        "Autodetection detected unsupported UCS-4 unusual octet order (2143)");
+}
+
+TEST_CASE("Throws exception on unsupported unusual UCS-4 octet orders (3412)",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data1 = {'\xFE', '\xFF', '\x00', '\x00'};
+    StringCursor pos1(data1);
+    REQUIRE_THROWS_WITH(
+        autodetectXmlEncoding(pos1),
+        "Autodetection detected unsupported UCS-4 unusual octet order (3412)");
+
+    std::string data2 = {'\x00', '\x3C', '\x00', '\x00'};
+    StringCursor pos2(data2);
+    REQUIRE_THROWS_WITH(
+        autodetectXmlEncoding(pos2),
+        "Autodetection detected unsupported UCS-4 unusual octet order (3412)");
+}
+
+TEST_CASE("Returns UNKNOWN with UTF-8 default for unrecognized byte patterns",
+          "[autodetectXmlEncoding]") {
+    using namespace onyx::text;
+    using namespace onyx::parser;
+
+    std::string data = "<name></name>";
+    StringCursor pos(data);
+
+    auto [encoding, result] = autodetectXmlEncoding(pos);
+
+    REQUIRE(encoding == "UTF-8");
+    REQUIRE(result == XmlEncodingAutodetectionResult::UNKNOWN);
+    REQUIRE(pos.current() == '<');
 }

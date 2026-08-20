@@ -1,7 +1,11 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <optional>
+#include <stdexcept>
+#include <utility>
 
 #include "node.h"
 #include "parse/is_cursor.h"
@@ -244,6 +248,162 @@ inline std::string asciiToUpper(std::string_view stringToUppercase) {
         res.push_back((c >= 'a' && c <= 'z') ? c - 32 : c);
     }
     return res;
+}
+
+/**
+ * @brief Encodes results of XML autodetection
+ *
+ */
+enum class XmlEncodingAutodetectionResult {
+    /**
+     * @brief The end of the file was encountered before detection could be
+     * done.
+     *
+     */
+    END_OF_FILE,
+    /**
+     * @brief The encoding detection is certain. This means that a BOM was
+     * discovered.
+     *
+     */
+    ENCODING_DETECTED,
+    /**
+     * @brief The encoding detection can only narrow down to a family.
+     *
+     */
+    FAMILY_DETECTED,
+    /**
+     * @brief No encoding was detected.
+     *
+     */
+    UNKNOWN
+};
+
+/**
+ * @brief Automatically detects an encoding. This is done using the first 4
+ * bytes of the cursor.
+ *
+ * If there are less than 4 bytes, an empty string is returned with
+ * XmlEncodingAutodetectionResult::END_OF_FILE.
+ *
+ * If a Byte Order Mark (BOM) is matched, the encoding is returned along with
+ * XmlEncodingAutodetectionResult::ENCODING_DETECTED. The Cursor is set to the
+ * first byte after the BOM.
+ *
+ * Otherwise, the first 4 bytes are used to detect a family on encodings. This
+ * function picks an encoding for every detected family and returns it. It is
+ * guaranteed the picked encoding is correct for at least the XML declaration,
+ * which must be read to find the exact encoding. However, it may not be correct
+ * for the entire document. The cursor is not moved.
+ * XmlEncodingAutodetectionResult::FAMILY_DETECTED is returned.
+ *
+ * The following default encodings have been chosen for families (families are
+ * described as per the XML spec):
+ *
+ * UCS-4BE or other big endian encoding with a 32-bit code unit and ASCII
+ * characters encoded as ASCII values -> UCS-4BE
+ *
+ * UCS-4LE or other little endian encoding with a 32-bit code unit and ASCII
+ * characters encoded as ASCII values -> UCS-4LE
+ *
+ * UTF-16BE or big-endian ISO-10646-UCS-2 or other encoding with a 16-bit code
+ * unit in big-endian order and ASCII characters encoded as ASCII values ->
+ * UTF-16BE
+ *
+ * UTF-16LE or little-endian ISO-10646-UCS-2 or other encoding with a 16-bit
+ * code unit in little-endian order and ASCII characters encoded as ASCII values
+ * -> UTF-16LE
+ *
+ * UTF-8, ISO 646, ASCII, some part of ISO 8859, Shift-JIS, EUC, or any other
+ * 7-bit, 8-bit, or mixed-width encoding which ensures that the characters of
+ * ASCII have their normal positions, width, and values -> UTF-8
+ *
+ * EBCDIC (in some flavour) -> IBM037
+ *
+ * Unusual octet orders of UCS-4 encodings are not supported and throw an
+ * exception if discovered in either the BOM or as the first characters.
+ *
+ * Otherwise returns "UTF-8" with XmlEncodingAutodetectionResult::UNKNOWN.
+ * @tparam Cursor
+ */
+template <typename Cursor>
+std::pair<std::string, XmlEncodingAutodetectionResult> autodetectXmlEncoding(
+    Cursor& pos)
+    requires(parser::isCursor<Cursor>)
+{
+    if (pos.isEOF(3))
+        return std::make_pair("", XmlEncodingAutodetectionResult::END_OF_FILE);
+
+    uint32_t marker =
+        (static_cast<uint32_t>(static_cast<unsigned char>(pos.peek(0))) << 24) |
+        (static_cast<uint32_t>(static_cast<unsigned char>(pos.peek(1))) << 16) |
+        (static_cast<uint32_t>(static_cast<unsigned char>(pos.peek(2))) << 8) |
+        static_cast<uint32_t>(static_cast<unsigned char>(pos.peek(3)));
+
+    switch (marker) {
+        case 0x0000FEFF:
+            pos.advance(4);
+            pos.beginCapture();
+            return std::make_pair(
+                "UCS-4BE", XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+        case 0xFFFE0000:
+            pos.advance(4);
+            pos.beginCapture();
+            return std::make_pair(
+                "UCS-4LE", XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+        case 0x0000FFFE:
+        case 0x00003C00:
+            throw std::invalid_argument(
+                "Autodetection detected unsupported UCS-4 unusual octet order "
+                "(2143)");
+        case 0xFEFF0000:
+        case 0x003C0000:
+            throw std::invalid_argument(
+                "Autodetection detected unsupported UCS-4 unusual octet order "
+                "(3412)");
+        case 0x0000003C:
+            return std::make_pair(
+                "UCS-4BE", XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+        case 0x3C000000:
+            return std::make_pair(
+                "UCS-4LE", XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+        case 0x003C003F:
+            return std::make_pair(
+                "UTF-16BE", XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+        case 0x3C003F00:
+            return std::make_pair(
+                "UTF-16LE", XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+        case 0x3C3F786D:
+            return std::make_pair(
+                "UTF-8", XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+        case 0x4C6FA794:
+            return std::make_pair(
+                "IBM037", XmlEncodingAutodetectionResult::FAMILY_DETECTED);
+        default: {
+            if ((marker & 0xFFFF0000) == 0xFEFF0000) {
+                pos.advance(2);
+                pos.beginCapture();
+                return std::make_pair(
+                    "UTF-16BE",
+                    XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+            } else if ((marker & 0xFFFF0000) == 0xFFFE0000) {
+                pos.advance(2);
+                pos.beginCapture();
+                return std::make_pair(
+                    "UTF-16LE",
+                    XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+            } else if ((marker & 0xFFFFFF00) == 0xEFBBBF00) {
+                pos.advance(3);
+                pos.beginCapture();
+                return std::make_pair(
+                    "UTF-8", XmlEncodingAutodetectionResult::ENCODING_DETECTED);
+            }
+
+            break;
+        }
+    }
+
+    return std::make_pair("UTF-8", XmlEncodingAutodetectionResult::UNKNOWN);
 }
 }  // namespace text
 }  // namespace onyx::dynamic
