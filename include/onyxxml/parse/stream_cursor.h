@@ -165,13 +165,14 @@ struct StreamCursor {
 
     /**
      * @brief Checks whether the cursor is at (or past) the end of the
-     * stream.
+     * stream with the given offset.
      *
+     * @param offset
      * @return true if there is no character available at the current
-     * position
+     * position + offset
      * @return false otherwise
      */
-    bool isEOF() { return !fillTo(pos); }
+    bool isEOF(int offset = 0) { return !fillTo(pos + offset); }
 
     /**
      * @brief Get the character at the index

@@ -17,13 +17,28 @@ TEST_CASE("Cursors report the initial character and can look ahead") {
     REQUIRE(stringCursor.current() == 't');
     REQUIRE(stringCursor.peek(1) == 'e');
     REQUIRE(stringCursor.peek(5) == 's');
-    REQUIRE_FALSE(stringCursor.isEOF());
 
     REQUIRE(streamCursor.current() == 't');
     REQUIRE(streamCursor.peek(1) == 'e');
     REQUIRE(streamCursor.peek(5) == 's');
     REQUIRE(streamCursor.inputEncoding == "UTF-8");
-    REQUIRE_FALSE(streamCursor.isEOF());
+}
+
+TEST_CASE("Cursors isEOF() works with offset") {
+    std::string text = "test string";
+    std::stringstream inputStream(text);
+
+    StringCursor stringCursor(text);
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE_FALSE(stringCursor.isEOF());
+    REQUIRE_FALSE(stringCursor.isEOF(10));
+    REQUIRE(stringCursor.isEOF(11));
+    REQUIRE(stringCursor.isEOF(12));
+
+    REQUIRE_FALSE(streamCursor.isEOF(10));
+    REQUIRE(streamCursor.isEOF(11));
+    REQUIRE(streamCursor.isEOF(12));
 }
 
 TEST_CASE("advance moves the current position by the requested amount") {

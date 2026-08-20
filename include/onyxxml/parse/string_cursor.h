@@ -132,7 +132,16 @@ struct StringCursor {
         return true;
     }
 
-    bool isEOF() const { return ptr >= end; }
+    /**
+     * @brief Checks whether the cursor is at (or past) the end of the
+     * input string with the given offset.
+     *
+     * @param offset
+     * @return true if there is no character available at the current
+     * position + offset
+     * @return false otherwise
+     */
+    bool isEOF(int offset = 0) const { return (ptr + offset) >= end; }
 };
 }  // namespace onyx::dynamic::parser
 //  onyx::dynamic::parser

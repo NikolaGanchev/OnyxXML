@@ -11,7 +11,7 @@ concept isCursor = requires(T t, int i, std::string_view expected) {
     { t.captureCurrent() } -> std::same_as<char>;
     { t.capturePeek(i) } -> std::same_as<char>;
     { t.consumeIfMatches(expected) } -> std::same_as<bool>;
-    { t.isEOF() } -> std::same_as<bool>;
+    { t.isEOF(i) } -> std::same_as<bool>;
     t.getCaptured();
     t.advance(i);
     t.captureAdvance(i);
