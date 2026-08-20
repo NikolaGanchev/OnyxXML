@@ -208,6 +208,15 @@ ONYX_INLINE void readUntilAnyOf(CursorType& pos, bool validateUTF8,
     }
 }
 
+template <typename Config>
+ONYX_INLINE void validateRequireDeclaration(bool foundXmlDeclaration) {
+    if constexpr (Config::validate && Config::requireEncoding) {
+        if (!foundXmlDeclaration) {
+            throw std::invalid_argument("Required XML declaration not found");
+        }
+    }
+}
+
 template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                            bool validateUTF8 = true)
@@ -234,10 +243,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
         /* Invariant - always at the start of either a tag or a sequence of
          * text */
         if (pos.current() != '<') {
+            validateRequireDeclaration<Config>(foundXmlDeclaration);
             // In text
-            if (firstTag && !foundXmlDeclaration && !foundDoctype) {
-                throw std::invalid_argument(
-                    "Top level text forbidden in XML document");
+            if constexpr (Config::validate) {
+                if (firstTag && !foundXmlDeclaration && !foundDoctype) {
+                    throw std::invalid_argument(
+                        "Top level text forbidden in XML document");
+                }
             }
             pos.beginCapture();
             TextTransformationMode transformationMode =
@@ -291,7 +303,6 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
             if (end) break;
             CursorStringType text = pos.getCaptured();
             pos.bringToCapture();
-
             policy.textAction(std::move(policy.transformText(
                                   std::move(text), transformationMode)),
                               stack, pos);
@@ -517,6 +528,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 /* encoding is optional in 1.0, but if present must match
                  * NMTOKEN */
                 if constexpr (Config::validate) {
+                    if constexpr (Config::requireEncoding) {
+                        if (!hasEncoding) {
+                            throw std::invalid_argument(
+                                "Required encoding not found in XML "
+                                "declaration");
+                        }
+                    }
                     if (hasEncoding) {
                         /* simple check: no spaces, starts with letter */
                         if (encoding.empty() || !isalpha(encoding[0]))
@@ -557,6 +575,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     hasEncoding, isStandalone, hasStandalone, stack, pos);
                 continue;
             }
+            validateRequireDeclaration<Config>(foundXmlDeclaration);
             if constexpr (Config::validate) {
                 if ((pos.current() != ' ' || pos.peek(1) == '\0')) {
                     throw std::invalid_argument(
@@ -608,6 +627,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
             firstTag = false;
             continue;
         } else if (pos.current() == '!') {
+            validateRequireDeclaration<Config>(foundXmlDeclaration);
             pos.advance();
             if constexpr (Config::validate) {
                 if (pos.current() == '\0') {
@@ -794,6 +814,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 }
             }
         }
+        validateRequireDeclaration<Config>(foundXmlDeclaration);
 
         bool isClosing = (pos.current() == '/');
 

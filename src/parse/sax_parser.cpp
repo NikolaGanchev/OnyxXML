@@ -18,6 +18,7 @@ SaxParser::SaxParser(SaxListener& listener) : listener(listener) {}
 struct ValidatingConfig {
     constexpr static bool validate = true;
     constexpr static bool validateDuplicateAttributes = true;
+    constexpr static bool requireEncoding = false;
     constexpr static size_t maxAttributeCount =
         std::numeric_limits<size_t>::max();
 };

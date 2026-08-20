@@ -28,6 +28,7 @@ namespace onyx::dynamic::parser {
 struct DryRunConfig {
     constexpr static bool validate = true;
     constexpr static bool validateDuplicateAttributes = true;
+    constexpr static bool requireEncoding = false;
     constexpr static size_t maxAttributeCount =
         std::numeric_limits<size_t>::max();
 };
@@ -35,6 +36,7 @@ struct DryRunConfig {
 struct ValidatingConfig {
     constexpr static bool validate = true;
     constexpr static bool validateDuplicateAttributes = true;
+    constexpr static bool requireEncoding = false;
     constexpr static size_t maxAttributeCount =
         std::numeric_limits<size_t>::max();
 };
@@ -42,6 +44,7 @@ struct ValidatingConfig {
 struct NonValidatingConfig {
     constexpr static bool validate = false;
     constexpr static bool validateDuplicateAttributes = false;
+    constexpr static bool requireEncoding = false;
     constexpr static size_t maxAttributeCount =
         std::numeric_limits<size_t>::max();
 };
