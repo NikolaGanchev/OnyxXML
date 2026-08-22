@@ -77,6 +77,10 @@ class ParseResult {
  */
 class DomParser {
    private:
+    // Declared here to get access to Node's private attribute vector via the
+    // friend declaration
+    struct DomStringParserPolicy;
+    struct DomStreamParserPolicy;
     /**
      * @brief Runs the parser, validating and allocating the exact Arena memory.
      *
