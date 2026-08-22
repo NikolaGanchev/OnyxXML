@@ -10,6 +10,7 @@
 #include "nodes/processing_instruction_node.h"
 #include "nodes/text_node.h"
 #include "onyx.h"
+#include "parse/string_view_read_buffer.h"
 
 TEST_CASE("DomParser works") {
     using namespace onyx::tags;
@@ -1650,4 +1651,83 @@ TEST_CASE("SAXParser transcodes complex ISO-8859-1 components") {
 
     REQUIRE(str.str().find("Attribute Value: \xC3\xA7") != std::string::npos);
     REQUIRE(str.str().find("Comment: \xC3\xA0") != std::string::npos);
+}
+
+TEST_CASE("StringViewReadBuffer can be read sequentially via std::istream") {
+    using namespace onyx::parser;
+    std::string_view data = "Hello, World!";
+    impl::StringViewReadBuffer<char> buffer(data);
+    std::istream stream(&buffer);
+
+    std::string result;
+    std::getline(stream, result);
+
+    REQUIRE(result == "Hello, World!");
+    REQUIRE(stream.eof());
+}
+
+TEST_CASE(
+    "StringViewReadBuffer correctly handles character-by-character "
+    "extraction") {
+    using namespace onyx::parser;
+    std::string_view data = "abc";
+    impl::StringViewReadBuffer<char> buffer(data);
+    std::istream stream(&buffer);
+
+    REQUIRE(stream.get() == 'a');
+    REQUIRE(stream.get() == 'b');
+    REQUIRE(stream.get() == 'c');
+
+    REQUIRE(stream.get() == std::char_traits<char>::eof());
+    REQUIRE(stream.eof());
+}
+
+TEST_CASE("StringViewReadBuffer supports block reading") {
+    using namespace onyx::parser;
+    std::string_view data = "Block read test data";
+    impl::StringViewReadBuffer<char> buffer(data);
+    std::istream stream(&buffer);
+
+    char output[10];
+    stream.read(output, 5);
+    output[5] = '\0';
+
+    REQUIRE(std::string(output) == "Block");
+    REQUIRE(stream.gcount() == 5);
+    REQUIRE_FALSE(stream.eof());
+}
+
+TEST_CASE(
+    "StringViewReadBuffer correctly reports EOF for an empty string_view") {
+    using namespace onyx::parser;
+    std::string_view empty_data = "";
+    impl::StringViewReadBuffer<char> buffer(empty_data);
+    std::istream stream(&buffer);
+
+    REQUIRE(stream.get() == std::char_traits<char>::eof());
+    REQUIRE(stream.eof());
+}
+
+TEST_CASE(
+    "StringViewReadBuffer throws logic_error on single character write "
+    "(overflow)") {
+    using namespace onyx::parser;
+    std::string_view data = "Read Only";
+    impl::StringViewReadBuffer<char> buffer(data);
+    std::ostream stream(&buffer);
+
+    REQUIRE_THROWS_AS(stream.put('X'), std::logic_error);
+    REQUIRE_THROWS_WITH(stream.put('X'),
+                        "Trying to write to read only buffer.");
+}
+
+TEST_CASE("StringViewReadBuffer throws logic_error on block write (xsputn)") {
+    using namespace onyx::parser;
+    std::string_view data = "Read Only";
+    impl::StringViewReadBuffer<char> buffer(data);
+    std::ostream stream(&buffer);
+
+    REQUIRE_THROWS_AS(stream.write("Write attempt", 13), std::logic_error);
+    REQUIRE_THROWS_WITH(stream.write("Write attempt", 13),
+                        "Trying to write to read only buffer.");
 }
