@@ -5,6 +5,8 @@
 #include <string>
 #include <string_view>
 
+#include "text.h"
+
 namespace onyx::dynamic::parser {
 /**
  * @brief A controller that orchestrates parser related methods for encoding
@@ -48,6 +50,18 @@ class EncodingController {
      */
     bool waitingParseDueToRestart = false;
     /**
+     * @brief True is the encoding controller requested a speculative parse to
+     * find the real encoding using an autodetected encoding.
+     *
+     */
+    bool waitingSpeculativeParse = false;
+    /**
+     * @brief Whether a speculative parse was used to finish the whole parse
+     * process.
+     *
+     */
+    bool continuedSpeculativeParse = false;
+    /**
      * @brief The number of times the parse function has been triggered via
      * triggerParse().
      *
@@ -63,6 +77,21 @@ class EncodingController {
      *
      */
     std::function<void(EncodingController&)> parse;
+
+    /**
+     * @brief Function for autodetecting an encoding the content.
+     *
+     */
+    std::function<std::pair<std::string, text::XmlEncodingAutodetectionResult>(
+        EncodingController&)>
+        autodetectEncoding;
+    /**
+     * @brief Function used for finding the encoding in a document without
+     * parsing all of it. If the source can continue reading without restarting
+     * on transcode, the whole parse can instead be done via this function.
+     *
+     */
+    std::function<void(EncodingController&)> transcodeAndSpeculativeParse;
     /**
      * @brief Function for transcoding the content. Returns true if transcoding
      * was initiated or done. Otherwise returns false.
@@ -78,34 +107,54 @@ class EncodingController {
      */
     explicit EncodingController(
         std::function<void(EncodingController&)> parse,
-        std::function<bool(EncodingController&)> transcode)
-        : parse{parse}, transcode{transcode} {}
+        std::function<bool(EncodingController&)> transcode,
+        std::function<
+            std::pair<std::string, text::XmlEncodingAutodetectionResult>(
+                EncodingController&)>
+            autodetectEncoding,
+        std::function<void(EncodingController&)> speculativeEncodingFindParse)
+        : parse{parse},
+          transcode{transcode},
+          autodetectEncoding{autodetectEncoding},
+          transcodeAndSpeculativeParse{speculativeEncodingFindParse} {}
 
     /**
      * @brief Start the controller
      *
      * @param userEncoding
+     * @param shouldAutodetectEncoding
      */
     void begin(std::string_view userEncoding) {
-        validate = true;
-        isFinal = false;
-
-        if (!userEncoding.empty()) {
-            encoding = userEncoding;
-            if (encoding == "UTF-8" || encoding == "ASCII") {
-                isFinal = true;
-                triggerParse();
-                return;
-            } else {
-                validate = !transcode(*this);
-                isFinal = true;
-                triggerParse();
-                return;
+        if (userEncoding == "autodetect") {
+            auto [detectedEncoding, result] = autodetectEncoding(*this);
+            encoding = detectedEncoding;
+            switch (result) {
+                case text::XmlEncodingAutodetectionResult::END_OF_FILE:
+                    encoding = "UTF-8";
+                    break;
+                case text::XmlEncodingAutodetectionResult::FAMILY_DETECTED:
+                    waitingSpeculativeParse = true;
+                    transcodeAndSpeculativeParse(*this);
+                    if (continuedSpeculativeParse) {
+                        return;
+                    }
+                    break;
+                case text::XmlEncodingAutodetectionResult::ENCODING_DETECTED:
+                case text::XmlEncodingAutodetectionResult::UNKNOWN:
+                    break;
             }
+        } else if (!userEncoding.empty()) {
+            encoding = userEncoding;
+            isFinal = true;
         } else {
             encoding = "UTF-8";
-            triggerParse();
         }
+
+        if (encoding != "UTF-8" && encoding != "ASCII") {
+            triggerTranscode();
+        }
+
+        triggerParse();
     }
 
     /**
@@ -113,10 +162,12 @@ class EncodingController {
      *
      * @param found
      * @param mustRestartOnTranscode
+     * @param mustRestartOnSpeculativeParse
      * @return ParserAction
      */
     ParserAction foundEncoding(std::string_view found,
-                               bool mustRestartOnTranscode) {
+                               bool mustRestartOnTranscode,
+                               bool mustRestartOnSpeculativeParse) {
         if (isFinal) {
             if (found != encoding) {
                 throw std::invalid_argument(
@@ -127,18 +178,36 @@ class EncodingController {
         } else {
             if (found == encoding) {
                 isFinal = true;
+                if (waitingSpeculativeParse) {
+                    waitingSpeculativeParse = false;
+
+                    continuedSpeculativeParse = !mustRestartOnSpeculativeParse;
+
+                    if (mustRestartOnSpeculativeParse)
+                        return ParserAction::RESTART;
+                }
                 return ParserAction::CONTINUE;
             } else {
                 encoding = found;
                 isFinal = true;
 
-                bool canContinue = !transcode(*this);
-                validate = canContinue;
-                waitingParseDueToRestart = !canContinue;
+                bool canContinue = !triggerTranscode();
+                bool willContinue = canContinue || !mustRestartOnTranscode;
+                waitingParseDueToRestart = !willContinue;
 
-                return (canContinue || !mustRestartOnTranscode)
-                           ? ParserAction::CONTINUE
-                           : ParserAction::RESTART;
+                if (waitingSpeculativeParse) {
+                    waitingSpeculativeParse = false;
+
+                    continuedSpeculativeParse =
+                        willContinue && !mustRestartOnSpeculativeParse;
+
+                    if (!continuedSpeculativeParse) {
+                        return ParserAction::RESTART;
+                    }
+                }
+
+                return willContinue ? ParserAction::CONTINUE
+                                    : ParserAction::RESTART;
             }
         }
     }
@@ -150,6 +219,11 @@ class EncodingController {
     void triggerParse() {
         parseCallCount++;
         parse(*this);
+    }
+
+    bool triggerTranscode() {
+        validate = !transcode(*this);
+        return !validate;
     }
 
     /**

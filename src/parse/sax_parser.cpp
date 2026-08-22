@@ -9,6 +9,7 @@
 #include "parse/parser.h"
 #include "parse/stream_cursor.h"
 #include "parse/string_cursor.h"
+#include "parse/string_view_read_buffer.h"
 #include "text.h"
 
 namespace onyx::dynamic::parser {
@@ -19,6 +20,14 @@ struct ValidatingConfig {
     constexpr static bool validate = true;
     constexpr static bool validateDuplicateAttributes = true;
     constexpr static bool requireEncoding = false;
+    constexpr static size_t maxAttributeCount =
+        std::numeric_limits<size_t>::max();
+};
+
+struct EncodingAutodetectionConfig {
+    constexpr static bool validate = true;
+    constexpr static bool validateDuplicateAttributes = true;
+    constexpr static bool requireEncoding = true;
     constexpr static size_t maxAttributeCount =
         std::numeric_limits<size_t>::max();
 };
@@ -131,7 +140,7 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
             CursorType::StringType&& discoveredEncoding, CursorType& cursor,
             bool& validateUTF8) {
             EncodingController::ParserAction action =
-                ec.foundEncoding(discoveredEncoding, true);
+                ec.foundEncoding(discoveredEncoding, true, true);
 
             if (action == EncodingController::ParserAction::RESTART) {
                 return false;
@@ -145,12 +154,104 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
         }
     };
 
+    struct StringSaxAutodetectionPolicy {
+        EncodingController& ec;
+
+        using CursorType = StreamCursor;
+        using StringType = StreamCursor::StringType;
+        using StackType = std::string;
+        using Stack = std::vector<StackType>;
+
+        void throwRequiresDeclarationEncoding() {
+            throw std::logic_error("Received non-declaration encoding event");
+        }
+
+        ONYX_INLINE void textAction(StringType&& text, Stack& stack,
+                                    CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void commentAction(StringType&& commentText, Stack& stack,
+                                       CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void cdataAction(StringType&& cdataText, Stack& stack,
+                                     CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void instructionAction(StringType&& tagName,
+                                           StringType&& processingInstruction,
+                                           Stack& stack, CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void xmlDeclarationAction(StringType&& version,
+                                              StringType&& encoding,
+                                              bool hasEncoding,
+                                              bool isStandalone,
+                                              bool hasStandalone, Stack& stack,
+                                              CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void doctypeAction(StringType&& doctypeText, Stack& stack,
+                                       CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void openAction(StringType&& tagName, bool isSelfClosing,
+                                    std::vector<StringType>& attributeNames,
+                                    std::vector<StringType>& attributeValues,
+                                    Stack& stack, CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void closeAction(StringType&& tagName, Stack& stack,
+                                     CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void initStack(std::vector<StackType>& stack) {}
+
+        ONYX_INLINE bool equalStackElementToTag(StackType& el,
+                                                CursorType::StringType& tag) {
+            return false;
+        }
+
+        ONYX_INLINE bool isStackRoot(StackType& stackElement) { return false; }
+
+        ONYX_INLINE StringType transformText(CursorType::StringType&& text,
+                                             TextTransformationMode ttm) {
+            if (ttm == TextTransformationMode::UPPERCASE) {
+                return text::asciiToUpper(text);
+            }
+
+            return std::string(text);
+        }
+
+        ONYX_INLINE bool foundEncoding(
+            CursorType::StringType&& discoveredEncoding, CursorType& cursor,
+            bool& validateUTF8) {
+            ec.foundEncoding(discoveredEncoding, true, true);
+
+            return false;
+        }
+    };
+
     EncodingStringState inputState(input);
 
     SaxListener& listener = this->listener;
-    auto parseLocal = [&inputState, &listener](EncodingController& ec) {
+    auto parseLocal = [&inputState, &listener,
+                       &encoding](EncodingController& ec) {
         using StringType = StringCursor::StringType;
         StringCursor pos(inputState.getInput());
+
+        if (encoding == "autodetect") {
+            // Consume the BOM so it isn't perceived as top level text
+            text::autodetectXmlEncoding(pos);
+        }
 
         StringSaxParserPolicy policy{
             .listener = listener, .ec = ec, .inputState = inputState};
@@ -175,7 +276,35 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
         return inputState.transcodeToUTF8(ec.encoding);
     };
 
-    EncodingController encodingController(parseLocal, transcode);
+    auto autodetectEncoding = [&inputState](EncodingController& ec)
+        -> std::pair<std::string, text::XmlEncodingAutodetectionResult> {
+        StringCursor pos(inputState.getInput());
+
+        return text::autodetectXmlEncoding(pos);
+    };
+
+    auto transcodeAndSpeculativeParse =
+        [&inputState](EncodingController& ec) -> void {
+        impl::StringViewReadBuffer<char> buf(inputState.getInput());
+        std::istream input(&buf);
+        StreamCursor pos(input);
+
+        StringSaxAutodetectionPolicy policy{.ec = ec};
+
+        // We are starting from the beginning, so a BOM that must have been
+        // consumed may be available. This function will do that.
+        text::autodetectXmlEncoding(pos);
+        // Needs to be called after possibly skipping the BOM
+        ec.validate = !pos.setInputEncoding(ec.encoding);
+        skipWhitespace(pos);
+
+        parseBody<EncodingAutodetectionConfig, StringSaxAutodetectionPolicy>(
+            pos, policy, ec.validate);
+    };
+
+    EncodingController encodingController(parseLocal, transcode,
+                                          autodetectEncoding,
+                                          transcodeAndSpeculativeParse);
     encodingController.begin(encoding);
 
     encodingController.triggerParseIfWaiting();
@@ -289,7 +418,7 @@ void SaxParser::parse(std::istream& input, std::string encoding) {
         ONYX_INLINE bool foundEncoding(
             CursorType::StringType&& discoveredEncoding, CursorType& cursor,
             bool& validateUTF8) {
-            ec.foundEncoding(discoveredEncoding, false);
+            ec.foundEncoding(discoveredEncoding, false, false);
 
             validateUTF8 = ec.validate;
             return true;
@@ -300,27 +429,45 @@ void SaxParser::parse(std::istream& input, std::string encoding) {
     StreamCursor pos(input);
 
     SaxListener& listener = this->listener;
-    auto parseLocal = [&pos, &listener](EncodingController& ec) {
-        StreamSaxParserPolicy policy{.listener = listener, .ec = ec};
+    auto parseLocalBase =
+        [&pos, &listener]<typename ParseLocalConfig>(EncodingController& ec) {
+            StreamSaxParserPolicy policy{.listener = listener, .ec = ec};
 
-        skipWhitespace(pos);
+            skipWhitespace(pos);
 
-        listener.onStart();
-        try {
-            parseBody<ValidatingConfig, StreamSaxParserPolicy>(pos, policy,
-                                                               ec.validate);
-        } catch (std::exception& e) {
-            listener.onException(e);
-        }
+            listener.onStart();
+            try {
+                parseBody<ParseLocalConfig, StreamSaxParserPolicy>(pos, policy,
+                                                                   ec.validate);
+            } catch (std::exception& e) {
+                listener.onException(e);
+            }
 
-        listener.onEnd();
+            listener.onEnd();
+        };
+
+    auto parseLocal = [&parseLocalBase](EncodingController& ec) {
+        parseLocalBase.template operator()<ValidatingConfig>(ec);
     };
 
     auto transcode = [&pos](EncodingController& ec) -> bool {
         return pos.setInputEncoding(ec.encoding);
     };
 
-    EncodingController encodingController(parseLocal, transcode);
+    auto autodetectEncoding = [&pos](EncodingController& ec)
+        -> std::pair<std::string, text::XmlEncodingAutodetectionResult> {
+        return text::autodetectXmlEncoding(pos);
+    };
+
+    auto transcodeAndSpeculativeParse =
+        [&parseLocalBase](EncodingController& ec) -> void {
+        ec.triggerTranscode();
+        parseLocalBase.template operator()<EncodingAutodetectionConfig>(ec);
+    };
+
+    EncodingController encodingController(parseLocal, transcode,
+                                          autodetectEncoding,
+                                          transcodeAndSpeculativeParse);
     encodingController.begin(encoding);
 }
 }  // namespace onyx::dynamic::parser

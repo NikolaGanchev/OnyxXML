@@ -1653,6 +1653,410 @@ TEST_CASE("SAXParser transcodes complex ISO-8859-1 components") {
     REQUIRE(str.str().find("Comment: \xC3\xA0") != std::string::npos);
 }
 
+TEST_CASE("DomParser autodetects UTF-8 BOM and parses successfully") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input =
+        "\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"UTF-8\"?><root>\xC3\xA9</"
+        "root>";
+    std::stringstream inputStream(input);
+
+    EmptyNode output{XmlDeclaration("1.0", "UTF-8", true, false, false, false),
+                     GenericNode("root", false, Text("\xC3\xA9"))};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE(
+    "DomParser autodetects UTF-16LE BOM and transcodes to UTF-8 successfully") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // UTF-16LE encoded: <root>é</root>
+    const char utf16le_data[] = {
+        '\xFF', '\xFE', '<', '\x00', 'r',    '\x00', 'o', '\x00', 'o', '\x00',
+        't',    '\x00', '>', '\x00', '\xE9', '\x00', '<', '\x00', '/', '\x00',
+        'r',    '\x00', 'o', '\x00', 'o',    '\x00', 't', '\x00', '>', '\x00'};
+    std::string input(utf16le_data, sizeof(utf16le_data));
+    std::stringstream inputStream(input);
+
+    GenericNode output{"root", false, Text("\xC3\xA9")};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE(
+    "DomParser autodetects UTF-16BE BOM and transcodes to UTF-8 successfully") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // UTF-16BE encoded: <root>é</root>
+    const char utf16be_data[] = {
+        '\xFE', '\xFF', '\x00', '<', '\x00', 'r',    '\x00', 'o', '\x00', 'o',
+        '\x00', 't',    '\x00', '>', '\x00', '\xE9', '\x00', '<', '\x00', '/',
+        '\x00', 'r',    '\x00', 'o', '\x00', 'o',    '\x00', 't', '\x00', '>'};
+    std::string input(utf16be_data, sizeof(utf16be_data));
+    std::stringstream inputStream(input);
+
+    GenericNode output{"root", false, Text("\xC3\xA9")};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE(
+    "DomParser autodetects UTF-16LE family without BOM and transcodes to UTF-8 "
+    "successfully") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // UTF-16LE without BOM: <?xml version="1.0"
+    // encoding="UTF-16LE"?><root>é</root>
+    const char utf16le_no_bom[] = {
+        '<', '\x00', '?', '\x00', 'x',    '\x00', 'm', '\x00', 'l', '\x00',
+        ' ', '\x00', 'v', '\x00', 'e',    '\x00', 'r', '\x00', 's', '\x00',
+        'i', '\x00', 'o', '\x00', 'n',    '\x00', '=', '\x00', '"', '\x00',
+        '1', '\x00', '.', '\x00', '0',    '\x00', '"', '\x00', ' ', '\x00',
+        'e', '\x00', 'n', '\x00', 'c',    '\x00', 'o', '\x00', 'd', '\x00',
+        'i', '\x00', 'n', '\x00', 'g',    '\x00', '=', '\x00', '"', '\x00',
+        'U', '\x00', 'T', '\x00', 'F',    '\x00', '-', '\x00', '1', '\x00',
+        '6', '\x00', 'L', '\x00', 'E',    '\x00', '"', '\x00', '?', '\x00',
+        '>', '\x00', '<', '\x00', 'r',    '\x00', 'o', '\x00', 'o', '\x00',
+        't', '\x00', '>', '\x00', '\xE9', '\x00', '<', '\x00', '/', '\x00',
+        'r', '\x00', 'o', '\x00', 'o',    '\x00', 't', '\x00', '>', '\x00'};
+    std::string input(utf16le_no_bom, sizeof(utf16le_no_bom));
+    std::stringstream inputStream(input);
+
+    EmptyNode output{
+        XmlDeclaration("1.0", "UTF-16LE", true, false, false, false),
+        GenericNode("root", false, Text("\xC3\xA9"))};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser defaults to UTF-8 when autodetection returns UNKNOWN") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input = "<root>\xC3\xA9</root>";
+    std::stringstream inputStream(input);
+
+    GenericNode output{"root", false, Text("\xC3\xA9")};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser defaults to UTF-8 when autodetection hits EOF early") {
+    using namespace onyx::parser;
+
+    std::string input = "<!";
+    std::stringstream inputStream(input);
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input, "autodetect"),
+                        "Premature end of <! tag");
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream, "autodetect"),
+                        "Premature end of <! tag");
+}
+
+TEST_CASE(
+    "SaxParser autodetects UTF-16LE BOM and transcodes to UTF-8 successfully") {
+    using namespace onyx::parser;
+
+    // UTF-16LE encoded: <root>é</root>
+    const char utf16le_data[] = {
+        '\xFF', '\xFE', '<', '\x00', 'r',    '\x00', 'o', '\x00', 'o', '\x00',
+        't',    '\x00', '>', '\x00', '\xE9', '\x00', '<', '\x00', '/', '\x00',
+        'r',    '\x00', 'o', '\x00', 'o',    '\x00', 't', '\x00', '>', '\x00'};
+    std::string input(utf16le_data, sizeof(utf16le_data));
+    std::stringstream inputStream(input);
+
+    std::stringstream str1, str2;
+
+    SaxListenerLogger listener(str1);
+    SaxParser parser(listener);
+    parser.parse(input, "autodetect");
+
+    // Events: Start(1) + TagOpen(1) + Text(1) + TagClose(1) + End(1) = 5
+    REQUIRE(listener.getEventCount() == 5);
+    REQUIRE(str1.str().find("Text: \xC3\xA9") != std::string::npos);
+
+    SaxListenerLogger listenerStream(str2);
+    SaxParser parserStream(listenerStream);
+    parserStream.parse(inputStream, "autodetect");
+
+    REQUIRE(listenerStream.getEventCount() == 5);
+    REQUIRE(str2.str().find("Text: \xC3\xA9") != std::string::npos);
+}
+
+TEST_CASE(
+    "SaxParser autodetects UTF-16BE family without BOM and transcodes to UTF-8 "
+    "successfully") {
+    using namespace onyx::parser;
+
+    // UTF-16BE without BOM: <?xml version="1.0"
+    // encoding="UTF-16BE"?><root>é</root>
+    const char utf16be_no_bom[] = {
+        '\x00', '<', '\x00', '?', '\x00', 'x',    '\x00', 'm',  '\x00', 'l',
+        '\x00', ' ', '\x00', 'v', '\x00', 'e',    '\x00', 'r',  '\x00', 's',
+        '\x00', 'i', '\x00', 'o', '\x00', 'n',    '\x00', '=',  '\x00', '"',
+        '\x00', '1', '\x00', '.', '\x00', '0',    '\x00', '"',  '\00',  ' ',
+        '\00',  'e', '\00',  'n', '\00',  'c',    '\00',  'o',  '\00',  'd',
+        '\00',  'i', '\00',  'n', '\00',  'g',    '\00',  '=',  '\00',  '\"',
+        '\00',  'U', '\00',  'T', '\00',  'F',    '\00',  '-',  '\00',  '1',
+        '\00',  '6', '\00',  'B', '\00',  'E',    '\00',  '\"', '\x00', '?',
+        '\x00', '>', '\x00', '<', '\x00', 'r',    '\x00', 'o',  '\x00', 'o',
+        '\x00', 't', '\x00', '>', '\x00', '\xE9', '\x00', '<',  '\x00', '/',
+        '\x00', 'r', '\x00', 'o', '\x00', 'o',    '\x00', 't',  '\x00', '>'};
+    std::string input(utf16be_no_bom, sizeof(utf16be_no_bom));
+    std::stringstream inputStream(input);
+
+    std::stringstream str1, str2;
+
+    SaxListenerLogger listener(str1);
+    SaxParser parser(listener);
+    parser.parse(input, "autodetect");
+
+    // Events: Start(1) + XMLDecl(1) + TagOpen(1) + Text(1) + TagClose(1) +
+    // End(1) = 6
+    REQUIRE(listener.getEventCount() == 6);
+    REQUIRE(str1.str().find("Text: \xC3\xA9") != std::string::npos);
+
+    SaxListenerLogger listenerStream(str2);
+    SaxParser parserStream(listenerStream);
+    parserStream.parse(inputStream, "autodetect");
+
+    REQUIRE(listenerStream.getEventCount() == 6);
+    REQUIRE(str2.str().find("Text: \xC3\xA9") != std::string::npos);
+}
+
+TEST_CASE("DomParser autodetects UCS-4BE family without BOM") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // UCS-4BE without BOM: <?xml version="1.0"
+    // encoding="UCS-4BE"?><root>a</root>
+    const char ucs4be_data[] = {
+        '\00', '\00', '\00', '<',   '\00', '\00', '\00', '?',   '\00', '\00',
+        '\00', 'x',   '\00', '\00', '\00', 'm',   '\00', '\00', '\00', 'l',
+        '\00', '\00', '\00', ' ',   '\00', '\00', '\00', 'v',   '\00', '\00',
+        '\00', 'e',   '\00', '\00', '\00', 'r',   '\00', '\00', '\00', 's',
+        '\00', '\00', '\00', 'i',   '\00', '\00', '\00', 'o',   '\00', '\00',
+        '\00', 'n',   '\00', '\00', '\00', '=',   '\00', '\00', '\00', '"',
+        '\00', '\00', '\00', '1',   '\00', '\00', '\00', '.',   '\00', '\00',
+        '\00', '0',   '\00', '\00', '\00', '"',   '\00', '\00', '\00', ' ',
+        '\00', '\00', '\00', 'e',   '\00', '\00', '\00', 'n',   '\00', '\00',
+        '\00', 'c',   '\00', '\00', '\00', 'o',   '\00', '\00', '\00', 'd',
+        '\00', '\00', '\00', 'i',   '\00', '\00', '\00', 'n',   '\00', '\00',
+        '\00', 'g',   '\00', '\00', '\00', '=',   '\00', '\00', '\00', '"',
+        '\00', '\00', '\00', 'U',   '\00', '\00', '\00', 'C',   '\00', '\00',
+        '\00', 'S',   '\00', '\00', '\00', '-',   '\00', '\00', '\00', '4',
+        '\00', '\00', '\00', 'B',   '\00', '\00', '\00', 'E',   '\00', '\00',
+        '\00', '"',   '\00', '\00', '\00', '?',   '\00', '\00', '\00', '>',
+        '\00', '\00', '\00', '<',   '\00', '\00', '\00', 'r',   '\00', '\00',
+        '\00', 'o',   '\00', '\00', '\00', 'o',   '\00', '\00', '\00', 't',
+        '\00', '\00', '\00', '>',   '\00', '\00', '\00', 'a',   '\00', '\00',
+        '\00', '<',   '\00', '\00', '\00', '/',   '\00', '\00', '\00', 'r',
+        '\00', '\00', '\00', 'o',   '\00', '\00', '\00', 'o',   '\00', '\00',
+        '\00', 't',   '\00', '\00', '\00', '>'};
+    std::string input(ucs4be_data, sizeof(ucs4be_data));
+    std::stringstream inputStream(input);
+
+    EmptyNode output{
+        XmlDeclaration("1.0", "UCS-4BE", true, false, false, false),
+        GenericNode("root", false, Text("a"))};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser autodetects UTF-32LE (UCS-4LE) BOM") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // UTF-32LE with BOM: <root>a</root>
+    const char utf32le_data[] =
+        "\xFF\xFE\x00\x00\x3C\x00\x00\x00\x72\x00\x00\x00\x6F\x00\x00\x00"
+        "\x6F\x00\x00\x00\x74\x00\x00\x00\x3E\x00\x00\x00\x61\x00\x00\x00"
+        "\x3C\x00\x00\x00\x2F\x00\x00\x00\x72\x00\x00\x00\x6F\x00\x00\x00"
+        "\x6F\x00\x00\x00\x74\x00\x00\x00\x3E\x00\x00\x00";
+    std::string input(utf32le_data, sizeof(utf32le_data) - 1);
+    std::stringstream inputStream(input);
+
+    GenericNode output{"root", false, Text("a")};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser autodetects UCS-2LE family and restarts parse") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // UCS-2LE without BOM: <?xml version="1.0"
+    // encoding="UCS-2LE"?><root>a</root>
+    const char ucs2le_data[] =
+        "\x3C\x00\x3F\x00\x78\x00\x6D\x00\x6C\x00\x20\x00\x76\x00\x65\x00"
+        "\x72\x00\x73\x00\x69\x00\x6F\x00\x6E\x00\x3D\x00\x22\x00\x31\x00"
+        "\x2E\x00\x30\x00\x22\x00\x20\x00\x65\x00\x6E\x00\x63\x00\x6F\x00"
+        "\x64\x00\x69\x00\x6E\x00\x67\x00\x3D\x00\x22\x00\x55\x00\x43\x00"
+        "\x53\x00\x2D\x00\x32\x00\x4C\x00\x45\x00\x22\x00\x3F\x00\x3E\x00"
+        "\x3C\x00\x72\x00\x6F\x00\x6F\x00\x74\x00\x3E\x00\x61\x00\x3C\x00"
+        "\x2F\x00\x72\x00\x6F\x00\x6F\x00\x74\x00\x3E\x00";
+    std::string input(ucs2le_data, sizeof(ucs2le_data) - 1);
+    std::stringstream inputStream(input);
+
+    EmptyNode output{
+        XmlDeclaration("1.0", "UCS-2LE", true, false, false, false),
+        GenericNode("root", false, Text("a"))};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE(
+    "DomParser detects ASCII family and restarts for ISO-8859-1 (Latin1)") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input =
+        "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><root>\xE9</root>";
+    std::stringstream inputStream(input);
+
+    EmptyNode output{
+        XmlDeclaration("1.0", "ISO-8859-1", true, false, false, false),
+        GenericNode("root", false, Text("\xC3\xA9"))};  // "é" in UTF-8
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE("DomParser detects ASCII family and restarts for Shift_JIS") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // Shift_JIS encoded: <?xml version="1.0"
+    // encoding="Shift_JIS"?><root>テスト</root>
+    std::string input =
+        "<?xml version=\"1.0\" "
+        "encoding=\"Shift_JIS\"?><root>\x83\x65\x83\x58\x83\x67</root>";
+    std::stringstream inputStream(input);
+
+    EmptyNode output{
+        XmlDeclaration("1.0", "SHIFT_JIS", true, false, false, false),
+        GenericNode("root", false, Text("テスト"))};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE(
+    "DomParser autodetects EBCDIC IBM037 family matching actual encoding") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // IBM037 encoded: <?xml version="1.0" encoding="IBM037"?><root>a</root>
+    const char ibm037_data[] =
+        "\x4C\x6F\xA7\x94\x93\x40\xA5\x85\x99\xA2\x89\x96\x95\x7E\x7F\xF1"
+        "\x4B\xF0\x7F\x40\x85\x95\x83\x96\x84\x89\x95\x87\x7E\x7F\xC9\xC2"
+        "\xD4\xF0\xF3\xF7\x7F\x6F\x6E\x4C\x99\x96\x96\xA3\x6E\x81\x4C\x61"
+        "\x99\x96\x96\xA3\x6E";
+    std::string input(ibm037_data, sizeof(ibm037_data) - 1);
+    std::stringstream inputStream(input);
+
+    EmptyNode output{XmlDeclaration("1.0", "IBM037", true, false, false, false),
+                     GenericNode("root", false, Text("a"))};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE(
+    "DomParser autodetects EBCDIC family and restarts for incompatible "
+    "IBM1047") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    // IBM1047 encoded: <?xml version="1.0" encoding="IBM1047"?><root>[</root>
+    // Note: 0xAD is '[' in IBM1047, but would be 'Ý' if incorrectly parsed as
+    // IBM037
+    const char ibm1047_data[] =
+        "\x4C\x6F\xA7\x94\x93\x40\xA5\x85\x99\xA2\x89\x96\x95\x7E\x7F\xF1"
+        "\x4B\xF0\x7F\x40\x85\x95\x83\x96\x84\x89\x95\x87\x7E\x7F\xC9\xC2"
+        "\xD4\xF1\xF0\xF4\xF7\x7F\x6F\x6E\x4C\x99\x96\x96\xA3\x6E\xAD\x4C"
+        "\x61\x99\x96\x96\xA3\x6E";
+    std::string input(ibm1047_data, sizeof(ibm1047_data) - 1);
+    std::stringstream inputStream(input);
+
+    EmptyNode output{
+        XmlDeclaration("1.0", "IBM1047", true, false, false, false),
+        GenericNode("root", false, Text("["))};
+
+    ParseResult pr = DomParser::parse(input, "autodetect");
+    ParseResult prStream = DomParser::parse(inputStream, "autodetect");
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
+TEST_CASE(
+    "DomParser throws when family inferred but XML declaration lacks "
+    "encoding") {
+    using namespace onyx::parser;
+
+    // UTF-16LE without BOM, XML declaration lacks encoding: <?xml
+    // version="1.0"?><root>a</root>
+    const char utf16le_no_enc[] =
+        "\x3C\x00\x3F\x00\x78\x00\x6D\x00\x6C\x00\x20\x00\x76\x00\x65\x00"
+        "\x72\x00\x73\x00\x69\x00\x6F\x00\x6E\x00\x3D\x00\x22\x00\x31\x00"
+        "\x2E\x00\x30\x00\x22\x00\x3F\x00\x3E\x00\x3C\x00\x72\x00\x6F\x00"
+        "\x6F\x00\x74\x00\x3E\x00\x61\x00\x3C\x00\x2F\x00\x72\x00\x6F\x00"
+        "\x6F\x00\x74\x00\x3E\x00";
+    std::string input(utf16le_no_enc, sizeof(utf16le_no_enc) - 1);
+    std::stringstream inputStream(input);
+
+    std::string message = "Required encoding not found in XML declaration";
+    REQUIRE_THROWS_WITH(DomParser::parse(input, "autodetect"), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream, "autodetect"), message);
+}
+
 TEST_CASE("StringViewReadBuffer can be read sequentially via std::istream") {
     using namespace onyx::parser;
     std::string_view data = "Hello, World!";

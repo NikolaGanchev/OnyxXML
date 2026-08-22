@@ -1,7 +1,9 @@
 #include "parse/dom_parser.h"
 
 #include <cstddef>
+#include <istream>
 #include <limits>
+#include <stdexcept>
 #include <string_view>
 
 #include "arena.h"
@@ -20,6 +22,7 @@
 #include "parse/parser.h"
 #include "parse/stream_cursor.h"
 #include "parse/string_cursor.h"
+#include "parse/string_view_read_buffer.h"
 #include "parse/text_transformation_mode.h"
 #include "text.h"
 
@@ -45,6 +48,14 @@ struct NonValidatingConfig {
     constexpr static bool validate = false;
     constexpr static bool validateDuplicateAttributes = false;
     constexpr static bool requireEncoding = false;
+    constexpr static size_t maxAttributeCount =
+        std::numeric_limits<size_t>::max();
+};
+
+struct EncodingAutodetectionConfig {
+    constexpr static bool validate = true;
+    constexpr static bool validateDuplicateAttributes = true;
+    constexpr static bool requireEncoding = true;
     constexpr static size_t maxAttributeCount =
         std::numeric_limits<size_t>::max();
 };
@@ -137,7 +148,7 @@ std::pair<Arena, EncodingStringState> DomParser::parseDryRun(
             bool& validateUTF8) {
             std::string enc = text::asciiToUpper(discoveredEncoding);
             EncodingController::ParserAction action =
-                ec.foundEncoding(enc, true);
+                ec.foundEncoding(enc, true, true);
 
             if (action == EncodingController::ParserAction::RESTART) {
                 return false;
@@ -148,17 +159,105 @@ std::pair<Arena, EncodingStringState> DomParser::parseDryRun(
         }
     };
 
+    struct DomDryRunAutodetectPolicy {
+        EncodingController& ec;
+
+        using CursorType = StreamCursor;
+        using StringType = CursorType::StringType;
+        using StackType = std::string;
+        using Stack = std::vector<StackType>;
+
+        void throwRequiresDeclarationEncoding() {
+            throw std::logic_error("Received non-declaration encoding event");
+        }
+
+        ONYX_INLINE void textAction(StringType text, Stack& stack,
+                                    CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void commentAction(StringType commentText, Stack& stack,
+                                       CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void cdataAction(StringType cdataText, Stack& stack,
+                                     CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void instructionAction(StringType tagName,
+                                           StringType processingInstruction,
+                                           Stack& stack, CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void xmlDeclarationAction(StringType version,
+                                              StringType encoding,
+                                              bool hasEncoding,
+                                              bool isStandalone,
+                                              bool hasStandalone, Stack& stack,
+                                              CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void doctypeAction(StringType doctypeText, Stack& stack,
+                                       CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void openAction(StringType tagName, bool isSelfClosing,
+                                    std::vector<StringType>& attributeNames,
+                                    std::vector<StringType>& attributeValues,
+                                    std::vector<StackType>& stack,
+                                    CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void closeAction(StringType tagName,
+                                     std::vector<StackType>& stack,
+                                     CursorType& cursor) {
+            throwRequiresDeclarationEncoding();
+        }
+
+        ONYX_INLINE void initStack(std::vector<StackType>& stack) {}
+
+        ONYX_INLINE bool equalStackElementToTag(StackType& el,
+                                                CursorType::StringType& tag) {
+            return false;
+        }
+
+        ONYX_INLINE bool isStackRoot(StringType& stackElement) { return false; }
+
+        ONYX_INLINE StringType transformText(CursorType::StringType&& text,
+                                             TextTransformationMode ttm) {
+            return text;
+        }
+
+        ONYX_INLINE bool foundEncoding(
+            CursorType::StringType&& discoveredEncoding, CursorType& cursor,
+            bool& validateUTF8) {
+            std::string enc = text::asciiToUpper(discoveredEncoding);
+            ec.foundEncoding(enc, true, true);
+
+            return false;
+        }
+    };
+
     EncodingStringState inputState(input);
     Arena arena = Arena::Builder().build();
 
-    auto parseLocal = [&inputState, &arena](EncodingController& ec) {
-        using StringType = StringCursor::StringType;
+    auto parseLocal = [&inputState, &arena, &encoding](EncodingController& ec) {
         StringCursor pos(inputState.getInput());
 
         DomDryRunParserPolicy policy{.ec = ec, .inputState = inputState};
 
         policy.builder.preallocate<tags::EmptyNode>();
 
+        if (encoding == "autodetect") {
+            // Consume the BOM so it isn't perceived as top level text
+            text::autodetectXmlEncoding(pos);
+        }
         skipWhitespace(pos);
 
         parseBody<DryRunConfig, DomDryRunParserPolicy>(pos, policy,
@@ -171,7 +270,35 @@ std::pair<Arena, EncodingStringState> DomParser::parseDryRun(
         return inputState.transcodeToUTF8(ec.encoding);
     };
 
-    EncodingController encodingController(parseLocal, transcode);
+    auto autodetectEncoding = [&inputState](EncodingController& ec)
+        -> std::pair<std::string, text::XmlEncodingAutodetectionResult> {
+        StringCursor pos(inputState.getInput());
+
+        return text::autodetectXmlEncoding(pos);
+    };
+
+    auto transcodeAndSpeculativeParse =
+        [&inputState](EncodingController& ec) -> void {
+        impl::StringViewReadBuffer<char> buf(inputState.getInput());
+        std::istream input(&buf);
+        StreamCursor pos(input);
+
+        DomDryRunAutodetectPolicy policy{.ec = ec};
+
+        // We are starting from the beginning, so a BOM that must have been
+        // consumed may be available. This function will do that.
+        text::autodetectXmlEncoding(pos);
+        // Needs to be called after possibly skipping the BOM
+        ec.validate = !pos.setInputEncoding(ec.encoding);
+        skipWhitespace(pos);
+
+        parseBody<EncodingAutodetectionConfig, DomDryRunAutodetectPolicy>(
+            pos, policy, ec.validate);
+    };
+
+    EncodingController encodingController(parseLocal, transcode,
+                                          autodetectEncoding,
+                                          transcodeAndSpeculativeParse);
     encodingController.begin(encoding);
 
     encodingController.triggerParseIfWaiting();
@@ -300,6 +427,10 @@ ParseResult<Arena> DomParser::parse(std::string_view input,
 
     DomStringParserPolicy policy{std::move(dryRunResult.first)};
 
+    if (encoding == "autodetect") {
+        // Consume the BOM so it isn't perceived as top level text
+        text::autodetectXmlEncoding(pos);
+    }
     skipWhitespace(pos);
 
     parseBody<NonValidatingConfig, DomStringParserPolicy>(pos, policy);
@@ -425,7 +556,7 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
         ONYX_INLINE bool foundEncoding(
             CursorType::StringType&& discoveredEncoding, CursorType& cursor,
             bool& validateUTF8) {
-            ec.foundEncoding(discoveredEncoding, false);
+            ec.foundEncoding(discoveredEncoding, false, false);
 
             validateUTF8 = ec.validate;
             return true;
@@ -437,12 +568,13 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
     StreamCursor pos(input);
     Node* root;
 
-    auto parseLocal = [&pos, &arena, &root](EncodingController& ec) {
+    auto parseLocalBase = [&pos, &arena, &root]<typename ParseLocalConfig>(
+                              EncodingController& ec) {
         DomStreamParserPolicy policy{.ec = ec};
 
         skipWhitespace(pos);
 
-        parseBody<ValidatingConfig, DomStreamParserPolicy>(pos, policy,
+        parseBody<ParseLocalConfig, DomStreamParserPolicy>(pos, policy,
                                                            ec.validate);
 
         if (policy.root->getChildrenCount() == 1) {
@@ -456,11 +588,28 @@ ParseResult<PagedArena> DomParser::parse(std::istream& input,
         root = policy.root;
     };
 
+    auto parseLocal = [&parseLocalBase](EncodingController& ec) {
+        parseLocalBase.template operator()<ValidatingConfig>(ec);
+    };
+
     auto transcode = [&pos](EncodingController& ec) -> bool {
         return pos.setInputEncoding(ec.encoding);
     };
 
-    EncodingController encodingController(parseLocal, transcode);
+    auto autodetectEncoding = [&pos](EncodingController& ec)
+        -> std::pair<std::string, text::XmlEncodingAutodetectionResult> {
+        return text::autodetectXmlEncoding(pos);
+    };
+
+    auto transcodeAndSpeculativeParse =
+        [&parseLocalBase](EncodingController& ec) -> void {
+        ec.triggerTranscode();
+        parseLocalBase.template operator()<EncodingAutodetectionConfig>(ec);
+    };
+
+    EncodingController encodingController(parseLocal, transcode,
+                                          autodetectEncoding,
+                                          transcodeAndSpeculativeParse);
     encodingController.begin(encoding);
 
     return ParseResult{std::move(arena), root};

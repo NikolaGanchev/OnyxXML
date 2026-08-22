@@ -80,14 +80,18 @@ class DomParser {
     /**
      * @brief Runs the parser, validating and allocating the exact Arena memory.
      *
-     * If a non-empty encoding string is passed, it will be validated against
-     * the declared document encoding.
+     * If a non-empty encoding string that is not "autodetect" is passed, it
+     * will be validated against the declared document encoding.
      *
      * If an empty encoding string is passed,
      * the parser will presume UTF-8 until an XML declaration with an encoding
      * tag is found. It will then transcode the string to the required encoding
      * and revalidate. The transcoded new string will be passed back as the
      * second element of the return pair.
+     *
+     * If the encoding string "autodetect" is passed, encoding will be
+     * automatically detected as described in Appendix F of the XML
+     * specification
      *
      * @param input
      * @param encoding
@@ -100,13 +104,17 @@ class DomParser {
     /**
      * @brief Parse an XML string
      *
-     * If a non-empty encoding string is passed, it will be validated against
-     * the declared document encoding.
+     * If a non-empty encoding string that is not "autodetect" is passed, it
+     * will be validated against the declared document encoding.
      *
      * If an empty encoding string is passed,
      * the parser will presume UTF-8 until an XML declaration with an encoding
      * tag is found. It will automatically transcode the document to that
      * encoding and read it.
+     *
+     * If the encoding string "autodetect" is passed, encoding will be
+     * automatically detected as described in Appendix F of the XML
+     * specification
      *
      * @param input
      * @param encoding
@@ -118,13 +126,17 @@ class DomParser {
     /**
      * @brief Parse an XML stream
      *
-     * If a non-empty encoding string is passed, it will be validated against
-     * the declared document encoding.
+     * If a non-empty encoding string that is not "autodetect" is passed, it
+     * will be validated against the declared document encoding.
      *
      * If an empty encoding string is passed,
      * the parser will presume UTF-8 until an XML declaration with an encoding
      * tag is found. It will automatically transcode the document to that
      * encoding and read it.
+     *
+     * If the encoding string "autodetect" is passed, encoding will be
+     * automatically detected as described in Appendix F of the XML
+     * specification
      *
      * @param input
      * @param encoding
