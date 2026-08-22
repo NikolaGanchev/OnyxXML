@@ -299,7 +299,7 @@ struct StreamCursor {
      * Upon calling this function, the internal buffer will be flushed.
      *
      * Transcoding can only happen if the capture is empty and there is no
-     * recorded lookahead.
+     * transcoded recorded lookahead. Raw lookahead is preserved.
      *
      * @param newInputEncoding
      * @return true Transcoding is being done after this call
@@ -311,22 +311,30 @@ struct StreamCursor {
                 "Cannot change encoding while capture is active");
         }
 
-        if (buffer.size() != pos) {
-            throw std::runtime_error(
-                "Cannot change encoding with unconsumed decoded lookahead "
-                "past pos");
-        }
-
         if (!rawBuffer.empty()) {
             throw std::runtime_error(
                 "Cannot change encoding mid multi byte sequence");
         }
 
+        bool newTranscoding =
+            newInputEncoding != "UTF-8" && newInputEncoding != "ASCII";
+
+        if (buffer.size() > pos) {
+            if (transcoding) {
+                throw std::runtime_error(
+                    "Cannot change encoding with unconsumed decoded lookahead "
+                    "past pos");
+            }
+        }
+
 #if ICONV_AVAILABLE
-        iconv_t newCd = iconv_open("UTF-8", newInputEncoding.c_str());
-        if (newCd == (iconv_t)-1) {
-            throw std::runtime_error("Failed to initialize iconv_open for " +
-                                     newInputEncoding);
+        iconv_t newCd = (iconv_t)-1;
+        if (newTranscoding) {
+            newCd = iconv_open("UTF-8", newInputEncoding.c_str());
+            if (newCd == (iconv_t)-1) {
+                throw std::runtime_error(
+                    "Failed to initialize iconv_open for " + newInputEncoding);
+            }
         }
 
         if (cd != (iconv_t)-1) {
@@ -335,15 +343,48 @@ struct StreamCursor {
         cd = newCd;
 
         inputEncoding = std::move(newInputEncoding);
-        transcoding = inputEncoding != "UTF-8" && inputEncoding != "ASCII";
+        transcoding = newTranscoding;
 
-        buffer.clear();
+        if (buffer.size() > pos) {
+            if (transcoding) {
+                // Move the raw lookahead into rawBuffer to be decoded on the
+                // next fillTo()
+                rawBuffer.insert(rawBuffer.end(), buffer.begin() + pos,
+                                 buffer.end());
+                buffer.clear();
+            } else {
+                // We still aren't transcoding, just shift the unconsumed raw
+                // bytes to the front
+                size_t remaining = buffer.size() - pos;
+                std::memmove(buffer.data(), buffer.data() + pos, remaining);
+                buffer.resize(remaining);
+            }
+        } else {
+            buffer.clear();
+        }
+
         pos = 0;
         captured = 0;
         return transcoding;
 #else
-        throw std::runtime_error(
-            "Trying to transcode at runtime without iconv");
+        if (newTranscoding) {
+            throw std::runtime_error(
+                "Trying to transcode at runtime without iconv");
+        }
+
+        inputEncoding = std::move(newInputEncoding);
+
+        if (buffer.size() > pos) {
+            size_t remaining = buffer.size() - pos;
+            std::memmove(buffer.data(), buffer.data() + pos, remaining);
+            buffer.resize(remaining);
+        } else {
+            buffer.clear();
+        }
+
+        pos = 0;
+        captured = 0;
+        return false;
 #endif
     }
 

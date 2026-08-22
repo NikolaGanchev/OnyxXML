@@ -278,6 +278,21 @@ TEST_CASE("setInputEncoding throws while a capture is active") {
                         "Cannot change encoding while capture is active");
 }
 
+TEST_CASE("setInputEncoding allows raw lookahead and transcodes it") {
+    std::string text = "caf\xE9 latte";
+    std::stringstream inputStream(text);
+
+    StreamCursor streamCursor(inputStream);
+
+    REQUIRE(streamCursor.peek(3) == '\xE9');
+
+    REQUIRE(streamCursor.setInputEncoding("ISO-8859-1"));
+
+    streamCursor.beginCapture();
+    streamCursor.captureAdvance(5);
+    REQUIRE(streamCursor.getCaptured() == "caf\xC3\xA9");
+}
+
 TEST_CASE(
     "setInputEncoding throws when there is unconsumed decoded lookahead "
     "past pos") {
@@ -286,10 +301,12 @@ TEST_CASE(
 
     StreamCursor streamCursor(inputStream);
 
+    streamCursor.setInputEncoding("ISO-8859-1");
+
     streamCursor.peek(3);
 
     REQUIRE_THROWS_WITH(
-        streamCursor.setInputEncoding("ISO-8859-1"),
+        streamCursor.setInputEncoding("UTF-16LE"),
         "Cannot change encoding with unconsumed decoded lookahead past pos");
 }
 
