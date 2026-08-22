@@ -32,8 +32,7 @@ class StringViewReadBuffer
      */
     StringViewReadBuffer(std::basic_string_view<char_type> input) {
         char* inputBuffer = const_cast<char*>(input.data());
-        std::streambuf::setg(inputBuffer, inputBuffer,
-                             inputBuffer + input.size());
+        Base::setg(inputBuffer, inputBuffer, inputBuffer + input.size());
     }
 
    protected:

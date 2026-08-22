@@ -2118,10 +2118,9 @@ TEST_CASE(
     using namespace onyx::parser;
     std::string_view data = "Read Only";
     impl::StringViewReadBuffer<char> buffer(data);
-    std::ostream stream(&buffer);
 
-    REQUIRE_THROWS_AS(stream.put('X'), std::logic_error);
-    REQUIRE_THROWS_WITH(stream.put('X'),
+    REQUIRE_THROWS_AS(buffer.sputc('X'), std::logic_error);
+    REQUIRE_THROWS_WITH(buffer.sputc('X'),
                         "Trying to write to read only buffer.");
 }
 
@@ -2129,9 +2128,8 @@ TEST_CASE("StringViewReadBuffer throws logic_error on block write (xsputn)") {
     using namespace onyx::parser;
     std::string_view data = "Read Only";
     impl::StringViewReadBuffer<char> buffer(data);
-    std::ostream stream(&buffer);
 
-    REQUIRE_THROWS_AS(stream.write("Write attempt", 13), std::logic_error);
-    REQUIRE_THROWS_WITH(stream.write("Write attempt", 13),
+    REQUIRE_THROWS_AS(buffer.sputc('X'), std::logic_error);
+    REQUIRE_THROWS_WITH(buffer.sputc('X'),
                         "Trying to write to read only buffer.");
 }
