@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include "parse/basic_autodetection_parser_policy.h"
+#include "parse/common_parser_configs.h"
 #include "parse/encoding_controller.h"
 #include "parse/encoding_string_state.h"
 #include "parse/parser.h"
@@ -16,22 +17,6 @@
 namespace onyx::dynamic::parser {
 
 SaxParser::SaxParser(SaxListener& listener) : listener(listener) {}
-
-struct ValidatingConfig {
-    constexpr static bool validate = true;
-    constexpr static bool validateDuplicateAttributes = true;
-    constexpr static bool requireEncoding = false;
-    constexpr static size_t maxAttributeCount =
-        std::numeric_limits<size_t>::max();
-};
-
-struct EncodingAutodetectionConfig {
-    constexpr static bool validate = true;
-    constexpr static bool validateDuplicateAttributes = true;
-    constexpr static bool requireEncoding = true;
-    constexpr static size_t maxAttributeCount =
-        std::numeric_limits<size_t>::max();
-};
 
 void SaxParser::parse(std::string_view input, std::string encoding) {
     struct StringSaxParserPolicy {
@@ -155,32 +140,34 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
         }
     };
 
-struct StringSaxAutodetectionPolicy
-    : BasicAutodetectionParserPolicy<StreamCursor, StreamCursor::StringType,
-                                     std::string, std::vector<std::string>> {
-    EncodingController& ec;
+    struct StringSaxAutodetectionPolicy
+        : BasicAutodetectionParserPolicy<StreamCursor, StreamCursor::StringType,
+                                         std::string,
+                                         std::vector<std::string>> {
+        EncodingController& ec;
 
-    using CursorType = StreamCursor;
-    using StringType = StreamCursor::StringType;
-    using StackType = std::string;
-    using Stack = std::vector<StackType>;
+        using CursorType = StreamCursor;
+        using StringType = StreamCursor::StringType;
+        using StackType = std::string;
+        using Stack = std::vector<StackType>;
 
-    ONYX_INLINE StringType transformText(CursorType::StringType&& text,
-                                         TextTransformationMode ttm) {
-        if (ttm == TextTransformationMode::UPPERCASE) {
-            return text::asciiToUpper(text);
+        ONYX_INLINE StringType transformText(CursorType::StringType&& text,
+                                             TextTransformationMode ttm) {
+            if (ttm == TextTransformationMode::UPPERCASE) {
+                return text::asciiToUpper(text);
+            }
+
+            return std::string(text);
         }
 
-        return std::string(text);
-    }
+        ONYX_INLINE bool foundEncoding(
+            CursorType::StringType&& discoveredEncoding, CursorType& cursor,
+            bool& validateUTF8) {
+            ec.foundEncoding(discoveredEncoding, true, true);
 
-    ONYX_INLINE bool foundEncoding(CursorType::StringType&& discoveredEncoding,
-                                   CursorType& cursor, bool& validateUTF8) {
-        ec.foundEncoding(discoveredEncoding, true, true);
-
-        return false;
-    }
-};
+            return false;
+        }
+    };
 
     EncodingStringState inputState(input);
 

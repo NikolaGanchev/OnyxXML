@@ -17,6 +17,7 @@
 #include "nodes/xml_declaration_node.h"
 #include "paged_arena.h"
 #include "parse/basic_autodetection_parser_policy.h"
+#include "parse/common_parser_configs.h"
 #include "parse/encoding_controller.h"
 #include "parse/encoding_string_state.h"
 #include "parse/helpers.h"
@@ -28,38 +29,6 @@
 #include "text.h"
 
 namespace onyx::dynamic::parser {
-
-struct DryRunConfig {
-    constexpr static bool validate = true;
-    constexpr static bool validateDuplicateAttributes = true;
-    constexpr static bool requireEncoding = false;
-    constexpr static size_t maxAttributeCount =
-        std::numeric_limits<size_t>::max();
-};
-
-struct ValidatingConfig {
-    constexpr static bool validate = true;
-    constexpr static bool validateDuplicateAttributes = true;
-    constexpr static bool requireEncoding = false;
-    constexpr static size_t maxAttributeCount =
-        std::numeric_limits<size_t>::max();
-};
-
-struct NonValidatingConfig {
-    constexpr static bool validate = false;
-    constexpr static bool validateDuplicateAttributes = false;
-    constexpr static bool requireEncoding = false;
-    constexpr static size_t maxAttributeCount =
-        std::numeric_limits<size_t>::max();
-};
-
-struct EncodingAutodetectionConfig {
-    constexpr static bool validate = true;
-    constexpr static bool validateDuplicateAttributes = true;
-    constexpr static bool requireEncoding = true;
-    constexpr static size_t maxAttributeCount =
-        std::numeric_limits<size_t>::max();
-};
 
 std::pair<Arena, EncodingStringState> DomParser::parseDryRun(
     std::string_view input, std::string encoding) {
@@ -160,29 +129,31 @@ std::pair<Arena, EncodingStringState> DomParser::parseDryRun(
         }
     };
 
-struct DomDryRunAutodetectPolicy
-    : BasicAutodetectionParserPolicy<StreamCursor, StreamCursor::StringType,
-                                     std::string, std::vector<std::string>> {
-    EncodingController& ec;
+    struct DomDryRunAutodetectPolicy
+        : BasicAutodetectionParserPolicy<StreamCursor, StreamCursor::StringType,
+                                         std::string,
+                                         std::vector<std::string>> {
+        EncodingController& ec;
 
-    using CursorType = StreamCursor;
-    using StringType = CursorType::StringType;
-    using StackType = std::string;
-    using Stack = std::vector<StackType>;
+        using CursorType = StreamCursor;
+        using StringType = CursorType::StringType;
+        using StackType = std::string;
+        using Stack = std::vector<StackType>;
 
-    ONYX_INLINE StringType transformText(CursorType::StringType&& text,
-                                         TextTransformationMode ttm) {
-        return text;
-    }
+        ONYX_INLINE StringType transformText(CursorType::StringType&& text,
+                                             TextTransformationMode ttm) {
+            return text;
+        }
 
-    ONYX_INLINE bool foundEncoding(CursorType::StringType&& discoveredEncoding,
-                                   CursorType& cursor, bool& validateUTF8) {
-        std::string enc = text::asciiToUpper(discoveredEncoding);
-        ec.foundEncoding(enc, true, true);
+        ONYX_INLINE bool foundEncoding(
+            CursorType::StringType&& discoveredEncoding, CursorType& cursor,
+            bool& validateUTF8) {
+            std::string enc = text::asciiToUpper(discoveredEncoding);
+            ec.foundEncoding(enc, true, true);
 
-        return false;
-    }
-};
+            return false;
+        }
+    };
 
     EncodingStringState inputState(input);
     Arena arena = Arena::Builder().build();
@@ -200,8 +171,8 @@ struct DomDryRunAutodetectPolicy
         }
         skipWhitespace(pos);
 
-        parseBody<DryRunConfig, DomDryRunParserPolicy>(pos, policy,
-                                                       ec.validate);
+        parseBody<ValidatingConfig, DomDryRunParserPolicy>(pos, policy,
+                                                           ec.validate);
 
         arena = std::move(policy.builder.build());
     };
