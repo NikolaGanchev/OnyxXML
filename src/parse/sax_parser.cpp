@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 
+#include "parse/basic_autodetection_parser_policy.h"
 #include "parse/encoding_controller.h"
 #include "parse/encoding_string_state.h"
 #include "parse/parser.h"
@@ -154,91 +155,32 @@ void SaxParser::parse(std::string_view input, std::string encoding) {
         }
     };
 
-    struct StringSaxAutodetectionPolicy {
-        EncodingController& ec;
+struct StringSaxAutodetectionPolicy
+    : BasicAutodetectionParserPolicy<StreamCursor, StreamCursor::StringType,
+                                     std::string, std::vector<std::string>> {
+    EncodingController& ec;
 
-        using CursorType = StreamCursor;
-        using StringType = StreamCursor::StringType;
-        using StackType = std::string;
-        using Stack = std::vector<StackType>;
+    using CursorType = StreamCursor;
+    using StringType = StreamCursor::StringType;
+    using StackType = std::string;
+    using Stack = std::vector<StackType>;
 
-        void throwRequiresDeclarationEncoding() {
-            throw std::logic_error("Received non-declaration encoding event");
+    ONYX_INLINE StringType transformText(CursorType::StringType&& text,
+                                         TextTransformationMode ttm) {
+        if (ttm == TextTransformationMode::UPPERCASE) {
+            return text::asciiToUpper(text);
         }
 
-        ONYX_INLINE void textAction(StringType&& text, Stack& stack,
-                                    CursorType& cursor) {
-            throwRequiresDeclarationEncoding();
-        }
+        return std::string(text);
+    }
 
-        ONYX_INLINE void commentAction(StringType&& commentText, Stack& stack,
-                                       CursorType& cursor) {
-            throwRequiresDeclarationEncoding();
-        }
+    ONYX_INLINE bool foundEncoding(CursorType::StringType&& discoveredEncoding,
+                                   CursorType& cursor, bool& validateUTF8) {
+        ec.foundEncoding(discoveredEncoding, true, true);
 
-        ONYX_INLINE void cdataAction(StringType&& cdataText, Stack& stack,
-                                     CursorType& cursor) {
-            throwRequiresDeclarationEncoding();
-        }
-
-        ONYX_INLINE void instructionAction(StringType&& tagName,
-                                           StringType&& processingInstruction,
-                                           Stack& stack, CursorType& cursor) {
-            throwRequiresDeclarationEncoding();
-        }
-
-        ONYX_INLINE void xmlDeclarationAction(StringType&& version,
-                                              StringType&& encoding,
-                                              bool hasEncoding,
-                                              bool isStandalone,
-                                              bool hasStandalone, Stack& stack,
-                                              CursorType& cursor) {
-            throwRequiresDeclarationEncoding();
-        }
-
-        ONYX_INLINE void doctypeAction(StringType&& doctypeText, Stack& stack,
-                                       CursorType& cursor) {
-            throwRequiresDeclarationEncoding();
-        }
-
-        ONYX_INLINE void openAction(StringType&& tagName, bool isSelfClosing,
-                                    std::vector<StringType>& attributeNames,
-                                    std::vector<StringType>& attributeValues,
-                                    Stack& stack, CursorType& cursor) {
-            throwRequiresDeclarationEncoding();
-        }
-
-        ONYX_INLINE void closeAction(StringType&& tagName, Stack& stack,
-                                     CursorType& cursor) {
-            throwRequiresDeclarationEncoding();
-        }
-
-        ONYX_INLINE void initStack(std::vector<StackType>& stack) {}
-
-        ONYX_INLINE bool equalStackElementToTag(StackType& el,
-                                                CursorType::StringType& tag) {
-            return false;
-        }
-
-        ONYX_INLINE bool isStackRoot(StackType& stackElement) { return false; }
-
-        ONYX_INLINE StringType transformText(CursorType::StringType&& text,
-                                             TextTransformationMode ttm) {
-            if (ttm == TextTransformationMode::UPPERCASE) {
-                return text::asciiToUpper(text);
-            }
-
-            return std::string(text);
-        }
-
-        ONYX_INLINE bool foundEncoding(
-            CursorType::StringType&& discoveredEncoding, CursorType& cursor,
-            bool& validateUTF8) {
-            ec.foundEncoding(discoveredEncoding, true, true);
-
-            return false;
-        }
-    };
+        return false;
+    }
+};
 
     EncodingStringState inputState(input);
 
