@@ -741,6 +741,66 @@ ONYX_INLINE void parseCData(ParseState<Config, Policy>& state,
 }
 
 template <typename Config, typename Policy>
+ONYX_INLINE void parseDoctype(ParseState<Config, Policy>& state,
+                              typename Policy::CursorType& pos, Policy& policy,
+                              bool validateUTF8) {
+    using State = ParseState<Config, Policy>;
+    pos.advance();
+
+    readOrThrow<Config::validate>(pos, "OCTYPE ",
+                                  "Premature end of DOCTYPE section");
+
+    if constexpr (Config::validate) {
+        if (state.foundDoctype) {
+            throw std::invalid_argument(
+                "Multiple Document Type Declarations found");
+        } else {
+            state.foundDoctype = true;
+        }
+        if (!state.firstTag) {
+            throw std::invalid_argument(
+                "Document Type Declaration is only allowed before "
+                "all "
+                "XML elements except the XML declaration");
+        }
+    }
+
+    pos.beginCapture();
+
+    // Warning - some valid DOCTYPE declarations may contain '>'
+    // inside of quotes. Currently, this implementation would fail
+    // on them.
+    readUntilAnyOf<Config::validate>(pos, validateUTF8, '>', '\r');
+    if constexpr (Config::validate) {
+        if (pos.captureCurrent() == '\0') {
+            throw std::invalid_argument("Invalid DOCTYPE without ending");
+        }
+    }
+
+    TextTransformationMode transformationMode = TextTransformationMode::NONE;
+    while (pos.captureCurrent() != '>') {
+        // Always at '\r' here if not at '>'
+        transformationMode = TextTransformationMode::EOL_ONLY;
+        pos.captureAdvance();
+        readUntilAnyOf<Config::validate>(pos, validateUTF8, '>', '\r');
+        if constexpr (Config::validate) {
+            if (pos.captureCurrent() == '\0') {
+                throw std::invalid_argument("Invalid DOCTYPE without ending");
+            }
+        }
+    }
+
+    typename State::CursorStringType doctypeText = pos.getCaptured();
+
+    pos.bringToCapture();
+    pos.advance();
+    policy.doctypeAction(std::move(policy.transformText(std::move(doctypeText),
+                                                        transformationMode)),
+                         state.stack, pos);
+    state.firstTag = false;
+}
+
+template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                            bool validateUTF8 = true)
     /* In GCC 15.1 and older MSVC versions, having
@@ -797,65 +857,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 parseCData<Config>(state, pos, policy, validateUTF8);
                 continue;
             } else if (pos.current() == 'D') {
-                pos.advance();
-
-                readOrThrow<Config::validate>(
-                    pos, "OCTYPE ", "Premature end of DOCTYPE section");
-
-                if constexpr (Config::validate) {
-                    if (state.foundDoctype) {
-                        throw std::invalid_argument(
-                            "Multiple Document Type Declarations found");
-                    } else {
-                        state.foundDoctype = true;
-                    }
-                    if (!state.firstTag) {
-                        throw std::invalid_argument(
-                            "Document Type Declaration is only allowed before "
-                            "all "
-                            "XML elements except the XML declaration");
-                    }
-                }
-
-                pos.beginCapture();
-
-                // Warning - some valid DOCTYPE declarations may contain '>'
-                // inside of quotes. Currently, this implementation would fail
-                // on them.
-                readUntilAnyOf<Config::validate>(pos, validateUTF8, '>', '\r');
-                if constexpr (Config::validate) {
-                    if (pos.captureCurrent() == '\0') {
-                        throw std::invalid_argument(
-                            "Invalid DOCTYPE without ending");
-                    }
-                }
-
-                TextTransformationMode transformationMode =
-                    TextTransformationMode::NONE;
-                while (pos.captureCurrent() != '>') {
-                    // Always at '\r' here if not at '>'
-                    transformationMode = TextTransformationMode::EOL_ONLY;
-                    pos.captureAdvance();
-                    readUntilAnyOf<Config::validate>(pos, validateUTF8, '>',
-                                                     '\r');
-                    if constexpr (Config::validate) {
-                        if (pos.captureCurrent() == '\0') {
-                            throw std::invalid_argument(
-                                "Invalid DOCTYPE without ending");
-                        }
-                    }
-                }
-
-                typename State::CursorStringType doctypeText =
-                    pos.getCaptured();
-
-                pos.bringToCapture();
-                pos.advance();
-                policy.doctypeAction(
-                    std::move(policy.transformText(std::move(doctypeText),
-                                                   transformationMode)),
-                    state.stack, pos);
-                state.firstTag = false;
+                parseDoctype<Config>(state, pos, policy, validateUTF8);
                 continue;
             } else {
                 if constexpr (Config::validate) {
