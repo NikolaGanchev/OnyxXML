@@ -694,6 +694,53 @@ ONYX_INLINE void parseComment(ParseState<Config, Policy>& state,
 }
 
 template <typename Config, typename Policy>
+ONYX_INLINE void parseCData(ParseState<Config, Policy>& state,
+                            typename Policy::CursorType& pos, Policy& policy,
+                            bool validateUTF8) {
+    using State = ParseState<Config, Policy>;
+    pos.advance();
+    readOrThrow<Config::validate>(pos, "CDATA[",
+                                  "Premature end of CDATA section");
+    /* Invariant - right after <![CDATA[ */
+    if constexpr (Config::validate) {
+        if (pos.current() == '\0') {
+            throw std::invalid_argument("Premature end of document");
+        }
+    }
+    pos.beginCapture();
+
+    TextTransformationMode transformationMode = TextTransformationMode::NONE;
+    readUntilAnyOf<Config::validate, false>(pos, validateUTF8, ']', '\r');
+    if constexpr (Config::validate) {
+        if (pos.captureCurrent() == '\0')
+            throw std::invalid_argument("Invalid CDATA without ending");
+    }
+    // Found single ']'
+    // Loop continues until finding ']]>'
+    while (!(pos.captureCurrent() == ']' && pos.capturePeek(1) == ']' &&
+             pos.capturePeek(2) != '\0' && pos.capturePeek(2) == '>')) {
+        if (pos.captureCurrent() == '\r') {
+            transformationMode = TextTransformationMode::EOL_ONLY;
+        }
+        pos.captureAdvance();
+        readUntilAnyOf<Config::validate, false>(pos, validateUTF8, ']', '\r');
+        if constexpr (Config::validate) {
+            if (pos.captureCurrent() == '\0')
+                throw std::invalid_argument("Invalid CDATA without ending");
+        }
+    }
+
+    typename State::CursorStringType cdataText = pos.getCaptured();
+
+    pos.bringToCapture();
+    pos.advance(3);
+    policy.cdataAction(std::move(policy.transformText(std::move(cdataText),
+                                                      transformationMode)),
+                       state.stack, pos);
+    state.firstTag = false;
+}
+
+template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                            bool validateUTF8 = true)
     /* In GCC 15.1 and older MSVC versions, having
@@ -747,54 +794,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 parseComment<Config>(state, pos, policy, validateUTF8);
                 continue;
             } else if (pos.current() == '[') {
-                pos.advance();
-                readOrThrow<Config::validate>(pos, "CDATA[",
-                                              "Premature end of CDATA section");
-                /* Invariant - right after <![CDATA[ */
-                if constexpr (Config::validate) {
-                    if (pos.current() == '\0') {
-                        throw std::invalid_argument(
-                            "Premature end of document");
-                    }
-                }
-                pos.beginCapture();
-
-                TextTransformationMode transformationMode =
-                    TextTransformationMode::NONE;
-                readUntilAnyOf<Config::validate, false>(pos, validateUTF8, ']',
-                                                        '\r');
-                if constexpr (Config::validate) {
-                    if (pos.captureCurrent() == '\0')
-                        throw std::invalid_argument(
-                            "Invalid CDATA without ending");
-                }
-                // Found single ']'
-                // Loop continues until finding ']]>'
-                while (!(
-                    pos.captureCurrent() == ']' && pos.capturePeek(1) == ']' &&
-                    pos.capturePeek(2) != '\0' && pos.capturePeek(2) == '>')) {
-                    if (pos.captureCurrent() == '\r') {
-                        transformationMode = TextTransformationMode::EOL_ONLY;
-                    }
-                    pos.captureAdvance();
-                    readUntilAnyOf<Config::validate, false>(pos, validateUTF8,
-                                                            ']', '\r');
-                    if constexpr (Config::validate) {
-                        if (pos.captureCurrent() == '\0')
-                            throw std::invalid_argument(
-                                "Invalid CDATA without ending");
-                    }
-                }
-
-                typename State::CursorStringType cdataText = pos.getCaptured();
-
-                pos.bringToCapture();
-                pos.advance(3);
-                policy.cdataAction(
-                    std::move(policy.transformText(std::move(cdataText),
-                                                   transformationMode)),
-                    state.stack, pos);
-                state.firstTag = false;
+                parseCData<Config>(state, pos, policy, validateUTF8);
                 continue;
             } else if (pos.current() == 'D') {
                 pos.advance();
