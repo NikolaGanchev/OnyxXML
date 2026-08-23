@@ -231,6 +231,16 @@ struct ParseState {
     std::vector<StackType> stack;
 };
 
+template <typename StringType>
+struct XmlDeclarationParseState {
+    bool hasVersion = false;
+    bool hasEncoding = false;
+    bool hasStandalone = false;
+    StringType version;
+    StringType encoding;
+    StringType standalone;
+};
+
 /**
  * @brief Returns true to continue or false to break
  *
@@ -305,33 +315,13 @@ ONYX_INLINE bool parseText(ParseState<Config, Policy>& state,
     return true;
 }
 
-/**
- * @brief Returns true to continue or false to stop parsing
- *
- */
 template <typename Config, typename Policy>
-ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
-                                     typename Policy::CursorType& pos,
-                                     Policy& policy, bool validateUTF8) {
+ONYX_INLINE void parseXmlDeclarationPseudoAttributes(
+    XmlDeclarationParseState<typename Policy::CursorType::StringType>&
+        xmlDeclarationState,
+    ParseState<Config, Policy>& state, typename Policy::CursorType& pos,
+    Policy& policy, bool validateUTF8) {
     using State = ParseState<Config, Policy>;
-    if constexpr (Config::validate) {
-        if (!state.firstTag) {
-            throw std::invalid_argument(
-                "XML declaration is only allowed at the first "
-                "position in the prologue");
-        }
-        if (state.foundXmlDeclaration) {
-            throw std::invalid_argument("Multiple XML declarations found");
-        } else {
-            state.foundXmlDeclaration = true;
-        }
-    }
-    /* Invariant - right after xml tag */
-    bool hasVersion = false;
-    bool hasEncoding = false;
-    bool hasStandalone = false;
-    typename State::CursorStringType version, encoding, standalone;
-
     /* Walk through all pseudo-attributes in the xml declaration */
     while (pos.current() != '\0' && pos.current() != '?') {
         /* skip whitespace */
@@ -407,31 +397,31 @@ ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
 
         if (attrName == "version") {
             if constexpr (Config::validate) {
-                if (hasVersion) {
+                if (xmlDeclarationState.hasVersion) {
                     throw std::invalid_argument(
                         "XML Declaration 'version' declared more "
                         "than once");
                 }
             }
-            version = val;
-            hasVersion = true;
+            xmlDeclarationState.version = val;
+            xmlDeclarationState.hasVersion = true;
         } else if (attrName == "encoding") {
             if constexpr (Config::validate) {
-                if (hasEncoding) {
+                if (xmlDeclarationState.hasEncoding) {
                     throw std::invalid_argument(
                         "XML Declaration 'encoding' declared more "
                         "than once");
                 }
             }
-            encoding = val;
-            hasEncoding = true;
+            xmlDeclarationState.encoding = val;
+            xmlDeclarationState.hasEncoding = true;
             if constexpr (Config::validate) {
-                if (!hasVersion) {
+                if (!xmlDeclarationState.hasVersion) {
                     throw std::invalid_argument(
                         "XML Declaration cannot declare 'encoding' "
                         "before 'version'");
                 }
-                if (hasStandalone) {
+                if (xmlDeclarationState.hasStandalone) {
                     throw std::invalid_argument(
                         "XML Declaration cannot declare "
                         "'standalone' before 'encoding' when "
@@ -440,16 +430,16 @@ ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
             }
         } else if (attrName == "standalone") {
             if constexpr (Config::validate) {
-                if (hasStandalone) {
+                if (xmlDeclarationState.hasStandalone) {
                     throw std::invalid_argument(
                         "XML Declaration 'standalone' declared "
                         "more than once");
                 }
             }
-            standalone = val;
-            hasStandalone = true;
+            xmlDeclarationState.standalone = val;
+            xmlDeclarationState.hasStandalone = true;
             if constexpr (Config::validate) {
-                if (!hasVersion) {
+                if (!xmlDeclarationState.hasVersion) {
                     throw std::invalid_argument(
                         "XML Declaration cannot declare "
                         "'standalone' "
@@ -464,6 +454,35 @@ ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
             }
         }
     }
+}
+/**
+ * @brief Returns true to continue or false to stop parsing
+ *
+ */
+template <typename Config, typename Policy>
+ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
+                                     typename Policy::CursorType& pos,
+                                     Policy& policy, bool validateUTF8) {
+    using State = ParseState<Config, Policy>;
+    if constexpr (Config::validate) {
+        if (!state.firstTag) {
+            throw std::invalid_argument(
+                "XML declaration is only allowed at the first "
+                "position in the prologue");
+        }
+        if (state.foundXmlDeclaration) {
+            throw std::invalid_argument("Multiple XML declarations found");
+        } else {
+            state.foundXmlDeclaration = true;
+        }
+    }
+
+    XmlDeclarationParseState<typename State::CursorStringType>
+        xmlDeclarationState;
+
+    parseXmlDeclarationPseudoAttributes<Config>(xmlDeclarationState, state, pos,
+                                                policy, validateUTF8);
+
     /* Invariant - pos at ?*/
     if constexpr (Config::validate) {
         if (pos.peek(1) != '>') {
@@ -481,12 +500,13 @@ ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
 
     /* enforce presence and legality */
     if constexpr (Config::validate) {
-        if (!hasVersion) {
+        if (!xmlDeclarationState.hasVersion) {
             throw std::invalid_argument("XML declaration must include version");
         }
     }
     if constexpr (Config::validate) {
-        if (version != "1.0" && version != "1.1") {
+        if (xmlDeclarationState.version != "1.0" &&
+            xmlDeclarationState.version != "1.1") {
             throw std::invalid_argument(
                 "Unsupported XML version, must be '1.0' or "
                 "'1.1'");
@@ -496,18 +516,20 @@ ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
      * NMTOKEN */
     if constexpr (Config::validate) {
         if constexpr (Config::requireEncoding) {
-            if (!hasEncoding) {
+            if (!xmlDeclarationState.hasEncoding) {
                 throw std::invalid_argument(
                     "Required encoding not found in XML "
                     "declaration");
             }
         }
-        if (hasEncoding) {
+        if (xmlDeclarationState.hasEncoding) {
             /* simple check: no spaces, starts with letter */
-            if (encoding.empty() || !isalpha(encoding[0]))
+            if (xmlDeclarationState.encoding.empty() ||
+                !isalpha(xmlDeclarationState.encoding[0]))
                 throw std::invalid_argument(
                     "Invalid encoding in XML declaration");
-            typename State::CursorStringType encodingCopy = encoding;
+            typename State::CursorStringType encodingCopy =
+                xmlDeclarationState.encoding;
             if (!policy.foundEncoding(std::move(policy.transformText(
                                           std::move(encodingCopy),
                                           TextTransformationMode::UPPERCASE)),
@@ -517,11 +539,12 @@ ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
         }
     }
     /* standalone defaults to "no" if not present */
-    if (!hasStandalone) {
-        standalone = "no";
+    if (!xmlDeclarationState.hasStandalone) {
+        xmlDeclarationState.standalone = "no";
     } else {
         if constexpr (Config::validate) {
-            if (standalone != "yes" && standalone != "no") {
+            if (xmlDeclarationState.standalone != "yes" &&
+                xmlDeclarationState.standalone != "no") {
                 throw std::invalid_argument(
                     "Invalid standalone value, must be 'yes' "
                     "or "
@@ -529,15 +552,17 @@ ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
             }
         }
     }
-    bool isStandalone = (standalone[0] == 'y');
-    if (encoding.size() == 0) encoding = "UTF-8";
+    bool isStandalone = (xmlDeclarationState.standalone[0] == 'y');
+    if (xmlDeclarationState.encoding.size() == 0)
+        xmlDeclarationState.encoding = "UTF-8";
 
     policy.xmlDeclarationAction(
-        std::move(policy.transformText(std::move(version),
+        std::move(policy.transformText(std::move(xmlDeclarationState.version),
                                        TextTransformationMode::NONE)),
-        std::move(policy.transformText(std::move(encoding),
+        std::move(policy.transformText(std::move(xmlDeclarationState.encoding),
                                        TextTransformationMode::UPPERCASE)),
-        hasEncoding, isStandalone, hasStandalone, state.stack, pos);
+        xmlDeclarationState.hasEncoding, isStandalone,
+        xmlDeclarationState.hasStandalone, state.stack, pos);
     return true;
 }
 
