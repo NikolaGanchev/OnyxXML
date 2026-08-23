@@ -231,6 +231,80 @@ struct ParseState {
     std::vector<StackType> stack;
 };
 
+/**
+ * @brief Returns true to continue or false to break
+ *
+ */
+template <typename Config, typename Policy>
+ONYX_INLINE bool parseText(ParseState<Config, Policy>& state,
+                           typename Policy::CursorType& pos, Policy& policy,
+                           bool validateUTF8) {
+    using State = ParseState<Config, Policy>;
+    validateRequireDeclaration<Config>(state.foundXmlDeclaration);
+    if constexpr (Config::validate) {
+        if (state.firstTag && !state.foundXmlDeclaration &&
+            !state.foundDoctype) {
+            throw std::invalid_argument(
+                "Top level text forbidden in XML document");
+        }
+    }
+    pos.beginCapture();
+    TextTransformationMode transformationMode = TextTransformationMode::NONE;
+    bool end = false;
+    readUntilAnyOf<Config::validate>(pos, validateUTF8, '\0', '<', '&', '\r');
+    while (pos.captureCurrent() != '<') {
+        if (pos.captureCurrent() == '\0') {
+            // If we find the end of the document, one of the following
+            // must be true:
+            // 1) We are in a tag contents and found the
+            // end of the document. Then, the stack will catch this.
+            //
+            // 2) We are between sibling tags. But, if they have a
+            // common parent, the document cannot end here and the stack
+            // will catch this, since the parent is not closed. Them
+            // being top level siblings is a contradiction since the
+            // second sibling must be after the text, yet there is
+            // nothing after the text.
+            //
+            // 3) The text is before the beginning of the document,
+            // i.e., the first tag. This is malformed XML, due
+            // to the rule of the root element.
+            //
+            // 4) The text is after the last element.
+            // Then, whitespace is explicitly allowed. Since this
+            // segment is not consumed and anything other than
+            // whitespace is an exception, it does not need to be
+            // specially validated or expanded. Thus, it can keep the
+            // simple while loop.
+
+            if constexpr (Config::validate) {
+                while (pos.current() != '\0') {
+                    if (!isWhitespace(pos.current())) {
+                        throw std::invalid_argument(
+                            "Invalid end after tag open");
+                    }
+                    pos.advance();
+                }
+            }
+            end = true;
+            break;
+        }
+        if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\r')
+            transformationMode = TextTransformationMode::TEXT;
+        pos.captureAdvance();
+        readUntilAnyOf<Config::validate>(pos, validateUTF8, '\0', '<', '&',
+                                         '\r');
+    }
+    if (end) return false;
+    typename State::CursorStringType text = pos.getCaptured();
+    pos.bringToCapture();
+    policy.textAction(
+        std::move(policy.transformText(std::move(text), transformationMode)),
+        state.stack, pos);
+
+    return true;
+}
+
 template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                            bool validateUTF8 = true)
@@ -249,72 +323,12 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
         /* Invariant - always at the start of either a tag or a sequence of
          * text */
         if (pos.current() != '<') {
-            validateRequireDeclaration<Config>(state.foundXmlDeclaration);
             // In text
-            if constexpr (Config::validate) {
-                if (state.firstTag && !state.foundXmlDeclaration &&
-                    !state.foundDoctype) {
-                    throw std::invalid_argument(
-                        "Top level text forbidden in XML document");
-                }
+            if (parseText(state, pos, policy, validateUTF8)) {
+                continue;
+            } else {
+                break;
             }
-            pos.beginCapture();
-            TextTransformationMode transformationMode =
-                TextTransformationMode::NONE;
-            bool end = false;
-            readUntilAnyOf<Config::validate>(pos, validateUTF8, '\0', '<', '&',
-                                             '\r');
-            while (pos.captureCurrent() != '<') {
-                if (pos.captureCurrent() == '\0') {
-                    // If we find the end of the document, one of the following
-                    // must be true:
-                    // 1) We are in a tag contents and found the
-                    // end of the document. Then, the stack will catch this.
-                    //
-                    // 2) We are between sibling tags. But, if they have a
-                    // common parent, the document cannot end here and the stack
-                    // will catch this, since the parent is not closed. Them
-                    // being top level siblings is a contradiction since the
-                    // second sibling must be after the text, yet there is
-                    // nothing after the text.
-                    //
-                    // 3) The text is before the beginning of the document,
-                    // i.e., the first tag. This is malformed XML, due
-                    // to the rule of the root element.
-                    //
-                    // 4) The text is after the last element.
-                    // Then, whitespace is explicitly allowed. Since this
-                    // segment is not consumed and anything other than
-                    // whitespace is an exception, it does not need to be
-                    // specially validated or expanded. Thus, it can keep the
-                    // simple while loop.
-
-                    if constexpr (Config::validate) {
-                        while (pos.current() != '\0') {
-                            if (!isWhitespace(pos.current())) {
-                                throw std::invalid_argument(
-                                    "Invalid end after tag open");
-                            }
-                            pos.advance();
-                        }
-                    }
-                    end = true;
-                    break;
-                }
-                if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\r')
-                    transformationMode = TextTransformationMode::TEXT;
-                pos.captureAdvance();
-                readUntilAnyOf<Config::validate>(pos, validateUTF8, '\0', '<',
-                                                 '&', '\r');
-            }
-            if (end) break;
-            typename State::CursorStringType text = pos.getCaptured();
-            pos.bringToCapture();
-            policy.textAction(std::move(policy.transformText(
-                                  std::move(text), transformationMode)),
-                              state.stack, pos);
-
-            continue;
         }
 
         /* Invariant - always in tag name */
