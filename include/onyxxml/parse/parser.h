@@ -242,8 +242,30 @@ struct XmlDeclarationParseState {
 };
 
 /**
- * @brief Returns true to continue or false to break
+ * @brief Parses text until encountering end of document or '<'.
  *
+ * If we find the end of the document, one of the following
+ * must be true:
+ * 1) We are in a tag's contents and found the
+ * end of the document. This is obviously a problem. It will be caught the stack
+ * as an unclosed element.
+ *
+ * 2) We are between sibling tags. But, if they have a
+ * common parent, the document cannot end there and the stack
+ * will catch this, since the parent is not closed. Them
+ * being top level siblings is a contradiction since the
+ * second sibling must be after the text, yet there is
+ * nothing after the text.
+ *
+ * 3) The text is before the beginning of the document,
+ * i.e., the first tag. This is malformed XML, due
+ * to the rule of the root element.
+ *
+ * 4) The text is after the last element.
+ * Then, whitespace is explicitly allowed. Since this
+ * segment is not consumed and anything other than
+ * whitespace is an exception, it does not need to be
+ * specially validated or expanded.
  */
 template <typename Config, typename Policy>
 ONYX_INLINE bool parseText(ParseState<Config, Policy>& state,
@@ -264,29 +286,6 @@ ONYX_INLINE bool parseText(ParseState<Config, Policy>& state,
     readUntilAnyOf<Config::validate>(pos, validateUTF8, '\0', '<', '&', '\r');
     while (pos.captureCurrent() != '<') {
         if (pos.captureCurrent() == '\0') {
-            // If we find the end of the document, one of the following
-            // must be true:
-            // 1) We are in a tag contents and found the
-            // end of the document. Then, the stack will catch this.
-            //
-            // 2) We are between sibling tags. But, if they have a
-            // common parent, the document cannot end here and the stack
-            // will catch this, since the parent is not closed. Them
-            // being top level siblings is a contradiction since the
-            // second sibling must be after the text, yet there is
-            // nothing after the text.
-            //
-            // 3) The text is before the beginning of the document,
-            // i.e., the first tag. This is malformed XML, due
-            // to the rule of the root element.
-            //
-            // 4) The text is after the last element.
-            // Then, whitespace is explicitly allowed. Since this
-            // segment is not consumed and anything other than
-            // whitespace is an exception, it does not need to be
-            // specially validated or expanded. Thus, it can keep the
-            // simple while loop.
-
             if constexpr (Config::validate) {
                 while (pos.current() != '\0') {
                     if (!isWhitespace(pos.current())) {
@@ -315,6 +314,11 @@ ONYX_INLINE bool parseText(ParseState<Config, Policy>& state,
     return true;
 }
 
+/**
+ * @brief Given an attribute name and value, validates the name and order of
+ * the XML declaration pseudo-attributes.
+ *
+ */
 template <typename Config, typename Policy>
 ONYX_INLINE void validateXmlDeclarationPseudoAttributes(
     typename Policy::CursorType::StringType& attrName,
@@ -383,6 +387,10 @@ ONYX_INLINE void validateXmlDeclarationPseudoAttributes(
     }
 }
 
+/**
+ * @brief Given a Cursor just past the '<?xml' part of an XML declaration,
+ * parses the pseudo-attributes and validates their order.
+ */
 template <typename Config, typename Policy>
 ONYX_INLINE void parseXmlDeclarationPseudoAttributes(
     XmlDeclarationParseState<typename Policy::CursorType::StringType>&
@@ -467,8 +475,12 @@ ONYX_INLINE void parseXmlDeclarationPseudoAttributes(
             attrName, val, xmlDeclarationState, state, pos, policy);
     }
 }
+
 /**
- * @brief Returns true to continue or false to stop parsing
+ * @brief Given a Cursor just at the '?' of the '<?' part of an XML
+ * declaration, parses the declaration.
+ *
+ * Returns true to continue or false to stop parsing.
  *
  */
 template <typename Config, typename Policy>
@@ -578,6 +590,11 @@ ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
     return true;
 }
 
+/**
+ * @brief Given a Cursor just at the '?' of the '<?' part of a processing
+ * instruction, parses the instruction.
+ *
+ */
 template <typename Config, typename Policy>
 ONYX_INLINE void parseProcessingInstruction(
     typename Policy::CursorType::StringType& tagName,
@@ -633,7 +650,11 @@ ONYX_INLINE void parseProcessingInstruction(
 }
 
 /**
- * @brief Returns true to continue or false to stop parsing
+ * @brief Given a Cursor just at the '?' of the '<?' part of a processing
+ * instruction like structure (i.e., a processing instruction or the XML
+ * declaration), parses the instruction.
+ *
+ * Returns true to continue or false to stop parsing.
  *
  */
 template <typename Config, typename Policy>
@@ -670,6 +691,11 @@ ONYX_INLINE bool dispatchProcessingInstructionLike(
     return true;
 }
 
+/**
+ * @brief Given a Cursor just at the '!' of the '<!--' part of a comment,
+ * parses the comment.
+ *
+ */
 template <typename Config, typename Policy>
 ONYX_INLINE void parseComment(ParseState<Config, Policy>& state,
                               typename Policy::CursorType& pos, Policy& policy,
@@ -730,6 +756,11 @@ ONYX_INLINE void parseComment(ParseState<Config, Policy>& state,
     state.firstTag = false;
 }
 
+/**
+ * @brief Given a Cursor just at the first '[' of the '<![CDATA[' part of a
+ * CDATA, parses the CDATA.
+ *
+ */
 template <typename Config, typename Policy>
 ONYX_INLINE void parseCData(ParseState<Config, Policy>& state,
                             typename Policy::CursorType& pos, Policy& policy,
@@ -777,6 +808,12 @@ ONYX_INLINE void parseCData(ParseState<Config, Policy>& state,
     state.firstTag = false;
 }
 
+/**
+ * @brief Given a Cursor just at the 'D' of the '<!DOCTYPE' part of a DOCTYPE,
+ * parses the DOCTYPE. Currently not DOCTYPE syntax aware. Many valid DOCTYPE
+ * declarations contain '>'. This function would fail at parsing them.
+ *
+ */
 template <typename Config, typename Policy>
 ONYX_INLINE void parseDoctype(ParseState<Config, Policy>& state,
                               typename Policy::CursorType& pos, Policy& policy,
@@ -837,6 +874,11 @@ ONYX_INLINE void parseDoctype(ParseState<Config, Policy>& state,
     state.firstTag = false;
 }
 
+/**
+ * @brief Given a Cursor just at the first name of an attribute list, parses
+ * the attributes.
+ *
+ */
 template <typename Config, typename Policy>
 ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
                                  typename Policy::CursorType& pos,
@@ -961,6 +1003,10 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
     }
 }
 
+/**
+ * @brief Given a Cursor just after the opening '<' of a tag, parses the tag.
+ *
+ */
 template <typename Config, typename Policy>
 ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
                           typename Policy::CursorType& pos, Policy& policy,
