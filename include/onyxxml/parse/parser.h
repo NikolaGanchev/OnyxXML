@@ -184,8 +184,7 @@ ONYX_INLINE void validateCDataEnding(CursorType& pos) {
 
 template <bool validate, bool shouldValidateCDataEndings = true,
           typename CursorType, typename... Chars>
-ONYX_INLINE void readUntilAnyOf(CursorType& pos, bool validateUTF8,
-                                Chars... targets) {
+void readUntilAnyOf(CursorType& pos, bool validateUTF8, Chars... targets) {
     unsigned char current = pos.captureCurrent();
     if constexpr (validate) {
         if constexpr (shouldValidateCDataEndings) {
@@ -484,9 +483,9 @@ ONYX_INLINE void parseXmlDeclarationPseudoAttributes(
  *
  */
 template <typename Config, typename Policy>
-ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
-                                     typename Policy::CursorType& pos,
-                                     Policy& policy, bool validateUTF8) {
+bool parseXmlDeclaration(ParseState<Config, Policy>& state,
+                         typename Policy::CursorType& pos, Policy& policy,
+                         bool validateUTF8) {
     using State = ParseState<Config, Policy>;
     if constexpr (Config::validate) {
         if (!state.firstTag) {
@@ -596,7 +595,7 @@ ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
  *
  */
 template <typename Config, typename Policy>
-ONYX_INLINE void parseProcessingInstruction(
+void parseProcessingInstruction(
     typename Policy::CursorType::StringType& tagName,
     ParseState<Config, Policy>& state, typename Policy::CursorType& pos,
     Policy& policy, bool validateUTF8) {
@@ -658,9 +657,9 @@ ONYX_INLINE void parseProcessingInstruction(
  *
  */
 template <typename Config, typename Policy>
-ONYX_INLINE bool dispatchProcessingInstructionLike(
-    ParseState<Config, Policy>& state, typename Policy::CursorType& pos,
-    Policy& policy, bool validateUTF8) {
+bool dispatchProcessingInstructionLike(ParseState<Config, Policy>& state,
+                                       typename Policy::CursorType& pos,
+                                       Policy& policy, bool validateUTF8) {
     using State = ParseState<Config, Policy>;
 
     pos.advance();
@@ -697,9 +696,9 @@ ONYX_INLINE bool dispatchProcessingInstructionLike(
  *
  */
 template <typename Config, typename Policy>
-ONYX_INLINE void parseComment(ParseState<Config, Policy>& state,
-                              typename Policy::CursorType& pos, Policy& policy,
-                              bool validateUTF8) {
+void parseComment(ParseState<Config, Policy>& state,
+                  typename Policy::CursorType& pos, Policy& policy,
+                  bool validateUTF8) {
     using State = ParseState<Config, Policy>;
     pos.advance();
     if constexpr (Config::validate) {
@@ -762,9 +761,9 @@ ONYX_INLINE void parseComment(ParseState<Config, Policy>& state,
  *
  */
 template <typename Config, typename Policy>
-ONYX_INLINE void parseCData(ParseState<Config, Policy>& state,
-                            typename Policy::CursorType& pos, Policy& policy,
-                            bool validateUTF8) {
+void parseCData(ParseState<Config, Policy>& state,
+                typename Policy::CursorType& pos, Policy& policy,
+                bool validateUTF8) {
     using State = ParseState<Config, Policy>;
     pos.advance();
     readOrThrow<Config::validate>(pos, "CDATA[",
@@ -815,9 +814,9 @@ ONYX_INLINE void parseCData(ParseState<Config, Policy>& state,
  *
  */
 template <typename Config, typename Policy>
-ONYX_INLINE void parseDoctype(ParseState<Config, Policy>& state,
-                              typename Policy::CursorType& pos, Policy& policy,
-                              bool validateUTF8) {
+void parseDoctype(ParseState<Config, Policy>& state,
+                  typename Policy::CursorType& pos, Policy& policy,
+                  bool validateUTF8) {
     using State = ParseState<Config, Policy>;
     pos.advance();
 
@@ -1104,8 +1103,8 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
 }
 
 template <typename Config, typename Policy>
-ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
-                           bool validateUTF8 = true)
+void parseBody(typename Policy::CursorType& pos, Policy& policy,
+               bool validateUTF8 = true)
     /* In GCC 15.1 and older MSVC versions, having
         `isCursor<CursorType>, isParserPolicy<Policy>`
         with a comma instead of `&&` actually causes an internal compiler error.
