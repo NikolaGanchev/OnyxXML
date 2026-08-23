@@ -218,6 +218,20 @@ ONYX_INLINE void validateRequireDeclaration(bool foundXmlDeclaration) {
 }
 
 template <typename Config, typename Policy>
+struct ParseState {
+    using StringType = typename Policy::StringType;
+    using CursorStringType = typename Policy::CursorType::StringType;
+    using StackType = typename Policy::StackType;
+
+    bool firstTag = true;
+    bool foundXmlDeclaration = false;
+    bool foundDoctype = false;
+    std::vector<StringType> attributeNames;
+    std::vector<StringType> attributeValues;
+    std::vector<StackType> stack;
+};
+
+template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                            bool validateUTF8 = true)
     /* In GCC 15.1 and older MSVC versions, having
@@ -228,25 +242,18 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
     requires(isCursor<typename Policy::CursorType> && isParserPolicy<Policy> &&
              isParserConfig<Config>)
 {
-    using StringType = typename Policy::StringType;
-    using CursorStringType = typename Policy::CursorType::StringType;
-    using StackType = typename Policy::StackType;
-    bool firstTag = true;
-    bool foundXmlDeclaration = false;
-    bool foundDoctype = false;
-    struct EmptyStruct {};
-    std::vector<StringType> attributeNames;
-    std::vector<StringType> attributeValues;
-    std::vector<StackType> stack;
-    policy.initStack(stack);
+    using State = ParseState<Config, Policy>;
+    State state;
+    policy.initStack(state.stack);
     while (pos.current() != '\0') {
         /* Invariant - always at the start of either a tag or a sequence of
          * text */
         if (pos.current() != '<') {
-            validateRequireDeclaration<Config>(foundXmlDeclaration);
+            validateRequireDeclaration<Config>(state.foundXmlDeclaration);
             // In text
             if constexpr (Config::validate) {
-                if (firstTag && !foundXmlDeclaration && !foundDoctype) {
+                if (state.firstTag && !state.foundXmlDeclaration &&
+                    !state.foundDoctype) {
                     throw std::invalid_argument(
                         "Top level text forbidden in XML document");
                 }
@@ -301,11 +308,11 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                                                  '&', '\r');
             }
             if (end) break;
-            CursorStringType text = pos.getCaptured();
+            typename State::CursorStringType text = pos.getCaptured();
             pos.bringToCapture();
             policy.textAction(std::move(policy.transformText(
                                   std::move(text), transformationMode)),
-                              stack, pos);
+                              state.stack, pos);
 
             continue;
         }
@@ -327,7 +334,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     throw std::invalid_argument("Premature end of document");
                 }
             }
-            CursorStringType tagName = readName(pos);
+            typename State::CursorStringType tagName = readName(pos);
             if constexpr (Config::validate) {
                 if (tagName.empty()) {
                     throw std::invalid_argument("Invalid tag name");
@@ -338,23 +345,23 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
             if (tagName.size() == 3 && tolower(tagName[0]) == 'x' &&
                 tolower(tagName[1]) == 'm' && tolower(tagName[2]) == 'l') {
                 if constexpr (Config::validate) {
-                    if (!firstTag) {
+                    if (!state.firstTag) {
                         throw std::invalid_argument(
                             "XML declaration is only allowed at the first "
                             "position in the prologue");
                     }
-                    if (foundXmlDeclaration) {
+                    if (state.foundXmlDeclaration) {
                         throw std::invalid_argument(
                             "Multiple XML declarations found");
                     } else {
-                        foundXmlDeclaration = true;
+                        state.foundXmlDeclaration = true;
                     }
                 }
                 /* Invariant - right after xml tag */
                 bool hasVersion = false;
                 bool hasEncoding = false;
                 bool hasStandalone = false;
-                CursorStringType version, encoding, standalone;
+                typename State::CursorStringType version, encoding, standalone;
 
                 /* Walk through all pseudo-attributes in the xml declaration */
                 while (pos.current() != '\0' && pos.current() != '?') {
@@ -371,7 +378,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     }
 
                     /* read attribute name */
-                    CursorStringType attrName = readName(pos);
+                    typename State::CursorStringType attrName = readName(pos);
                     if constexpr (Config::validate) {
                         if (attrName.empty()) {
                             throw std::invalid_argument(
@@ -425,7 +432,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                                 "value");
                         }
                     }
-                    CursorStringType val = pos.getCaptured();
+                    typename State::CursorStringType val = pos.getCaptured();
                     pos.bringToCapture();
                     pos.advance(); /* skip closing quote */
                     if constexpr (Config::validate) {
@@ -540,7 +547,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                         if (encoding.empty() || !isalpha(encoding[0]))
                             throw std::invalid_argument(
                                 "Invalid encoding in XML declaration");
-                        CursorStringType encodingCopy = encoding;
+                        typename State::CursorStringType encodingCopy =
+                            encoding;
                         if (!policy.foundEncoding(
                                 std::move(policy.transformText(
                                     std::move(encodingCopy),
@@ -572,10 +580,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     std::move(policy.transformText(
                         std::move(encoding),
                         TextTransformationMode::UPPERCASE)),
-                    hasEncoding, isStandalone, hasStandalone, stack, pos);
+                    hasEncoding, isStandalone, hasStandalone, state.stack, pos);
                 continue;
             }
-            validateRequireDeclaration<Config>(foundXmlDeclaration);
+            validateRequireDeclaration<Config>(state.foundXmlDeclaration);
             if constexpr (Config::validate) {
                 if ((pos.current() != ' ' || pos.peek(1) == '\0')) {
                     throw std::invalid_argument(
@@ -611,7 +619,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 }
             }
 
-            CursorStringType processingInstruction = pos.getCaptured();
+            typename State::CursorStringType processingInstruction =
+                pos.getCaptured();
 
             pos.bringToCapture();
             pos.advance(2);
@@ -623,11 +632,11 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 std::move(
                     policy.transformText(std::move(processingInstruction),
                                          TextTransformationMode::EOL_ONLY)),
-                stack, pos);
-            firstTag = false;
+                state.stack, pos);
+            state.firstTag = false;
             continue;
         } else if (pos.current() == '!') {
-            validateRequireDeclaration<Config>(foundXmlDeclaration);
+            validateRequireDeclaration<Config>(state.foundXmlDeclaration);
             pos.advance();
             if constexpr (Config::validate) {
                 if (pos.current() == '\0') {
@@ -679,7 +688,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     }
                 }
 
-                CursorStringType commentText = pos.getCaptured();
+                typename State::CursorStringType commentText =
+                    pos.getCaptured();
 
                 pos.captureAdvance(2);
 
@@ -695,8 +705,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 policy.commentAction(
                     std::move(policy.transformText(std::move(commentText),
                                                    transformationMode)),
-                    stack, pos);
-                firstTag = false;
+                    state.stack, pos);
+                state.firstTag = false;
                 continue;
             } else if (pos.current() == '[') {
                 pos.advance();
@@ -738,15 +748,15 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     }
                 }
 
-                CursorStringType cdataText = pos.getCaptured();
+                typename State::CursorStringType cdataText = pos.getCaptured();
 
                 pos.bringToCapture();
                 pos.advance(3);
                 policy.cdataAction(
                     std::move(policy.transformText(std::move(cdataText),
                                                    transformationMode)),
-                    stack, pos);
-                firstTag = false;
+                    state.stack, pos);
+                state.firstTag = false;
                 continue;
             } else if (pos.current() == 'D') {
                 pos.advance();
@@ -755,13 +765,13 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     pos, "OCTYPE ", "Premature end of DOCTYPE section");
 
                 if constexpr (Config::validate) {
-                    if (foundDoctype) {
+                    if (state.foundDoctype) {
                         throw std::invalid_argument(
                             "Multiple Document Type Declarations found");
                     } else {
-                        foundDoctype = true;
+                        state.foundDoctype = true;
                     }
-                    if (!firstTag) {
+                    if (!state.firstTag) {
                         throw std::invalid_argument(
                             "Document Type Declaration is only allowed before "
                             "all "
@@ -798,15 +808,16 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                     }
                 }
 
-                CursorStringType doctypeText = pos.getCaptured();
+                typename State::CursorStringType doctypeText =
+                    pos.getCaptured();
 
                 pos.bringToCapture();
                 pos.advance();
                 policy.doctypeAction(
                     std::move(policy.transformText(std::move(doctypeText),
                                                    transformationMode)),
-                    stack, pos);
-                firstTag = false;
+                    state.stack, pos);
+                state.firstTag = false;
                 continue;
             } else {
                 if constexpr (Config::validate) {
@@ -814,7 +825,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 }
             }
         }
-        validateRequireDeclaration<Config>(foundXmlDeclaration);
+        validateRequireDeclaration<Config>(state.foundXmlDeclaration);
 
         bool isClosing = (pos.current() == '/');
 
@@ -826,7 +837,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
         }
 
         /* Invariant - pos always at tag name start */
-        CursorStringType tagName = readName(pos);
+        typename State::CursorStringType tagName = readName(pos);
         if constexpr (Config::validate) {
             if (tagName.empty()) {
                 throw std::invalid_argument("Invalid tag name");
@@ -847,7 +858,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
         if (couldHaveAttributes) {
             /* Invariant - either at start of attribute or at > */
             while (pos.current() != '>' && pos.current() != '/') {
-                CursorStringType attributeName = readName(pos);
+                typename State::CursorStringType attributeName = readName(pos);
                 if constexpr (Config::validate) {
                     if (attributeName.empty()) {
                         throw std::invalid_argument("Invalid non-closing tag");
@@ -926,7 +937,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                                                          '\r', '\n', '\t');
                     }
                 }
-                CursorStringType attributeValue = pos.getCaptured();
+                typename State::CursorStringType attributeValue =
+                    pos.getCaptured();
                 pos.bringToCapture();
 
                 /* Invariant - pos is at closing quote */
@@ -945,8 +957,8 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
 
                 if constexpr (Config::validate &&
                               Config::validateDuplicateAttributes) {
-                    for (size_t i = 0; i < attributeNames.size(); i++) {
-                        if (attributeNames[i] == attributeName) {
+                    for (size_t i = 0; i < state.attributeNames.size(); i++) {
+                        if (state.attributeNames[i] == attributeName) {
                             throw std::invalid_argument(
                                 "Duplicate attribute name");
                         }
@@ -954,14 +966,15 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                 }
 
                 if constexpr (Config::validate) {
-                    if (attributeNames.size() >= Config::maxAttributeCount) {
+                    if (state.attributeNames.size() >=
+                        Config::maxAttributeCount) {
                         throw std::invalid_argument(
                             "Tag has too many attributes");
                     }
                 }
-                attributeNames.push_back(std::move(policy.transformText(
+                state.attributeNames.push_back(std::move(policy.transformText(
                     std::move(attributeName), TextTransformationMode::NONE)));
-                attributeValues.push_back(std::move(policy.transformText(
+                state.attributeValues.push_back(std::move(policy.transformText(
                     std::move(attributeValue), transformationMode)));
 
                 /* Continues to either >, /> or another attribute */
@@ -1005,32 +1018,34 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
         /* Invariant - pos always after valid tag close */
         if (!isClosing) {
             /* Invariant - top stack node is always current parent */
-            firstTag = false;
+            state.firstTag = false;
             policy.openAction(
                 std::move(policy.transformText(std::move(tagName),
                                                TextTransformationMode::NONE)),
-                isSelfClosing, attributeNames, attributeValues, stack, pos);
-            attributeNames.resize(0);
-            attributeValues.resize(0);
+                isSelfClosing, state.attributeNames, state.attributeValues,
+                state.stack, pos);
+            state.attributeNames.resize(0);
+            state.attributeValues.resize(0);
         } else {
             /* Invariant - when closing node, the current parent (stack top)
              * must be of the node type */
             if constexpr (Config::validate) {
-                if (!policy.equalStackElementToTag(stack.back(), tagName)) {
+                if (!policy.equalStackElementToTag(state.stack.back(),
+                                                   tagName)) {
                     throw std::invalid_argument("Closing unopened tag");
                 }
-                if (stack.size() == 1) {
+                if (state.stack.size() == 1) {
                     throw std::invalid_argument("Closing non-existent tags");
                 }
             }
             policy.closeAction(
                 std::move(policy.transformText(std::move(tagName),
                                                TextTransformationMode::NONE)),
-                stack, pos);
+                state.stack, pos);
         }
     }
     if constexpr (Config::validate) {
-        if (stack.size() != 1 || !policy.isStackRoot(stack[0])) {
+        if (state.stack.size() != 1 || !policy.isStackRoot(state.stack[0])) {
             throw std::invalid_argument("Unclosed tags left");
         }
     }
