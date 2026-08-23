@@ -801,6 +801,130 @@ ONYX_INLINE void parseDoctype(ParseState<Config, Policy>& state,
 }
 
 template <typename Config, typename Policy>
+ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
+                                 typename Policy::CursorType& pos,
+                                 Policy& policy, bool validateUTF8) {
+    using State = ParseState<Config, Policy>;
+    while (pos.current() != '>' && pos.current() != '/') {
+        typename State::CursorStringType attributeName = readName(pos);
+        if constexpr (Config::validate) {
+            if (attributeName.empty()) {
+                throw std::invalid_argument("Invalid non-closing tag");
+            }
+        }
+        pos.advance(attributeName.size());
+
+        /* Invariant - after attribute name */
+        skipWhitespace(pos);
+
+        /* Invariant - at = or error state */
+        if constexpr (Config::validate) {
+            if ((pos.current() == '\0' || pos.current() != '=')) {
+                throw std::invalid_argument("No = after attribute");
+            }
+        }
+        pos.advance();
+        /* Invariant - after attribute = */
+        skipWhitespace(pos);
+        char attributeQuote = '\0';
+        if constexpr (Config::validate) {
+            if (pos.current() == '\0') {
+                throw std::invalid_argument("Premature end at attribute");
+            }
+        }
+
+        if (pos.current() == '\'' || pos.current() == '\"') {
+            attributeQuote = pos.current();
+        } else {
+            if constexpr (Config::validate) {
+                throw std::invalid_argument(
+                    "No quote (\" or \') after attribute =");
+            }
+        }
+        pos.advance();
+
+        /* Invariant - after attribute value opening quote */
+        pos.beginCapture();
+        TextTransformationMode transformationMode =
+            TextTransformationMode::NONE;
+        if constexpr (Config::validate) {
+            readUntilAnyOf<Config::validate>(pos, validateUTF8, attributeQuote,
+                                             '<', '&', '\r', '\n', '\t');
+        } else {
+            readUntilAnyOf<Config::validate>(pos, validateUTF8, attributeQuote,
+                                             '&', '\r', '\n', '\t');
+        }
+
+        while (pos.captureCurrent() != attributeQuote) {
+            if constexpr (Config::validate) {
+                if (pos.captureCurrent() == '\0') {
+                    throw std::invalid_argument(
+                        "Improperly closed attribute value");
+                }
+                if (pos.captureCurrent() == '<') {
+                    throw std::invalid_argument(
+                        "Cannot have '<' inside of attribute value");
+                }
+            }
+            if (pos.captureCurrent() == '&' || pos.captureCurrent() == '\r' ||
+                pos.captureCurrent() == '\n' || pos.captureCurrent() == '\t')
+                transformationMode = TextTransformationMode::ATTRIBUTE;
+            pos.captureAdvance();
+            if constexpr (Config::validate) {
+                readUntilAnyOf<Config::validate>(pos, validateUTF8,
+                                                 attributeQuote, '<', '&', '\r',
+                                                 '\n', '\t');
+            } else {
+                readUntilAnyOf<Config::validate>(
+                    pos, validateUTF8, attributeQuote, '&', '\r', '\n', '\t');
+            }
+        }
+        typename State::CursorStringType attributeValue = pos.getCaptured();
+        pos.bringToCapture();
+
+        /* Invariant - pos is at closing quote */
+        pos.advance();
+
+        /* Invariant - pos is just after closing quote */
+        /* Allows non-standard <tagName name="value"/> where the
+         * backslash is exactly after the quote */
+        if constexpr (Config::validate) {
+            if (!isWhitespace(pos.current()) && pos.current() != '>' &&
+                pos.current() != '/') {
+                throw std::invalid_argument(
+                    "No whitespace after attribute closing quote");
+            }
+        }
+
+        if constexpr (Config::validate && Config::validateDuplicateAttributes) {
+            for (size_t i = 0; i < state.attributeNames.size(); i++) {
+                if (state.attributeNames[i] == attributeName) {
+                    throw std::invalid_argument("Duplicate attribute name");
+                }
+            }
+        }
+
+        if constexpr (Config::validate) {
+            if (state.attributeNames.size() >= Config::maxAttributeCount) {
+                throw std::invalid_argument("Tag has too many attributes");
+            }
+        }
+        state.attributeNames.push_back(std::move(policy.transformText(
+            std::move(attributeName), TextTransformationMode::NONE)));
+        state.attributeValues.push_back(std::move(policy.transformText(
+            std::move(attributeValue), transformationMode)));
+
+        /* Continues to either >, /> or another attribute */
+        skipWhitespace(pos);
+        if constexpr (Config::validate) {
+            if (pos.current() == '\0') {
+                throw std::invalid_argument("Premature end after attribute");
+            }
+        }
+    }
+}
+
+template <typename Config, typename Policy>
 ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
                           typename Policy::CursorType& pos, Policy& policy,
                           bool validateUTF8) {
@@ -837,129 +961,7 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
 
     if (couldHaveAttributes) {
         /* Invariant - either at start of attribute or at > */
-        while (pos.current() != '>' && pos.current() != '/') {
-            typename State::CursorStringType attributeName = readName(pos);
-            if constexpr (Config::validate) {
-                if (attributeName.empty()) {
-                    throw std::invalid_argument("Invalid non-closing tag");
-                }
-            }
-            pos.advance(attributeName.size());
-
-            /* Invariant - after attribute name */
-            skipWhitespace(pos);
-
-            /* Invariant - at = or error state */
-            if constexpr (Config::validate) {
-                if ((pos.current() == '\0' || pos.current() != '=')) {
-                    throw std::invalid_argument("No = after attribute");
-                }
-            }
-            pos.advance();
-            /* Invariant - after attribute = */
-            skipWhitespace(pos);
-            char attributeQuote = '\0';
-            if constexpr (Config::validate) {
-                if (pos.current() == '\0') {
-                    throw std::invalid_argument("Premature end at attribute");
-                }
-            }
-
-            if (pos.current() == '\'' || pos.current() == '\"') {
-                attributeQuote = pos.current();
-            } else {
-                if constexpr (Config::validate) {
-                    throw std::invalid_argument(
-                        "No quote (\" or \') after attribute =");
-                }
-            }
-            pos.advance();
-
-            /* Invariant - after attribute value opening quote */
-            pos.beginCapture();
-            TextTransformationMode transformationMode =
-                TextTransformationMode::NONE;
-            if constexpr (Config::validate) {
-                readUntilAnyOf<Config::validate>(pos, validateUTF8,
-                                                 attributeQuote, '<', '&', '\r',
-                                                 '\n', '\t');
-            } else {
-                readUntilAnyOf<Config::validate>(
-                    pos, validateUTF8, attributeQuote, '&', '\r', '\n', '\t');
-            }
-
-            while (pos.captureCurrent() != attributeQuote) {
-                if constexpr (Config::validate) {
-                    if (pos.captureCurrent() == '\0') {
-                        throw std::invalid_argument(
-                            "Improperly closed attribute value");
-                    }
-                    if (pos.captureCurrent() == '<') {
-                        throw std::invalid_argument(
-                            "Cannot have '<' inside of attribute value");
-                    }
-                }
-                if (pos.captureCurrent() == '&' ||
-                    pos.captureCurrent() == '\r' ||
-                    pos.captureCurrent() == '\n' ||
-                    pos.captureCurrent() == '\t')
-                    transformationMode = TextTransformationMode::ATTRIBUTE;
-                pos.captureAdvance();
-                if constexpr (Config::validate) {
-                    readUntilAnyOf<Config::validate>(pos, validateUTF8,
-                                                     attributeQuote, '<', '&',
-                                                     '\r', '\n', '\t');
-                } else {
-                    readUntilAnyOf<Config::validate>(pos, validateUTF8,
-                                                     attributeQuote, '&', '\r',
-                                                     '\n', '\t');
-                }
-            }
-            typename State::CursorStringType attributeValue = pos.getCaptured();
-            pos.bringToCapture();
-
-            /* Invariant - pos is at closing quote */
-            pos.advance();
-
-            /* Invariant - pos is just after closing quote */
-            /* Allows non-standard <tagName name="value"/> where the
-             * backslash is exactly after the quote */
-            if constexpr (Config::validate) {
-                if (!isWhitespace(pos.current()) && pos.current() != '>' &&
-                    pos.current() != '/') {
-                    throw std::invalid_argument(
-                        "No whitespace after attribute closing quote");
-                }
-            }
-
-            if constexpr (Config::validate &&
-                          Config::validateDuplicateAttributes) {
-                for (size_t i = 0; i < state.attributeNames.size(); i++) {
-                    if (state.attributeNames[i] == attributeName) {
-                        throw std::invalid_argument("Duplicate attribute name");
-                    }
-                }
-            }
-
-            if constexpr (Config::validate) {
-                if (state.attributeNames.size() >= Config::maxAttributeCount) {
-                    throw std::invalid_argument("Tag has too many attributes");
-                }
-            }
-            state.attributeNames.push_back(std::move(policy.transformText(
-                std::move(attributeName), TextTransformationMode::NONE)));
-            state.attributeValues.push_back(std::move(policy.transformText(
-                std::move(attributeValue), transformationMode)));
-
-            /* Continues to either >, /> or another attribute */
-            skipWhitespace(pos);
-            if constexpr (Config::validate) {
-                if (pos.current() == '\0') {
-                    throw std::invalid_argument(
-                        "Premature end after attribute");
-                }
-            }
-        }
+        parseAttributes<Config>(state, pos, policy, validateUTF8);
     }
 
     bool isSelfClosing = false;
