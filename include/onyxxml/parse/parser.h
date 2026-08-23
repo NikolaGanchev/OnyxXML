@@ -305,6 +305,334 @@ ONYX_INLINE bool parseText(ParseState<Config, Policy>& state,
     return true;
 }
 
+/**
+ * @brief Returns true to continue or false to stop parsing
+ *
+ */
+template <typename Config, typename Policy>
+ONYX_INLINE bool parseXmlDeclaration(ParseState<Config, Policy>& state,
+                                     typename Policy::CursorType& pos,
+                                     Policy& policy, bool validateUTF8) {
+    using State = ParseState<Config, Policy>;
+    if constexpr (Config::validate) {
+        if (!state.firstTag) {
+            throw std::invalid_argument(
+                "XML declaration is only allowed at the first "
+                "position in the prologue");
+        }
+        if (state.foundXmlDeclaration) {
+            throw std::invalid_argument("Multiple XML declarations found");
+        } else {
+            state.foundXmlDeclaration = true;
+        }
+    }
+    /* Invariant - right after xml tag */
+    bool hasVersion = false;
+    bool hasEncoding = false;
+    bool hasStandalone = false;
+    typename State::CursorStringType version, encoding, standalone;
+
+    /* Walk through all pseudo-attributes in the xml declaration */
+    while (pos.current() != '\0' && pos.current() != '?') {
+        /* skip whitespace */
+        skipWhitespace(pos);
+        if (pos.current() == '?') {
+            break;
+        }
+        if constexpr (Config::validate) {
+            if (pos.current() == '\0') {
+                throw std::invalid_argument("Premature end of document");
+            }
+        }
+
+        /* read attribute name */
+        typename State::CursorStringType attrName = readName(pos);
+        if constexpr (Config::validate) {
+            if (attrName.empty()) {
+                throw std::invalid_argument(
+                    "Invalid XML declaration attribute name");
+            }
+        }
+        pos.advance(attrName.size());
+
+        /* expect '=' */
+        skipWhitespace(pos);
+        if constexpr (Config::validate) {
+            if (pos.current() != '=') {
+                throw std::invalid_argument(
+                    "No '=' after XML declaration attribute "
+                    "name");
+            }
+        }
+        pos.advance();
+        if constexpr (Config::validate) {
+            if (pos.current() == '\0') {
+                throw std::invalid_argument("Premature end of document");
+            }
+        }
+
+        skipWhitespace(pos);
+        if constexpr (Config::validate) {
+            if ((pos.current() != '"' && pos.current() != '\'')) {
+                throw std::invalid_argument(
+                    "XML declaration attribute value not "
+                    "quoted");
+            }
+        }
+        char quote = pos.current();
+        pos.advance();
+
+        pos.beginCapture();
+        if constexpr (Config::validate) {
+            readUntilAnyOf<Config::validate>(pos, validateUTF8, '?', quote);
+        } else {
+            readUntilAnyOf<Config::validate>(pos, validateUTF8, quote);
+        }
+        if constexpr (Config::validate) {
+            if ((pos.captureCurrent() == '?' || pos.captureCurrent() == '\0' ||
+                 pos.captureCurrent() != quote)) {
+                throw std::invalid_argument(
+                    "Unterminated XML declaration attribute "
+                    "value");
+            }
+        }
+        typename State::CursorStringType val = pos.getCaptured();
+        pos.bringToCapture();
+        pos.advance(); /* skip closing quote */
+        if constexpr (Config::validate) {
+            if (pos.current() == '\0') {
+                throw std::invalid_argument("Premature end of document");
+            }
+        }
+
+        if (attrName == "version") {
+            if constexpr (Config::validate) {
+                if (hasVersion) {
+                    throw std::invalid_argument(
+                        "XML Declaration 'version' declared more "
+                        "than once");
+                }
+            }
+            version = val;
+            hasVersion = true;
+        } else if (attrName == "encoding") {
+            if constexpr (Config::validate) {
+                if (hasEncoding) {
+                    throw std::invalid_argument(
+                        "XML Declaration 'encoding' declared more "
+                        "than once");
+                }
+            }
+            encoding = val;
+            hasEncoding = true;
+            if constexpr (Config::validate) {
+                if (!hasVersion) {
+                    throw std::invalid_argument(
+                        "XML Declaration cannot declare 'encoding' "
+                        "before 'version'");
+                }
+                if (hasStandalone) {
+                    throw std::invalid_argument(
+                        "XML Declaration cannot declare "
+                        "'standalone' before 'encoding' when "
+                        "'encoding' is present");
+                }
+            }
+        } else if (attrName == "standalone") {
+            if constexpr (Config::validate) {
+                if (hasStandalone) {
+                    throw std::invalid_argument(
+                        "XML Declaration 'standalone' declared "
+                        "more than once");
+                }
+            }
+            standalone = val;
+            hasStandalone = true;
+            if constexpr (Config::validate) {
+                if (!hasVersion) {
+                    throw std::invalid_argument(
+                        "XML Declaration cannot declare "
+                        "'standalone' "
+                        "before 'version'");
+                }
+            }
+        } else {
+            if constexpr (Config::validate) {
+                throw std::invalid_argument(
+                    std::string("Invalid XML declaration attribute '") +
+                    std::string(attrName) + "'");
+            }
+        }
+    }
+    /* Invariant - pos at ?*/
+    if constexpr (Config::validate) {
+        if (pos.peek(1) != '>') {
+            throw std::invalid_argument("Unclosed XML declaration");
+        }
+    }
+    pos.advance();
+    if constexpr (Config::validate) {
+        if (pos.current() == '\0') {
+            throw std::invalid_argument("Premature end of document");
+        }
+    }
+    pos.advance();
+    pos.beginCapture();  // Synchronize capture and current
+
+    /* enforce presence and legality */
+    if constexpr (Config::validate) {
+        if (!hasVersion) {
+            throw std::invalid_argument("XML declaration must include version");
+        }
+    }
+    if constexpr (Config::validate) {
+        if (version != "1.0" && version != "1.1") {
+            throw std::invalid_argument(
+                "Unsupported XML version, must be '1.0' or "
+                "'1.1'");
+        }
+    }
+    /* encoding is optional in 1.0, but if present must match
+     * NMTOKEN */
+    if constexpr (Config::validate) {
+        if constexpr (Config::requireEncoding) {
+            if (!hasEncoding) {
+                throw std::invalid_argument(
+                    "Required encoding not found in XML "
+                    "declaration");
+            }
+        }
+        if (hasEncoding) {
+            /* simple check: no spaces, starts with letter */
+            if (encoding.empty() || !isalpha(encoding[0]))
+                throw std::invalid_argument(
+                    "Invalid encoding in XML declaration");
+            typename State::CursorStringType encodingCopy = encoding;
+            if (!policy.foundEncoding(std::move(policy.transformText(
+                                          std::move(encodingCopy),
+                                          TextTransformationMode::UPPERCASE)),
+                                      pos, validateUTF8)) {
+                return false;
+            }
+        }
+    }
+    /* standalone defaults to "no" if not present */
+    if (!hasStandalone) {
+        standalone = "no";
+    } else {
+        if constexpr (Config::validate) {
+            if (standalone != "yes" && standalone != "no") {
+                throw std::invalid_argument(
+                    "Invalid standalone value, must be 'yes' "
+                    "or "
+                    "'no'");
+            }
+        }
+    }
+    bool isStandalone = (standalone[0] == 'y');
+    if (encoding.size() == 0) encoding = "UTF-8";
+
+    policy.xmlDeclarationAction(
+        std::move(policy.transformText(std::move(version),
+                                       TextTransformationMode::NONE)),
+        std::move(policy.transformText(std::move(encoding),
+                                       TextTransformationMode::UPPERCASE)),
+        hasEncoding, isStandalone, hasStandalone, state.stack, pos);
+    return true;
+}
+
+template <typename Config, typename Policy>
+ONYX_INLINE void parseProcessingInstruction(
+    typename Policy::CursorType::StringType& tagName,
+    ParseState<Config, Policy>& state, typename Policy::CursorType& pos,
+    Policy& policy, bool validateUTF8) {
+    using State = ParseState<Config, Policy>;
+    if constexpr (Config::validate) {
+        if ((pos.current() != ' ' || pos.peek(1) == '\0')) {
+            throw std::invalid_argument(
+                "No space between processing instruction target and "
+                "processing instruction content");
+        }
+    }
+    pos.advance();
+
+    pos.beginCapture();
+
+    TextTransformationMode transformationMode = TextTransformationMode::NONE;
+    readUntilAnyOf<Config::validate>(pos, validateUTF8, '?', '\r');
+
+    if constexpr (Config::validate) {
+        if (pos.captureCurrent() == '\0')
+            throw std::invalid_argument(
+                "Invalid processing instruction without ending");
+    }
+
+    while (!(pos.captureCurrent() == '?' && pos.capturePeek(1) == '>')) {
+        if (pos.captureCurrent() == '\r') {
+            transformationMode = TextTransformationMode::EOL_ONLY;
+        }
+        pos.captureAdvance();
+        readUntilAnyOf<Config::validate>(pos, validateUTF8, '?', '\r');
+        if constexpr (Config::validate) {
+            if (pos.captureCurrent() == '\0')
+                throw std::invalid_argument(
+                    "Invalid processing instruction without ending");
+        }
+    }
+
+    typename State::CursorStringType processingInstruction = pos.getCaptured();
+
+    pos.bringToCapture();
+    pos.advance(2);
+
+    /* Invariant - just after processing instruction end */
+    policy.instructionAction(
+        std::move(policy.transformText(std::move(tagName),
+                                       TextTransformationMode::NONE)),
+        std::move(policy.transformText(std::move(processingInstruction),
+                                       TextTransformationMode::EOL_ONLY)),
+        state.stack, pos);
+    state.firstTag = false;
+}
+
+/**
+ * @brief Returns true to continue or false to stop parsing
+ *
+ */
+template <typename Config, typename Policy>
+ONYX_INLINE bool dispatchProcessingInstructionLike(
+    ParseState<Config, Policy>& state, typename Policy::CursorType& pos,
+    Policy& policy, bool validateUTF8) {
+    using State = ParseState<Config, Policy>;
+
+    pos.advance();
+    if constexpr (Config::validate) {
+        if (pos.current() == '\0') {
+            throw std::invalid_argument("Premature end of document");
+        }
+    }
+    typename State::CursorStringType tagName = readName(pos);
+    if constexpr (Config::validate) {
+        if (tagName.empty()) {
+            throw std::invalid_argument("Invalid tag name");
+        }
+    }
+    pos.advance(tagName.size());
+
+    /* Invariant - after tag name */
+    if (tagName.size() == 3 &&
+        tolower(static_cast<unsigned char>(tagName[0])) == 'x' &&
+        tolower(static_cast<unsigned char>(tagName[1])) == 'm' &&
+        tolower(static_cast<unsigned char>(tagName[2])) == 'l') {
+        return parseXmlDeclaration<Config>(state, pos, policy, validateUTF8);
+    }
+
+    validateRequireDeclaration<Config>(state.foundXmlDeclaration);
+    parseProcessingInstruction<Config>(tagName, state, pos, policy,
+                                       validateUTF8);
+    return true;
+}
+
 template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                            bool validateUTF8 = true)
@@ -324,11 +652,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
          * text */
         if (pos.current() != '<') {
             // In text
-            if (parseText(state, pos, policy, validateUTF8)) {
-                continue;
-            } else {
+            if (!parseText<Config>(state, pos, policy, validateUTF8)) {
                 break;
             }
+            continue;
         }
 
         /* Invariant - always in tag name */
@@ -342,312 +669,10 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
 
         if (pos.current() == '?') {
             /* Invariant - at processing instruction */
-            pos.advance();
-            if constexpr (Config::validate) {
-                if (pos.current() == '\0') {
-                    throw std::invalid_argument("Premature end of document");
-                }
+            if (!dispatchProcessingInstructionLike<Config>(state, pos, policy,
+                                                           validateUTF8)) {
+                return;
             }
-            typename State::CursorStringType tagName = readName(pos);
-            if constexpr (Config::validate) {
-                if (tagName.empty()) {
-                    throw std::invalid_argument("Invalid tag name");
-                }
-            }
-            pos.advance(tagName.size());
-            /* Invariant - after tag name */
-            if (tagName.size() == 3 && tolower(tagName[0]) == 'x' &&
-                tolower(tagName[1]) == 'm' && tolower(tagName[2]) == 'l') {
-                if constexpr (Config::validate) {
-                    if (!state.firstTag) {
-                        throw std::invalid_argument(
-                            "XML declaration is only allowed at the first "
-                            "position in the prologue");
-                    }
-                    if (state.foundXmlDeclaration) {
-                        throw std::invalid_argument(
-                            "Multiple XML declarations found");
-                    } else {
-                        state.foundXmlDeclaration = true;
-                    }
-                }
-                /* Invariant - right after xml tag */
-                bool hasVersion = false;
-                bool hasEncoding = false;
-                bool hasStandalone = false;
-                typename State::CursorStringType version, encoding, standalone;
-
-                /* Walk through all pseudo-attributes in the xml declaration */
-                while (pos.current() != '\0' && pos.current() != '?') {
-                    /* skip whitespace */
-                    skipWhitespace(pos);
-                    if (pos.current() == '?') {
-                        break;
-                    }
-                    if constexpr (Config::validate) {
-                        if (pos.current() == '\0') {
-                            throw std::invalid_argument(
-                                "Premature end of document");
-                        }
-                    }
-
-                    /* read attribute name */
-                    typename State::CursorStringType attrName = readName(pos);
-                    if constexpr (Config::validate) {
-                        if (attrName.empty()) {
-                            throw std::invalid_argument(
-                                "Invalid XML declaration attribute name");
-                        }
-                    }
-                    pos.advance(attrName.size());
-
-                    /* expect '=' */
-                    skipWhitespace(pos);
-                    if constexpr (Config::validate) {
-                        if (pos.current() != '=') {
-                            throw std::invalid_argument(
-                                "No '=' after XML declaration attribute "
-                                "name");
-                        }
-                    }
-                    pos.advance();
-                    if constexpr (Config::validate) {
-                        if (pos.current() == '\0') {
-                            throw std::invalid_argument(
-                                "Premature end of document");
-                        }
-                    }
-
-                    skipWhitespace(pos);
-                    if constexpr (Config::validate) {
-                        if ((pos.current() != '"' && pos.current() != '\'')) {
-                            throw std::invalid_argument(
-                                "XML declaration attribute value not "
-                                "quoted");
-                        }
-                    }
-                    char quote = pos.current();
-                    pos.advance();
-
-                    pos.beginCapture();
-                    if constexpr (Config::validate) {
-                        readUntilAnyOf<Config::validate>(pos, validateUTF8, '?',
-                                                         quote);
-                    } else {
-                        readUntilAnyOf<Config::validate>(pos, validateUTF8,
-                                                         quote);
-                    }
-                    if constexpr (Config::validate) {
-                        if ((pos.captureCurrent() == '?' ||
-                             pos.captureCurrent() == '\0' ||
-                             pos.captureCurrent() != quote)) {
-                            throw std::invalid_argument(
-                                "Unterminated XML declaration attribute "
-                                "value");
-                        }
-                    }
-                    typename State::CursorStringType val = pos.getCaptured();
-                    pos.bringToCapture();
-                    pos.advance(); /* skip closing quote */
-                    if constexpr (Config::validate) {
-                        if (pos.current() == '\0') {
-                            throw std::invalid_argument(
-                                "Premature end of document");
-                        }
-                    }
-
-                    if (attrName == "version") {
-                        if constexpr (Config::validate) {
-                            if (hasVersion) {
-                                throw std::invalid_argument(
-                                    "XML Declaration 'version' declared more "
-                                    "than once");
-                            }
-                        }
-                        version = val;
-                        hasVersion = true;
-                    } else if (attrName == "encoding") {
-                        if constexpr (Config::validate) {
-                            if (hasEncoding) {
-                                throw std::invalid_argument(
-                                    "XML Declaration 'encoding' declared more "
-                                    "than once");
-                            }
-                        }
-                        encoding = val;
-                        hasEncoding = true;
-                        if constexpr (Config::validate) {
-                            if (!hasVersion) {
-                                throw std::invalid_argument(
-                                    "XML Declaration cannot declare 'encoding' "
-                                    "before 'version'");
-                            }
-                            if (hasStandalone) {
-                                throw std::invalid_argument(
-                                    "XML Declaration cannot declare "
-                                    "'standalone' before 'encoding' when "
-                                    "'encoding' is present");
-                            }
-                        }
-                    } else if (attrName == "standalone") {
-                        if constexpr (Config::validate) {
-                            if (hasStandalone) {
-                                throw std::invalid_argument(
-                                    "XML Declaration 'standalone' declared "
-                                    "more than once");
-                            }
-                        }
-                        standalone = val;
-                        hasStandalone = true;
-                        if constexpr (Config::validate) {
-                            if (!hasVersion) {
-                                throw std::invalid_argument(
-                                    "XML Declaration cannot declare "
-                                    "'standalone' "
-                                    "before 'version'");
-                            }
-                        }
-                    } else {
-                        if constexpr (Config::validate) {
-                            throw std::invalid_argument(
-                                std::string(
-                                    "Invalid XML declaration attribute '") +
-                                std::string(attrName) + "'");
-                        }
-                    }
-                }
-                /* Invariant - pos at ?*/
-                if constexpr (Config::validate) {
-                    if (pos.peek(1) != '>') {
-                        throw std::invalid_argument("Unclosed XML declaration");
-                    }
-                }
-                pos.advance();
-                if constexpr (Config::validate) {
-                    if (pos.current() == '\0') {
-                        throw std::invalid_argument(
-                            "Premature end of document");
-                    }
-                }
-                pos.advance();
-                pos.beginCapture();  // Synchronize capture and current
-
-                /* enforce presence and legality */
-                if constexpr (Config::validate) {
-                    if (!hasVersion) {
-                        throw std::invalid_argument(
-                            "XML declaration must include version");
-                    }
-                }
-                if constexpr (Config::validate) {
-                    if (version != "1.0" && version != "1.1") {
-                        throw std::invalid_argument(
-                            "Unsupported XML version, must be '1.0' or "
-                            "'1.1'");
-                    }
-                }
-                /* encoding is optional in 1.0, but if present must match
-                 * NMTOKEN */
-                if constexpr (Config::validate) {
-                    if constexpr (Config::requireEncoding) {
-                        if (!hasEncoding) {
-                            throw std::invalid_argument(
-                                "Required encoding not found in XML "
-                                "declaration");
-                        }
-                    }
-                    if (hasEncoding) {
-                        /* simple check: no spaces, starts with letter */
-                        if (encoding.empty() || !isalpha(encoding[0]))
-                            throw std::invalid_argument(
-                                "Invalid encoding in XML declaration");
-                        typename State::CursorStringType encodingCopy =
-                            encoding;
-                        if (!policy.foundEncoding(
-                                std::move(policy.transformText(
-                                    std::move(encodingCopy),
-                                    TextTransformationMode::UPPERCASE)),
-                                pos, validateUTF8)) {
-                            return;
-                        }
-                    }
-                }
-                /* standalone defaults to "no" if not present */
-                if (!hasStandalone) {
-                    standalone = "no";
-                } else {
-                    if constexpr (Config::validate) {
-                        if (standalone != "yes" && standalone != "no") {
-                            throw std::invalid_argument(
-                                "Invalid standalone value, must be 'yes' "
-                                "or "
-                                "'no'");
-                        }
-                    }
-                }
-                bool isStandalone = (standalone[0] == 'y');
-                if (encoding.size() == 0) encoding = "UTF-8";
-
-                policy.xmlDeclarationAction(
-                    std::move(policy.transformText(
-                        std::move(version), TextTransformationMode::NONE)),
-                    std::move(policy.transformText(
-                        std::move(encoding),
-                        TextTransformationMode::UPPERCASE)),
-                    hasEncoding, isStandalone, hasStandalone, state.stack, pos);
-                continue;
-            }
-            validateRequireDeclaration<Config>(state.foundXmlDeclaration);
-            if constexpr (Config::validate) {
-                if ((pos.current() != ' ' || pos.peek(1) == '\0')) {
-                    throw std::invalid_argument(
-                        "No space between processing instruction target and "
-                        "processing instruction content");
-                }
-            }
-            pos.advance();
-
-            pos.beginCapture();
-
-            TextTransformationMode transformationMode =
-                TextTransformationMode::NONE;
-            readUntilAnyOf<Config::validate>(pos, validateUTF8, '?', '\r');
-
-            if constexpr (Config::validate) {
-                if (pos.captureCurrent() == '\0')
-                    throw std::invalid_argument(
-                        "Invalid processing instruction without ending");
-            }
-
-            while (
-                !(pos.captureCurrent() == '?' && pos.capturePeek(1) == '>')) {
-                if (pos.captureCurrent() == '\r') {
-                    transformationMode = TextTransformationMode::EOL_ONLY;
-                }
-                pos.captureAdvance();
-                readUntilAnyOf<Config::validate>(pos, validateUTF8, '?', '\r');
-                if constexpr (Config::validate) {
-                    if (pos.captureCurrent() == '\0')
-                        throw std::invalid_argument(
-                            "Invalid processing instruction without ending");
-                }
-            }
-
-            typename State::CursorStringType processingInstruction =
-                pos.getCaptured();
-
-            pos.bringToCapture();
-            pos.advance(2);
-
-            /* Invariant - just after processing instruction end */
-            policy.instructionAction(
-                std::move(policy.transformText(std::move(tagName),
-                                               TextTransformationMode::NONE)),
-                std::move(
-                    policy.transformText(std::move(processingInstruction),
-                                         TextTransformationMode::EOL_ONLY)),
-                state.stack, pos);
-            state.firstTag = false;
             continue;
         } else if (pos.current() == '!') {
             validateRequireDeclaration<Config>(state.foundXmlDeclaration);
