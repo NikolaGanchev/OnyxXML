@@ -634,6 +634,66 @@ ONYX_INLINE bool dispatchProcessingInstructionLike(
 }
 
 template <typename Config, typename Policy>
+ONYX_INLINE void parseComment(ParseState<Config, Policy>& state,
+                              typename Policy::CursorType& pos, Policy& policy,
+                              bool validateUTF8) {
+    using State = ParseState<Config, Policy>;
+    pos.advance();
+    if constexpr (Config::validate) {
+        if (pos.current() != '-') {
+            throw std::invalid_argument("Premature end of comment");
+        }
+    }
+    pos.advance();
+    /* Invariant - right after <!-- of comment */
+    if constexpr (Config::validate) {
+        if (pos.current() == '\0') {
+            throw std::invalid_argument("Premature end of document");
+        }
+    }
+    pos.beginCapture();
+
+    TextTransformationMode transformationMode = TextTransformationMode::NONE;
+    readUntilAnyOf<Config::validate>(pos, validateUTF8, '-', '\r');
+    if constexpr (Config::validate) {
+        if (pos.captureCurrent() == '\0') {
+            throw std::invalid_argument("Invalid comment without ending");
+        }
+    }
+    // Found singular '-'
+    // Loop continues until finding '--'
+    while (!(pos.captureCurrent() == '-' && pos.capturePeek(1) == '-')) {
+        if (pos.captureCurrent() == '\r') {
+            transformationMode = TextTransformationMode::EOL_ONLY;
+        }
+        pos.captureAdvance();
+        readUntilAnyOf<Config::validate>(pos, validateUTF8, '-', '\r');
+        if constexpr (Config::validate) {
+            if (pos.captureCurrent() == '\0') {
+                throw std::invalid_argument("Invalid comment without ending");
+            }
+        }
+    }
+
+    typename State::CursorStringType commentText = pos.getCaptured();
+
+    pos.captureAdvance(2);
+
+    /* Invariant - either at error state or at > */
+    if constexpr (Config::validate) {
+        if (pos.captureCurrent() != '>') {
+            throw std::invalid_argument("-- inside of comment not allowed");
+        }
+    }
+    pos.bringToCapture();
+    pos.advance();
+    policy.commentAction(std::move(policy.transformText(std::move(commentText),
+                                                        transformationMode)),
+                         state.stack, pos);
+    state.firstTag = false;
+}
+
+template <typename Config, typename Policy>
 ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
                            bool validateUTF8 = true)
     /* In GCC 15.1 and older MSVC versions, having
@@ -684,68 +744,7 @@ ONYX_INLINE void parseBody(typename Policy::CursorType& pos, Policy& policy,
             }
 
             if (pos.current() == '-') {
-                pos.advance();
-                if constexpr (Config::validate) {
-                    if (pos.current() != '-') {
-                        throw std::invalid_argument("Premature end of comment");
-                    }
-                }
-                pos.advance();
-                /* Invariant - right after <!-- of comment */
-                if constexpr (Config::validate) {
-                    if (pos.current() == '\0') {
-                        throw std::invalid_argument(
-                            "Premature end of document");
-                    }
-                }
-                pos.beginCapture();
-
-                TextTransformationMode transformationMode =
-                    TextTransformationMode::NONE;
-                readUntilAnyOf<Config::validate>(pos, validateUTF8, '-', '\r');
-                if constexpr (Config::validate) {
-                    if (pos.captureCurrent() == '\0') {
-                        throw std::invalid_argument(
-                            "Invalid comment without ending");
-                    }
-                }
-                // Found singular '-'
-                // Loop continues until finding '--'
-                while (!(pos.captureCurrent() == '-' &&
-                         pos.capturePeek(1) == '-')) {
-                    if (pos.captureCurrent() == '\r') {
-                        transformationMode = TextTransformationMode::EOL_ONLY;
-                    }
-                    pos.captureAdvance();
-                    readUntilAnyOf<Config::validate>(pos, validateUTF8, '-',
-                                                     '\r');
-                    if constexpr (Config::validate) {
-                        if (pos.captureCurrent() == '\0') {
-                            throw std::invalid_argument(
-                                "Invalid comment without ending");
-                        }
-                    }
-                }
-
-                typename State::CursorStringType commentText =
-                    pos.getCaptured();
-
-                pos.captureAdvance(2);
-
-                /* Invariant - either at error state or at > */
-                if constexpr (Config::validate) {
-                    if (pos.captureCurrent() != '>') {
-                        throw std::invalid_argument(
-                            "-- inside of comment not allowed");
-                    }
-                }
-                pos.bringToCapture();
-                pos.advance();
-                policy.commentAction(
-                    std::move(policy.transformText(std::move(commentText),
-                                                   transformationMode)),
-                    state.stack, pos);
-                state.firstTag = false;
+                parseComment<Config>(state, pos, policy, validateUTF8);
                 continue;
             } else if (pos.current() == '[') {
                 pos.advance();
