@@ -316,6 +316,74 @@ ONYX_INLINE bool parseText(ParseState<Config, Policy>& state,
 }
 
 template <typename Config, typename Policy>
+ONYX_INLINE void validateXmlDeclarationPseudoAttributes(
+    typename Policy::CursorType::StringType& attrName,
+    typename Policy::CursorType::StringType& val,
+    XmlDeclarationParseState<typename Policy::CursorType::StringType>&
+        xmlDeclarationState,
+    ParseState<Config, Policy>& state, typename Policy::CursorType& pos,
+    Policy& policy) {
+    if (attrName == "version") {
+        if constexpr (Config::validate) {
+            if (xmlDeclarationState.hasVersion) {
+                throw std::invalid_argument(
+                    "XML Declaration 'version' declared more "
+                    "than once");
+            }
+        }
+        xmlDeclarationState.version = val;
+        xmlDeclarationState.hasVersion = true;
+    } else if (attrName == "encoding") {
+        if constexpr (Config::validate) {
+            if (xmlDeclarationState.hasEncoding) {
+                throw std::invalid_argument(
+                    "XML Declaration 'encoding' declared more "
+                    "than once");
+            }
+        }
+        xmlDeclarationState.encoding = val;
+        xmlDeclarationState.hasEncoding = true;
+        if constexpr (Config::validate) {
+            if (!xmlDeclarationState.hasVersion) {
+                throw std::invalid_argument(
+                    "XML Declaration cannot declare 'encoding' "
+                    "before 'version'");
+            }
+            if (xmlDeclarationState.hasStandalone) {
+                throw std::invalid_argument(
+                    "XML Declaration cannot declare "
+                    "'standalone' before 'encoding' when "
+                    "'encoding' is present");
+            }
+        }
+    } else if (attrName == "standalone") {
+        if constexpr (Config::validate) {
+            if (xmlDeclarationState.hasStandalone) {
+                throw std::invalid_argument(
+                    "XML Declaration 'standalone' declared "
+                    "more than once");
+            }
+        }
+        xmlDeclarationState.standalone = val;
+        xmlDeclarationState.hasStandalone = true;
+        if constexpr (Config::validate) {
+            if (!xmlDeclarationState.hasVersion) {
+                throw std::invalid_argument(
+                    "XML Declaration cannot declare "
+                    "'standalone' "
+                    "before 'version'");
+            }
+        }
+    } else {
+        if constexpr (Config::validate) {
+            throw std::invalid_argument(
+                std::string("Invalid XML declaration attribute '") +
+                std::string(attrName) + "'");
+        }
+    }
+}
+
+template <typename Config, typename Policy>
 ONYX_INLINE void parseXmlDeclarationPseudoAttributes(
     XmlDeclarationParseState<typename Policy::CursorType::StringType>&
         xmlDeclarationState,
@@ -395,64 +463,8 @@ ONYX_INLINE void parseXmlDeclarationPseudoAttributes(
             }
         }
 
-        if (attrName == "version") {
-            if constexpr (Config::validate) {
-                if (xmlDeclarationState.hasVersion) {
-                    throw std::invalid_argument(
-                        "XML Declaration 'version' declared more "
-                        "than once");
-                }
-            }
-            xmlDeclarationState.version = val;
-            xmlDeclarationState.hasVersion = true;
-        } else if (attrName == "encoding") {
-            if constexpr (Config::validate) {
-                if (xmlDeclarationState.hasEncoding) {
-                    throw std::invalid_argument(
-                        "XML Declaration 'encoding' declared more "
-                        "than once");
-                }
-            }
-            xmlDeclarationState.encoding = val;
-            xmlDeclarationState.hasEncoding = true;
-            if constexpr (Config::validate) {
-                if (!xmlDeclarationState.hasVersion) {
-                    throw std::invalid_argument(
-                        "XML Declaration cannot declare 'encoding' "
-                        "before 'version'");
-                }
-                if (xmlDeclarationState.hasStandalone) {
-                    throw std::invalid_argument(
-                        "XML Declaration cannot declare "
-                        "'standalone' before 'encoding' when "
-                        "'encoding' is present");
-                }
-            }
-        } else if (attrName == "standalone") {
-            if constexpr (Config::validate) {
-                if (xmlDeclarationState.hasStandalone) {
-                    throw std::invalid_argument(
-                        "XML Declaration 'standalone' declared "
-                        "more than once");
-                }
-            }
-            xmlDeclarationState.standalone = val;
-            xmlDeclarationState.hasStandalone = true;
-            if constexpr (Config::validate) {
-                if (!xmlDeclarationState.hasVersion) {
-                    throw std::invalid_argument(
-                        "XML Declaration cannot declare "
-                        "'standalone' "
-                        "before 'version'");
-                }
-            }
-        } else {
-            if constexpr (Config::validate) {
-                throw std::invalid_argument(
-                    std::string("Invalid XML declaration attribute '") +
-                    std::string(attrName) + "'");
-            }
-        }
+        validateXmlDeclarationPseudoAttributes<Config>(
+            attrName, val, xmlDeclarationState, state, pos, policy);
     }
 }
 /**
