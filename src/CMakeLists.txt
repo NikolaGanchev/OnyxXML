@@ -17,7 +17,6 @@ target_sources(
         "indices/attribute_name_index.cpp"
         "indices/tag_name_index.cpp"
         "indices/tag_index.cpp"
-        "indices/cache_index.cpp"
         "void_node.cpp"
         "nodes/text_node.cpp"
         "nodes/empty_node.cpp"

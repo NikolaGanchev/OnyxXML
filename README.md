@@ -198,31 +198,8 @@ auto products = nameIdx.get();
 REQUIRE(products.size() == 3);
 ```
 
-#### CacheIndex
-
-```cpp
-using namespace onyx::tags;
-using namespace onyx::dynamic;
-
-// Simple XML with attributes
-GenericNode docRoot("document", false,
-    Attribute("lang","en"),
-    Attribute("status","draft"),
-    metadata()
-);
-
-// Cache serialization
-auto cacheIdx = index::createIndex<index::CacheIndex>(&docRoot);
-std::string first = cacheIdx.cache(&GenericNode::serializePretty, "\t", true);
-// second will be the cached result from the previous call
-// The cache will reset if docRoot is edited in any way
-std::string second = cacheIdx.cache(&GenericNode::serializePretty, "\t", true);
-CHECK(first == second);
-```
-
 You may define custom indices by inheriting from `Node::Index` and implementing its methods. Neither storage methods nor query methods are provided by the base class.
-Refer to the built-in Doxygen documentation, [`include/onyxxml/index.h`](include/onyxxml/index.h), [`include/onyxxml/indices`](include/onyxxml/indices), 
-[`src/indices`](src/indices/) for more details and examples.
+Refer to the built-in Doxygen documentation, [`include/onyxxml/index.h`](include/onyxxml/index.h). Refer to [`include/onyxxml/indices`](include/onyxxml/indices) and [`src/indices`](src/indices/) for more details and examples.
 
 ### Compile-Time API
 

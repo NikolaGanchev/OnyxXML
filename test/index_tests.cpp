@@ -592,45 +592,6 @@ TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
     REQUIRE(articleResult.size() == 1);
 }
 
-TEST_CASE("CacheIndex works", "[CacheIndex]") {
-    using namespace onyx::tags;
-    using namespace onyx::dynamic;
-
-    GenericNode obj{"html", false, Attribute("lang", "en"),
-                    Attribute("theme", "dark"), GenericNode("head", false)};
-
-    std::string expected =
-        "<html lang=\"en\" theme=\"dark\">\n\t<head></head>\n</html>";
-
-    index::CacheIndex index = index::createIndex<index::CacheIndex>(&obj);
-
-    std::string serialized =
-        index.cache(&GenericNode::serializePretty, "\t", true);
-
-    CHECK(expected == serialized);
-
-    CHECK(expected ==
-          index.getCached(&GenericNode::serializePretty, "\t", true));
-
-    std::string serialized2 =
-        index.cache(&GenericNode::serializePretty, "\t\t", true);
-
-    CHECK(expected ==
-          index.getCached(&GenericNode::serializePretty, "\t", true));
-    CHECK(expected !=
-          index.getCached(&GenericNode::serializePretty, "\t\t", true));
-
-    auto head = obj.getChildrenByTagName("head");
-
-    REQUIRE(head.size() == 1);
-    obj.removeChild(head[0]);
-
-    CHECK(!(index.isCached(&GenericNode::serializePretty, "\t", true)));
-    CHECK(!(index.isCached(&GenericNode::serializePretty, "\t\t", true)));
-
-    CHECK_THROWS(index.getCached(&GenericNode::serializePretty, "\t", true));
-}
-
 onyx::dynamic::tags::GenericNode getComplexTree() {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
@@ -814,39 +775,6 @@ TEST_CASE("TagIndex is faster than querying the tree", "[TagIndex]") {
     duration<double, std::milli> timeParse = t22 - t21;
 
     REQUIRE(timeIndex.count() < timeParse.count());
-}
-
-TEST_CASE("CacheIndex is faster than querying the tree", "[TagIndex]") {
-    using namespace onyx::tags;
-    using namespace onyx::dynamic;
-    using std::chrono::duration;
-    using std::chrono::duration_cast;
-    using std::chrono::high_resolution_clock;
-    using std::chrono::milliseconds;
-
-    GenericNode obj = getComplexTree();
-
-    REQUIRE(obj.getChildrenCount() > 0);
-
-    index::CacheIndex index = index::createIndex<index::CacheIndex>(&obj);
-
-    std::string result = index.cache(&Node::serializePretty, "\t", true);
-
-    auto t1 = high_resolution_clock::now();
-    result = index.cache(&Node::serializePretty, "\t", true);
-    auto t2 = high_resolution_clock::now();
-
-    duration<double, std::milli> timeIndex = t2 - t1;
-
-    auto t21 = high_resolution_clock::now();
-    std::string result2 = obj.serializePretty("\t", true);
-    auto t22 = high_resolution_clock::now();
-
-    REQUIRE(result2 == result);
-
-    duration<double, std::milli> timeQuery = t22 - t21;
-
-    REQUIRE(timeIndex.count() < timeQuery.count());
 }
 
 TEST_CASE("Index move constructor works", "[Index]") {
