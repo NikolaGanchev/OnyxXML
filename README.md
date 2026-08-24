@@ -19,8 +19,11 @@ OnyxXML is a C++ library designed to streamline XML document construction, parsi
    - [Control Constructs (ForEach, If)](#control-constructs)
    - [Non-Owning Nodes](#non-owning-nodes)
    - [Arena Allocator](#arena-allocator)
-   - [DOM Parser](#dom-parser)
-   - [SAX Parser](#sax-parser)
+   - [Parser](#parser)
+     - [DOM Parser](#dom-parser)
+     - [SAX Parser](#sax-parser)
+     - [Encoding support](#encoding-support)
+     - [Creating a custom frontend](#creating-a-custom-frontend)
    - [GenericNode API](#genericnode-api)
    - [XPath 1.0 Support](#xpath-10-support)
    - [Text Handling](#text-handling)
@@ -307,18 +310,52 @@ container->addChild(entry);
 
 The arena allocator bulk-allocates objects of specified types in contiguous memory, yielding faster allocation and deallocation by releasing all at once when the arena goes out of scope. All nodes held by the Arena are NonOwning.
 
-### DOM Parser
+### Parser
+
+The library provides a non-recursive, fast, configurable, policy-based XML parser backend. 
+
+The parser has a high level of [XML 1.0 Specification](https://www.w3.org/TR/xml/) compliance, including standard-compliant text expansion (newlines and embedded entities), encoding support, implementation for the optional encoding autodetection support (Appendix F of the [XML 1.0 Specification](https://www.w3.org/TR/xml/)), strict validation of UTF-8 content, strict validation of content rules (such as `--` not being allowed on comments, or `]]>` not being allowed outside of CDATA sequences), strict validation of XML declarations. 
+
+The parser can read isolated fragments of XML. This in turn means that by default, it allows documents without a single root. For example:
+```xml
+<tag></tag>
+<another-tag></another-tag>
+```
+The above fragment will be parsed as valid, despite it not being a valid XML Document because it lacks a single root. However, XML declaration order and DOCTYPE order are enforced if available, so this will cause an exception:
+```xml
+<tag></tag>
+<?xml version="1.0"?>
+```
+Furthermore, top level text is not allowed. This in turn means that the fragment:
+```xml
+Text
+<tag></tag>
+```
+will cause an exception, and so would
+```xml
+An XML document
+```
+A configuration option can be added in the future to enforce root presence in documents but is not currently present.
+
+The parser is non-validating as per the XML standard as it does not validate content according to a document's DOCTYPE Declaration. Furthermore, it currently does not parse DTDs at all, which may lead to the rejection of a valid document containing a DOCTYPE Declaration with a syntactically correct '>' character inside of it. Implementing support for parsing DOCTYPE declarations and validating mode is possible in the future and on the [Roadmap](#roadmap).
+
+The parser backend is heavily templated and flexible, which makes it complex to set up. Considering this, for most users the provided frontends ([DOM Parser](#dom-parser) and [SAX Parser](#sax-parser)) are recommended. Both frontends use the underlying backend.
+
+Users that wish to set up a custom frontend should skip to [Creating a custom frontend](#creating-a-custom-frontend).
+
+#### DOM Parser
 
 ```cpp
 #include "dom_parser.h"
 ParseResult document = DomParser::parse(xmlString);
 ```
 
-The DOM Parser is non-recursive, syntax-preserving, and throws detailed exceptions on invalid XML. Per the standard, it is non-validating - meaning it does not validate content according to DTDs. Due to security concerns, it does not parse DTDs at all, nor does it parse or expand user-defined entities. It also has no explicit namespace support. It is otherwise standard compliant, including encoding handling, character reference and entity expansion and newline behavior. The DOM parser currently represents every element as a `GenericNode`. `ParseResult` contains a private Arena and a public `ParseResult::root` Node\*, the root of the underlying non-owning tree. All memory is handled by ParseResult and is released when it goes out of scope.
+The DOM Parser is a frontend implementation of the backend parser that parses a DOM tree from provided XML. 
+The DOM parser currently represents every element as a `GenericNode`. `ParseResult` contains a private Arena and a public `ParseResult::root` Node\*, the root of the underlying non-owning tree. All memory is handled by ParseResult and is released when it goes out of scope.
 
-The DOM Parser supports both reading from a string in memory and streams. Generally, parsing an in memory string is faster. However, streaming does not require the whole document to be loaded in memory. 
+The DOM Parser supports both reading from a string in-memory and streams. Generally, parsing an in-memory string is faster, generally by about a factor of 2. However, streaming does not require the whole document to be loaded in-memory. 
 
-### SAX Parser
+#### SAX Parser
 
 A SAX Parser is also provided. It uses the same underlying parser as the DOM Parser, as well as the same text handling functions and same validation logic. It is used via implementing the `SaxListener` interface and supplying the instance to the SAX Parser on construction.
 ```cpp
@@ -347,6 +384,80 @@ parser.parse(xmlString);
 ```
 
 The SAX Parser is generally slower than the DOM Parser due to the function call overhead. However, it allows massive savings in memory as the full DOM tree is not constructed. Also supports stream parsing.
+
+#### Encoding support
+
+By default, the parser can only parse UTF-8. Support for any other encodings, including the standard mandated UTF-16, requires the usage of `iconv`. 
+To enable `iconv` via CMake, the `OnyxXML_USE_ICONV` option needs to be set, which will use CMake to find `iconv` on the host system. Furthermore, the `ICONV_AVAILABLE` compile definition needs to be defined. Otherwise, any attempt to transcode text at runtime will result in an exception. 
+
+The set of encodings and available conversions is thus defined entirely by the set of encodings and conversions that the local build of `iconv` that CMake finds supports.
+
+All predefined frontends expose the `encoding` argument as an additional optional argument. This means all overloads of `DomParser::parse` and all overloads of `SaxParser::parse`. The encoding argument is interpreted as follows:
+
+- empty (default)
+
+    If the encoding argument is the empty string (`""`), then the encoding is presumed to be UTF-8. The encoding is presumed to be **final**, which in turn means that if an `encoding` pseudo-attribute in the XML Declaration (if available) is set to a contradictory encoding, an exception will be thrown. This includes encodings that are compatible, such as UTF-8 and ASCII. A configuration option may be added in the future to control this behavior. If a document contains a UTF-8 Byte Order Mark (BOM) at the beginning, this configuration will not strip it and will most likely throw an exception.
+
+- "autodetect"
+
+    If the encoding argument is the string `"autodetect"`, then autodetection will follow per Appendix F of the [XML 1.0 Specification](https://www.w3.org/TR/xml/).
+
+    First, an attempt will be made to read the encoding of the document from the beginning 4 bytes, as defined in the specification. If an encoding is extracted from a Byte Order Mark (BOM), that encoding will be treated as final, which is defined as in the previous section and the parsing process will proceed as normal.
+
+    If no Byte Order Mark (BOM) is available, then an attempt will be made to infer the encoding from the first 4 bytes of the document as according to the specification. The attempt is guaranteed to yield a possible encoding *family*, where a family is a set of encodings that the specification details are possible encodings of the document given these 4 starting bytes.
+
+    If the family is inferred, then it is strictly required that the document possess a valid XML Declaration that has an `encoding` pseudo-attribute. If the document does not possess a valid XML Declaration, or the declaration it possesses has not declared an `encoding` pseudo-attribute, an exception will be thrown.
+
+    The value of the `encoding` pseudo-attribute will be the final encoding, as defined in the previous sections. The frontends do not validate whether the encoding that was found belongs to or is compatible with the autodetected encoding family.
+
+    Autodetection uses only the first 4 bytes of the document. It is possible to craft payloads that mimic a wrong BOM or family detection sequence. Due to this, it is important to carefully consider usages of autodetection.
+
+- other (non-empty, non-autodetect string)
+
+    If the encoding argument is any other string that is not `""` and is not `"autodetect"`, it will be interpreted as the encoding of the document. The document will in turn be transcoded from that encoding to UTF-8 using `iconv`. This encoding will be treated as final, as defined in the previous sections.  
+
+Take note that encoding handling behavior is specific to the frontends. The backend parser only consumes UTF-8 and any custom frontends may support or may not support encodings.
+
+#### Creating a custom frontend
+
+The backend parser is defined in [`include/onyxxml/parse/parser.h`](include/onyxxml/parse/parser.h). It is broken into a variety of documented functions that parse individual elements of an XML document such as text, comments, tags, attributes, XML Declarations, DOCTYPE Declarations, CDATA sequences. While these functions can be used, we mostly care for `parseBody` which acts as a dispatcher for them.
+
+`parseBody` requires the following to start:
+
+- Config
+
+    A Config is a struct for configuration of the parser which satisfies the [`isParserConfig`](include/onyxxml/parse/is_parser_config.h) concept.
+
+    Common configs are defined in [`include/onyxxml/parse/common_parser_configs.h`](include/onyxxml/parse/common_parser_configs.h).
+
+    This argument is strictly passed as a typename.
+
+- Cursor
+
+    An instance of a Cursor is the source the parser will read from. A Cursor is any class (or struct) which satisfies the [`isCursor`](include/onyxxml/parse/is_cursor.h) concept.
+
+- Policy
+
+    An instance of a Policy is how the parser backend communicates with the outer world. As it parses, the parses dispatches events via the Policy methods, not unlike a SAX parser. The Policy chooses how to handle them. The Policy also provides to the cursor the types it requires, and offers methods for certain string related transformation. 
+    
+    For example, it is responsibility of the policy to correctly transform text per accordance with the specification via the `Policy::transformText` method, which the parser calls with an appropriate [`TextTransformationMode`](include/onyxxml/parse/text_transformation_mode.h). The functions `text::expandEntitiesAndNormalizeEol`, `text::expandText`, `text::expandAttributeValue` and `text::expandEOLOnly` defined in [`include/onyxxml/text.h`](include/onyxxml/text.h) are compliant and may be used.
+
+    A Policy is any class (or struct) which satisfies the [`isParserPolicy`](include/onyxxml/parse/is_parser_policy.h) concept.
+
+    The structs [`BaseParserPolicy`](include/onyxxml/parse/base_parser_policy.h) and [`BasicAutodetectionParserPolicy`](include/onyxxml/parse/basic_autodetection_parser_policy.h) may be used via CRTP.
+
+- bool validateUTF8
+
+    This bool is strictly runtime and indicates whether the parser backend should validate UTF-8 or not. If the source has been or is being transcoded, the transcoding layer may (and in the case of `iconv`, will) do validation, which removes the need for a second validation. 
+
+Furthermore, if encoding support is desired, one may use the [`EncodingController`](include/onyxxml/parse/encoding_controller.h) class to simplify the complex state control for the different autodetection modes. More is specified in the documentation of [`EncodingController`](include/onyxxml/parse/encoding_controller.h).
+
+In the end, a valid call to `parseBody` will look something like this:
+```cpp
+parseBody<ParseConfig>(pos, policy, validateUTF8);
+```
+
+Further examples can be read in [`dom_parser.cpp`](src/parse/dom_parser.cpp) and [`sax_parser.cpp`](src/parse/sax_parser.cpp).
 
 ### GenericNode API
 
@@ -385,9 +496,9 @@ OnyxXML includes a fully custom XPath 1.0 engine. The engine uses a custom pipel
 
 XML Namespaces are not currently supported by the XPath engine. The engine also does NOT explicitly handle UTF-8 content, especially in string functions.
 
-Not all functions are supported. In particular, `name`, `local-name` and `lang` are not supported yet. `id` is implement in a specification-compliant manner and returns the empty string, as the library does not support DTDs. However, this may be unexpected behavior for some users.
+Not all functions are supported. In particular, `name`, `local-name` and `lang` are not supported yet. `id` is implemented in a specification-compliant manner and returns the empty string, as the library does not support DTDs. However, this may be unexpected behavior for some users.
 
-The pipeline should correctly execute valid XPath queries, but it is not guaranteed to reject all invalid ones. It has been reasonably tested against many wrong queries with missing brackets/parenthesis, invalid names, wrong syntax structure, but does not validate the complete XPath 1.0 grammar. In general, an invalid query will either be rejected or successfully complete with a reasonably expected result given the query. Queries can be rejected at different stages, such as the Lexer, Parser, Compiler or at execution. This means that an `XPathQuery` object may be constructed successfully using an invalid query, but fail at execution.
+The pipeline should correctly execute valid XPath queries, but it is not guaranteed to reject all invalid ones. It has been reasonably tested against many wrong queries with missing brackets/parenthesis, invalid names, wrong syntax structure, but does not validate the complete XPath 1.0 grammar. This is because it currently lacks a semantic analysis step, which will likely be built in the future. In general, an invalid query will either be rejected or successfully complete with a reasonably expected result given the query. Queries can be rejected at different stages, such as the Lexer, Parser, Compiler or at execution. This means that an `XPathQuery` object may be constructed successfully using an invalid query, but fail at execution.
 
 Outside of these constraints, the engine follows the XPath 1.0 specification as closely as possible.
 
@@ -445,5 +556,7 @@ OnyxXML is distributed under the Apache License 2.0. See [LICENSE](LICENSE) fo
 
 ## Roadmap
 
-- Runtime and compile-time schema validation
-- Sanitization
+- Namespaces
+- Semantic analyzer for XPath
+- DOCTYPE Declaration support
+- Testing with the [`W3C XML Conformance Test Suites`](https://www.w3.org/XML/Test/)
