@@ -13,6 +13,9 @@ OnyxXML is a C++ library designed to streamline XML document construction, parsi
 5. [Usage Examples](#usage-examples)
    - [Dynamic API](#dynamic-api)
    - [Indexing API](#indexing-api)
+     - [AttributeNameIndex](#attributenameindex)
+     - [TagIndex](#tagindex)
+     - [TagNameIndex](#tagnameindex)
    - [Compile-Time API](#compile-time-api)
    - [Hybrid API](#hybrid-api)
    - [Placeholders](#placeholders)
@@ -139,7 +142,7 @@ This example builds a product catalog at runtime using tag helpers generated fro
 
 ### Indexing API
 
-OnyxXML provides four built-in index types for efficient tree queries and caching. You can also extend the indexing API to define custom indices.
+OnyxXML provides three built-in index types for efficient tree queries and caching. You can also extend the indexing API to define custom indices. For more information on creating a custom index, refer to [the index header](include/onyxxml/index.h).
 
 #### AttributeNameIndex
 
