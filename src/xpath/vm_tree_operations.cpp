@@ -94,28 +94,32 @@ bool isAncestor(Node* node, Node* desc) {
 void VirtualMachine::collectDescendants(Node* current, AXIS axis,
                                         const std::string& test,
                                         std::vector<Node*>& result) {
-    Node* child1 = current->getLastChild();
-    while (child1 != nullptr) {
-        child1->iterativeProcessor(
-            [&current, axis, &test, &result, this](Node* child) -> void {
-                if (nodeMatchesTest(child, axis, test)) {
-                    result.push_back(child);
+    Node* child = current->getLastChild();
+    if (!child) return;
+    Node* original = child;
+    do {
+        child->iterativeProcessor(
+            [&current, axis, &test, &result, this](Node* child1) -> void {
+                if (nodeMatchesTest(child1, axis, test)) {
+                    result.push_back(child1);
                 }
             });
-        child1 = child1->getPrevSibling();
-    }
+        child = child->getPrevSibling();
+    } while (child != original);
 }
 
 void VirtualMachine::collectChildren(Node* current, AXIS axis,
                                      const std::string& test,
                                      std::vector<Node*>& result) {
     Node* child = current->getFirstChild();
-    while (child) {
+    if (!child) return;
+    Node* original = child;
+    do {
         if (nodeMatchesTest(child, axis, test)) {
             result.push_back(child);
         }
         child = child->getNextSibling();
-    }
+    } while (child != original);
 }
 
 void VirtualMachine::collectParent(Node* current, AXIS axis,
@@ -152,24 +156,26 @@ void VirtualMachine::collectFollowingSiblings(Node* current, AXIS axis,
                                               const std::string& test,
                                               std::vector<Node*>& result) {
     Node* sibling = current->getNextSibling();
-    while (sibling) {
+    Node* original = sibling;
+    do {
         if (nodeMatchesTest(sibling, axis, test)) {
             result.push_back(sibling);
         }
         sibling = sibling->getNextSibling();
-    }
+    } while (sibling != original);
 }
 
 void VirtualMachine::collectPrecedingSiblings(Node* current, AXIS axis,
                                               const std::string& test,
                                               std::vector<Node*>& result) {
     Node* sibling = current->getPrevSibling();
-    while (sibling) {
+    Node* original = sibling;
+    do {
         if (nodeMatchesTest(sibling, axis, test)) {
             result.push_back(sibling);
         }
         sibling = sibling->getPrevSibling();
-    }
+    } while (sibling != original);
 }
 
 void VirtualMachine::collectPreceding(Node* current, AXIS axis,

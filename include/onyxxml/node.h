@@ -85,6 +85,10 @@ inline constexpr NonOwningNodeTag NonOwning{};
  * nodes cannot be mixed. Nodes cannot be copied or copy assigned. Moves are
  * allowed.
  *
+ * Siblings are presented as a circular linked list where the next sibling of
+ * the last child is the first child and the previous sibling of the first child
+ * is the last child.
+ *
  */
 class Node {
     friend parser::DomParser;
@@ -209,12 +213,6 @@ class Node {
      *
      */
     Node* firstChild;
-
-    /**
-     * @brief The last child
-     *
-     */
-    Node* lastChild;
 
     /**
      * @brief The previous sibling
@@ -905,14 +903,16 @@ class Node {
     const Node* getLastChild() const;
 
     /**
-     * @brief Get a const reference to the previous sibling
+     * @brief Get a const reference to the previous sibling. Wraps around a
+     * circular list.
      *
      * @return const Node*
      */
     const Node* getPrevSibling() const;
 
     /**
-     * @brief Get a const reference to the next sibling
+     * @brief Get a const reference to the next sibling. Wraps around a circular
+     * list.
      *
      * @return const Node*
      */
@@ -933,14 +933,15 @@ class Node {
     Node* getLastChild();
 
     /**
-     * @brief Get a reference to the previous sibling
+     * @brief Get a reference to the previous sibling. Wraps around a circular
+     * list.
      *
      * @return Node*
      */
     Node* getPrevSibling();
 
     /**
-     * @brief Get a reference to the next sibling
+     * @brief Get a reference to the next sibling. Wraps around a circular list.
      *
      * @return Node*
      */
@@ -982,9 +983,8 @@ onyx::dynamic::Node::Node(Args&&... args)
     requires(onyx::dynamic::isValidNodeConstructorType<Args> && ...)
     : attributes{},
       firstChild{nullptr},
-      lastChild{nullptr},
-      prevSibling{nullptr},
-      nextSibling{nullptr},
+      prevSibling{this},
+      nextSibling{this},
       parent{nullptr},
       indices{},
       _isOwning(true) {

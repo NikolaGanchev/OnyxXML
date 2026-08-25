@@ -16,10 +16,12 @@ void If::specialSerialize(std::vector<Node::SerializationNode>& stack,
                           std::ostringstream& result) const {
     stack.pop_back();
     const Node* current = this->getLastChild();
-    while (current != nullptr) {
+    if (!current) return;
+    const Node* original = current;
+    do {
         stack.emplace_back(SerializationNode{current, false});
         current = current->getPrevSibling();
-    }
+    } while (current != original);
 }
 
 void If::specialSerializePretty(std::vector<Node::SerializationNode>& stack,
