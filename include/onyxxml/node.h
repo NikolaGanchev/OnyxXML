@@ -1164,14 +1164,8 @@ void onyx::dynamic::Node::iterativeProcessor(Function process) {
 
         s.pop_back();
 
-        if (obj->firstChild) {
-            Node* current = obj->firstChild->prevSibling;
-            Node* original = current;
-            do {
-                s.push_back(current);
-                current = current->prevSibling;
-            } while (current != original);
-        }
+        obj->iterateDirectChildrenReverse(
+            [&s](Node* child) { s.push_back(child); });
     }
 }
 
@@ -1181,15 +1175,8 @@ std::vector<onyx::dynamic::Node*> onyx::dynamic::Node::iterativeChildrenParse(
     std::vector<Node*> s;
     std::vector<Node*> result;
 
-    Node* current = this->firstChild;
-    if (current) {
-        current = this->firstChild->prevSibling;
-        Node* original = current;
-        do {
-            s.push_back(current);
-            current = current->prevSibling;
-        } while (current != original);
-    }
+    this->iterateDirectChildrenReverse(
+        [&s](const Node* child) { s.push_back(const_cast<Node*>(child)); });
 
     while (!s.empty()) {
         Node* obj = s.back();
@@ -1200,15 +1187,8 @@ std::vector<onyx::dynamic::Node*> onyx::dynamic::Node::iterativeChildrenParse(
 
         s.pop_back();
 
-        current = obj->firstChild;
-        if (current) {
-            current = obj->firstChild->prevSibling;
-            Node* original = current;
-            do {
-                s.push_back(current);
-                current = current->prevSibling;
-            } while (current != original);
-        }
+        obj->iterateDirectChildrenReverse(
+            [&s](Node* child) { s.push_back(child); });
     }
 
     return result;

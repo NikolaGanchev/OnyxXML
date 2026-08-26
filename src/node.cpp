@@ -240,14 +240,8 @@ std::vector<Node*> Node::getChildren() const {
 size_t Node::getChildrenCount() const {
     size_t count = 0;
 
-    Node* current = this->firstChild;
-    Node* original = current;
-    if (current) {
-        do {
-            count++;
-            current = current->nextSibling;
-        } while (current != original);
-    }
+    this->iterateDirectChildrenReverse(
+        [&count](const Node* current) { count++; });
 
     return count;
 }
@@ -528,20 +522,14 @@ size_t Node::depth() const {
         }
 
         if (!(obj->isVoid())) {
-            Node* current = obj->firstChild;
-            Node* original = current;
-            if (current != nullptr) {
+            if (obj->firstChild != nullptr) {
                 depth++;
                 if (depth > maxDepth) {
                     maxDepth = depth;
                 }
                 s.emplace_back(nullptr);
-                current = obj->firstChild->prevSibling;
-                original = current;
-                do {
-                    s.emplace_back(current);
-                    current = current->prevSibling;
-                } while (current != original);
+                obj->iterateDirectChildrenReverse(
+                    [&s](const Node* child) { s.emplace_back(child); });
             }
         }
     }
@@ -560,14 +548,9 @@ size_t Node::leafCount() const {
         s.pop_back();
 
         if (!(obj->isVoid())) {
-            Node* current = obj->firstChild;
-            if (current != nullptr) {
-                current = obj->firstChild->prevSibling;
-                Node* original = current;
-                do {
-                    s.emplace_back(current);
-                    current = current->prevSibling;
-                } while (current != original);
+            if (obj->firstChild != nullptr) {
+                obj->iterateDirectChildrenReverse(
+                    [&s](const Node* current) { s.emplace_back(current); });
             } else {
                 leaves++;
             }
@@ -683,15 +666,12 @@ std::string Node::serialize() const {
         }
 
         if (!(obj->isVoid())) {
-            Node* current = obj->firstChild;
-            if (current != nullptr) {
-                current = obj->firstChild->prevSibling;
-                Node* original = current;
+            if (obj->firstChild != nullptr) {
                 result << ">";
-                do {
+
+                obj->iterateDirectChildrenReverse([&s](const Node* current) {
                     s.emplace_back(SerializationNode{current, false});
-                    current = current->prevSibling;
-                } while (current != original);
+                });
             } else {
                 result << "></" << tagName << ">";
                 s.pop_back();
@@ -777,17 +757,14 @@ std::string Node::serializePretty(const std::string& indentationSequence,
         }
 
         if (!(obj->isVoid())) {
-            Node* current = obj->firstChild;
-            if (current != nullptr) {
-                current = obj->firstChild->prevSibling;
-                Node* original = current;
+            if (obj->firstChild != nullptr) {
                 result << ">\n";
                 s.emplace_back(SerializationNode{nullptr, false});
                 indentation += indentationSequence;
-                do {
+
+                obj->iterateDirectChildrenReverse([&s](const Node* current) {
                     s.emplace_back(SerializationNode{current, false});
-                    current = current->prevSibling;
-                } while (current != original);
+                });
             } else {
                 result << "></" << tagName << ">\n";
                 s.pop_back();

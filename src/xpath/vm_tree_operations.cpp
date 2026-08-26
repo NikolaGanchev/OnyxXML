@@ -94,18 +94,15 @@ bool isAncestor(Node* node, Node* desc) {
 void VirtualMachine::collectDescendants(Node* current, AXIS axis,
                                         const std::string& test,
                                         std::vector<Node*>& result) {
-    Node* child = current->getLastChild();
-    if (!child) return;
-    Node* original = child;
-    do {
-        child->iterativeProcessor(
-            [&current, axis, &test, &result, this](Node* child1) -> void {
-                if (nodeMatchesTest(child1, axis, test)) {
-                    result.push_back(child1);
-                }
-            });
-        child = child->getPrevSibling();
-    } while (child != original);
+    current->iterateDirectChildrenReverse(
+        [&current, axis, &test, &result, this](Node* child) {
+            child->iterativeProcessor(
+                [&current, axis, &test, &result, this](Node* child1) -> void {
+                    if (nodeMatchesTest(child1, axis, test)) {
+                        result.push_back(child1);
+                    }
+                });
+        });
 }
 
 void VirtualMachine::collectChildren(Node* current, AXIS axis,

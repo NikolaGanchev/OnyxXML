@@ -17,13 +17,9 @@ std::unique_ptr<Node> ForEach::shallowCopy() const {
 void ForEach::specialSerialize(std::vector<Node::SerializationNode>& stack,
                                std::ostringstream& result) const {
     stack.pop_back();
-    const Node* current = this->getLastChild();
-    if (!current) return;
-    const Node* original = current;
-    do {
+    this->iterateDirectChildrenReverse([&stack](const Node* current) {
         stack.emplace_back(SerializationNode{current, false});
-        current = current->getPrevSibling();
-    } while (current != original);
+    });
 }
 
 void ForEach::specialSerializePretty(
