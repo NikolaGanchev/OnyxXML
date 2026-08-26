@@ -74,6 +74,30 @@ concept isValidNodeChild =
     std::same_as<T, std::unique_ptr<Node>> || std::same_as<T, Node*> ||
     std::derived_from<std::decay_t<T>, Node>;
 
+/**
+ * @brief Checks if the Function can be called using a non-const Node pointer
+ * and return ReturnType
+ *
+ * @tparam Function
+ * @tparam ReturnType
+ */
+template <typename Function, typename ReturnType = void>
+concept isNodeCallback = requires(Function f, Node* node) {
+    { f(node) } -> std::same_as<ReturnType>;
+};
+
+/**
+ * @brief Checks if the Function can be called using a const Node pointer
+ * and return ReturnType
+ *
+ * @tparam Function
+ * @tparam ReturnType
+ */
+template <typename Function, typename ReturnType = void>
+concept isConstNodeCallback = requires(Function f, const Node* node) {
+    { f(node) } -> std::same_as<ReturnType>;
+};
+
 struct NonOwningNodeTag {};
 inline constexpr NonOwningNodeTag NonOwning{};
 
@@ -966,6 +990,30 @@ class Node {
     template <typename Function>
     void iterativeProcessor(Function process);
 
+    /**
+     * @brief Invokes the process callback over all the children of the Node in
+     * forward order.
+     *
+     * @tparam Function
+     * @param process The process function. The function must declare a singular
+     * Node* argument.
+     */
+    template <typename Function>
+    void iterateDirectChildren(Function process)
+        requires(isNodeCallback<Function>);
+
+    /**
+     * @brief Invokes the process callback over all the children of the Node in
+     * forward order.
+     *
+     * @tparam Function
+     * @param process The process function. The function must declare a singular
+     * const Node* argument.
+     */
+    template <typename Function>
+    void iterateDirectChildren(Function process) const
+        requires(isConstNodeCallback<Function>);
+
     enum class XPathType {
         ROOT,
         ELEMENT,
@@ -1139,4 +1187,36 @@ std::vector<onyx::dynamic::Node*> onyx::dynamic::Node::iterativeChildrenParse(
     }
 
     return result;
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterateDirectChildren(Function process)
+    requires(isNodeCallback<Function>)
+{
+    Node* current = this->firstChild;
+    Node* original = current;
+    Node* copy;
+    if (current) {
+        do {
+            copy = current->nextSibling;
+            process(current);
+            current = copy;
+        } while (current != original);
+    }
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterateDirectChildren(Function process) const
+    requires(isConstNodeCallback<Function>)
+{
+    const Node* current = this->firstChild;
+    const Node* original = current;
+    Node* copy;
+    if (current) {
+        do {
+            copy = current->nextSibling;
+            process(current);
+            current = copy;
+        } while (current != original);
+    }
 }
