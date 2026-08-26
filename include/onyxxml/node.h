@@ -1,4 +1,5 @@
 #pragma once
+#include <concepts>
 #include <cstring>
 #include <forward_list>
 #include <functional>
@@ -64,7 +65,7 @@ template <typename T>
 concept isAttribute = std::same_as<T, Attribute>;
 
 /**
- * @brief  Checks if the type T can be used to call Node::addChild(), i.e., if T
+ * @brief Checks if the type T can be used to call Node::addChild(), i.e., if T
  * is a subclass of Node or std::unique_ptr<Node>.
  *
  * @tparam T
@@ -1014,6 +1015,30 @@ class Node {
     void iterateDirectChildren(Function process) const
         requires(isConstNodeCallback<Function>);
 
+    /**
+     * @brief Invokes the process callback over all the children of the Node in
+     * reverse order.
+     *
+     * @tparam Function
+     * @param process The process function. The function must declare a singular
+     * Node* argument.
+     */
+    template <typename Function>
+    void iterateDirectChildrenReverse(Function process)
+        requires(isNodeCallback<Function>);
+
+    /**
+     * @brief Invokes the process callback over all the children of the Node in
+     * reverse order.
+     *
+     * @tparam Function
+     * @param process The process function. The function must declare a singular
+     * const Node* argument.
+     */
+    template <typename Function>
+    void iterateDirectChildrenReverse(Function process) const
+        requires(isConstNodeCallback<Function>);
+
     enum class XPathType {
         ROOT,
         ELEMENT,
@@ -1215,6 +1240,42 @@ void onyx::dynamic::Node::iterateDirectChildren(Function process) const
     if (current) {
         do {
             copy = current->nextSibling;
+            process(current);
+            current = copy;
+        } while (current != original);
+    }
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterateDirectChildrenReverse(Function process)
+    requires(isNodeCallback<Function>)
+{
+    Node* current = this->firstChild;
+    if (!current) return;
+    current = this->firstChild->prevSibling;
+    Node* original = current;
+    Node* copy;
+    if (current) {
+        do {
+            copy = current->prevSibling;
+            process(current);
+            current = copy;
+        } while (current != original);
+    }
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterateDirectChildrenReverse(Function process) const
+    requires(isConstNodeCallback<Function>)
+{
+    const Node* current = this->firstChild;
+    if (!current) return;
+    current = this->firstChild->prevSibling;
+    const Node* original = current;
+    Node* copy;
+    if (current) {
+        do {
+            copy = current->prevSibling;
             process(current);
             current = copy;
         } while (current != original);
