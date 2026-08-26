@@ -111,15 +111,11 @@ void VirtualMachine::collectDescendants(Node* current, AXIS axis,
 void VirtualMachine::collectChildren(Node* current, AXIS axis,
                                      const std::string& test,
                                      std::vector<Node*>& result) {
-    Node* child = current->getFirstChild();
-    if (!child) return;
-    Node* original = child;
-    do {
+    current->iterateDirectChildren([&axis, &test, &result, this](Node* child) {
         if (nodeMatchesTest(child, axis, test)) {
             result.push_back(child);
         }
-        child = child->getNextSibling();
-    } while (child != original);
+    });
 }
 
 void VirtualMachine::collectParent(Node* current, AXIS axis,

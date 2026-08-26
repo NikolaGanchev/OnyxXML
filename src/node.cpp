@@ -47,13 +47,7 @@ Node::Node(Node&& other) noexcept
     other.nextSibling = nullptr;
     this->takeOverIndices(other);
 
-    Node* current = this->firstChild;
-    if (!current) return;
-    Node* original = current;
-    do {
-        current->parent = this;
-        current = current->nextSibling;
-    } while (current != original);
+    this->iterateDirectChildren([this](Node* child) { child->parent = this; });
 }
 
 Node::Node(std::vector<Attribute> attributes,
@@ -123,13 +117,7 @@ Node& Node::operator=(Node&& other) noexcept {
     this->parent = other.parent;
     other.parent = nullptr;
 
-    Node* current = this->firstChild;
-    if (!current) return *this;
-    Node* original = current;
-    do {
-        current->parent = this;
-        current = current->nextSibling;
-    } while (current != original);
+    this->iterateDirectChildren([this](Node* child) { child->parent = this; });
 
     return *this;
 }
@@ -154,15 +142,7 @@ void Node::processConstructorAttribute(Attribute&& attribute) {
 }
 
 void Node::processConstructorObjectMoveCleanup() {
-    Node* current = this->firstChild;
-    Node* original = current;
-    if (!current) return;
-    do {
-        Node* copy = current;
-        current = current->nextSibling;
-
-        delete copy;
-    } while (current != original);
+    this->iterateDirectChildren([](Node* child) { delete child; });
 }
 
 void Node::destroy() {
@@ -184,32 +164,16 @@ void Node::destroy() {
         index->invalidate();
     };
 
-    Node* current = this->firstChild;
-    Node* original = current;
-    if (current) {
-        do {
-            current->parent = nullptr;
-            current = current->nextSibling;
-        } while (current != original);
-    }
+    this->iterateDirectChildren([](Node* child) { child->parent = nullptr; });
 
     if (this->_isOwning) {
-        Node* original = this->firstChild;
-        while (this->firstChild) {
-            Node* child = this->firstChild;
-
-            this->firstChild = child->nextSibling;
-
+        this->iterateDirectChildren([](Node* child) {
             child->parent = nullptr;
             child->prevSibling = nullptr;
             child->nextSibling = nullptr;
 
             delete child;
-
-            if (original == this->firstChild) {
-                break;
-            }
-        }
+        });
     }
 
     if (this->parent && !this->parent->_isOwning) {
@@ -267,14 +231,8 @@ Node* Node::addChild(Node* child) { return addChild(NodeHandle(child, false)); }
 std::vector<Node*> Node::getChildren() const {
     std::vector<Node*> res;
 
-    Node* current = this->firstChild;
-    Node* original = current;
-    if (current) {
-        do {
-            res.push_back(current);
-            current = current->nextSibling;
-        } while (current != original);
-    }
+    this->iterateDirectChildren(
+        [&res](const Node* child) { res.push_back(const_cast<Node*>(child)); });
 
     return res;
 }
@@ -461,16 +419,11 @@ std::unique_ptr<Node> Node::deepCopy() const {
         const Node* obj = node.obj;
 
         if (!(obj->isVoid())) {
-            Node* current = obj->firstChild;
-            if (current) {
-                Node* original = current;
-                do {
-                    std::unique_ptr<Node> child = current->shallowCopy();
-                    s.emplace_back(ParseNode{current, child.get()});
-                    node.copy->addChild(std::move(child));
-                    current = current->nextSibling;
-                } while (current != original);
-            }
+            obj->iterateDirectChildren([&s, &node](const Node* current) {
+                std::unique_ptr<Node> child = current->shallowCopy();
+                s.emplace_back(ParseNode{current, child.get()});
+                node.copy->addChild(std::move(child));
+            });
         }
     }
     return root;
