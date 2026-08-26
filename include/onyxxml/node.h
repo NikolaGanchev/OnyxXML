@@ -959,9 +959,11 @@ class Node {
      * @brief Invokes the process callback over this and all its children.
      * Parses iteratively.
      *
-     * @param process The process function
+     * @param process The process function. The function must declare a singular
+     * Node* argument.
      */
-    void iterativeProcessor(const std::function<void(Node*)>& process);
+    template <typename Function>
+    void iterativeProcessor(Function process);
 
     enum class XPathType {
         ROOT,
@@ -1073,4 +1075,28 @@ onyx::dynamic::NodeHandle onyx::dynamic::Node::replaceChild(
 
     childToReplace->parent->addChild(std::move(newChild));
     return childToReplace->parent->removeChild(childToReplace);
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterativeProcessor(Function process) {
+    std::vector<Node*> s;
+
+    s.push_back(this);
+
+    while (!s.empty()) {
+        Node* obj = s.back();
+
+        process(obj);
+
+        s.pop_back();
+
+        if (obj->firstChild) {
+            Node* current = obj->firstChild->prevSibling;
+            Node* original = current;
+            do {
+                s.push_back(current);
+                current = current->prevSibling;
+            } while (current != original);
+        }
+    }
 }

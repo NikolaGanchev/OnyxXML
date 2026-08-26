@@ -364,29 +364,6 @@ void Node::updateAndPropagateUp(IndexPropagationMessage message) {
     this->propagateIndexUpdateUp(this, message);
 }
 
-void Node::iterativeProcessor(const std::function<void(Node*)>& process) {
-    std::vector<Node*> s;
-
-    s.push_back(this);
-
-    while (!s.empty()) {
-        Node* obj = s.back();
-
-        process(obj);
-
-        s.pop_back();
-
-        if (obj->firstChild) {
-            Node* current = obj->firstChild->prevSibling;
-            Node* original = current;
-            do {
-                s.push_back(current);
-                current = current->prevSibling;
-            } while (current != original);
-        }
-    }
-}
-
 bool Node::isInTree() const { return this->parent != nullptr; }
 
 Node* Node::getParentNode() const { return this->parent; }
