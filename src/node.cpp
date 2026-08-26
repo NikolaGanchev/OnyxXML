@@ -368,44 +368,6 @@ bool Node::isInTree() const { return this->parent != nullptr; }
 
 Node* Node::getParentNode() const { return this->parent; }
 
-std::vector<Node*> Node::iterativeChildrenParse(
-    const std::function<bool(Node*)>& condition) const {
-    std::vector<Node*> s;
-    std::vector<Node*> result;
-
-    Node* current = this->firstChild;
-    if (current) {
-        current = this->firstChild->prevSibling;
-        Node* original = current;
-        do {
-            s.push_back(current);
-            current = current->prevSibling;
-        } while (current != original);
-    }
-
-    while (!s.empty()) {
-        Node* obj = s.back();
-
-        if (condition(obj)) {
-            result.push_back(obj);
-        }
-
-        s.pop_back();
-
-        current = obj->firstChild;
-        if (current) {
-            current = obj->firstChild->prevSibling;
-            Node* original = current;
-            do {
-                s.push_back(current);
-                current = current->prevSibling;
-            } while (current != original);
-        }
-    }
-
-    return result;
-}
-
 std::vector<Node*> Node::getChildrenByAttribute(
     const std::string& attribute, const std::string& value) const {
     return iterativeChildrenParse(([&attribute, &value](Node* obj) -> bool {

@@ -187,12 +187,13 @@ class Node {
      * @brief Parses over all children of this and constructs a vector including
      * only those that satisfy the condition function.
      *
-     * @param condition A function which returns true if the given child should
-     * be included in the return vector and false if not
+     * @param condition A function which takes a singular Node* argument returns
+     * true if the given child should be included in the return vector and false
+     * if not
      * @return std::vector<Node*>
      */
-    std::vector<Node*> iterativeChildrenParse(
-        const std::function<bool(Node*)>& condition) const;
+    template <typename Function>
+    std::vector<Node*> iterativeChildrenParse(Function condition) const;
 
     /**
      * @brief Attach the child to the back of the linked list. Does not update
@@ -1099,4 +1100,43 @@ void onyx::dynamic::Node::iterativeProcessor(Function process) {
             } while (current != original);
         }
     }
+}
+
+template <typename Function>
+std::vector<onyx::dynamic::Node*> onyx::dynamic::Node::iterativeChildrenParse(
+    Function condition) const {
+    std::vector<Node*> s;
+    std::vector<Node*> result;
+
+    Node* current = this->firstChild;
+    if (current) {
+        current = this->firstChild->prevSibling;
+        Node* original = current;
+        do {
+            s.push_back(current);
+            current = current->prevSibling;
+        } while (current != original);
+    }
+
+    while (!s.empty()) {
+        Node* obj = s.back();
+
+        if (condition(obj)) {
+            result.push_back(obj);
+        }
+
+        s.pop_back();
+
+        current = obj->firstChild;
+        if (current) {
+            current = obj->firstChild->prevSibling;
+            Node* original = current;
+            do {
+                s.push_back(current);
+                current = current->prevSibling;
+            } while (current != original);
+        }
+    }
+
+    return result;
 }
