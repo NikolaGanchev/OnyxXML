@@ -33,8 +33,8 @@ Node::Node(Node&& other) noexcept
     : attributes{std::move(other.attributes)},
       firstChild{other.firstChild},
       indices{std::move(other.indices)},
+      flags{other.flags},
       parent{other.parent} {
-    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(other.isOwning());
     if (other.nextSibling == &other) {
         this->prevSibling = this;
         this->nextSibling = this;
@@ -99,6 +99,7 @@ Node& Node::operator=(Node&& other) noexcept {
     this->destroy();
     this->attributes = std::move(other.attributes);
     this->firstChild = other.firstChild;
+    this->flags = other.flags;
 
     if (other.nextSibling == &other) {
         this->prevSibling = this;
