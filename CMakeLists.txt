@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project documentation" ON)
 option(OnyxXML_USE_ICONV "Enable Iconv support" OFF)
+option(OnyxXML_COVERAGE "Enable coverage reporting" OFF)
 
 
 if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -139,6 +140,15 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
+if(OnyxXML_COVERAGE)
+    target_compile_options(OnyxXML PRIVATE --coverage)
+    target_link_options(OnyxXML PRIVATE --coverage)
+    
+    if(TARGET OnyxXML_unit-tests)
+        target_compile_options(OnyxXML_unit-tests PRIVATE --coverage)
+        target_link_options(OnyxXML_unit-tests PRIVATE --coverage)
+    endif()
+endif()
 
 if(ENABLE_DOCUMENTATION)
     message(STATUS "Documentation building is enabled")
