@@ -1,5 +1,7 @@
 #pragma once
+#include <climits>
 #include <concepts>
+#include <cstdint>
 #include <cstring>
 #include <forward_list>
 #include <functional>
@@ -263,6 +265,18 @@ class Node {
      *
      */
     Node* parent;
+
+    /**
+     * @brief The type used for the internal flag variable
+     *
+     */
+    using FlagType = uint8_t;
+
+    /**
+     * @brief The internal flags field
+     *
+     */
+    FlagType flags = 0;
 
     /**
      * @brief Whether this Node is owning. An owning Node must release the
@@ -1051,6 +1065,31 @@ class Node {
     };
 
     virtual XPathType getXPathType() const;
+
+   protected:
+    /**
+     * @brief Returns the size of the FlagType in bits
+     * Only works when CHAR_BIT == 8
+     *
+     * @return consteval
+     */
+    static consteval std::size_t maxFlagBits();
+
+    /**
+     * @brief Get the value of a flag
+     *
+     */
+    template <std::size_t Bit>
+    bool getFlag() const
+        requires(Bit < maxFlagBits());
+
+    /**
+     * @brief Set the value of a flag
+     *
+     */
+    template <std::size_t Bit>
+    void setFlag(bool value)
+        requires(Bit < maxFlagBits());
 };
 }  // namespace onyx::dynamic
 
@@ -1259,5 +1298,28 @@ void onyx::dynamic::Node::iterateDirectChildrenReverse(Function process) const
             process(current);
             current = copy;
         } while (current != original);
+    }
+}
+
+consteval std::size_t onyx::dynamic::Node::maxFlagBits() {
+    static_assert(CHAR_BIT == 8, "Flags requires 8-bit bytes.");
+    return sizeof(FlagType) * 8;
+}
+
+template <std::size_t Bit>
+bool onyx::dynamic::Node::getFlag() const
+    requires(Bit < maxFlagBits())
+{
+    return (flags & (1 << Bit)) != 0;
+}
+
+template <std::size_t Bit>
+void onyx::dynamic::Node::setFlag(bool value)
+    requires(Bit < maxFlagBits())
+{
+    if (value) {
+        flags |= (1 << Bit);
+    } else {
+        flags &= ~(1 << Bit);
     }
 }
