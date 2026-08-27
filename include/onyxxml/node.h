@@ -279,14 +279,6 @@ class Node {
     FlagType flags = 0;
 
     /**
-     * @brief Whether this Node is owning. An owning Node must release the
-     * memory of its children upon destruction. Owning Nodes can only contain
-     * owning children. Non-owning Nodes can only contain non-owning children.
-     *
-     */
-    bool _isOwning;
-
-    /**
      * @brief A recursive constructor argument move processor. Takes an argument
      * and delegates to either @ref processConstructorAttribute(Attribute&&) or
      * processConstructorObjectMove(T&&).
@@ -1072,9 +1064,28 @@ class Node {
      *
      * @return consteval
      */
-    static consteval std::size_t maxFlagBits();
-   protected:
+    static consteval std::size_t maxFlagBits() {
+        static_assert(CHAR_BIT == 8, "Flags requires 8-bit bytes.");
+        return sizeof(FlagType) * 8;
+    }
 
+    /**
+     * @brief Contains the bit indices this class claims ownership over
+     *
+     */
+    enum FlagBitIndices : std::size_t {
+        /**
+         * @brief Whether this Node is owning. An owning Node must release the
+         * memory of its children upon destruction. Owning Nodes can only
+         * contain owning children. Non-owning Nodes can only contain non-owning
+         * children.
+         *
+         */
+        BIT_IS_OWNING = 0,
+        NEXT_BIT
+    };
+
+   protected:
     /**
      * @brief Get the value of a flag
      *
@@ -1091,6 +1102,9 @@ class Node {
     void setFlag(bool value)
         requires(Bit < maxFlagBits());
 };
+
+static_assert(Node::FlagBitIndices::NEXT_BIT <= Node::maxFlagBits(),
+              "Node flags bit overflow");
 }  // namespace onyx::dynamic
 
 template <typename... Args>
@@ -1101,8 +1115,8 @@ onyx::dynamic::Node::Node(Args&&... args)
       prevSibling{this},
       nextSibling{this},
       parent{nullptr},
-      indices{},
-      _isOwning(true) {
+      indices{} {
+    setFlag<FlagBitIndices::BIT_IS_OWNING>(true);
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
@@ -1128,7 +1142,7 @@ onyx::dynamic::Node* onyx::dynamic::Node::addChild(T&& newChild)
             "Attempted to add child to " + getTagName() +
             "  that is already a child of another Object.");
     }
-    if (newChild._isOwning != this->_isOwning) {
+    if (newChild.isOwning() != this->isOwning()) {
         throw std::runtime_error("Attempted to add child to " + getTagName() +
                                  " with different owning mode.");
     }
@@ -1156,7 +1170,7 @@ void onyx::dynamic::Node::processConstructorObjectMove(T&& child)
             "Attempted to construct Node with a child that is already a child "
             "of another Node.");
     }
-    if (child._isOwning != this->_isOwning) {
+    if (child.isOwning() != this->isOwning()) {
         processConstructorObjectMoveCleanup();
         throw std::runtime_error(
             "Attempted to add child to Node with different owning mode.");
@@ -1299,11 +1313,6 @@ void onyx::dynamic::Node::iterateDirectChildrenReverse(Function process) const
             current = copy;
         } while (current != original);
     }
-}
-
-consteval std::size_t onyx::dynamic::Node::maxFlagBits() {
-    static_assert(CHAR_BIT == 8, "Flags requires 8-bit bytes.");
-    return sizeof(FlagType) * 8;
 }
 
 template <std::size_t Bit>

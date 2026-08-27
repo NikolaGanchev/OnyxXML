@@ -15,8 +15,9 @@ Node::Node()
       prevSibling{this},
       nextSibling{this},
       indices{},
-      parent{nullptr},
-      _isOwning(true) {}
+      parent{nullptr} {
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(true);
+}
 
 Node::Node(NonOwningNodeTag)
     : attributes{},
@@ -24,15 +25,16 @@ Node::Node(NonOwningNodeTag)
       prevSibling{this},
       nextSibling{this},
       indices{},
-      parent{nullptr},
-      _isOwning(false) {}
+      parent{nullptr} {
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(false);
+}
 
 Node::Node(Node&& other) noexcept
     : attributes{std::move(other.attributes)},
       firstChild{other.firstChild},
       indices{std::move(other.indices)},
-      parent{other.parent},
-      _isOwning(other._isOwning) {
+      parent{other.parent} {
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(other.isOwning());
     if (other.nextSibling == &other) {
         this->prevSibling = this;
         this->nextSibling = this;
@@ -57,10 +59,10 @@ Node::Node(std::vector<Attribute> attributes,
       firstChild{nullptr},
       prevSibling{this},
       nextSibling{this},
-      parent{nullptr},
-      _isOwning(true) {
+      parent{nullptr} {
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(true);
     for (auto& child : children) {
-        if (child.owning() != this->_isOwning) {
+        if (child.owning() != this->isOwning()) {
             throw std::invalid_argument(
                 "Mixing Nodes with different ownership modes");
         }
@@ -79,10 +81,10 @@ Node::Node(NonOwningNodeTag, std::vector<Attribute> attributes,
       firstChild{nullptr},
       prevSibling{this},
       nextSibling{this},
-      parent{nullptr},
-      _isOwning(false) {
+      parent{nullptr} {
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(false);
     for (auto& child : children) {
-        if (child.owning() != this->_isOwning) {
+        if (child.owning() != this->isOwning()) {
             throw std::invalid_argument(
                 "Mixing Nodes with different ownership modes");
         }
@@ -111,7 +113,8 @@ Node& Node::operator=(Node&& other) noexcept {
     other.nextSibling = nullptr;
 
     this->indices = std::move(other.indices);
-    this->_isOwning = other._isOwning;
+
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(other.isOwning());
 
     this->takeOverIndices(other);
     this->parent = other.parent;
@@ -154,7 +157,7 @@ void Node::destroy() {
     // cheap operation)
     // In non-owning trees this is not guaranteed, as the
     // destructor of a Node in the tree can be called arbitrarily
-    if (this->parent && !this->parent->_isOwning) {
+    if (this->parent && !this->parent->isOwning()) {
         this->iterativeProcessor([this](Node* obj) -> void {
             this->propagateIndexUpdateUp(obj, IndexPropagationMessage::REMOVE);
         });
@@ -166,7 +169,7 @@ void Node::destroy() {
 
     this->iterateDirectChildren([](Node* child) { child->parent = nullptr; });
 
-    if (this->_isOwning) {
+    if (this->isOwning()) {
         this->iterateDirectChildren([](Node* child) {
             child->parent = nullptr;
             child->prevSibling = nullptr;
@@ -176,7 +179,7 @@ void Node::destroy() {
         });
     }
 
-    if (this->parent && !this->parent->_isOwning) {
+    if (this->parent && !this->parent->isOwning()) {
         // In non-owning trees, nodes are not guaranteed to be sequentially
         // destroyed, so they need to manually remove themselves from the
         // parent's children to guarantee no dangling pointers are left
@@ -204,7 +207,7 @@ Node* Node::addChild(NodeHandle newChild) {
         throw std::runtime_error("Attempted to add child to " + getTagName() +
                                  " that is already a child of another Object.");
     }
-    if (newChild.owning() != this->_isOwning) {
+    if (newChild.owning() != this->isOwning()) {
         throw std::runtime_error("Attempted to add child to " + getTagName() +
                                  " with different owning mode.");
     }
@@ -318,6 +321,10 @@ void Node::updateAndPropagateUp(IndexPropagationMessage message) {
 
 bool Node::isInTree() const { return this->parent != nullptr; }
 
+bool Node::isOwning() const {
+    return this->getFlag<FlagBitIndices::BIT_IS_OWNING>();
+}
+
 Node* Node::getParentNode() const { return this->parent; }
 
 std::vector<Node*> Node::getChildrenByAttribute(
@@ -392,7 +399,7 @@ NodeHandle Node::removeChild(Node* childToRemove) {
     childToRemove->nextSibling = childToRemove;
     childToRemove->parent = nullptr;
 
-    return NodeHandle(childToRemove, this->_isOwning);
+    return NodeHandle(childToRemove, this->isOwning());
 }
 
 std::unique_ptr<Node> Node::deepCopy() const {

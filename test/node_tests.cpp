@@ -1,6 +1,7 @@
 #include <chrono>
 
 #include "catch2/catch_all.hpp"
+#include "node.h"
 #include "onyx.h"
 #include "util.h"
 
@@ -2525,7 +2526,7 @@ namespace {
 // Test fixture class to expose protected getFlag and setFlag methods
 class FlagTestNode : public onyx::tags::GenericNode {
    public:
-    FlagTestNode() : GenericNode("div", false) {}
+    FlagTestNode() : GenericNode(onyx::dynamic::NonOwning, "div", false) {}
 
     template <std::size_t Bit>
     bool testGetFlag() const {
