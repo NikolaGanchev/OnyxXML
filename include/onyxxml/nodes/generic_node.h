@@ -18,12 +18,6 @@ class GenericNode : public Node {
      */
     std::string tag;
 
-    /**
-     * @brief Whether the Node is void or not.
-     *
-     */
-    bool _isVoid;
-
    public:
     /**
      * @brief Construct a new owning GenericNode.
@@ -94,13 +88,29 @@ class GenericNode : public Node {
     const std::string& getTagName() const override;
     bool isVoid() const override;
     std::unique_ptr<Node> shallowCopy() const override;
+
+    /**
+     * @brief Contains the bit indices this class claims ownership over
+     *
+     */
+    enum FlagBitIndices : std::size_t {
+        /**
+         * @brief Whether the Node is void.
+         *
+         */
+        BIT_IS_VOID = Node::FlagBitIndices::NEXT_BIT,
+        NEXT_BIT
+    };
 };
+
+static_assert(GenericNode::FlagBitIndices::NEXT_BIT <= Node::maxFlagBits(),
+              "GenericNode flags bit overflow");
 
 template <typename... Args>
 GenericNode::GenericNode(std::string tagName, bool isVoid, Args&&... args)
-    : tag{std::move(tagName)},
-      _isVoid{isVoid},
-      Node(std::forward<Args>(args)...) {
+    : tag{std::move(tagName)}, Node(std::forward<Args>(args)...) {
+    this->setFlag<FlagBitIndices::BIT_IS_VOID>(isVoid);
+
     if (this->isVoid() && this->getChildrenCount() > 0) {
         throw std::runtime_error("Void " + getTagName() +
                                  " cannot have children.");
