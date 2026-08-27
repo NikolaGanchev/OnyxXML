@@ -1066,14 +1066,14 @@ class Node {
 
     virtual XPathType getXPathType() const;
 
-   protected:
     /**
-     * @brief Returns the size of the FlagType in bits
-     * Only works when CHAR_BIT == 8
+     * @brief Returns the number of flags this class supports.
+     * Only works when CHAR_BIT == 8.
      *
      * @return consteval
      */
     static consteval std::size_t maxFlagBits();
+   protected:
 
     /**
      * @brief Get the value of a flag
