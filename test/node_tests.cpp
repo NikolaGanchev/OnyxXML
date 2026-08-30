@@ -1,7 +1,8 @@
 #include <chrono>
+#include <memory>
+#include <optional>
 
 #include "catch2/catch_all.hpp"
-#include "node.h"
 #include "onyx.h"
 #include "util.h"
 
@@ -574,12 +575,13 @@ TEST_CASE("Child remove works", "[Node]") {
     std::vector<NodeHandle> vec;
     vec.push_back(std::move(child));
 
-    GenericNode obj{"html",
-                    false,
-                    Attribute("lang", "en"),
-                    Attribute("theme", "dark"),
-                    GenericNode("head", false),
-                    GenericNode("body", false, {}, std::move(vec))};
+    GenericNode obj{
+        "html",
+        false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false),
+        GenericNode("body", false, std::vector<Attribute>{}, std::move(vec))};
 
     auto children = obj.getChildrenById("1");
 
@@ -1939,12 +1941,13 @@ TEST_CASE("Child replace works", "[Node]") {
     std::vector<NodeHandle> vec;
     vec.push_back(std::move(child));
 
-    GenericNode obj{"html",
-                    false,
-                    Attribute("lang", "en"),
-                    Attribute("theme", "dark"),
-                    GenericNode("head", false),
-                    GenericNode("body", false, {}, std::move(vec))};
+    GenericNode obj{
+        "html",
+        false,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", false),
+        GenericNode("body", false, std::vector<Attribute>{}, std::move(vec))};
 
     auto children = obj.getChildrenById("1");
 
@@ -2520,6 +2523,31 @@ TEST_CASE("getStringValue handles __DangerousRawText",
     cdiv d{Text("Safe"), __DangerousRawText("<span>Unsafe</span>")};
 
     CHECK(d.getStringValue() == "Safe<span>Unsafe</span>");
+}
+
+TEST_CASE("getNamespacePrefix resolves empty prefix to null",
+          "[Attribute::getNamespacePrefix]") {
+    using namespace onyx::dynamic;
+    REQUIRE(Attribute("price", "15").getNamespacePrefix() == std::nullopt);
+}
+
+TEST_CASE("getNamespacePrefix resolves prefix",
+          "[Attribute::getNamespacePrefix]") {
+    using namespace onyx::dynamic;
+    REQUIRE(Attribute("lib:price", "15").getNamespacePrefix() == "lib");
+}
+
+TEST_CASE("getNCNameWithoutNamespace resolves with no prefix",
+          "[Attribute::getNCNameWithoutNamespace]") {
+    using namespace onyx::dynamic;
+    REQUIRE(Attribute("price", "15").getNCNameWithoutNamespace() == "price");
+}
+
+TEST_CASE("getNCNameWithoutNamespace resolves with prefix",
+          "[Attribute::getNCNameWithoutNamespace]") {
+    using namespace onyx::dynamic;
+    REQUIRE(Attribute("lib:price", "15").getNCNameWithoutNamespace() ==
+            "price");
 }
 
 namespace {

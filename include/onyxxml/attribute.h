@@ -1,12 +1,17 @@
 #pragma once
 
+#include <limits>
+#include <optional>
 #include <string>
+#include <string_view>
 
 namespace onyx::dynamic {
 class Node;
 
 /**
- * @brief Represents an XML attribute with a name and value
+ * @brief Represents an XML attribute with a name and value. Can query
+ * namespaces, but comparisons only work based on the literal qualified name
+ * string. No method for querying the resolved namespace URI is provided.
  *
  */
 class Attribute {
@@ -33,6 +38,22 @@ class Attribute {
      *
      */
     bool _shouldEscapeMultiByte;
+
+    /**
+     * @brief If the Attribute name has a namespace prefix, it will be held
+     * fully inside the name string. This index denotes the index of ':' of the
+     * QName.
+     *
+     * If it does not, this will be std::string::npos, as no valid QName ends
+     * with ':'.
+     *
+     * If the namespace has never been queried, this value will be 0, as no
+     * QName can start with ':' either. This is mainly a performance
+     * optimization.
+     *
+     */
+    mutable std::size_t namespaceSeparatorIndex = 0;
+
     /**
      * @brief Set the Value string
      *
@@ -56,11 +77,13 @@ class Attribute {
      * shouldEscape is used by consumers of the class to decide whether the
      * value should be escaped and Has no effect on the constructed object's
      * behaviour.
-     * @param shouldEscapeMultiByte Signifies if multi-byte sequences should be escaped. For use with legacy systems. False by default. Even if true, no escaping is to be done unless shouldEscape is also true.
+     * @param shouldEscapeMultiByte Signifies if multi-byte sequences should be
+     * escaped. For use with legacy systems. False by default. Even if true, no
+     * escaping is to be done unless shouldEscape is also true.
      */
     explicit Attribute(std::string name, std::string value,
                        bool shouldEscape = true,
-                        bool shouldEscapeMultiByte = false);
+                       bool shouldEscapeMultiByte = false);
 
     /**
      * @brief Construct a new Attribute object with an empty value.
@@ -68,9 +91,10 @@ class Attribute {
      * shouldEscape() will return true. This is due to the possibility that the
      * object is later modified. If an Attribute object is needed which has an
      * empty value and which is marked as safe,
-     * @ref Attribute(std::string, std::string, bool shouldEscape, bool shouldEscapeMultiByte)
-     * "Attribute(std::string name, \"\", bool shouldEscape = false, bool shouldEscapeMultiByte = false)" should be
-     * used instead.
+     * @ref Attribute(std::string, std::string, bool shouldEscape, bool
+     * shouldEscapeMultiByte) "Attribute(std::string name, \"\", bool
+     * shouldEscape = false, bool shouldEscapeMultiByte = false)" should be used
+     * instead.
      *
      * @param name The name of the attribute
      */
@@ -84,11 +108,27 @@ class Attribute {
     const std::string& getName() const;
 
     /**
+     * @brief Get the name without the namespace. Returns the name if there is
+     * no namespace.
+     *
+     * @return const std::string&
+     */
+    std::string_view getNCNameWithoutNamespace() const;
+
+    /**
      * @brief Get the value string
      *
      * @return const std::string&
      */
     const std::string& getValue() const;
+
+    /**
+     * @brief Returns a *non-null terminated string_view* of the namespace
+     * prefix if it is available, or std::nullopt if it is not.
+     *
+     * @return std::optional<std::string_view>
+     */
+    std::optional<std::string_view> getNamespacePrefix() const;
 
     /**
      * @brief Get whether the value should be escaped
@@ -100,14 +140,15 @@ class Attribute {
 
     /**
      * @brief Get whether multi-byte sequences should be escaped
-     * 
-     * @return true 
-     * @return false 
+     *
+     * @return true
+     * @return false
      */
     bool shouldEscapeMultiByte() const;
 
     /**
-     * @brief Compares two Attributes by their name and value
+     * @brief Compares two Attributes by their name and value. Namespaces are
+     * treated literally.
      *
      * @param other
      * @return true The Attributes are equal
@@ -116,7 +157,8 @@ class Attribute {
     bool operator==(const Attribute& other) const;
 
     /**
-     * @brief Compares two Attributes by their name and value
+     * @brief Compares two Attributes by their name and value. Namespaces are
+     * treated literally.
      *
      * @param other
      * @return true The Attributes are not equal
