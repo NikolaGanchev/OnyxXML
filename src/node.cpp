@@ -1,8 +1,10 @@
 #include "node.h"
 
 #include <algorithm>
+#include <optional>
 #include <sstream>
 #include <stack>
+#include <string_view>
 #include <unordered_map>
 
 #include "index.h"
@@ -911,4 +913,41 @@ std::string Node::getStringValue() const {
 }
 
 Node::XPathType Node::getXPathType() const { return XPathType::ELEMENT; }
+
+std::optional<std::string_view> Node::getNamespacePrefix() const {
+    return std::nullopt;
+}
+
+std::optional<std::string_view> Node::resolveNamespacePrefix(
+    std::optional<std::string_view> prefix) const {
+    if (!prefix.has_value() || prefix == "") return std::nullopt;
+
+    const Node* current = this;
+
+    while (current) {
+        for (auto it = current->attributes.begin();
+             it != current->attributes.end(); it++) {
+            std::optional<std::string_view> attributePrefix =
+                it->getNamespacePrefix();
+            if (attributePrefix.has_value() &&
+                attributePrefix.value() == "xmlns") {
+                if (it->getNCNameWithoutNamespace() == prefix) {
+                    if (it->getValue() == "") {
+                        return std::nullopt;
+                    } else {
+                        return it->getValue();
+                    }
+                }
+            }
+        }
+
+        current = current->parent;
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::string_view> Node::getNamespaceURI() const {
+    return resolveNamespacePrefix(this->getNamespacePrefix());
+}
 }  // namespace onyx::dynamic

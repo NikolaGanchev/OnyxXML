@@ -6,9 +6,11 @@
 #include <forward_list>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -552,6 +554,32 @@ class Node {
      * @return false The tag is not void
      */
     virtual bool isVoid() const = 0;
+
+    /**
+     * @brief Get the namespace prefix. Returns std::nullopt if there is no
+     * prefix, which is always true for the base Node class.
+     *
+     * @return std::optional<std::string_view>
+     */
+    virtual std::optional<std::string_view> getNamespacePrefix() const;
+
+    /**
+     * @brief Get the resolved namespace URI. Returns std::nullopt if the
+     * namespace URI could not be resolved.
+     *
+     * @return std::optional<std::string_view>
+     */
+    std::optional<std::string_view> getNamespaceURI() const;
+
+    /**
+     * @brief Resolve the namespace URI from this Node's viewpoint. Returns
+     * std::nullopt if the namespace URI could not be resolved.
+     *
+     * @param prefix The namespace prefix
+     * @return std::optional<std::string_view>
+     */
+    std::optional<std::string_view> resolveNamespacePrefix(
+        std::optional<std::string_view> prefix) const;
 
     /**
      * @brief Returns whether the current Node is in a tree
