@@ -2550,6 +2550,90 @@ TEST_CASE("getNCNameWithoutNamespace resolves with prefix",
             "price");
 }
 
+TEST_CASE("getNamespaceURI resolves empty prefix to null",
+          "[Node::getNamespaceURI]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", false, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:notlib", "uri2"),
+        GenericNode("book", false, GenericNode("name", false, Text("Book")),
+                    GenericNode("price", false, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceURI() == std::nullopt);
+}
+
+TEST_CASE("getNamespaceURI resolves prefix with no declared namespace to null",
+          "[Node::getNamespaceURI]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", false, Attribute("xmlns:notlib", "uri2"),
+        GenericNode(
+            "book", false, GenericNode("name", false, Text("Book")),
+            GenericNode("lib", std::string("price"), false, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceURI() == std::nullopt);
+}
+
+TEST_CASE(
+    "getNamespaceURI resolves prefix with declared empty namespace to null",
+    "[Node::getNamespaceURI]") {
+    using namespace onyx::tags;
+
+    GenericNode library("library", false, Attribute("xmlns:lib", "uri"),
+                        Attribute("xmlns:notlib", "uri2"),
+                        GenericNode("book", false, Attribute("xmlns:lib", ""),
+                                    GenericNode("name", false, Text("Book")),
+                                    GenericNode("lib", std::string("price"),
+                                                false, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceURI() == std::nullopt);
+}
+
+TEST_CASE("getNamespaceURI resolves prefix with declared namespace on ancestor",
+          "[Node::getNamespaceURI]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", false, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:notlib", "uri2"),
+        GenericNode(
+            "book", false, GenericNode("name", false, Text("Book")),
+            GenericNode("lib", std::string("price"), false, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceURI() == "uri");
+}
+
+TEST_CASE("getNamespaceURI resolves prefix with declared namespace on self",
+          "[Node::getNamespaceURI]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", false, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:notlib", "uri2"),
+        GenericNode("book", false, GenericNode("name", false, Text("Book")),
+                    GenericNode("lib", std::string("price"), false,
+                                Attribute("xmlns:lib", "uri3"), Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceURI() == "uri3");
+}
+
 namespace {
 // Test fixture class to expose protected getFlag and setFlag methods
 class FlagTestNode : public onyx::tags::GenericNode {
