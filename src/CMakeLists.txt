@@ -18,6 +18,7 @@ target_sources(
         "indices/tag_name_index.cpp"
         "indices/tag_index.cpp"
         "void_node.cpp"
+        "namespace_node.cpp"
         "nodes/text_node.cpp"
         "nodes/empty_node.cpp"
         "nodes/generic_node.cpp"
