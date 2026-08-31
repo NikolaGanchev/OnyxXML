@@ -341,7 +341,8 @@ std::string expandEntitiesAndNormalizeEol(std::string_view input,
             }
             lastCopyPos = pos;
             goto cont;
-        } else if (eolTable[*pos]) {
+        } else if (static_cast<unsigned char>(*pos) < 128 &&
+                   eolTable[static_cast<unsigned char>(*pos)]) {
             // Copy the segment of normal characters found before the '\r'
             if (pos > lastCopyPos) {
                 output.append(lastCopyPos, pos - lastCopyPos);
