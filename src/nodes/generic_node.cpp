@@ -5,66 +5,64 @@
 namespace onyx::dynamic::tags {
 
 GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
-                         bool isVoid)
+                         Type type)
     : tag{std::move(tagName)}, NamespaceNode(std::move(namespacePrefix)) {
-    this->setFlag<FlagBitIndices::BIT_IS_VOID>(isVoid);
+    this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
 }
 
-GenericNode::GenericNode(std::string tagName, bool isVoid)
-    : GenericNode("", std::move(tagName), isVoid) {}
+GenericNode::GenericNode(std::string tagName, Type type)
+    : GenericNode("", std::move(tagName), type) {}
 
 GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
-                         bool isVoid, std::vector<Attribute> attributes,
+                         Type type, std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children)
     : tag{std::move(tagName)},
       NamespaceNode{std::move(namespacePrefix), std::move(attributes),
                     std::move(children)} {
-    this->setFlag<FlagBitIndices::BIT_IS_VOID>(isVoid);
+    this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
 
-    if (isVoid && this->getChildrenCount() > 0) {
-        throw std::runtime_error("Void " + getTagName() +
-                                 " cannot have children.");
+    if (type == Type::Void && this->getChildrenCount() > 0) {
+        throw std::runtime_error("Void node cannot have children.");
     }
 }
 
-GenericNode::GenericNode(std::string tagName, bool isVoid,
+GenericNode::GenericNode(std::string tagName, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children)
-    : GenericNode{"", std::move(tagName), isVoid, std::move(attributes),
+    : GenericNode{"", std::move(tagName), type, std::move(attributes),
                   std::move(children)} {}
 
 GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
-                         std::string tagName, bool isVoid)
+                         std::string tagName, Type type)
     : tag{std::move(tagName)},
       NamespaceNode(NonOwning, std::move(namespacePrefix)) {
-    this->setFlag<FlagBitIndices::BIT_IS_VOID>(isVoid);
+    this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
 }
 
-GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid)
-    : GenericNode(NonOwning, "", std::move(tagName), isVoid) {}
+GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, Type type)
+    : GenericNode(NonOwning, "", std::move(tagName), type) {}
 
 GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
-                         std::string tagName, bool isVoid,
+                         std::string tagName, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children)
     : tag{std::move(tagName)},
       NamespaceNode{NonOwning, std::move(namespacePrefix),
                     std::move(attributes), std::move(children)} {
-    this->setFlag<FlagBitIndices::BIT_IS_VOID>(isVoid);
+    this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
 
-    if (isVoid && this->getChildrenCount() > 0) {
-        throw std::runtime_error("Void " + getTagName() +
-                                 " cannot have children.");
+    if (type == Type::Void && this->getChildrenCount() > 0) {
+        throw std::runtime_error("Void node cannot have children.");
     }
 }
 
-GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid,
+GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children)
     : GenericNode{NonOwning,
                   "",
                   std::move(tagName),
-                  isVoid,
+                  type,
                   std::move(attributes),
                   std::move(children)} {}
 
@@ -93,7 +91,7 @@ std::unique_ptr<Node> GenericNode::shallowCopy() const {
         std::string(this->getNamespacePrefix().has_value()
                         ? this->getNamespacePrefix().value()
                         : ""),
-        this->tag, this->isVoid(), this->getAttributes(),
-        std::vector<NodeHandle>{});
+        this->tag, this->isVoid() ? Type::Void : Type::NonVoid,
+        this->getAttributes(), std::vector<NodeHandle>{});
 }
 }  // namespace onyx::dynamic::tags

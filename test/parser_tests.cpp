@@ -19,7 +19,7 @@ TEST_CASE("DomParser works") {
     std::string input = "<html><head></head></html>";
     std::stringstream inputStream(input);
 
-    GenericNode output{"html", false, GenericNode("head", false)};
+    GenericNode output{"html", NonVoid, GenericNode("head", NonVoid)};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
@@ -36,11 +36,11 @@ TEST_CASE("DomParser works with text") {
         "<html><body><div> Hello<span></span>World! </div></body></html>";
     std::stringstream inputStream(input);
 
-    GenericNode output{
-        "html", false,
-        GenericNode("body", false,
-                    GenericNode("div", false, Text(" Hello"),
-                                GenericNode("span", false), Text("World! ")))};
+    GenericNode output{"html", NonVoid,
+                       GenericNode("body", NonVoid,
+                                   GenericNode("div", NonVoid, Text(" Hello"),
+                                               GenericNode("span", NonVoid),
+                                               Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
@@ -58,11 +58,11 @@ TEST_CASE("DomParser works with a single attribute") {
         "</div></body></html>";
     std::stringstream inputStream(input);
 
-    GenericNode output{
-        "html", false, Attribute("theme", "dark"),
-        GenericNode("body", false,
-                    GenericNode("div", false, Text(" Hello"),
-                                GenericNode("span", false), Text("World! ")))};
+    GenericNode output{"html", NonVoid, Attribute("theme", "dark"),
+                       GenericNode("body", NonVoid,
+                                   GenericNode("div", NonVoid, Text(" Hello"),
+                                               GenericNode("span", NonVoid),
+                                               Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
@@ -80,11 +80,12 @@ TEST_CASE("DomParser works with many attributes") {
         "</div></body></html>";
     std::stringstream inputStream(input);
 
-    GenericNode output{
-        "html", false, Attribute("theme", "dark"), Attribute("lang", "en"),
-        GenericNode("body", false,
-                    GenericNode("div", false, Text(" Hello"),
-                                GenericNode("span", false), Text("World! ")))};
+    GenericNode output{"html", NonVoid, Attribute("theme", "dark"),
+                       Attribute("lang", "en"),
+                       GenericNode("body", NonVoid,
+                                   GenericNode("div", NonVoid, Text(" Hello"),
+                                               GenericNode("span", NonVoid),
+                                               Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
@@ -103,9 +104,9 @@ TEST_CASE("DomParser expands entities in text") {
     std::stringstream inputStream(input);
 
     GenericNode output{
-        "html", false, Attribute("theme", "dark"), Attribute("lang", "en"),
-        GenericNode("body", false,
-                    GenericNode("div", false, Text(" 4 < 5; ")))};
+        "html", NonVoid, Attribute("theme", "dark"), Attribute("lang", "en"),
+        GenericNode("body", NonVoid,
+                    GenericNode("div", NonVoid, Text(" 4 < 5; ")))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
@@ -123,11 +124,12 @@ TEST_CASE("DomParser expands entities in attribute values") {
         "Hello<span></span>World! </div></body></html>";
     std::stringstream inputStream(input);
 
-    GenericNode output{
-        "html", false, Attribute("theme", "dark'"), Attribute("lang", "en"),
-        GenericNode("body", false,
-                    GenericNode("div", false, Text(" Hello"),
-                                GenericNode("span", false), Text("World! ")))};
+    GenericNode output{"html", NonVoid, Attribute("theme", "dark'"),
+                       Attribute("lang", "en"),
+                       GenericNode("body", NonVoid,
+                                   GenericNode("div", NonVoid, Text(" Hello"),
+                                               GenericNode("span", NonVoid),
+                                               Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
@@ -218,12 +220,12 @@ TEST_CASE("DomParser properly normalizes complex text") {
     EmptyNode output{
         Doctype("&apos \n \n &apos;"),
         GenericNode(
-            "html", false, Attribute("theme", "dark "),
+            "html", NonVoid, Attribute("theme", "dark "),
             Attribute("lang", " en "),
             GenericNode(
-                "body", false,
-                GenericNode("div", false, Text(" Hello"),
-                            GenericNode("span", false, Text("\n\n\n\n")),
+                "body", NonVoid,
+                GenericNode("div", NonVoid, Text(" Hello"),
+                            GenericNode("span", NonVoid, Text("\n\n\n\n")),
                             Text("World! \n"), CData("&apos\t\n\n&apos;"))),
             Comment("This is a comment with invalid entities &apos that should "
                     "not error, valid entities apos&; that should not expand, "
@@ -251,79 +253,80 @@ TEST_CASE("DomParser parses complex html") {
 
     GenericNode output{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
 
         GenericNode(
-            "head", false,
-            GenericNode("meta", true, Attribute("charset", "UTF-8")),
+            "head", NonVoid,
+            GenericNode("meta", Void, Attribute("charset", "UTF-8")),
             GenericNode(
-                "meta", true, Attribute("name", "viewport"),
+                "meta", Void, Attribute("name", "viewport"),
                 Attribute("content", "width=device-width, initial-scale=1.0")),
-            GenericNode("title", false, Text("Complex Test Page")),
-            GenericNode("link", true, Attribute("rel", "stylesheet"),
+            GenericNode("title", NonVoid, Text("Complex Test Page")),
+            GenericNode("link", Void, Attribute("rel", "stylesheet"),
                         Attribute("href", "/styles/main.css"))),
 
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "header", false,
+                "header", NonVoid,
                 GenericNode(
-                    "nav", false,
+                    "nav", NonVoid,
                     GenericNode(
-                        "ul", false,
-                        GenericNode(
-                            "li", false,
-                            GenericNode("a", false, Attribute("href", "#home"),
-                                        Text("Home"))),
-                        GenericNode(
-                            "li", false,
-                            GenericNode("a", false, Attribute("href", "#about"),
-                                        Text("About Us")))))),
+                        "ul", NonVoid,
+                        GenericNode("li", NonVoid,
+                                    GenericNode("a", NonVoid,
+                                                Attribute("href", "#home"),
+                                                Text("Home"))),
+                        GenericNode("li", NonVoid,
+                                    GenericNode("a", NonVoid,
+                                                Attribute("href", "#about"),
+                                                Text("About Us")))))),
 
             GenericNode(
-                "main", false,
+                "main", NonVoid,
                 GenericNode(
-                    "section", false, Attribute("id", "introduction"),
-                    GenericNode("h1", false, Text("Introduction")),
-                    GenericNode("p", false,
+                    "section", NonVoid, Attribute("id", "introduction"),
+                    GenericNode("h1", NonVoid, Text("Introduction")),
+                    GenericNode("p", NonVoid,
                                 Text("Welcome to the complex HTML structure "
                                      "test case.")),
-                    GenericNode("p", false,
+                    GenericNode("p", NonVoid,
                                 Text("This test includes various nested "
                                      "elements, attributes, and content.")),
                     GenericNode(
-                        "form", false, Attribute("name", "contact-form"),
-                        GenericNode("label", false, Attribute("for", "name"),
+                        "form", NonVoid, Attribute("name", "contact-form"),
+                        GenericNode("label", NonVoid, Attribute("for", "name"),
                                     Text("Your Name:")),
-                        GenericNode("input", true, Attribute("type", "text"),
+                        GenericNode("input", Void, Attribute("type", "text"),
                                     Attribute("id", "name"),
                                     Attribute("name", "name")),
-                        GenericNode("label", false, Attribute("for", "email"),
+                        GenericNode("label", NonVoid, Attribute("for", "email"),
                                     Text("Your Email:")),
-                        GenericNode("input", true, Attribute("type", "email"),
+                        GenericNode("input", Void, Attribute("type", "email"),
                                     Attribute("id", "email"),
                                     Attribute("name", "email")),
-                        GenericNode("button", false,
+                        GenericNode("button", NonVoid,
                                     Attribute("type", "submit"),
                                     Text("Submit")))),
 
                 GenericNode(
-                    "section", false, Attribute("id", "features"),
-                    GenericNode("h2", false, Text("Features")),
-                    GenericNode("ul", false,
-                                GenericNode("li", false, Text("Feature 1")),
-                                GenericNode("li", false, Text("Feature 2")),
-                                GenericNode("li", false, Text("Feature 3"))),
-                    GenericNode("p", false,
+                    "section", NonVoid, Attribute("id", "features"),
+                    GenericNode("h2", NonVoid, Text("Features")),
+                    GenericNode("ul", NonVoid,
+                                GenericNode("li", NonVoid, Text("Feature 1")),
+                                GenericNode("li", NonVoid, Text("Feature 2")),
+                                GenericNode("li", NonVoid, Text("Feature 3"))),
+                    GenericNode("p", NonVoid,
                                 Text("These are the key features of the "
                                      "application.")))),
 
             GenericNode(
-                "footer", false,
-                GenericNode("p", false, Text("© 2025 Complex HTML Test Page")),
-                GenericNode("a", false,
+                "footer", NonVoid,
+                GenericNode("p", NonVoid,
+                            Text("© 2025 Complex HTML Test Page")),
+                GenericNode("a", NonVoid,
                             Attribute("href", "https://www.example.com"),
                             Text("Privacy Policy"))))};
 
@@ -380,12 +383,12 @@ TEST_CASE("DomParser works with comments") {
         "Hello<span></span>World! </div></body></html>";
     std::stringstream inputStream(input);
 
-    GenericNode output{
-        "html", false, Attribute("theme", "dark"),
-        Comment("This is a comment\n-!"),
-        GenericNode("body", false,
-                    GenericNode("div", false, Text(" Hello"),
-                                GenericNode("span", false), Text("World! ")))};
+    GenericNode output{"html", NonVoid, Attribute("theme", "dark"),
+                       Comment("This is a comment\n-!"),
+                       GenericNode("body", NonVoid,
+                                   GenericNode("div", NonVoid, Text(" Hello"),
+                                               GenericNode("span", NonVoid),
+                                               Text("World! ")))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
@@ -405,7 +408,7 @@ TEST_CASE("DomParser works with processing instructions") {
         "\r?somethingElse?></root>";
     std::stringstream inputStream(input);
 
-    GenericNode output{"root", false, Attribute("lang", "en"),
+    GenericNode output{"root", NonVoid, Attribute("lang", "en"),
                        ProcessingInstruction(
                            "templater", "doSomething 5 > 4 \n?somethingElse")};
 
@@ -428,7 +431,7 @@ TEST_CASE("DomParser works with CDATA") {
         "will not end this section.]]></root>";
     std::stringstream inputStream(input);
 
-    GenericNode output{"root", false, Attribute("lang", "en"),
+    GenericNode output{"root", NonVoid, Attribute("lang", "en"),
                        CData("<someElement> This is some literal text, in "
                              "which & and <, > can safely be written! Also, "
                              "a]>, ]a>, ]], aa> will not end this section.")};
@@ -505,10 +508,10 @@ TEST_CASE("DomParser works with DOCTYPE") {
 
     EmptyNode output{
         Doctype("html"),
-        GenericNode("html", false, Attribute("theme", "dark"),
-                    GenericNode("body", false,
-                                GenericNode("div", false, Text(" Hello"),
-                                            GenericNode("span", false),
+        GenericNode("html", NonVoid, Attribute("theme", "dark"),
+                    GenericNode("body", NonVoid,
+                                GenericNode("div", NonVoid, Text(" Hello"),
+                                            GenericNode("span", NonVoid),
                                             Text("World! "))))};
 
     ParseResult pr = DomParser::parse(input);
@@ -535,15 +538,15 @@ TEST_CASE("DomParser parses unicode") {
     EmptyNode output{
         XmlDeclaration("1.0", "UTF-8", true, false, false, false),
         GenericNode(
-            "root-тест", false,
-            GenericNode("елемент-с-юникод", false,
+            "root-тест", NonVoid,
+            GenericNode("елемент-с-юникод", NonVoid,
                         Text("Hello, 世界! Привет! 👋")),
             GenericNode(
-                "データ", false,
+                "データ", NonVoid,
                 Text("Some mixed content: éléphant, caffè, España. 🚀")),
-            GenericNode("属性", false, Attribute("attr", "値-юникод-1"),
+            GenericNode("属性", NonVoid, Attribute("attr", "値-юникод-1"),
                         Attribute("друг-attr", "テスト値")),
-            GenericNode("空要素", true))};
+            GenericNode("空要素", Void))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prStream = DomParser::parse(inputStream);
@@ -1487,7 +1490,7 @@ TEST_CASE("DomParser successfully transcodes ISO-8859-1 document to UTF-8") {
     // '\xC3\xA9' is "é" in UTF-8
     EmptyNode output{
         XmlDeclaration("1.0", "ISO-8859-1", true, false, false, false),
-        GenericNode("root", false, Text("\xC3\xA9"))};
+        GenericNode("root", NonVoid, Text("\xC3\xA9"))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prExplicit = DomParser::parse(input, "ISO-8859-1");
@@ -1513,7 +1516,7 @@ TEST_CASE("DomParser successfully transcodes Windows-1251 document to UTF-8") {
 
     EmptyNode output{
         XmlDeclaration("1.0", "WINDOWS-1251", true, false, false, false),
-        GenericNode("root", false, Text("Здравей"))};
+        GenericNode("root", NonVoid, Text("Здравей"))};
 
     ParseResult pr = DomParser::parse(input);
     ParseResult prExplicit = DomParser::parse(input, "WINDOWS-1251");
@@ -1537,7 +1540,7 @@ TEST_CASE("DomParser skips transcoding if explicit encoding matches declared") {
     std::stringstream inputStream(input);
 
     EmptyNode output{XmlDeclaration("1.0", "UTF-8", true, false, false, false),
-                     GenericNode("root", false, Text("a"))};
+                     GenericNode("root", NonVoid, Text("a"))};
 
     ParseResult pr = DomParser::parse(input, "UTF-8");
     ParseResult prStream = DomParser::parse(inputStream, "UTF-8");
@@ -1563,8 +1566,8 @@ TEST_CASE(
 
     EmptyNode output{
         XmlDeclaration("1.0", "ISO-8859-1", true, false, false, false),
-        GenericNode("root", false, Attribute("attr", "\xC3\xA7"),
-                    GenericNode("child", false, Text("\xC3\xA9")),
+        GenericNode("root", NonVoid, Attribute("attr", "\xC3\xA7"),
+                    GenericNode("child", NonVoid, Text("\xC3\xA9")),
                     Comment("\xC3\xA0"), CData("\xC3\xA9\xC3\xA0"))};
 
     ParseResult pr = DomParser::parse(input);
@@ -1663,7 +1666,7 @@ TEST_CASE("DomParser autodetects UTF-8 BOM and parses successfully") {
     std::stringstream inputStream(input);
 
     EmptyNode output{XmlDeclaration("1.0", "UTF-8", true, false, false, false),
-                     GenericNode("root", false, Text("\xC3\xA9"))};
+                     GenericNode("root", NonVoid, Text("\xC3\xA9"))};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1685,7 +1688,7 @@ TEST_CASE(
     std::string input(utf16le_data, sizeof(utf16le_data));
     std::stringstream inputStream(input);
 
-    GenericNode output{"root", false, Text("\xC3\xA9")};
+    GenericNode output{"root", NonVoid, Text("\xC3\xA9")};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1707,7 +1710,7 @@ TEST_CASE(
     std::string input(utf16be_data, sizeof(utf16be_data));
     std::stringstream inputStream(input);
 
-    GenericNode output{"root", false, Text("\xC3\xA9")};
+    GenericNode output{"root", NonVoid, Text("\xC3\xA9")};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1741,7 +1744,7 @@ TEST_CASE(
 
     EmptyNode output{
         XmlDeclaration("1.0", "UTF-16LE", true, false, false, false),
-        GenericNode("root", false, Text("\xC3\xA9"))};
+        GenericNode("root", NonVoid, Text("\xC3\xA9"))};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1757,7 +1760,7 @@ TEST_CASE("DomParser defaults to UTF-8 when autodetection returns UNKNOWN") {
     std::string input = "<root>\xC3\xA9</root>";
     std::stringstream inputStream(input);
 
-    GenericNode output{"root", false, Text("\xC3\xA9")};
+    GenericNode output{"root", NonVoid, Text("\xC3\xA9")};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1883,7 +1886,7 @@ TEST_CASE("DomParser autodetects UCS-4BE family without BOM") {
 
     EmptyNode output{
         XmlDeclaration("1.0", "UCS-4BE", true, false, false, false),
-        GenericNode("root", false, Text("a"))};
+        GenericNode("root", NonVoid, Text("a"))};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1905,7 +1908,7 @@ TEST_CASE("DomParser autodetects UTF-32LE (UCS-4LE) BOM") {
     std::string input(utf32le_data, sizeof(utf32le_data) - 1);
     std::stringstream inputStream(input);
 
-    GenericNode output{"root", false, Text("a")};
+    GenericNode output{"root", NonVoid, Text("a")};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1933,7 +1936,7 @@ TEST_CASE("DomParser autodetects UCS-2LE family and restarts parse") {
 
     EmptyNode output{
         XmlDeclaration("1.0", "UCS-2LE", true, false, false, false),
-        GenericNode("root", false, Text("a"))};
+        GenericNode("root", NonVoid, Text("a"))};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1953,7 +1956,7 @@ TEST_CASE(
 
     EmptyNode output{
         XmlDeclaration("1.0", "ISO-8859-1", true, false, false, false),
-        GenericNode("root", false, Text("\xC3\xA9"))};  // "é" in UTF-8
+        GenericNode("root", NonVoid, Text("\xC3\xA9"))};  // "é" in UTF-8
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1975,7 +1978,7 @@ TEST_CASE("DomParser detects ASCII family and restarts for Shift_JIS") {
 
     EmptyNode output{
         XmlDeclaration("1.0", "SHIFT_JIS", true, false, false, false),
-        GenericNode("root", false, Text("テスト"))};
+        GenericNode("root", NonVoid, Text("テスト"))};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -1999,7 +2002,7 @@ TEST_CASE(
     std::stringstream inputStream(input);
 
     EmptyNode output{XmlDeclaration("1.0", "IBM037", true, false, false, false),
-                     GenericNode("root", false, Text("a"))};
+                     GenericNode("root", NonVoid, Text("a"))};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");
@@ -2027,7 +2030,7 @@ TEST_CASE(
 
     EmptyNode output{
         XmlDeclaration("1.0", "IBM1047", true, false, false, false),
-        GenericNode("root", false, Text("["))};
+        GenericNode("root", NonVoid, Text("["))};
 
     ParseResult pr = DomParser::parse(input, "autodetect");
     ParseResult prStream = DomParser::parse(inputStream, "autodetect");

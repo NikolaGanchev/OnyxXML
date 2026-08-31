@@ -42,7 +42,6 @@
 #include "xpath/xpath_object.h"
 #include "xpath/xpath_query.h"
 
-
 #if __has_include("dynamic/tags.h")
 #include "dynamic/tags.h"
 #endif
@@ -65,6 +64,7 @@ using onyx::dynamic::Attribute;
 using onyx::dynamic::Node;
 using onyx::dynamic::NodeHandle;
 using onyx::dynamic::NonOwning;
+using enum onyx::dynamic::tags::GenericNode::Type;
 }  // namespace dynamic::tags
 
 namespace compile::ctags {

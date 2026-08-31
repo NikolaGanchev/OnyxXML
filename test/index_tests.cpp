@@ -9,18 +9,18 @@ TEST_CASE("Index is added correctly", "[Index]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("id", "0"),
-                GenericNode("div", false, Attribute("id", "1"),
-                            GenericNode("div", false, Attribute("id", "2"))),
-                GenericNode("div", false, Attribute("id", "3")),
-                GenericNode("div", false, Attribute("id", "4"))))};
+                "div", NonVoid, Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("id", "2"))),
+                GenericNode("div", NonVoid, Attribute("id", "3")),
+                GenericNode("div", NonVoid, Attribute("id", "4"))))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -38,14 +38,14 @@ TEST_CASE("Index handles multiple matches correctly", "[Index]") {
     using namespace onyx::dynamic;
 
     GenericNode obj{
-        "html", false,
+        "html", NonVoid,
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("class", "container"),
-                GenericNode("div", false, Attribute("class", "item")),
-                GenericNode("div", false, Attribute("class", "item")),
-                GenericNode("div", false, Attribute("class", "item"))))};
+                "div", NonVoid, Attribute("class", "container"),
+                GenericNode("div", NonVoid, Attribute("class", "item")),
+                GenericNode("div", NonVoid, Attribute("class", "item")),
+                GenericNode("div", NonVoid, Attribute("class", "item"))))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -64,9 +64,9 @@ TEST_CASE("Index returns empty when no match found", "[Index]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{"html", false,
-                    GenericNode("body", false,
-                                GenericNode("div", false,
+    GenericNode obj{"html", NonVoid,
+                    GenericNode("body", NonVoid,
+                                GenericNode("div", NonVoid,
                                             Attribute("class", "container")))};
 
     REQUIRE(obj.getChildrenCount() > 0);
@@ -83,12 +83,12 @@ TEST_CASE("Index works with nested attributes", "[Index]") {
     using namespace onyx::dynamic;
 
     GenericNode obj{
-        "html", false,
+        "html", NonVoid,
         GenericNode(
-            "body", false,
-            GenericNode(
-                "section", false, Attribute("data-type", "main"),
-                GenericNode("div", false, Attribute("data-type", "nested"))))};
+            "body", NonVoid,
+            GenericNode("section", NonVoid, Attribute("data-type", "main"),
+                        GenericNode("div", NonVoid,
+                                    Attribute("data-type", "nested"))))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -104,7 +104,7 @@ TEST_CASE("Index updates correctly when attributes change", "[Index]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{"div", false, Attribute("id", "test")};
+    GenericNode obj{"div", NonVoid, Attribute("id", "test")};
     index::AttributeNameIndex index =
         index::createIndex<index::AttributeNameIndex>(&obj, "id");
 
@@ -129,7 +129,7 @@ TEST_CASE("Index updates correctly when children are added", "[Index]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{"div", false};
+    GenericNode obj{"div", NonVoid};
     index::AttributeNameIndex index =
         index::createIndex<index::AttributeNameIndex>(&obj, "class");
 
@@ -137,7 +137,7 @@ TEST_CASE("Index updates correctly when children are added", "[Index]") {
     REQUIRE(result.empty());
 
     std::unique_ptr<Node> child = std::make_unique<GenericNode>(
-        "span", false, Attribute("class", "new-class"));
+        "span", NonVoid, Attribute("class", "new-class"));
     obj.addChild(std::move(child));
 
     result = index.getByValue("new-class");
@@ -150,13 +150,13 @@ TEST_CASE("Index updates correctly when children are added using move",
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{"div", false};
+    GenericNode obj{"div", NonVoid};
     index::AttributeNameIndex index =
         index::createIndex<index::AttributeNameIndex>(&obj, "class");
     auto result = index.getByValue("new-class");
     REQUIRE(result.empty());
 
-    obj.addChild(GenericNode("span", false, Attribute("class", "new-class")));
+    obj.addChild(GenericNode("span", NonVoid, Attribute("class", "new-class")));
 
     result = index.getByValue("new-class");
     REQUIRE(result.size() == 1);
@@ -169,7 +169,7 @@ TEST_CASE(
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{"div", false};
+    GenericNode obj{"div", NonVoid};
     obj["id"] = "original";
 
     index::AttributeNameIndex index =
@@ -191,9 +191,9 @@ TEST_CASE("Children are properly removed from parent indices", "[Index]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode parent{"div", false};
+    GenericNode parent{"div", NonVoid};
     std::unique_ptr<Node> child = std::make_unique<GenericNode>(
-        "span", false, Attribute("class", "removable"));
+        "span", NonVoid, Attribute("class", "removable"));
     Node* childRef = parent.addChild(std::move(child));
 
     index::AttributeNameIndex index =
@@ -208,14 +208,14 @@ TEST_CASE("Children keep their own indices when removed", "[Index]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    std::unique_ptr<Node> child =
-        std::make_unique<GenericNode>("span", false, Attribute("id", "child"));
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>(
+        "span", NonVoid, Attribute("id", "child"));
     index::AttributeNameIndex childIndex =
         index::createIndex<index::AttributeNameIndex>(child.get(), "id");
 
     REQUIRE(childIndex.getByValue("child").size() == 1);
 
-    GenericNode parent{"div", false};
+    GenericNode parent{"div", NonVoid};
     index::AttributeNameIndex parentIndex =
         index::createIndex<index::AttributeNameIndex>(&parent, "id");
 
@@ -232,18 +232,18 @@ TEST_CASE("Index is created with createIndexPointer ", "[Index]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("id", "0"),
-                GenericNode("div", false, Attribute("id", "1"),
-                            GenericNode("div", false, Attribute("id", "2"))),
-                GenericNode("div", false, Attribute("id", "3")),
-                GenericNode("div", false, Attribute("id", "4"))))};
+                "div", NonVoid, Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("id", "2"))),
+                GenericNode("div", NonVoid, Attribute("id", "3")),
+                GenericNode("div", NonVoid, Attribute("id", "4"))))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -264,18 +264,18 @@ TEST_CASE("Index is created with createIndexUniquePointer ", "[Index]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("id", "0"),
-                GenericNode("div", false, Attribute("id", "1"),
-                            GenericNode("div", false, Attribute("id", "2"))),
-                GenericNode("div", false, Attribute("id", "3")),
-                GenericNode("div", false, Attribute("id", "4"))))};
+                "div", NonVoid, Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("id", "2"))),
+                GenericNode("div", NonVoid, Attribute("id", "3")),
+                GenericNode("div", NonVoid, Attribute("id", "4"))))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -294,18 +294,18 @@ TEST_CASE("Index is created with createIndexSharedPointer ", "[Index]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("id", "0"),
-                GenericNode("div", false, Attribute("id", "1"),
-                            GenericNode("div", false, Attribute("id", "2"))),
-                GenericNode("div", false, Attribute("id", "3")),
-                GenericNode("div", false, Attribute("id", "4"))))};
+                "div", NonVoid, Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("id", "2"))),
+                GenericNode("div", NonVoid, Attribute("id", "3")),
+                GenericNode("div", NonVoid, Attribute("id", "4"))))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -327,18 +327,19 @@ TEST_CASE("Index is invalidated correctly", "[Index]") {
     {
         GenericNode obj{
             "html",
-            false,
+            NonVoid,
             Attribute("lang", "en"),
             Attribute("theme", "dark"),
-            GenericNode("head", false),
+            GenericNode("head", NonVoid),
             GenericNode(
-                "body", false,
-                GenericNode("div", false, Attribute("id", "0"),
-                            GenericNode("div", false, Attribute("id", "1"),
-                                        GenericNode("div", false,
-                                                    Attribute("id", "2"))),
-                            GenericNode("div", false, Attribute("id", "3")),
-                            GenericNode("div", false, Attribute("id", "4"))))};
+                "body", NonVoid,
+                GenericNode(
+                    "div", NonVoid, Attribute("id", "0"),
+                    GenericNode(
+                        "div", NonVoid, Attribute("id", "1"),
+                        GenericNode("div", NonVoid, Attribute("id", "2"))),
+                    GenericNode("div", NonVoid, Attribute("id", "3")),
+                    GenericNode("div", NonVoid, Attribute("id", "4"))))};
 
         ptr = index::createIndexSharedPointer<index::AttributeNameIndex>(&obj,
                                                                          "id");
@@ -356,18 +357,18 @@ TEST_CASE("Node operations work after an index is removed", "[Index]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("id", "0"),
-                GenericNode("div", false, Attribute("id", "1"),
-                            GenericNode("div", false, Attribute("id", "2"))),
-                GenericNode("div", false, Attribute("id", "3")),
-                GenericNode("div", false, Attribute("id", "4"))))};
+                "div", NonVoid, Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("id", "2"))),
+                GenericNode("div", NonVoid, Attribute("id", "3")),
+                GenericNode("div", NonVoid, Attribute("id", "4"))))};
 
     {
         index::AttributeNameIndex index =
@@ -388,12 +389,12 @@ TEST_CASE("Indexing multiple occurrences of the same tag", "[TagNameIndex]") {
     using namespace onyx::dynamic;
 
     GenericNode obj{
-        "html", false,
-        GenericNode(
-            "body", false,
-            GenericNode("div", false, GenericNode("div", false),
-                        GenericNode("span", false), GenericNode("div", false)),
-            GenericNode("div", false))};
+        "html", NonVoid,
+        GenericNode("body", NonVoid,
+                    GenericNode("div", NonVoid, GenericNode("div", NonVoid),
+                                GenericNode("span", NonVoid),
+                                GenericNode("div", NonVoid)),
+                    GenericNode("div", NonVoid))};
 
     index::TagNameIndex index =
         index::createIndex<index::TagNameIndex>(&obj, "div");
@@ -406,13 +407,14 @@ TEST_CASE("Indexing nested elements with the same tag name", "[TagNameIndex]") {
     using namespace onyx::dynamic;
 
     GenericNode obj{
-        "html", false,
+        "html", NonVoid,
         GenericNode(
-            "body", false,
-            GenericNode("div", false,
-                        GenericNode("div", false,
-                                    GenericNode("div", false,
-                                                GenericNode("div", false)))))};
+            "body", NonVoid,
+            GenericNode(
+                "div", NonVoid,
+                GenericNode("div", NonVoid,
+                            GenericNode("div", NonVoid,
+                                        GenericNode("div", NonVoid)))))};
 
     index::TagNameIndex index =
         index::createIndex<index::TagNameIndex>(&obj, "div");
@@ -424,13 +426,13 @@ TEST_CASE("Indexing multiple different tag names", "[TagNameIndex]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{
-        "html", false,
-        GenericNode("body", false,
-                    GenericNode("section", false, GenericNode("article", false),
-                                GenericNode("div", false),
-                                GenericNode("article", false)),
-                    GenericNode("section", false))};
+    GenericNode obj{"html", NonVoid,
+                    GenericNode("body", NonVoid,
+                                GenericNode("section", NonVoid,
+                                            GenericNode("article", NonVoid),
+                                            GenericNode("div", NonVoid),
+                                            GenericNode("article", NonVoid)),
+                                GenericNode("section", NonVoid))};
 
     index::TagNameIndex sectionIndex =
         index::createIndex<index::TagNameIndex>(&obj, "section");
@@ -445,9 +447,9 @@ TEST_CASE("Indexing when no elements match", "[TagNameIndex]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{"html", false,
-                    GenericNode("body", false, GenericNode("header", false),
-                                GenericNode("footer", false))};
+    GenericNode obj{"html", NonVoid,
+                    GenericNode("body", NonVoid, GenericNode("header", NonVoid),
+                                GenericNode("footer", NonVoid))};
 
     index::TagNameIndex index =
         index::createIndex<index::TagNameIndex>(&obj, "nav");
@@ -460,11 +462,11 @@ TEST_CASE("Removing a child updates the index", "[TagNameIndex]") {
     using namespace onyx::dynamic;
 
     GenericNode obj{
-        "html", false,
-        GenericNode("body", false,
-                    GenericNode("div", false, Attribute("id", "1")),
-                    GenericNode("div", false, Attribute("id", "2")),
-                    GenericNode("div", false, Attribute("id", "3")))};
+        "html", NonVoid,
+        GenericNode("body", NonVoid,
+                    GenericNode("div", NonVoid, Attribute("id", "1")),
+                    GenericNode("div", NonVoid, Attribute("id", "2")),
+                    GenericNode("div", NonVoid, Attribute("id", "3")))};
 
     index::TagNameIndex index =
         index::createIndex<index::TagNameIndex>(&obj, "div");
@@ -483,13 +485,14 @@ TEST_CASE("Indexing nested elements with multiple occurrences of the same tag",
     using namespace onyx::dynamic;
 
     GenericNode obj{
-        "html", false,
+        "html", NonVoid,
         GenericNode(
-            "body", false,
-            GenericNode("div", false,
-                        GenericNode("div", false,
-                                    GenericNode("div", false,
-                                                GenericNode("div", false)))))};
+            "body", NonVoid,
+            GenericNode(
+                "div", NonVoid,
+                GenericNode("div", NonVoid,
+                            GenericNode("div", NonVoid,
+                                        GenericNode("div", NonVoid)))))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     auto result = index.getByTagName("div");
@@ -502,13 +505,13 @@ TEST_CASE("Indexing multiple different tag names in a tree", "[TagIndex]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{
-        "html", false,
-        GenericNode("body", false,
-                    GenericNode("section", false, GenericNode("article", false),
-                                GenericNode("div", false),
-                                GenericNode("article", false)),
-                    GenericNode("section", false))};
+    GenericNode obj{"html", NonVoid,
+                    GenericNode("body", NonVoid,
+                                GenericNode("section", NonVoid,
+                                            GenericNode("article", NonVoid),
+                                            GenericNode("div", NonVoid),
+                                            GenericNode("article", NonVoid)),
+                                GenericNode("section", NonVoid))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
 
@@ -526,9 +529,9 @@ TEST_CASE("Indexing when no elements match", "[TagIndex]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{"html", false,
-                    GenericNode("body", false, GenericNode("header", false),
-                                GenericNode("footer", false))};
+    GenericNode obj{"html", NonVoid,
+                    GenericNode("body", NonVoid, GenericNode("header", NonVoid),
+                                GenericNode("footer", NonVoid))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     auto result = index.getByTagName("nav");
@@ -540,11 +543,11 @@ TEST_CASE("Removing a child element updates the index", "[TagIndex]") {
     using namespace onyx::dynamic;
 
     GenericNode obj{
-        "html", false,
-        GenericNode("body", false,
-                    GenericNode("div", false, Attribute("id", "1")),
-                    GenericNode("div", false, Attribute("id", "2")),
-                    GenericNode("div", false, Attribute("id", "3")))};
+        "html", NonVoid,
+        GenericNode("body", NonVoid,
+                    GenericNode("div", NonVoid, Attribute("id", "1")),
+                    GenericNode("div", NonVoid, Attribute("id", "2")),
+                    GenericNode("div", NonVoid, Attribute("id", "3")))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
     REQUIRE(index.getByTagName("div").size() == 3);
@@ -571,11 +574,11 @@ TEST_CASE("Indexing nested elements with different tag names", "[TagIndex]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode obj{
-        "html", false,
-        GenericNode("body", false, GenericNode("header", false),
-                    GenericNode("section", false, GenericNode("article", false),
-                                GenericNode("footer", false)))};
+    GenericNode obj{"html", NonVoid,
+                    GenericNode("body", NonVoid, GenericNode("header", NonVoid),
+                                GenericNode("section", NonVoid,
+                                            GenericNode("article", NonVoid),
+                                            GenericNode("footer", NonVoid)))};
 
     index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
 
@@ -598,83 +601,84 @@ onyx::dynamic::tags::GenericNode getComplexTree() {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
 
         GenericNode(
-            "head", false,
-            GenericNode("meta", true, Attribute("charset", "UTF-8")),
+            "head", NonVoid,
+            GenericNode("meta", Void, Attribute("charset", "UTF-8")),
             GenericNode(
-                "meta", true, Attribute("name", "viewport"),
+                "meta", Void, Attribute("name", "viewport"),
                 Attribute("content", "width=device-width, initial-scale=1.0")),
-            GenericNode("title", false, Text("Complex Test Page")),
-            GenericNode("link", true, Attribute("rel", "stylesheet"),
+            GenericNode("title", NonVoid, Text("Complex Test Page")),
+            GenericNode("link", Void, Attribute("rel", "stylesheet"),
                         Attribute("href", "/styles/main.css"))),
 
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "header", false,
+                "header", NonVoid,
                 GenericNode(
-                    "nav", false,
+                    "nav", NonVoid,
                     GenericNode(
-                        "ul", false,
-                        GenericNode(
-                            "li", false, Attribute("class", "item"),
-                            GenericNode("a", false, Attribute("href", "#home"),
-                                        Text("Home"))),
-                        GenericNode(
-                            "li", false, Attribute("class", "item"),
-                            GenericNode("a", false, Attribute("href", "#about"),
-                                        Text("About Us")))))),
+                        "ul", NonVoid,
+                        GenericNode("li", NonVoid, Attribute("class", "item"),
+                                    GenericNode("a", NonVoid,
+                                                Attribute("href", "#home"),
+                                                Text("Home"))),
+                        GenericNode("li", NonVoid, Attribute("class", "item"),
+                                    GenericNode("a", NonVoid,
+                                                Attribute("href", "#about"),
+                                                Text("About Us")))))),
 
             GenericNode(
-                "main", false,
+                "main", NonVoid,
                 GenericNode(
-                    "section", false, Attribute("id", "introduction"),
-                    GenericNode("h1", false, Text("Introduction")),
-                    GenericNode("p", false,
+                    "section", NonVoid, Attribute("id", "introduction"),
+                    GenericNode("h1", NonVoid, Text("Introduction")),
+                    GenericNode("p", NonVoid,
                                 Text("Welcome to the complex HTML structure "
                                      "test case.")),
-                    GenericNode("p", false,
+                    GenericNode("p", NonVoid,
                                 Text("This test includes various nested "
                                      "elements, attributes, and content.")),
                     GenericNode(
-                        "form", false, Attribute("name", "contact-form"),
-                        GenericNode("label", false, Attribute("for", "name"),
+                        "form", NonVoid, Attribute("name", "contact-form"),
+                        GenericNode("label", NonVoid, Attribute("for", "name"),
                                     Text("Your Name:")),
-                        GenericNode("input", true, Attribute("type", "text"),
+                        GenericNode("input", Void, Attribute("type", "text"),
                                     Attribute("id", "name"),
                                     Attribute("name", "name")),
-                        GenericNode("label", false, Attribute("for", "email"),
+                        GenericNode("label", NonVoid, Attribute("for", "email"),
                                     Text("Your Email:")),
-                        GenericNode("input", true, Attribute("type", "email"),
+                        GenericNode("input", Void, Attribute("type", "email"),
                                     Attribute("id", "email"),
                                     Attribute("name", "email")),
-                        GenericNode("button", false,
+                        GenericNode("button", NonVoid,
                                     Attribute("type", "submit"),
                                     Text("Submit")))),
 
                 GenericNode(
-                    "section", false, Attribute("id", "features"),
-                    GenericNode("h2", false, Text("Features")),
+                    "section", NonVoid, Attribute("id", "features"),
+                    GenericNode("h2", NonVoid, Text("Features")),
                     GenericNode(
-                        "ul", false,
-                        GenericNode("li", false, Attribute("class", "item"),
+                        "ul", NonVoid,
+                        GenericNode("li", NonVoid, Attribute("class", "item"),
                                     Text("Feature 1")),
-                        GenericNode("li", false, Attribute("class", "item"),
+                        GenericNode("li", NonVoid, Attribute("class", "item"),
                                     Text("Feature 2")),
-                        GenericNode("li", false, Attribute("class", "item"),
+                        GenericNode("li", NonVoid, Attribute("class", "item"),
                                     Text("Feature 3"))),
-                    GenericNode("p", false,
+                    GenericNode("p", NonVoid,
                                 Text("These are the key features of the "
                                      "application.")))),
 
             GenericNode(
-                "footer", false,
-                GenericNode("p", false, Text("© 2025 Complex HTML Test Page")),
-                GenericNode("a", false,
+                "footer", NonVoid,
+                GenericNode("p", NonVoid,
+                            Text("© 2025 Complex HTML Test Page")),
+                GenericNode("a", NonVoid,
                             Attribute("href", "https://www.example.com"),
                             Text("Privacy Policy"))))};
 
@@ -783,14 +787,14 @@ TEST_CASE("Index move constructor works", "[Index]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
-        GenericNode("body", false,
-                    GenericNode("div", false, Attribute("id", "0")),
-                    GenericNode("div", false, Attribute("id", "3")),
-                    GenericNode("div", false, Attribute("id", "4")))};
+        GenericNode("head", NonVoid),
+        GenericNode("body", NonVoid,
+                    GenericNode("div", NonVoid, Attribute("id", "0")),
+                    GenericNode("div", NonVoid, Attribute("id", "3")),
+                    GenericNode("div", NonVoid, Attribute("id", "4")))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -810,7 +814,7 @@ TEST_CASE("Index move constructor works", "[Index]") {
 
     REQUIRE(result2.size() == 1);
 
-    obj.addChild(GenericNode("div", false, Attribute("id", "3")));
+    obj.addChild(GenericNode("div", NonVoid, Attribute("id", "3")));
 
     auto result3 = index2.getByValue("3");
 
@@ -822,11 +826,11 @@ TEST_CASE("Index move assignment operator works", "[Index]") {
     using namespace onyx::dynamic;
 
     GenericNode obj{
-        "html", false, Attribute("lang", "en"), Attribute("theme", "dark"),
-        GenericNode("body", false,
-                    GenericNode("div", false, Attribute("id", "0")),
-                    GenericNode("div", false, Attribute("id", "3")),
-                    GenericNode("div", false, Attribute("id", "4")))};
+        "html", NonVoid, Attribute("lang", "en"), Attribute("theme", "dark"),
+        GenericNode("body", NonVoid,
+                    GenericNode("div", NonVoid, Attribute("id", "0")),
+                    GenericNode("div", NonVoid, Attribute("id", "3")),
+                    GenericNode("div", NonVoid, Attribute("id", "4")))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -846,7 +850,7 @@ TEST_CASE("Index move assignment operator works", "[Index]") {
 
     REQUIRE(result2.size() == 1);
 
-    obj.addChild(GenericNode("div", false, Attribute("id", "3")));
+    obj.addChild(GenericNode("div", NonVoid, Attribute("id", "3")));
 
     auto result3 = index2.getByValue("3");
 
@@ -860,14 +864,14 @@ TEST_CASE("Index move assignment operator cleans up memory properly",
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
-        GenericNode("body", false,
-                    GenericNode("div", false, Attribute("class", "0")),
-                    GenericNode("div", false, Attribute("id", "3")),
-                    GenericNode("div", false, Attribute("id", "4")))};
+        GenericNode("head", NonVoid),
+        GenericNode("body", NonVoid,
+                    GenericNode("div", NonVoid, Attribute("class", "0")),
+                    GenericNode("div", NonVoid, Attribute("id", "3")),
+                    GenericNode("div", NonVoid, Attribute("id", "4")))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -892,8 +896,8 @@ TEST_CASE("Index move assignment operator cleans up memory properly",
     REQUIRE(result2.size() == 1);
     CHECK(result2[0]->getAttributeValue("class") == "0");
 
-    obj.addChild(GenericNode("div", false, Attribute("class", "0")));
-    obj.addChild(GenericNode("div", false, Attribute("id", "3")));
+    obj.addChild(GenericNode("div", NonVoid, Attribute("class", "0")));
+    obj.addChild(GenericNode("div", NonVoid, Attribute("id", "3")));
 
     auto result3 = index.getByValue("0");
 

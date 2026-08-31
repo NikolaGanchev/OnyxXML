@@ -21,69 +21,74 @@ class GenericNode : public NamespaceNode {
 
    public:
     /**
+     * @brief Represents types of GenericNode
+     *
+     */
+    enum class Type { Void, NonVoid };
+    /**
      * @brief Construct a new owning GenericNode.
      *
      * @tparam Args
      * @param namespacePrefix The namespace prefix of this Node
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      * @param args Forwarded to the Node constructor
      */
     template <typename... Args>
     explicit GenericNode(std::string namespacePrefix, std::string tagName,
-                         bool isVoid, Args&&... args);
+                         Type type, Args&&... args);
 
     /**
      * @brief Construct a new owning GenericNode.
      *
      * @tparam Args
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      * @param args Forwarded to the Node constructor
      */
     template <typename... Args>
-    explicit GenericNode(std::string tagName, bool isVoid, Args&&... args);
+    explicit GenericNode(std::string tagName, Type type, Args&&... args);
 
     /**
      * @brief Construct an empty owning GenericNode object
      *
      * @param namespacePrefix The namespace prefix of this Node
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      */
     explicit GenericNode(std::string namespacePrefix, std::string tagName,
-                         bool isVoid);
+                         Type type);
 
     /**
      * @brief Construct an empty owning GenericNode object
      *
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      */
-    explicit GenericNode(std::string tagName, bool isVoid);
+    explicit GenericNode(std::string tagName, Type type);
 
     /**
      * @brief Construct a fully runtime owning GenericNode object
      *
      * @param namespacePrefix The namespace prefix of this Node
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
     explicit GenericNode(std::string namespacePrefix, std::string tagName,
-                         bool isVoid, std::vector<Attribute> attributes,
+                         Type type, std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children);
 
     /**
      * @brief Construct a fully runtime owning GenericNode object
      *
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
-    explicit GenericNode(std::string tagName, bool isVoid,
+    explicit GenericNode(std::string tagName, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children);
 
@@ -92,30 +97,30 @@ class GenericNode : public NamespaceNode {
      *
      * @param namespacePrefix The namespace prefix of this Node
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      */
     explicit GenericNode(NonOwningNodeTag, std::string namespacePrefix,
-                         std::string tagName, bool isVoid);
+                         std::string tagName, Type type);
 
     /**
      * @brief Construct an empty non-owning GenericNode object
      *
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      */
-    explicit GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid);
+    explicit GenericNode(NonOwningNodeTag, std::string tagName, Type type);
 
     /**
      * @brief Construct a fully runtime non-owning GenericNode object
      *
      * @param namespacePrefix The namespace prefix of this Node
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
     explicit GenericNode(NonOwningNodeTag, std::string namespacePrefix,
-                         std::string tagName, bool isVoid,
+                         std::string tagName, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children);
 
@@ -123,11 +128,11 @@ class GenericNode : public NamespaceNode {
      * @brief Construct a fully runtime non-owning GenericNode object
      *
      * @param tagName The tag name of this node
-     * @param isVoid Whether this Node is void
+     * @param type Void or NonVoid
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
-    explicit GenericNode(NonOwningNodeTag, std::string tagName, bool isVoid,
+    explicit GenericNode(NonOwningNodeTag, std::string tagName, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children);
 
@@ -169,10 +174,10 @@ static_assert(GenericNode::FlagBitIndices::NEXT_BIT <= Node::maxFlagBits(),
 
 template <typename... Args>
 GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
-                         bool isVoid, Args&&... args)
+                         Type type, Args&&... args)
     : tag{std::move(tagName)},
       NamespaceNode(std::move(namespacePrefix), std::forward<Args>(args)...) {
-    this->setFlag<FlagBitIndices::BIT_IS_VOID>(isVoid);
+    this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
 
     if (this->isVoid() && this->getChildrenCount() > 0) {
         throw std::runtime_error("Void " + getTagName() +
@@ -181,7 +186,6 @@ GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
 }
 
 template <typename... Args>
-GenericNode::GenericNode(std::string tagName, bool isVoid, Args&&... args)
-    : GenericNode("", std::move(tagName), isVoid, std::forward<Args>(args)...) {
-}
+GenericNode::GenericNode(std::string tagName, Type type, Args&&... args)
+    : GenericNode("", std::move(tagName), type, std::forward<Args>(args)...) {}
 }  // namespace onyx::dynamic::tags

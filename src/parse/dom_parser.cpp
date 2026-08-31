@@ -204,8 +204,10 @@ struct DomParser::DomStringParserPolicy {
                                 std::vector<StringType>& attributeNames,
                                 std::vector<StringType>& attributeValues,
                                 Stack& stack, CursorType& cursor) {
-        Node* newNode = arena.allocate<tags::GenericNode>(std::move(tagName),
-                                                          isSelfClosing);
+        Node* newNode = arena.allocate<tags::GenericNode>(
+            std::move(tagName), isSelfClosing
+                                    ? tags::GenericNode::Type::Void
+                                    : tags::GenericNode::Type::NonVoid);
 
         auto& attributes = newNode->attributes;
         for (int i = 0; i < attributeNames.size(); i++) {
@@ -315,8 +317,10 @@ struct DomParser::DomStreamParserPolicy {
                                 std::vector<StringType>& attributeNames,
                                 std::vector<StringType>& attributeValues,
                                 Stack& stack, CursorType& cursor) {
-        Node* newNode = arena.allocate<tags::GenericNode>(std::move(tagName),
-                                                          isSelfClosing);
+        Node* newNode = arena.allocate<tags::GenericNode>(
+            std::move(tagName), isSelfClosing
+                                    ? tags::GenericNode::Type::Void
+                                    : tags::GenericNode::Type::NonVoid);
 
         auto& attributes = newNode->attributes;
         for (int i = 0; i < attributeNames.size(); i++) {
