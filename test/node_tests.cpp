@@ -2639,6 +2639,54 @@ TEST_CASE("getNamespaceURI resolves prefix with declared namespace on self",
     REQUIRE(tracked->getNamespaceURI() == "uri3");
 }
 
+TEST_CASE("QualifiedName resolves empty prefix to \"\"", "[QualifiedName]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedName("price").prefix == "");
+}
+
+TEST_CASE("QualifiedName resolves prefix", "[QualifiedName]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedName("lib:price").prefix == "lib");
+}
+
+TEST_CASE("QualifiedName resolves name with no prefix", "[QualifiedName]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedName("price").name == "price");
+}
+
+TEST_CASE("QualifiedName resolves name with prefix", "[QualifiedName]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedName("lib:price").name == "price");
+}
+
+TEST_CASE(
+    "QualifiedName resolves prefix with no prefix and 0th character separator",
+    "[QualifiedName]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedName(":price").prefix == "");
+}
+
+TEST_CASE(
+    "QualifiedName resolves name with no prefix and 0th character separator",
+    "[QualifiedName]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedName(":price").name == "price");
+}
+
+TEST_CASE(
+    "QualifiedName resolves prefix with no name and last character separator",
+    "[QualifiedName]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedName("lib:").prefix == "lib");
+}
+
+TEST_CASE(
+    "QualifiedName resolves name with no name and last character separatorr",
+    "[QualifiedName]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedName("lib:").name == "");
+}
+
 namespace {
 // Test fixture class to expose protected getFlag and setFlag methods
 class FlagTestNode : public onyx::tags::GenericNode {
