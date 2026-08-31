@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../namespace_node.h"
+#include "util/qualified_name.h"
 
 namespace onyx::dynamic::tags {
 
@@ -42,12 +43,14 @@ class GenericNode : public NamespaceNode {
      * @brief Construct a new owning GenericNode.
      *
      * @tparam Args
-     * @param tagName The tag name of this node
+     * @param qualifiedName A qualified name that includes the name of the node
+     * and may or not include a namespace prefix
      * @param type Void or NonVoid
      * @param args Forwarded to the Node constructor
      */
     template <typename... Args>
-    explicit GenericNode(std::string tagName, Type type, Args&&... args);
+    explicit GenericNode(util::QualifiedName qualifiedName, Type type,
+                         Args&&... args);
 
     /**
      * @brief Construct an empty owning GenericNode object
@@ -62,10 +65,11 @@ class GenericNode : public NamespaceNode {
     /**
      * @brief Construct an empty owning GenericNode object
      *
-     * @param tagName The tag name of this node
+     * @param qualifiedName A qualified name that includes the name of the node
+     * and may or not include a namespace prefix
      * @param type Void or NonVoid
      */
-    explicit GenericNode(std::string tagName, Type type);
+    explicit GenericNode(util::QualifiedName qualifiedName, Type type);
 
     /**
      * @brief Construct a fully runtime owning GenericNode object
@@ -83,12 +87,13 @@ class GenericNode : public NamespaceNode {
     /**
      * @brief Construct a fully runtime owning GenericNode object
      *
-     * @param tagName The tag name of this node
+     * @param qualifiedName A qualified name that includes the name of the node
+     * and may or not include a namespace prefix
      * @param type Void or NonVoid
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
-    explicit GenericNode(std::string tagName, Type type,
+    explicit GenericNode(util::QualifiedName qualifiedName, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children);
 
@@ -105,10 +110,12 @@ class GenericNode : public NamespaceNode {
     /**
      * @brief Construct an empty non-owning GenericNode object
      *
-     * @param tagName The tag name of this node
+     * @param qualifiedName A qualified name that includes the name of the node
+     * and may or not include a namespace prefix
      * @param type Void or NonVoid
      */
-    explicit GenericNode(NonOwningNodeTag, std::string tagName, Type type);
+    explicit GenericNode(NonOwningNodeTag, util::QualifiedName qualifiedName,
+                         Type type);
 
     /**
      * @brief Construct a fully runtime non-owning GenericNode object
@@ -127,13 +134,14 @@ class GenericNode : public NamespaceNode {
     /**
      * @brief Construct a fully runtime non-owning GenericNode object
      *
-     * @param tagName The tag name of this node
+     * @param qualifiedName A qualified name that includes the name of the node
+     * and may or not include a namespace prefix
      * @param type Void or NonVoid
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
-    explicit GenericNode(NonOwningNodeTag, std::string tagName, Type type,
-                         std::vector<Attribute> attributes,
+    explicit GenericNode(NonOwningNodeTag, util::QualifiedName qualifiedName,
+                         Type type, std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children);
 
     /**
@@ -186,6 +194,9 @@ GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
 }
 
 template <typename... Args>
-GenericNode::GenericNode(std::string tagName, Type type, Args&&... args)
-    : GenericNode("", std::move(tagName), type, std::forward<Args>(args)...) {}
+GenericNode::GenericNode(util::QualifiedName qualifiedName, Type type,
+                         Args&&... args)
+    : GenericNode(std::string(qualifiedName.prefix),
+                  std::string(qualifiedName.name), type,
+                  std::forward<Args>(args)...) {}
 }  // namespace onyx::dynamic::tags

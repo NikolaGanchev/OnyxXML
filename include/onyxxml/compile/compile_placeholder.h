@@ -38,11 +38,11 @@ struct Placeholder {
 
    public:
     /**
-     * @brief The invalid tag name ".templater::placeholder" is used to reduce
+     * @brief The invalid tag name ".templater-placeholder" is used to reduce
      * chances of collisions.
      *
      */
-    static constexpr const char* TAG_NAME = ".templater::placeholder";
+    static constexpr const char* TAG_NAME = ".templater-placeholder";
 
     /**
      * @brief The compile-time size of the Placeholder. Does not account for

@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "catch2/catch_all.hpp"
+#include "nodes/util/qualified_name.h"
 #include "onyx.h"
 #include "util.h"
 
@@ -2580,7 +2581,7 @@ TEST_CASE("getNamespaceURI resolves prefix with no declared namespace to null",
     GenericNode library(
         "library", NonVoid, Attribute("xmlns:notlib", "uri2"),
         GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
-                    GenericNode("lib", "price", NonVoid, Text("10"))));
+                    GenericNode("lib:price", NonVoid, Text("10"))));
 
     Node* tracked = library.getFirstChild()->getLastChild();
 
@@ -2598,7 +2599,7 @@ TEST_CASE(
         Attribute("xmlns:notlib", "uri2"),
         GenericNode("book", NonVoid, Attribute("xmlns:lib", ""),
                     GenericNode("name", NonVoid, Text("Book")),
-                    GenericNode("lib", "price", NonVoid, Text("10"))));
+                    GenericNode("lib:price", NonVoid, Text("10"))));
 
     Node* tracked = library.getFirstChild()->getLastChild();
 
@@ -2614,7 +2615,7 @@ TEST_CASE("getNamespaceURI resolves prefix with declared namespace on ancestor",
         "library", NonVoid, Attribute("xmlns:lib", "uri"),
         Attribute("xmlns:notlib", "uri2"),
         GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
-                    GenericNode("lib", "price", NonVoid, Text("10"))));
+                    GenericNode("lib:price", NonVoid, Text("10"))));
 
     Node* tracked = library.getFirstChild()->getLastChild();
 
@@ -2630,7 +2631,7 @@ TEST_CASE("getNamespaceURI resolves prefix with declared namespace on self",
         "library", NonVoid, Attribute("xmlns:lib", "uri"),
         Attribute("xmlns:notlib", "uri2"),
         GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
-                    GenericNode("lib", "price", NonVoid,
+                    GenericNode("lib:price", NonVoid,
                                 Attribute("xmlns:lib", "uri3"), Text("10"))));
 
     Node* tracked = library.getFirstChild()->getLastChild();

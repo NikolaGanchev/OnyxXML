@@ -10,8 +10,9 @@ GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
     this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
 }
 
-GenericNode::GenericNode(std::string tagName, Type type)
-    : GenericNode("", std::move(tagName), type) {}
+GenericNode::GenericNode(util::QualifiedName qualifiedName, Type type)
+    : GenericNode(std::string(qualifiedName.prefix),
+                  std::string(qualifiedName.name), type) {}
 
 GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
                          Type type, std::vector<Attribute> attributes,
@@ -26,10 +27,11 @@ GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
     }
 }
 
-GenericNode::GenericNode(std::string tagName, Type type,
+GenericNode::GenericNode(util::QualifiedName qualifiedName, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children)
-    : GenericNode{"", std::move(tagName), type, std::move(attributes),
+    : GenericNode{std::string(qualifiedName.prefix),
+                  std::string(qualifiedName.name), type, std::move(attributes),
                   std::move(children)} {}
 
 GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
@@ -39,8 +41,10 @@ GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
     this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
 }
 
-GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, Type type)
-    : GenericNode(NonOwning, "", std::move(tagName), type) {}
+GenericNode::GenericNode(NonOwningNodeTag, util::QualifiedName qualifiedName,
+                         Type type)
+    : GenericNode(NonOwning, std::string(qualifiedName.prefix),
+                  std::string(qualifiedName.name), type) {}
 
 GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
                          std::string tagName, Type type,
@@ -56,12 +60,12 @@ GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
     }
 }
 
-GenericNode::GenericNode(NonOwningNodeTag, std::string tagName, Type type,
-                         std::vector<Attribute> attributes,
+GenericNode::GenericNode(NonOwningNodeTag, util::QualifiedName qualifiedName,
+                         Type type, std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children)
     : GenericNode{NonOwning,
-                  "",
-                  std::move(tagName),
+                  std::string(qualifiedName.prefix),
+                  std::string(qualifiedName.name),
                   type,
                   std::move(attributes),
                   std::move(children)} {}
