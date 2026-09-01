@@ -45,13 +45,14 @@ class SaxListener {
      * onTagClose() will eventually be called.
      *
      */
-    virtual void onTagOpen(std::string name, bool isSelfClosing,
+    virtual void onTagOpen(std::string namespacePrefix, std::string name,
+                           bool isSelfClosing,
                            std::vector<Attribute> attributes) = 0;
     /**
      * @brief Called when a tag is closed.
      *
      */
-    virtual void onTagClose(std::string name) = 0;
+    virtual void onTagClose(std::string namespacePrefix, std::string name) = 0;
     /**
      * @brief Called when an XML Declaration is found.
      *

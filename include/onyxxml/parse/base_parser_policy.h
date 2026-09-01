@@ -19,13 +19,16 @@ struct BaseParserPolicy {
     ONYX_INLINE void xmlDeclarationAction(StringType&&, StringType&&, bool,
                                           bool, bool, Stack&, CursorType&) {}
     ONYX_INLINE void doctypeAction(StringType&&, Stack&, CursorType&) {}
-    ONYX_INLINE void openAction(StringType&&, bool, std::vector<StringType>&,
+    ONYX_INLINE void openAction(StringType&&, StringType&&, bool,
+                                std::vector<StringType>&,
                                 std::vector<StringType>&, Stack&, CursorType&) {
     }
-    ONYX_INLINE void closeAction(StringType&&, Stack&, CursorType&) {}
+    ONYX_INLINE void closeAction(StringType&&, StringType&&, Stack&,
+                                 CursorType&) {}
 
     ONYX_INLINE void initStack(std::vector<StackType>&) {}
     ONYX_INLINE bool equalStackElementToTag(StackType&,
+                                            typename CursorType::StringType&,
                                             typename CursorType::StringType&) {
         return false;
     }

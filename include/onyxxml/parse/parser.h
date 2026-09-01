@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cctype>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -668,7 +669,7 @@ bool dispatchProcessingInstructionLike(ParseState<Config, Policy>& state,
             throw std::invalid_argument("Premature end of document");
         }
     }
-    typename State::CursorStringType tagName = readName(pos);
+    typename State::CursorStringType tagName = readNCName(pos);
     if constexpr (Config::validate) {
         if (tagName.empty()) {
             throw std::invalid_argument("Invalid tag name");
@@ -884,7 +885,7 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
                                  Policy& policy, bool validateUTF8) {
     using State = ParseState<Config, Policy>;
     while (pos.current() != '>' && pos.current() != '/') {
-        typename State::CursorStringType attributeName = readName(pos);
+        typename State::CursorStringType attributeName = readQName(pos);
         if constexpr (Config::validate) {
             if (attributeName.empty()) {
                 throw std::invalid_argument("Invalid non-closing tag");
@@ -1023,13 +1024,15 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
     }
 
     /* Invariant - pos always at tag name start */
-    typename State::CursorStringType tagName = readName(pos);
+    auto qname = readQNameAndSplit(pos);
     if constexpr (Config::validate) {
-        if (tagName.empty()) {
+        if (qname.first == std::nullopt && qname.second == std::nullopt) {
             throw std::invalid_argument("Invalid tag name");
+        } else if (qname.second == std::nullopt) {
+            throw std::invalid_argument(
+                "Invalid tag name containing only prefix part");
         }
     }
-    pos.advance(tagName.size());
 
     bool couldHaveAttributes = isWhitespace(pos.current()) && !isClosing;
 
@@ -1069,7 +1072,7 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
     } else {
         if constexpr (Config::validate) {
             throw std::invalid_argument("No tag close for tag " +
-                                        std::string(tagName));
+                                        std::string(qname.second.value()));
         }
     }
 
@@ -1078,7 +1081,12 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
         /* Invariant - top stack node is always current parent */
         state.firstTag = false;
         policy.openAction(
-            std::move(policy.transformText(std::move(tagName),
+            std::move(policy.transformText(
+                std::move(qname.first == std::nullopt
+                              ? typename State::CursorStringType()
+                              : qname.first.value()),
+                TextTransformationMode::NONE)),
+            std::move(policy.transformText(std::move(qname.second.value()),
                                            TextTransformationMode::NONE)),
             isSelfClosing, state.attributeNames, state.attributeValues,
             state.stack, pos);
@@ -1088,7 +1096,13 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
         /* Invariant - when closing node, the current parent (stack top)
          * must be of the node type */
         if constexpr (Config::validate) {
-            if (!policy.equalStackElementToTag(state.stack.back(), tagName)) {
+            typename State::CursorStringType namespacePrefix;
+            if (qname.first != std::nullopt) {
+                namespacePrefix = qname.first.value();
+            }
+            if (!policy.equalStackElementToTag(state.stack.back(),
+                                               namespacePrefix,
+                                               qname.second.value())) {
                 throw std::invalid_argument("Closing unopened tag");
             }
             if (state.stack.size() == 1) {
@@ -1096,7 +1110,12 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
             }
         }
         policy.closeAction(
-            std::move(policy.transformText(std::move(tagName),
+            std::move(policy.transformText(
+                std::move(qname.first == std::nullopt
+                              ? typename State::CursorStringType()
+                              : qname.first.value()),
+                TextTransformationMode::NONE)),
+            std::move(policy.transformText(std::move(qname.second.value()),
                                            TextTransformationMode::NONE)),
             state.stack, pos);
     }

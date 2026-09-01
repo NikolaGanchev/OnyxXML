@@ -10,12 +10,15 @@ namespace onyx::dynamic::parser {
 template <typename T>
 concept isParserPolicy = requires(
     T t, typename T::StringType&& text, typename T::StringType&& tagName,
-    typename T::StringType&& version, typename T::StringType&& encoding,
-    bool hasEncoding, bool isStandalone, bool hasStandalone, bool isSelfClosing,
+    typename T::StringType&& namespaceName, typename T::StringType&& version,
+    typename T::StringType&& encoding, bool hasEncoding, bool isStandalone,
+    bool hasStandalone, bool isSelfClosing,
     std::vector<typename T::StringType>& attributeNames,
     std::vector<typename T::StringType>& attributeValues,
     std::vector<typename T::StackType>& stack, T::StackType& stackElement,
-    typename T::CursorType::StringType& tag, typename T::CursorType& cursor,
+    typename T::CursorType::StringType& tag,
+    typename T::CursorType::StringType& namespaceNameRef,
+    typename T::CursorType& cursor,
     typename T::CursorType::StringType&& cursorString,
     TextTransformationMode textTransformationMode, bool& validateUTF8) {
     typename T::StringType;
@@ -34,11 +37,13 @@ concept isParserPolicy = requires(
     {
         t.foundEncoding(std::move(text), cursor, validateUTF8)
     } -> std::same_as<bool>;
-    t.openAction(std::move(tagName), isSelfClosing, attributeNames,
-                 attributeValues, stack, cursor);
-    t.closeAction(std::move(tagName), stack, cursor);
+    t.openAction(std::move(namespaceName), std::move(tagName), isSelfClosing,
+                 attributeNames, attributeValues, stack, cursor);
+    t.closeAction(std::move(namespaceName), std::move(tagName), stack, cursor);
     t.initStack(stack);
-    { t.equalStackElementToTag(stackElement, tag) } -> std::same_as<bool>;
+    {
+        t.equalStackElementToTag(stackElement, namespaceNameRef, tag)
+    } -> std::same_as<bool>;
     { t.isStackRoot(stackElement) } -> std::same_as<bool>;
     {
         t.transformText(std::move(text), textTransformationMode)

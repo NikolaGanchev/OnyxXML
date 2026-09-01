@@ -25,7 +25,7 @@ struct StringSaxParserPolicy {
 
     using CursorType = StringCursor;
     using StringType = std::string;
-    using StackType = std::string;
+    using StackType = std::pair<std::string, std::string>;
     using Stack = std::vector<StackType>;
 
     ONYX_INLINE void textAction(StringType&& text, Stack& stack,
@@ -65,7 +65,8 @@ struct StringSaxParserPolicy {
         this->listener.onDoctype(std::move(doctypeText));
     }
 
-    ONYX_INLINE void openAction(StringType&& tagName, bool isSelfClosing,
+    ONYX_INLINE void openAction(StringType&& namespacePrefix,
+                                StringType&& tagName, bool isSelfClosing,
                                 std::vector<StringType>& attributeNames,
                                 std::vector<StringType>& attributeValues,
                                 Stack& stack, CursorType& cursor) {
@@ -76,29 +77,32 @@ struct StringSaxParserPolicy {
         }
 
         if (!isSelfClosing) {
-            stack.push_back(tagName);
+            stack.push_back({namespacePrefix, tagName});
         }
-        this->listener.onTagOpen(std::move(tagName), isSelfClosing,
-                                 std::move(attributes));
+        this->listener.onTagOpen(std::move(namespacePrefix), std::move(tagName),
+                                 isSelfClosing, std::move(attributes));
     }
 
-    ONYX_INLINE void closeAction(StringType&& tagName, Stack& stack,
+    ONYX_INLINE void closeAction(StringType&& namespacePrefix,
+                                 StringType&& tagName, Stack& stack,
                                  CursorType& cursor) {
         stack.pop_back();
-        this->listener.onTagClose(std::move(tagName));
+        this->listener.onTagClose(std::move(namespacePrefix),
+                                  std::move(tagName));
     }
 
     ONYX_INLINE void initStack(std::vector<StackType>& stack) {
-        stack.push_back(std::string(root));
+        stack.push_back({"", std::string(root)});
     }
 
-    ONYX_INLINE bool equalStackElementToTag(StackType& el,
-                                            CursorType::StringType& tag) {
-        return el == tag;
+    ONYX_INLINE bool equalStackElementToTag(
+        StackType& el, CursorType::StringType& namespacePrefix,
+        CursorType::StringType& tag) {
+        return el.first == namespacePrefix && el.second == tag;
     }
 
     ONYX_INLINE bool isStackRoot(StackType& stackElement) {
-        return stackElement == root;
+        return stackElement.first == "" && stackElement.second == root;
     }
 
     ONYX_INLINE StringType transformText(CursorType::StringType&& text,
@@ -171,7 +175,7 @@ struct StreamSaxParserPolicy {
 
     using CursorType = StreamCursor;
     using StringType = StreamCursor::StringType;
-    using StackType = std::string;
+    using StackType = std::pair<std::string, std::string>;
     using Stack = std::vector<StackType>;
 
     ONYX_INLINE void textAction(StringType&& text, Stack& stack,
@@ -211,7 +215,8 @@ struct StreamSaxParserPolicy {
         this->listener.onDoctype(std::move(doctypeText));
     }
 
-    ONYX_INLINE void openAction(StringType&& tagName, bool isSelfClosing,
+    ONYX_INLINE void openAction(StringType&& namespaceName,
+                                StringType&& tagName, bool isSelfClosing,
                                 std::vector<StringType>& attributeNames,
                                 std::vector<StringType>& attributeValues,
                                 Stack& stack, CursorType& cursor) {
@@ -222,29 +227,31 @@ struct StreamSaxParserPolicy {
         }
 
         if (!isSelfClosing) {
-            stack.push_back(tagName);
+            stack.push_back({namespaceName, tagName});
         }
-        this->listener.onTagOpen(std::move(tagName), isSelfClosing,
-                                 std::move(attributes));
+        this->listener.onTagOpen(std::move(namespaceName), std::move(tagName),
+                                 isSelfClosing, std::move(attributes));
     }
 
-    ONYX_INLINE void closeAction(StringType&& tagName, Stack& stack,
+    ONYX_INLINE void closeAction(StringType&& namespaceName,
+                                 StringType&& tagName, Stack& stack,
                                  CursorType& cursor) {
         stack.pop_back();
-        this->listener.onTagClose(std::move(tagName));
+        this->listener.onTagClose(std::move(namespaceName), std::move(tagName));
     }
 
     ONYX_INLINE void initStack(std::vector<StackType>& stack) {
-        stack.push_back(std::string(root));
+        stack.push_back({"", std::string(root)});
     }
 
-    ONYX_INLINE bool equalStackElementToTag(StackType& el,
-                                            CursorType::StringType& tag) {
-        return el == tag;
+    ONYX_INLINE bool equalStackElementToTag(
+        StackType& el, CursorType::StringType& namespacePrefix,
+        CursorType::StringType& tag) {
+        return el.first == namespacePrefix && el.second == tag;
     }
 
     ONYX_INLINE bool isStackRoot(StackType& stackElement) {
-        return stackElement == root;
+        return stackElement.first == "" && stackElement.second == root;
     }
 
     ONYX_INLINE StringType transformText(CursorType::StringType&& text,

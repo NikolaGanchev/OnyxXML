@@ -1369,10 +1369,11 @@ class SaxListenerLogger : public virtual onyx::parser::SaxListener {
         eventCount++;
     }
 
-    void onTagOpen(std::string name, bool isSelfClosing,
+    void onTagOpen(std::string namespacePrefix, std::string name,
+                   bool isSelfClosing,
                    std::vector<onyx::dynamic::Attribute> attributes) override {
-        os << "Tag open: " << name << "\n\tisSelfClosing: " << isSelfClosing
-           << "\n";
+        os << "Tag open: " << namespacePrefix << " " << name
+           << "\n\tisSelfClosing: " << isSelfClosing << "\n";
         for (size_t i = 0; i < attributes.size(); i++) {
             os << "\tAttribute Name: " << attributes[i].getName()
                << " | Attribute Value: " << attributes[i].getValue() << "\n";
@@ -1381,8 +1382,8 @@ class SaxListenerLogger : public virtual onyx::parser::SaxListener {
         eventCount++;
     }
 
-    void onTagClose(std::string name) override {
-        os << "Tag close: " << name << "\n";
+    void onTagClose(std::string namespacePrefix, std::string name) override {
+        os << "Tag close: " << namespacePrefix << " " << name << "\n";
 
         eventCount++;
     }
