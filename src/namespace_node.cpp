@@ -38,6 +38,8 @@ NamespaceNode& NamespaceNode::operator=(Node&& other) noexcept {
 }
 
 std::optional<std::string_view> NamespaceNode::getNamespacePrefix() const {
-    return namespacePrefix;
+    return namespacePrefix == ""
+               ? std::nullopt
+               : std::optional(std::string_view(namespacePrefix));
 }
 }  // namespace onyx::dynamic
