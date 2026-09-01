@@ -17,32 +17,33 @@ struct BasicAutodetectionParserPolicy
         throw std::logic_error("Received non-declaration encoding event");
     }
 
-    ONYX_INLINE void textAction(StringType, Stack&, CursorType&) {
+    ONYX_INLINE void textAction(StringType&&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void commentAction(StringType, Stack&, CursorType&) {
+    ONYX_INLINE void commentAction(StringType&&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void cdataAction(StringType, Stack&, CursorType&) {
+    ONYX_INLINE void cdataAction(StringType&&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void instructionAction(StringType, StringType, Stack&,
+    ONYX_INLINE void instructionAction(StringType&&, StringType&&, Stack&,
                                        CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void xmlDeclarationAction(StringType, StringType, bool, bool,
-                                          bool, Stack&, CursorType&) {
+    ONYX_INLINE void xmlDeclarationAction(StringType&&, StringType&&, bool,
+                                          bool, bool, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void doctypeAction(StringType, Stack&, CursorType&) {
+    ONYX_INLINE void doctypeAction(StringType&&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void openAction(StringType, StringType, bool,
+    ONYX_INLINE void openAction(StringType&&, StringType&&, bool,
                                 std::vector<StringType>&,
                                 std::vector<StringType>&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void closeAction(StringType, StringType, Stack&, CursorType&) {
+    ONYX_INLINE void closeAction(StringType&&, StringType&&, Stack&,
+                                 CursorType&) {
         throwRequiresDeclarationEncoding();
     }
 
