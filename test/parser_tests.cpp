@@ -10,6 +10,8 @@
 #include "nodes/processing_instruction_node.h"
 #include "nodes/text_node.h"
 #include "onyx.h"
+#include "parse/helpers.h"
+#include "parse/string_cursor.h"
 #include "parse/string_view_read_buffer.h"
 
 TEST_CASE("DomParser works") {
@@ -2127,7 +2129,7 @@ TEST_CASE(
                         "Trying to write to read only buffer.");
 }
 
-TEST_CASE("StringViewReadBuffer throws logic_error on block write (xsputn)") {
+TEST_CASE("StringViewReadBuffer throws logic_error on block write (sputc)") {
     using namespace onyx::parser;
     std::string_view data = "Read Only";
     impl::StringViewReadBuffer<char> buffer(data);
@@ -2135,4 +2137,59 @@ TEST_CASE("StringViewReadBuffer throws logic_error on block write (xsputn)") {
     REQUIRE_THROWS_AS(buffer.sputc('X'), std::logic_error);
     REQUIRE_THROWS_WITH(buffer.sputc('X'),
                         "Trying to write to read only buffer.");
+}
+
+TEST_CASE("readQNameAndSplit fails to read invalid NCName") {
+    using namespace onyx::parser;
+    std::string_view input = "123ncname";
+    StringCursor pos(input);
+
+    auto [first, second] = readQNameAndSplit(pos);
+
+    REQUIRE_FALSE(first.has_value());
+    REQUIRE_FALSE(second.has_value());
+    REQUIRE(pos.current() == '1');
+}
+
+TEST_CASE("readQNameAndSplit successfully reads one NCName with no separator") {
+    using namespace onyx::parser;
+    std::string_view input = "name rest";
+    StringCursor pos(input);
+
+    auto [first, second] = readQNameAndSplit(pos);
+
+    REQUIRE_FALSE(first.has_value());
+    REQUIRE(second.has_value());
+    REQUIRE(*second == "name");
+    REQUIRE(pos.current() == ' ');
+}
+
+TEST_CASE(
+    "readQNameAndSplit successfully finds separator but can't read second "
+    "NCName") {
+    using namespace onyx::parser;
+    std::string_view input = "prefix:123";
+    StringCursor pos(input);
+
+    auto [first, second] = readQNameAndSplit(pos);
+
+    REQUIRE(first.has_value());
+    REQUIRE(*first == "prefix");
+    REQUIRE_FALSE(second.has_value());
+    REQUIRE(pos.current() == '1');
+}
+
+TEST_CASE(
+    "readQNameAndSplit successfully reads a QName with two NCName parts") {
+    using namespace onyx::parser;
+    std::string_view input = "prefix:localname rest";
+    StringCursor pos(input);
+
+    auto [first, second] = readQNameAndSplit(pos);
+
+    REQUIRE(first.has_value());
+    REQUIRE(*first == "prefix");
+    REQUIRE(second.has_value());
+    REQUIRE(*second == "localname");
+    REQUIRE(pos.current() == ' ');
 }
