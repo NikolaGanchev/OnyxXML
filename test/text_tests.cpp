@@ -6,7 +6,7 @@
 #include "parse/string_cursor.h"
 #include "text.h"
 
-TEST_CASE("Escapes complex html", "[escape]") {
+TEST_CASE("Escapes complex XML", "[escape]") {
     using namespace onyx::text;
 
     std::string textToEscape =
@@ -35,7 +35,7 @@ TEST_CASE("Empty string remains unchanged", "[escape]") {
     REQUIRE(escape(input, true) == expected);
 }
 
-TEST_CASE("Reserved HTML characters are properly escaped", "[escape]") {
+TEST_CASE("Reserved XML characters are properly escaped", "[escape]") {
     using namespace onyx::text;
     std::string input = "&<>\"'";
     std::string expected = "&amp;&lt;&gt;&quot;&#39;";
@@ -138,9 +138,9 @@ TEST_CASE("Escape 1 million character safe string in under 100ms", "[escape]") {
 TEST_CASE("Escapes random sequence correctly", "[escapeSequence]") {
     using namespace onyx::text;
     std::string input =
-        "This is an ill--formatted html comment with two -- inside!";
+        "This is an ill--formatted XML comment with two -- inside!";
     std::string expected =
-        "This is an ill&#x2d;&#x2d;formatted html comment with two "
+        "This is an ill&#x2d;&#x2d;formatted XML comment with two "
         "&#x2d;&#x2d; inside!";
     REQUIRE(escapeSequence(input, "--") == expected);
 }
@@ -148,9 +148,9 @@ TEST_CASE("Escapes random sequence correctly", "[escapeSequence]") {
 TEST_CASE("Escapes random sequence correctly", "[replaceSequence]") {
     using namespace onyx::text;
     std::string input =
-        "This is an ill--formatted html comment with two -- inside!";
+        "This is an ill--formatted XML comment with two -- inside!";
     std::string expected =
-        "This is an ill- -formatted html comment with two - - inside!";
+        "This is an ill- -formatted XML comment with two - - inside!";
     REQUIRE(replaceSequence(input, "--", "- -") == expected);
 }
 

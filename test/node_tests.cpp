@@ -7,7 +7,7 @@
 #include "onyx.h"
 #include "util.h"
 
-TEST_CASE("HTML is generated", "[Node]") {
+TEST_CASE("XML is generated", "[Node]") {
     using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
@@ -65,7 +65,7 @@ TEST_CASE("Vector constructor works", "[Node]") {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("Complex test case generates pretty html", "[Node]") {
+TEST_CASE("Complex test case generates pretty XML", "[Node]") {
     using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
@@ -191,7 +191,7 @@ TEST_CASE("Complex test case generates pretty html", "[Node]") {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("Complex test case generates non-pretty html", "[Node]") {
+TEST_CASE("Complex test case generates non-pretty XML", "[Node]") {
     using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
@@ -653,7 +653,7 @@ TEST_CASE("Operator += works for child add", "[Node]") {
     CHECK(children[0]->isInTree());
 }
 
-TEST_CASE("Complex html with dynamic tags", "[Node]") {
+TEST_CASE("Complex XML with dynamic tags", "[Node]") {
     using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
@@ -743,26 +743,26 @@ TEST_CASE("Complex html with dynamic tags", "[Node]") {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("Empty html tree has size 1", "[Node::size()]") {
+TEST_CASE("Empty XML tree has size 1", "[Node::size()]") {
     using namespace onyx::tags;
     html root;
     REQUIRE(root.size() == 1);
 }
 
-TEST_CASE("Html tree with one child has size 2", "[Node::size()]") {
+TEST_CASE("XML tree with one child has size 2", "[Node::size()]") {
     using namespace onyx::tags;
     html root;
     root.addChild(body());
     REQUIRE(root.size() == 2);
 }
 
-TEST_CASE("Html tree with 5 nodes has size 6", "[Node::size()]") {
+TEST_CASE("XML tree with 5 nodes has size 6", "[Node::size()]") {
     using namespace onyx::tags;
     html root{p(), p(), p(), p(), p()};
     REQUIRE(root.size() == 6);
 }
 
-TEST_CASE("Html tree with 5001 nodes has size 5001", "[Node::size()]") {
+TEST_CASE("XML tree with 5001 nodes has size 5001", "[Node::size()]") {
     using namespace onyx::tags;
     html root;
     for (int i = 0; i < 1000; i++) {
@@ -827,7 +827,7 @@ TEST_CASE("3000 tags serialize in under 50ms", "[Node]") {
     REQUIRE(time.count() < 50);
 }
 
-TEST_CASE("Template html runtime api serializes correctly", "[Node]") {
+TEST_CASE("Template XML runtime api serializes correctly", "[Node]") {
     using namespace onyx::ctags;
 
     std::string doc1 = Document<html<Attribute<"lang", "en">, head<>,
@@ -841,7 +841,7 @@ TEST_CASE("Template html runtime api serializes correctly", "[Node]") {
     CHECK(doc1 == expected);
 }
 
-TEST_CASE("Template html runtime api enforces given indentation rules",
+TEST_CASE("Template XML runtime api enforces given indentation rules",
           "[Node]") {
     using namespace onyx::ctags;
 
@@ -856,7 +856,7 @@ TEST_CASE("Template html runtime api enforces given indentation rules",
     CHECK(doc::dynamicTree()->serializePretty("    ", true) == expected);
 }
 
-TEST_CASE("HTML fragment using template runtime api serializes correctly",
+TEST_CASE("XML fragment using template runtime api serializes correctly",
           "[Node]") {
     using namespace onyx::ctags;
 
@@ -925,7 +925,7 @@ TEST_CASE("Special templated runtime api tags are serialized correctly") {
           "publication_year>\n\t</book>\n</library>");
 }
 
-TEST_CASE("Complex templated runtime api html with constant tags", "[Node]") {
+TEST_CASE("Complex templated runtime api XML with constant tags", "[Node]") {
     using namespace onyx::ctags;
 
     std::string doc4 = Document<html<
@@ -980,7 +980,7 @@ TEST_CASE("Complex templated runtime api html with constant tags", "[Node]") {
     CHECK(expected == doc4);
 }
 
-TEST_CASE("HTML is correctly serialized") {
+TEST_CASE("XML is correctly serialized") {
     using namespace onyx::ctags;
 
     using doc = Document<
@@ -1117,7 +1117,7 @@ TEST_CASE("Multiple text nodes are serialized in sequence") {
           "<html><head></head><body>Hello world!</body></html>");
 }
 
-TEST_CASE("Text properly escapes html", "[dynamic::tags::Text]") {
+TEST_CASE("Text properly escapes XML", "[dynamic::tags::Text]") {
     using namespace onyx::tags;
 
     std::string textToEscape =
@@ -1141,7 +1141,7 @@ TEST_CASE("Text properly escapes html", "[dynamic::tags::Text]") {
     CHECK(d.serializePretty("\t", true) == expected);
 }
 
-TEST_CASE("Attribute properly escapes html", "[dynamic::Attribute]") {
+TEST_CASE("Attribute properly escapes XML", "[dynamic::Attribute]") {
     using namespace onyx::tags;
 
     std::string textToEscape =

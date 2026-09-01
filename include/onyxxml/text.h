@@ -18,7 +18,7 @@ namespace text {
  * It can also escape unicode sequences if the escapeMultiByte argument is set
  * to true. Unicode sequences can be unsafe in environments that do not support
  * UTF-8 and can be used to create injections. Unicode escaping escapes any
- * unicode sequence to an XML/HTML entity. Due to the runtime cost and overall
+ * unicode sequence to an XML entity. Due to the runtime cost and overall
  * low risk this is false by default.
  *
  * @param str
@@ -37,7 +37,7 @@ std::string escape(const std::string& str, bool escapeMultiByte = false);
 std::string escapeMultiByte(const std::string& str, bool escapeMultiByte);
 
 /**
- * @brief For a given unicode codepoint returns the appropriate XML/HTML entity.
+ * @brief For a given unicode codepoint returns the appropriate XML entity.
  *
  * @param codepoint
  * @return std::string
@@ -115,7 +115,7 @@ uint32_t getUnicodeCodepoint(Cursor& c)
  * escapeTable. It can also escape unicode sequences if the escapeMultiByte
  * argument is set to true. Unicode sequences can be unsafe in environments that
  * do not support UTF-8 and can be used to create injections. Unicode escaping
- * escapes any unicode sequence to an XML/HTML entity. Due to the runtime cost
+ * escapes any unicode sequence to an XML entity. Due to the runtime cost
  * and overall low risk this is false by default. For maximum performance, the
  * escapeTable should be constexpr.
  *

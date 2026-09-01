@@ -36,7 +36,7 @@ class Text : public Node, public Node::SpecialSerializable {
      * @brief Construct a new owning Text object by given text and whether
      * unicode sequences should be escaped. Unicode sequences can be unsafe in
      * environments that do not support UTF-8 and can be used to create
-     * injections. Unicode escaping escapes any unicode sequence to an XML/HTML
+     * injections. Unicode escaping escapes any unicode sequence to an XML
      * entity. Due to the runtime cost and overall low risk this is false by
      * default.
      *
@@ -49,7 +49,7 @@ class Text : public Node, public Node::SpecialSerializable {
      * @brief Construct a new non-owning Text object by given text and whether
      * unicode sequences should be escaped. Unicode sequences can be unsafe in
      * environments that do not support UTF-8 and can be used to create
-     * injections. Unicode escaping escapes any unicode sequence to an XML/HTML
+     * injections. Unicode escaping escapes any unicode sequence to an XML
      * entity. Due to the runtime cost and overall low risk this is false by
      * default.
      *

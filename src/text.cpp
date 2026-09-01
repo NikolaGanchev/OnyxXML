@@ -15,13 +15,13 @@
 
 namespace onyx::dynamic::text {
 
-// Escapes a given string so that it is safe for use in HTML contexts.
-// This function replaces reserved HTML characters with their corresponding
-// entities and converts non-ASCII characters to numeric HTML entities if
+// Escapes a given string so that it is safe for use in XML contexts.
+// This function replaces reserved XML characters with their corresponding
+// entities and converts non-ASCII characters to numeric XML entities if
 // enabled Note: non-ASCII character escaping is disabled by default
 std::string escape(const std::string& str, bool escapeMultiByte) {
-    // Table of characters that must be escaped in HTML to their corresponding
-    // entity strings to keep HTML integrity
+    // Table of characters that must be escaped in XML to their corresponding
+    // entity strings to keep XML integrity
     static constexpr std::array<const char*, 128> escapeTable = []() {
         std::array<const char*, 128> table{};
         table['&'] = "&amp;";
@@ -40,7 +40,7 @@ std::string escape(const std::string& str, bool escapeMultiByte) {
 std::string escape(const std::string& str,
                    const std::array<const char*, 128>& escapeTable,
                    bool escapeMultiByte) {
-    // A Queue to hold numeric HTML entities for multi-byte (non-ASCII) Unicode
+    // A Queue to hold numeric XML entities for multi-byte (non-ASCII) Unicode
     // characters.
     std::queue<uint32_t> codepointSequence;
     std::unordered_map<uint32_t, std::string> dictionary{};
@@ -70,9 +70,9 @@ std::string escape(const std::string& str,
                 escapedSize += 1;
             } else {
                 // For non-ASCII characters, convert the codepoint to a numeric
-                // HTML entity.
+                // XML entity.
                 if (!dictionary.contains(codepoint)) {
-                    // Save the computed HTML entity in a queue to use later
+                    // Save the computed XML entity in a queue to use later
                     // when outputting.
                     dictionary[codepoint] = numericEntity(codepoint);
                 }
@@ -138,7 +138,7 @@ std::string escape(const std::string& str,
                     }
                 }
 
-                // Retrieve the pre-computed HTML entity for this Unicode
+                // Retrieve the pre-computed XML entity for this Unicode
                 // character.
                 const std::string& entity =
                     dictionary[codepointSequence.front()];
@@ -464,7 +464,7 @@ uint32_t getUnicodeCodepoint(const char* read) {
     return codepoint;
 }
 
-// Converts a Unicode codepoint into its corresponding numeric HTML entity
+// Converts a Unicode codepoint into its corresponding numeric XML entity
 // string. For example, codepoint 160 becomes "&#xa0;".
 std::string numericEntity(uint32_t codepoint) {
     std::ostringstream oss;
