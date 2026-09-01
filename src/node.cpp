@@ -646,7 +646,13 @@ std::string Node::serialize() const {
                 objSpecialSerializable->specialSerialize(s, result);
                 continue;
             }
-            result << "</" << tagName << ">";
+            result << "</";
+            if (obj->getNamespacePrefix() == std::nullopt) {
+                result << tagName;
+            } else {
+                result << obj->getNamespacePrefix().value() << ":" << tagName;
+            }
+            result << ">";
             s.pop_back();
             continue;
         }
@@ -659,7 +665,12 @@ std::string Node::serialize() const {
             continue;
         }
 
-        result << "<" << tagName;
+        result << "<";
+        if (obj->getNamespacePrefix() == std::nullopt) {
+            result << tagName;
+        } else {
+            result << obj->getNamespacePrefix().value() << ":" << tagName;
+        }
 
         attributes.clear();
         for (size_t i = 0; i < obj->attributes.size(); i++) {
@@ -683,7 +694,14 @@ std::string Node::serialize() const {
                     s.emplace_back(SerializationNode{current, false});
                 });
             } else {
-                result << "></" << tagName << ">";
+                result << "></";
+                if (obj->getNamespacePrefix() == std::nullopt) {
+                    result << tagName;
+                } else {
+                    result << obj->getNamespacePrefix().value() << ":"
+                           << tagName;
+                }
+                result << ">";
                 s.pop_back();
                 continue;
             }
@@ -730,7 +748,13 @@ std::string Node::serializePretty(const std::string& indentationSequence,
                     sortAttributes);
                 continue;
             }
-            result << indentation << "</" << tagName << ">\n";
+            result << indentation << "</";
+            if (obj->getNamespacePrefix() == std::nullopt) {
+                result << tagName;
+            } else {
+                result << obj->getNamespacePrefix().value() << ":" << tagName;
+            }
+            result << ">\n";
             s.pop_back();
             continue;
         }
@@ -744,7 +768,12 @@ std::string Node::serializePretty(const std::string& indentationSequence,
             continue;
         }
 
-        result << indentation << "<" << tagName;
+        result << indentation << "<";
+        if (obj->getNamespacePrefix() == std::nullopt) {
+            result << tagName;
+        } else {
+            result << obj->getNamespacePrefix().value() << ":" << tagName;
+        }
 
         attributes.clear();
         for (size_t i = 0; i < obj->attributes.size(); i++) {
@@ -776,7 +805,14 @@ std::string Node::serializePretty(const std::string& indentationSequence,
                     s.emplace_back(SerializationNode{current, false});
                 });
             } else {
-                result << "></" << tagName << ">\n";
+                result << "></";
+                if (obj->getNamespacePrefix() == std::nullopt) {
+                    result << tagName;
+                } else {
+                    result << obj->getNamespacePrefix().value() << ":"
+                           << tagName;
+                }
+                result << ">\n";
                 s.pop_back();
                 continue;
             }

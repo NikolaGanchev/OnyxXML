@@ -81,10 +81,10 @@ TEST_CASE("Complex test case generates pretty XML", "[Node]") {
             "head", NonVoid,
             GenericNode("meta", Void, Attribute("charset", "UTF-8")),
             GenericNode(
-                "meta", Void, Attribute("name", "viewport"),
+                "xml:meta", Void, Attribute("name", "viewport"),
                 Attribute("content", "width=device-width, initial-scale=1.0")),
             GenericNode("title", NonVoid, Text("Complex Test Page")),
-            GenericNode("link", Void, Attribute("rel", "stylesheet"),
+            GenericNode("link", Void, Attribute("xml:rel", "stylesheet"),
                         Attribute("href", "/styles/main.css"))),
 
         GenericNode(
@@ -105,7 +105,7 @@ TEST_CASE("Complex test case generates pretty XML", "[Node]") {
                                                 Text("About Us")))))),
 
             GenericNode(
-                "main", NonVoid,
+                "xml:main", NonVoid,
                 GenericNode(
                     "section", NonVoid, Attribute("id", "introduction"),
                     GenericNode("h1", NonVoid, Text("Introduction")),
@@ -152,17 +152,17 @@ TEST_CASE("Complex test case generates pretty XML", "[Node]") {
 
     std::string expected =
         "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<meta "
-        "charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, "
+        "charset=\"UTF-8\"/>\n\t\t<xml:meta content=\"width=device-width, "
         "initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex "
         "Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" "
-        "rel=\"stylesheet\"/>\n\t</"
+        "xml:rel=\"stylesheet\"/>\n\t</"
         "head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<"
         "li>\n\t\t\t\t\t\t<a "
         "href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</"
         "li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a "
         "href=\"#about\">\n\t\t\t\t\t\t\tAbout "
         "Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</"
-        "nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section "
+        "nav>\n\t\t</header>\n\t\t<xml:main>\n\t\t\t<section "
         "id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</"
         "h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure "
         "test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes "
@@ -183,7 +183,7 @@ TEST_CASE("Complex test case generates pretty XML", "[Node]") {
         "3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are "
         "the key features of the "
         "application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</"
-        "main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test "
+        "xml:main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test "
         "Page\n\t\t\t</p>\n\t\t\t<a "
         "href=\"https://www.example.com\">\n\t\t\t\tPrivacy "
         "Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
@@ -207,7 +207,7 @@ TEST_CASE("Complex test case generates non-pretty XML", "[Node]") {
             "head", NonVoid,
             GenericNode("meta", Void, Attribute("charset", "UTF-8")),
             GenericNode(
-                "meta", Void, Attribute("name", "viewport"),
+                "xml:meta", Void, Attribute("xml:name", "viewport"),
                 Attribute("content", "width=device-width, initial-scale=1.0")),
             GenericNode("title", NonVoid, Text("Complex Test Page")),
             GenericNode("link", Void, Attribute("rel", "stylesheet"),
@@ -231,7 +231,7 @@ TEST_CASE("Complex test case generates non-pretty XML", "[Node]") {
                                                 Text("About Us")))))),
 
             GenericNode(
-                "main", NonVoid,
+                "xml:main", NonVoid,
                 GenericNode(
                     "section", NonVoid, Attribute("id", "introduction"),
                     GenericNode("h1", NonVoid, Text("Introduction")),
@@ -277,13 +277,14 @@ TEST_CASE("Complex test case generates non-pretty XML", "[Node]") {
                             Text("Privacy Policy"))))};
 
     std::string expected =
-        "<html lang=\"en\" theme=\"dark\"><head><meta charset=\"UTF-8\"/><meta "
-        "name=\"viewport\" content=\"width=device-width, "
+        "<html lang=\"en\" theme=\"dark\"><head><meta "
+        "charset=\"UTF-8\"/><xml:meta "
+        "xml:name=\"viewport\" content=\"width=device-width, "
         "initial-scale=1.0\"/><title>Complex Test Page</title><link "
         "rel=\"stylesheet\" "
         "href=\"/styles/main.css\"/></head><body><header><nav><ul><li><a "
         "href=\"#home\">Home</a></li><li><a href=\"#about\">About "
-        "Us</a></li></ul></nav></header><main><section "
+        "Us</a></li></ul></nav></header><xml:main><section "
         "id=\"introduction\"><h1>Introduction</h1><p>Welcome to the complex "
         "HTML structure test case.</p><p>This test includes various nested "
         "elements, attributes, and content.</p><form "
@@ -294,7 +295,8 @@ TEST_CASE("Complex test case generates non-pretty XML", "[Node]") {
         "type=\"submit\">Submit</button></form></section><section "
         "id=\"features\"><h2>Features</h2><ul><li>Feature 1</li><li>Feature "
         "2</li><li>Feature 3</li></ul><p>These are the key features of the "
-        "application.</p></section></main><footer><p>© 2025 Complex HTML Test "
+        "application.</p></section></xml:main><footer><p>© 2025 Complex HTML "
+        "Test "
         "Page</p><a href=\"https://www.example.com\">Privacy "
         "Policy</a></footer></body></html>";
     CHECK(expected == obj.serialize());
