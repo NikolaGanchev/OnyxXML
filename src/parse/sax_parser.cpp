@@ -65,15 +65,17 @@ struct StringSaxParserPolicy {
         this->listener.onDoctype(std::move(doctypeText));
     }
 
-    ONYX_INLINE void openAction(StringType&& namespacePrefix,
-                                StringType&& tagName, bool isSelfClosing,
-                                std::vector<StringType>& attributeNames,
-                                std::vector<StringType>& attributeValues,
-                                Stack& stack, CursorType& cursor) {
+    ONYX_INLINE void openAction(
+        StringType&& namespacePrefix, StringType&& tagName, bool isSelfClosing,
+        std::vector<std::pair<StringType, StringType::size_type>>&
+            attributeNames,
+        std::vector<StringType>& attributeValues, Stack& stack,
+        CursorType& cursor) {
         std::vector<Attribute> attributes;
         for (int i = 0; i < attributeNames.size(); i++) {
-            attributes.emplace_back(std::move(attributeNames[i]),
-                                    std::move(attributeValues[i]));
+            attributes.emplace_back(std::move(attributeNames[i].first),
+                                    std::move(attributeValues[i]),
+                                    attributeNames[i].second);
         }
 
         if (!isSelfClosing) {
@@ -215,15 +217,17 @@ struct StreamSaxParserPolicy {
         this->listener.onDoctype(std::move(doctypeText));
     }
 
-    ONYX_INLINE void openAction(StringType&& namespaceName,
-                                StringType&& tagName, bool isSelfClosing,
-                                std::vector<StringType>& attributeNames,
-                                std::vector<StringType>& attributeValues,
-                                Stack& stack, CursorType& cursor) {
+    ONYX_INLINE void openAction(
+        StringType&& namespaceName, StringType&& tagName, bool isSelfClosing,
+        std::vector<std::pair<StringType, StringType::size_type>>&
+            attributeNames,
+        std::vector<StringType>& attributeValues, Stack& stack,
+        CursorType& cursor) {
         std::vector<Attribute> attributes;
         for (int i = 0; i < attributeNames.size(); i++) {
-            attributes.emplace_back(attributeNames[i],
-                                    std::move(attributeValues[i]));
+            attributes.emplace_back(std::move(attributeNames[i].first),
+                                    std::move(attributeValues[i]),
+                                    attributeNames[i].second);
         }
 
         if (!isSelfClosing) {

@@ -19,10 +19,10 @@ struct BaseParserPolicy {
     ONYX_INLINE void xmlDeclarationAction(StringType&&, StringType&&, bool,
                                           bool, bool, Stack&, CursorType&) {}
     ONYX_INLINE void doctypeAction(StringType&&, Stack&, CursorType&) {}
-    ONYX_INLINE void openAction(StringType&&, StringType&&, bool,
-                                std::vector<StringType>&,
-                                std::vector<StringType>&, Stack&, CursorType&) {
-    }
+    ONYX_INLINE void openAction(
+        StringType&&, StringType&&, bool,
+        std::vector<std::pair<StringType, typename StringType::size_type>>&,
+        std::vector<StringType>&, Stack&, CursorType&) {}
     ONYX_INLINE void closeAction(StringType&&, StringType&&, Stack&,
                                  CursorType&) {}
 

@@ -37,9 +37,10 @@ struct BasicAutodetectionParserPolicy
     ONYX_INLINE void doctypeAction(StringType&&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void openAction(StringType&&, StringType&&, bool,
-                                std::vector<StringType>&,
-                                std::vector<StringType>&, Stack&, CursorType&) {
+    ONYX_INLINE void openAction(
+        StringType&&, StringType&&, bool,
+        std::vector<std::pair<StringType, typename StringType::size_type>>&,
+        std::vector<StringType>&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
     ONYX_INLINE void closeAction(StringType&&, StringType&&, Stack&,

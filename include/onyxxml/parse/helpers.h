@@ -271,11 +271,21 @@ readQNameAndSplit(Cursor& pos)
 
 /**
  * @brief A QName is a name of the sort NCName : NCName.
+ * This function returns the QName in an std::pair along with a namespace ':'
+ * separator index.
+ * If no QName could be parsed, the return value will be
+ * {typename Cursor::StringType(), 0}.
+ * If a QName is parsed with no separator, the return value will be {typename
+ * Cursor::StringType(), Cursor::StringType::npos}.
+ * If a QName is parsed with a separator, the return value will be the parsed
+ * QName along with the index of the ':' separator.
  *
  * @tparam Cursor
  */
 template <typename Cursor>
-ONYX_NOINLINE typename Cursor::StringType readQName(Cursor& pos)
+ONYX_NOINLINE std::pair<typename Cursor::StringType,
+                        typename Cursor::StringType::size_type>
+readQName(Cursor& pos)
     requires(isCursor<Cursor>)
 {
     pos.beginCapture();
@@ -283,18 +293,23 @@ ONYX_NOINLINE typename Cursor::StringType readQName(Cursor& pos)
     // Read first ncname
     if (!isNCNameStartChar(pos)) {
         pos.swapDefault();
-        return typename Cursor::StringType();
+        return {typename Cursor::StringType(), 0};
     }
     pos.advance();
     while (isNCNameChar(pos)) {
         pos.advance();
     }
+    pos.swapDefault();
+    typename Cursor::StringType::size_type cursorIndex =
+        Cursor::StringType::npos;
+    pos.swapDefault();
     // read second nc name
     if (pos.current() == ':') {
+        cursorIndex = pos.getCapturedSize() - 1;
         pos.advance();
         if (!isNCNameStartChar(pos)) {
             pos.swapDefault();
-            return typename Cursor::StringType();
+            return {typename Cursor::StringType(), 0};
         }
         pos.advance();
         while (isNCNameChar(pos)) {
@@ -303,6 +318,6 @@ ONYX_NOINLINE typename Cursor::StringType readQName(Cursor& pos)
     }
     pos.swapDefault();
 
-    return pos.getCaptured();
+    return {pos.getCaptured(), cursorIndex};
 }
 }  // namespace onyx::dynamic::parser

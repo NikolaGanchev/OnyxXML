@@ -237,7 +237,7 @@ const Lexer::Token& Lexer::nextToken() {
         case '$': {
             token.type = Lexer::TokenType::VARIABLE_REFERENCE;
             cursor.advance();
-            token.value = parser::readQName(cursor);
+            token.value = parser::readQName(cursor).first;
             if (token.value.empty()) {
                 throw std::runtime_error(
                     "Cannot have empty variable reference");
@@ -258,7 +258,7 @@ const Lexer::Token& Lexer::nextToken() {
                 break;
             }
 
-            token.value = parser::readQName(cursor);
+            token.value = parser::readQName(cursor).first;
 
             // If this were end of document,
             // it should have been caught

@@ -226,7 +226,8 @@ struct ParseState {
     bool firstTag = true;
     bool foundXmlDeclaration = false;
     bool foundDoctype = false;
-    std::vector<StringType> attributeNames;
+    std::vector<std::pair<StringType, typename StringType::size_type>>
+        attributeNames;
     std::vector<StringType> attributeValues;
     std::vector<StackType> stack;
 };
@@ -885,13 +886,13 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
                                  Policy& policy, bool validateUTF8) {
     using State = ParseState<Config, Policy>;
     while (pos.current() != '>' && pos.current() != '/') {
-        typename State::CursorStringType attributeName = readQName(pos);
+        auto attributeNameWithSeparator = readQName(pos);
         if constexpr (Config::validate) {
-            if (attributeName.empty()) {
+            if (attributeNameWithSeparator.first.empty()) {
                 throw std::invalid_argument("Invalid non-closing tag");
             }
         }
-        pos.advance(attributeName.size());
+        pos.advance(attributeNameWithSeparator.first.size());
 
         /* Invariant - after attribute name */
         skipWhitespace(pos);
@@ -977,7 +978,8 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
 
         if constexpr (Config::validate && Config::validateDuplicateAttributes) {
             for (size_t i = 0; i < state.attributeNames.size(); i++) {
-                if (state.attributeNames[i] == attributeName) {
+                if (state.attributeNames[i].first ==
+                    attributeNameWithSeparator.first) {
                     throw std::invalid_argument("Duplicate attribute name");
                 }
             }
@@ -988,8 +990,15 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
                 throw std::invalid_argument("Tag has too many attributes");
             }
         }
-        state.attributeNames.push_back(std::move(policy.transformText(
-            std::move(attributeName), TextTransformationMode::NONE)));
+
+        // Only safe to use CursorStringType::size_type as StringType::size_typ
+        // because TextTransformationMode::NONE should supposedly not shift
+        // indexes
+        state.attributeNames.push_back(
+            {std::move(policy.transformText(
+                 std::move(attributeNameWithSeparator.first),
+                 TextTransformationMode::NONE)),
+             attributeNameWithSeparator.second});
         state.attributeValues.push_back(std::move(policy.transformText(
             std::move(attributeValue), transformationMode)));
 

@@ -77,12 +77,12 @@ struct DomDryRunParserPolicy {
         builder.preallocate<tags::Doctype>();
     }
 
-    ONYX_INLINE void openAction(StringType namespacePrefix, StringType tagName,
-                                bool isSelfClosing,
-                                std::vector<StringType>& attributeNames,
-                                std::vector<StringType>& attributeValues,
-                                std::vector<StackType>& stack,
-                                CursorType& cursor) {
+    ONYX_INLINE void openAction(
+        StringType namespacePrefix, StringType tagName, bool isSelfClosing,
+        std::vector<std::pair<StringType, StringType::size_type>>&
+            attributeNames,
+        std::vector<StringType>& attributeValues, std::vector<StackType>& stack,
+        CursorType& cursor) {
         builder.preallocate<tags::GenericNode>();
         if (!isSelfClosing) {
             stack.push_back({namespacePrefix, tagName});
@@ -203,11 +203,12 @@ struct DomParser::DomStringParserPolicy {
             arena.allocate<tags::Doctype>(std::move(doctypeText)));
     }
 
-    ONYX_INLINE void openAction(StringType&& namespacePrefix,
-                                StringType&& tagName, bool isSelfClosing,
-                                std::vector<StringType>& attributeNames,
-                                std::vector<StringType>& attributeValues,
-                                Stack& stack, CursorType& cursor) {
+    ONYX_INLINE void openAction(
+        StringType&& namespacePrefix, StringType&& tagName, bool isSelfClosing,
+        std::vector<std::pair<StringType, StringType::size_type>>&
+            attributeNames,
+        std::vector<StringType>& attributeValues, Stack& stack,
+        CursorType& cursor) {
         Node* newNode = arena.allocate<tags::GenericNode>(
             std::move(namespacePrefix), std::move(tagName),
             isSelfClosing ? tags::GenericNode::Type::Void
@@ -215,8 +216,9 @@ struct DomParser::DomStringParserPolicy {
 
         auto& attributes = newNode->attributes;
         for (int i = 0; i < attributeNames.size(); i++) {
-            attributes.emplace_back(std::move(attributeNames[i]),
-                                    std::move(attributeValues[i]));
+            attributes.emplace_back(std::move(attributeNames[i].first),
+                                    std::move(attributeValues[i]),
+                                    std::move(attributeNames[i].second));
         }
 
         stack.back()->addChild(newNode);
@@ -324,11 +326,12 @@ struct DomParser::DomStreamParserPolicy {
             arena.allocate<tags::Doctype>(std::move(doctypeText)));
     }
 
-    ONYX_INLINE void openAction(StringType&& namespacePrefix,
-                                StringType&& tagName, bool isSelfClosing,
-                                std::vector<StringType>& attributeNames,
-                                std::vector<StringType>& attributeValues,
-                                Stack& stack, CursorType& cursor) {
+    ONYX_INLINE void openAction(
+        StringType&& namespacePrefix, StringType&& tagName, bool isSelfClosing,
+        std::vector<std::pair<StringType, StringType::size_type>>&
+            attributeNames,
+        std::vector<StringType>& attributeValues, Stack& stack,
+        CursorType& cursor) {
         Node* newNode = arena.allocate<tags::GenericNode>(
             std::move(namespacePrefix), std::move(tagName),
             isSelfClosing ? tags::GenericNode::Type::Void
@@ -336,8 +339,9 @@ struct DomParser::DomStreamParserPolicy {
 
         auto& attributes = newNode->attributes;
         for (int i = 0; i < attributeNames.size(); i++) {
-            attributes.emplace_back(std::move(attributeNames[i]),
-                                    std::move(attributeValues[i]));
+            attributes.emplace_back(std::move(attributeNames[i].first),
+                                    std::move(attributeValues[i]),
+                                    std::move(attributeNames[i].second));
         }
 
         stack.back()->addChild(newNode);
