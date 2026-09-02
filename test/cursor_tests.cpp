@@ -117,12 +117,14 @@ TEST_CASE(
     stringCursor.beginCapture();
     stringCursor.captureAdvance(5);
     REQUIRE(stringCursor.getCaptured() == "world");
+    REQUIRE(stringCursor.getCapturedSize() == 5);
     REQUIRE(stringCursor.current() == 'w');
 
     streamCursor.advance(6);
     streamCursor.beginCapture();
     streamCursor.captureAdvance(5);
     REQUIRE(streamCursor.getCaptured() == "world");
+    REQUIRE(streamCursor.getCapturedSize() == 5);
     REQUIRE(streamCursor.current() == 'w');
 }
 
@@ -216,6 +218,7 @@ TEST_CASE(
     streamCursor.beginCapture();
     streamCursor.captureAdvance(5);
     REQUIRE(streamCursor.getCaptured() == "caf\xC3\xA9");
+    REQUIRE(streamCursor.getCapturedSize() == 5);
 }
 
 TEST_CASE(
@@ -291,6 +294,7 @@ TEST_CASE("setInputEncoding allows raw lookahead and transcodes it") {
     streamCursor.beginCapture();
     streamCursor.captureAdvance(5);
     REQUIRE(streamCursor.getCaptured() == "caf\xC3\xA9");
+    REQUIRE(streamCursor.getCapturedSize() == 5);
 }
 
 TEST_CASE(

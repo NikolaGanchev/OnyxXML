@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <string_view>
 
 namespace onyx::dynamic::parser {
@@ -51,6 +52,11 @@ concept isCursor = requires(T t, int i, std::string_view expected) {
      *
      */
     t.getCaptured();
+    /**
+     * @brief Return the size in characters of the capture.
+     *
+     */
+    { t.getCapturedSize() } -> std::same_as<typename T::StringType::size_type>;
     /**
      * @brief Advance the current pointer by i chars.
      *
