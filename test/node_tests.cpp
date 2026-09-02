@@ -2642,6 +2642,60 @@ TEST_CASE("getNamespaceURI resolves prefix with declared namespace on self",
     REQUIRE(tracked->getNamespaceURI() == "uri3");
 }
 
+TEST_CASE(
+    "getNamespaceURI resolves empty prefix with declared default namespace on "
+    "self",
+    "[Node::getNamespaceURI]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("price", NonVoid, Attribute("xmlns", "uri3"),
+                                Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceURI() == "uri3");
+}
+
+TEST_CASE(
+    "getNamespaceURI resolves empty prefix with declared default namespace on "
+    "ancestor",
+    "[Node::getNamespaceURI]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceURI() == "uri2");
+}
+
+TEST_CASE(
+    "getNamespaceURI resolves empty prefix with no default namespace to null",
+    "[Node::getNamespaceURI]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:lib2", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceURI() == std::nullopt);
+}
+
 TEST_CASE("QualifiedName resolves empty prefix to \"\"", "[QualifiedName]") {
     using namespace onyx::dynamic::tags::util;
     REQUIRE(QualifiedName("price").prefix == "");

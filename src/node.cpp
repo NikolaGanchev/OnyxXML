@@ -956,18 +956,14 @@ std::optional<std::string_view> Node::getNamespacePrefix() const {
 
 std::optional<std::string_view> Node::resolveNamespacePrefix(
     std::optional<std::string_view> prefix) const {
-    if (!prefix.has_value() || prefix == "") return std::nullopt;
-
     const Node* current = this;
 
-    while (current) {
-        for (auto it = current->attributes.begin();
-             it != current->attributes.end(); it++) {
-            std::optional<std::string_view> attributePrefix =
-                it->getNamespacePrefix();
-            if (attributePrefix.has_value() &&
-                attributePrefix.value() == "xmlns") {
-                if (it->getNCNameWithoutNamespace() == prefix) {
+    if (!prefix.has_value() || prefix == "") {
+        while (current) {
+            for (auto it = current->attributes.begin();
+                 it != current->attributes.end(); it++) {
+                const std::string& attributeName = it->getName();
+                if (attributeName == "xmlns") {
                     if (it->getValue() == "") {
                         return std::nullopt;
                     } else {
@@ -975,9 +971,29 @@ std::optional<std::string_view> Node::resolveNamespacePrefix(
                     }
                 }
             }
-        }
 
-        current = current->parent;
+            current = current->parent;
+        }
+    } else {
+        while (current) {
+            for (auto it = current->attributes.begin();
+                 it != current->attributes.end(); it++) {
+                std::optional<std::string_view> attributePrefix =
+                    it->getNamespacePrefix();
+                if (attributePrefix.has_value() &&
+                    attributePrefix.value() == "xmlns") {
+                    if (it->getNCNameWithoutNamespace() == prefix) {
+                        if (it->getValue() == "") {
+                            return std::nullopt;
+                        } else {
+                            return it->getValue();
+                        }
+                    }
+                }
+            }
+
+            current = current->parent;
+        }
     }
 
     return std::nullopt;
