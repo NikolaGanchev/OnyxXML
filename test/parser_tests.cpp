@@ -675,6 +675,16 @@ TEST_CASE("DomParser throws \"Empty tag name\"") {
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
+TEST_CASE("DomParser throws \"Invalid tag name containing only prefix part\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<prefix: />";
+    std::stringstream inputStream(input);
+    std::string message = "Invalid tag name containing only prefix part";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
 TEST_CASE("DomParser throws \"Invalid attribute name\"") {
     using namespace onyx::parser;
 
