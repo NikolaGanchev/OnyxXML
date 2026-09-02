@@ -991,15 +991,14 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
             }
         }
 
-        // Only safe to use CursorStringType::size_type as StringType::size_typ
-        // because TextTransformationMode::NONE should supposedly not shift
-        // indexes
-        state.attributeNames.push_back(
-            {std::move(policy.transformText(
-                 std::move(attributeNameWithSeparator.first),
-                 TextTransformationMode::NONE)),
-             attributeNameWithSeparator.second});
-        state.attributeValues.push_back(std::move(policy.transformText(
+        // Only safe to use CursorStringType::size_type as StringType::size_type
+        // because TextTransformationMode::NONE should not shift indexes
+        state.attributeNames.emplace_back(
+            std::move(policy.transformText(
+                std::move(attributeNameWithSeparator.first),
+                TextTransformationMode::NONE)),
+            attributeNameWithSeparator.second);
+        state.attributeValues.emplace_back(std::move(policy.transformText(
             std::move(attributeValue), transformationMode)));
 
         /* Continues to either >, /> or another attribute */
