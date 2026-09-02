@@ -7,16 +7,20 @@
 namespace onyx::dynamic {
 Attribute::Attribute(std::string name, std::string value, bool shouldEscape,
                      bool shouldEscapeMultiByte)
+    : Attribute(std::move(name), std::move(value), 0, shouldEscape,
+                shouldEscapeMultiByte) {}
+
+Attribute::Attribute(std::string name, std::string value,
+                     std::size_t namespaceSeparatorIndex, bool shouldEscape,
+                     bool shouldEscapeMultiByte)
     : name(std::move(name)),
       value(std::move(value)),
+      namespaceSeparatorIndex(namespaceSeparatorIndex),
       _shouldEscape(shouldEscape),
       _shouldEscapeMultiByte(shouldEscapeMultiByte) {}
 
 Attribute::Attribute(std::string name)
-    : name(std::move(name)),
-      value(""),
-      _shouldEscape(true),
-      _shouldEscapeMultiByte(false) {}
+    : Attribute(std::move(name), "", true, false) {}
 
 void Attribute::setValue(const std::string& value) { this->value = value; }
 

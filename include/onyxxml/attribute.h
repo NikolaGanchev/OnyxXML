@@ -86,6 +86,28 @@ class Attribute {
                        bool shouldEscapeMultiByte = false);
 
     /**
+     * @brief Construct a new Attribute object.
+     *
+     * @param name The name of the attribute
+     * @param value The value of the attribute
+     * @param namespaceSeparatorIndex The index of the namespace ':' separator
+     * in the name. std::string::npos if not available. 0 to use dynamic
+     * finding.
+     * @param shouldEscape Signifies if the value is xml safe; if the value is
+     * unsafe, this argument should be true, which is the default value.
+     * shouldEscape is used by consumers of the class to decide whether the
+     * value should be escaped and Has no effect on the constructed object's
+     * behaviour.
+     * @param shouldEscapeMultiByte Signifies if multi-byte sequences should be
+     * escaped. For use with legacy systems. False by default. Even if true, no
+     * escaping is to be done unless shouldEscape is also true.
+     */
+    explicit Attribute(std::string name, std::string value,
+                       std::size_t namespaceSeparatorIndex,
+                       bool shouldEscape = true,
+                       bool shouldEscapeMultiByte = false);
+
+    /**
      * @brief Construct a new Attribute object with an empty value.
      * The constructed object is marked unsafe for its value, meaning
      * shouldEscape() will return true. This is due to the possibility that the
