@@ -1729,6 +1729,7 @@ TEST_CASE("Nodes get removed from indices upon destruction in non-owning trees",
     REQUIRE(index.getByValue("item").size() == 2);
 
     delete child;
+    delete child1;
 
     REQUIRE(index.getByValue("item").size() == 0);
 }
@@ -2242,16 +2243,15 @@ TEST_CASE("AttributeViewNode identifies correctly", "[AttributeViewNode]") {
     CHECK(view.getRealNode() == &owner);
 }
 
-TEST_CASE("AttributeViewNode references correct attribute index", "[AttributeViewNode]") {
+TEST_CASE("AttributeViewNode references correct attribute index",
+          "[AttributeViewNode]") {
     using namespace onyx::dynamic::tags;
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
-    GenericNode owner{"div", false, 
-        Attribute("id", "1"), 
-        Attribute("class", "container"), 
-        Attribute("data-val", "xyz")
-    };
+    GenericNode owner{"div", false, Attribute("id", "1"),
+                      Attribute("class", "container"),
+                      Attribute("data-val", "xyz")};
 
     AttributeViewNode viewId(&owner, 0);
     AttributeViewNode viewClass(&owner, 1);
@@ -2267,7 +2267,8 @@ TEST_CASE("AttributeViewNode references correct attribute index", "[AttributeVie
     CHECK(viewData.getReferencedAttribute().getValue() == "xyz");
 }
 
-TEST_CASE("AttributeViewNode serializes to empty string", "[AttributeViewNode]") {
+TEST_CASE("AttributeViewNode serializes to empty string",
+          "[AttributeViewNode]") {
     using namespace onyx::dynamic::tags;
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
@@ -2293,13 +2294,14 @@ TEST_CASE("AttributeViewNode shallow copy works", "[AttributeViewNode]") {
 
     auto* castedCopy = dynamic_cast<AttributeViewNode*>(copy.get());
     REQUIRE(castedCopy != nullptr);
-    
+
     CHECK(castedCopy->getTagName() == ".attribute-view-node");
     CHECK(castedCopy->getRealNode() == &owner);
     CHECK(castedCopy->getReferencedAttribute().getValue() == "google.com");
 }
 
-TEST_CASE("AttributeViewNode equality compares attribute values", "[AttributeViewNode]") {
+TEST_CASE("AttributeViewNode equality compares attribute values",
+          "[AttributeViewNode]") {
     using namespace onyx::dynamic::tags;
     using namespace onyx::tags;
     using namespace onyx::dynamic::xpath;
@@ -2313,22 +2315,24 @@ TEST_CASE("AttributeViewNode equality compares attribute values", "[AttributeVie
     AttributeViewNode view3(&node3, 0);
 
     CHECK(view1.shallowEquals(view2));
-    
+
     CHECK_FALSE(view1.shallowEquals(view3));
 }
 
-TEST_CASE("AttributeViewNode equality handles type mismatch", "[AttributeViewNode]") {
+TEST_CASE("AttributeViewNode equality handles type mismatch",
+          "[AttributeViewNode]") {
     using namespace onyx::dynamic::tags;
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
     GenericNode owner{"div", false, Attribute("id", "1")};
     AttributeViewNode view(&owner, 0);
-    
+
     CHECK_FALSE(view.shallowEquals(owner));
 }
 
-TEST_CASE("getStringValue returns text content for Text nodes", "[Node::getStringValue]") {
+TEST_CASE("getStringValue returns text content for Text nodes",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     Text t("Hello World");
@@ -2338,37 +2342,43 @@ TEST_CASE("getStringValue returns text content for Text nodes", "[Node::getStrin
     CHECK(t2.getStringValue() == "");
 }
 
-TEST_CASE("getStringValue handles entities in Text nodes", "[Node::getStringValue]") {
+TEST_CASE("getStringValue handles entities in Text nodes",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     Text t("5 < 10 & 2 > 1");
-    
+
     CHECK(t.getStringValue() == "5 < 10 & 2 > 1");
 }
 
-TEST_CASE("getStringValue returns content for CDATA", "[Node::getStringValue]") {
+TEST_CASE("getStringValue returns content for CDATA",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     CData c("Some <raw> data & stuff");
-    
+
     CHECK(c.getStringValue() == "Some <raw> data & stuff");
 }
 
-TEST_CASE("getStringValue returns content for Comment nodes directly", "[Node::getStringValue]") {
+TEST_CASE("getStringValue returns content for Comment nodes directly",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     Comment c("This is a comment");
     CHECK(c.getStringValue() == "This is a comment");
 }
 
-TEST_CASE("getStringValue returns content for ProcessingInstruction nodes directly", "[Node::getStringValue]") {
+TEST_CASE(
+    "getStringValue returns content for ProcessingInstruction nodes directly",
+    "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     ProcessingInstruction pi("php", "echo 'hello';");
-    CHECK(pi.getStringValue() == "echo 'hello';"); 
+    CHECK(pi.getStringValue() == "echo 'hello';");
 }
 
-TEST_CASE("getStringValue ignores XML Declaration and Doctype", "[Node::getStringValue]") {
+TEST_CASE("getStringValue ignores XML Declaration and Doctype",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     XmlDeclaration xml("1.0", "UTF-8", true);
@@ -2378,16 +2388,15 @@ TEST_CASE("getStringValue ignores XML Declaration and Doctype", "[Node::getStrin
     CHECK(dt.getStringValue().empty());
 }
 
-TEST_CASE("AttributeViewNode returns strictly the attribute value", "[Node::getStringValue][AttributeViewNode]") {
+TEST_CASE("AttributeViewNode returns strictly the attribute value",
+          "[Node::getStringValue][AttributeViewNode]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic::tags;
     using namespace onyx::dynamic::xpath;
 
-    GenericNode owner{"div", false, 
-        Attribute("id", "main-container"),
-        Attribute("class", "hidden"),
-        Attribute("data-val", "123")
-    };
+    GenericNode owner{"div", false, Attribute("id", "main-container"),
+                      Attribute("class", "hidden"),
+                      Attribute("data-val", "123")};
 
     AttributeViewNode viewId(&owner, 0);
     AttributeViewNode viewClass(&owner, 1);
@@ -2398,55 +2407,36 @@ TEST_CASE("AttributeViewNode returns strictly the attribute value", "[Node::getS
     CHECK(viewData.getStringValue() == "123");
 }
 
-TEST_CASE("getStringValue concatenates text descendants for Element nodes", "[Node::getStringValue]") {
+TEST_CASE("getStringValue concatenates text descendants for Element nodes",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
-    cdiv d{
-        Text("Hello "),
-        span(Text("World")),
-        Text("!")
-    };
+    cdiv d{Text("Hello "), span(Text("World")), Text("!")};
 
     CHECK(d.getStringValue() == "Hello World!");
 }
 
-TEST_CASE("getStringValue skips Comments and PIs when inside an Element", "[Node::getStringValue]") {
+TEST_CASE("getStringValue skips Comments and PIs when inside an Element",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     // <div>Text More Text <?pi ?></div>
-    cdiv d{
-        Text("Text "),
-        Comment("Ignored comment"),
-        Text("More Text"),
-        ProcessingInstruction("target", "Ignored PI")
-    };
+    cdiv d{Text("Text "), Comment("Ignored comment"), Text("More Text"),
+           ProcessingInstruction("target", "Ignored PI")};
 
     CHECK(d.getStringValue() == "Text More Text");
 }
 
-TEST_CASE("getStringValue works with nested If nodes", "[Node::getStringValue]") {
+TEST_CASE("getStringValue works with nested If nodes",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
-    cdiv d{
-        Text("Start "),
-        If(true, 
-            Text("Included"), 
-            Text("Excluded")
-        ),
-        Text(" "),
-        If(false, 
-            Text("Excluded"), 
-            Text("Also Excluded")
-        ),
-        Text("End")
-    };
+    cdiv d{Text("Start "), If(true, Text("Included"), Text("Excluded")),
+           Text(" "), If(false, Text("Excluded"), Text("Also Excluded")),
+           Text("End")};
 
-    cdiv complexIf{
-        Text("A"),
-        If(true, span(Text("B")), span(Text("X"))),
-        If(false, span(Text("X")), span(Text("C"))),
-        Text("D")
-    };
+    cdiv complexIf{Text("A"), If(true, span(Text("B")), span(Text("X"))),
+                   If(false, span(Text("X")), span(Text("C"))), Text("D")};
 
     CHECK(complexIf.getStringValue() == "ABCD");
 }
@@ -2457,16 +2447,14 @@ TEST_CASE("getStringValue works with ForEach nodes", "[Node::getStringValue]") {
     std::vector<std::string> items = {"1", "2", "3"};
 
     // <ul><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>
-    ul list{
-        ForEach{items.begin(), items.end(), [](auto it) {
-            return li(Text("Item "), Text(*it));
-        }}
-    };
+    ul list{ForEach{items.begin(), items.end(),
+                    [](auto it) { return li(Text("Item "), Text(*it)); }}};
 
     CHECK(list.getStringValue() == "Item 1Item 2Item 3");
 }
 
-TEST_CASE("getStringValue works on deep complex trees with mixed content", "[Node::getStringValue]") {
+TEST_CASE("getStringValue works on deep complex trees with mixed content",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     // Structure:
@@ -2483,37 +2471,31 @@ TEST_CASE("getStringValue works on deep complex trees with mixed content", "[Nod
 
     article root{
         header(Text("Title")),
-        section(
-            p(Text("Para 1")),
-            Comment("Splitting comment"),
-            p(Text("Para "), CData("2 & 3")),
-            If(true, 
-                cdiv(Text("Dynamic content")), 
-                cdiv(Text("Hidden")))
-        )
-    };
+        section(p(Text("Para 1")), Comment("Splitting comment"),
+                p(Text("Para "), CData("2 & 3")),
+                If(true, cdiv(Text("Dynamic content")), cdiv(Text("Hidden"))))};
 
     CHECK(root.getStringValue() == "TitlePara 1Para 2 & 3Dynamic content");
 }
 
-TEST_CASE("getStringValue handles empty trees and void nodes correctly", "[Node::getStringValue]") {
+TEST_CASE("getStringValue handles empty trees and void nodes correctly",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     cdiv emptyDiv{};
     CHECK(emptyDiv.getStringValue() == "");
 
     // <div><img alt="text" /></div>
-    cdiv divWithImg{
-        img(Attribute("alt", "Alternative Text"))
-    };
+    cdiv divWithImg{img(Attribute("alt", "Alternative Text"))};
     CHECK(divWithImg.getStringValue() == "");
-    
+
     // <br>
     br breakTag{};
     CHECK(breakTag.getStringValue() == "");
 }
 
-TEST_CASE("getStringValue handles mixed depth concatenation", "[Node::getStringValue]") {
+TEST_CASE("getStringValue handles mixed depth concatenation",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
     // <div>
@@ -2524,26 +2506,17 @@ TEST_CASE("getStringValue handles mixed depth concatenation", "[Node::getStringV
     //   </div>
     //   D
     // </div>
-    
-    cdiv root{
-        Text("A"),
-        cdiv(
-            Text("B"),
-            span(Text("C"))
-        ),
-        Text("D")
-    };
+
+    cdiv root{Text("A"), cdiv(Text("B"), span(Text("C"))), Text("D")};
 
     CHECK(root.getStringValue() == "ABCD");
 }
 
-TEST_CASE("getStringValue handles __DangerousRawText", "[Node::getStringValue]") {
+TEST_CASE("getStringValue handles __DangerousRawText",
+          "[Node::getStringValue]") {
     using namespace onyx::tags;
 
-    cdiv d{
-        Text("Safe"),
-        __DangerousRawText("<span>Unsafe</span>")
-    };
+    cdiv d{Text("Safe"), __DangerousRawText("<span>Unsafe</span>")};
 
     CHECK(d.getStringValue() == "Safe<span>Unsafe</span>");
 }
