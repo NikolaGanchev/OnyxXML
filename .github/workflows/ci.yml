@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu GCC
+            os: ubuntu-24.04
+            cc: gcc-13
+            cxx: g++-13
+          - name: Ubuntu Clang
+            os: ubuntu-24.04
+            cc: clang-18
+            cxx: clang++-18
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.cc }} ${{ matrix.cxx == 'clang++-18' && 'clang-18' || 'g++-13' }} libc6-dev
+
+      - name: Configure CMake
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+        run: >
+          cmake -B ${{ github.workspace }}/build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON
+          -DENABLE_DOCUMENTATION=OFF
+          -DOnyxXML_USE_ICONV=ON
+
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build --config Debug --parallel
+
+      - name: Run tests
+        working-directory: ${{ github.workspace }}/build
+        run: ctest --output-on-failure --build-config Debug
+
+  sanitizers:
+    name: Address Sanitizer and Undefined Behavior Sanitizer 
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-18 libc6-dev
+
+      - name: Configure CMake with sanitizers
+        env:
+          CC: clang-18
+          CXX: clang++-18
+        run: >
+          cmake -B ${{ github.workspace }}/build-sanitize
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON
+          -DENABLE_DOCUMENTATION=OFF
+          -DOnyxXML_USE_ICONV=ON
+          -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build-sanitize --config Debug --parallel
+
+      - name: Run tests with sanitizers
+        working-directory: ${{ github.workspace }}/build-sanitize
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: ctest --output-on-failure --build-config Debug
