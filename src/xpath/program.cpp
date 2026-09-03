@@ -8,7 +8,7 @@ Program::Program(const std::vector<XPathObject>& data,
     : data{data}, instructions{instructions} {}
 
 Program::Program(std::vector<XPathObject>&& data,
-                 std::vector<Instruction>&& Instruction)
+                 std::vector<Instruction>&& instructions)
     : data{data}, instructions{instructions} {}
 
 Program::Builder& Program::Builder::addData(const XPathObject& newData) {
