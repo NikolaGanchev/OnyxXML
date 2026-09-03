@@ -163,7 +163,7 @@ void pushInstruction(std::vector<Instruction>& instructions,
     if (instructions.size() >= Instruction::maxOperand()) {
         throw std::runtime_error(
             "Emitted more than the maximum allowed instruction count of " +
-            Instruction::maxOperand());
+            std::to_string(Instruction::maxOperand()));
     }
 
     instructions.emplace_back(std::move(instruction));
