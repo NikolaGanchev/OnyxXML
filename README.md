@@ -1,5 +1,7 @@
 # OnyxXML
 
+![CI](https://github.com/NikolaGanchev/OnyxXML/actions/workflows/ci.yml/badge.svg)
+
 OnyxXML is a C++ library designed to streamline XML document construction, parsing, and indexing without sacrificing performance or safety. By combining dynamic tree building, compile-time generation, and a hybrid approach, along with advanced dynamic query and editing tools, OnyxXML offers unparalleled flexibility. Whether you need a fully static document generated at compile time or a richly dynamic structure in your application, OnyxXML delivers with zero runtime recursion, thorough memory safety, and an intuitive API.
 
 ## Table of Contents
