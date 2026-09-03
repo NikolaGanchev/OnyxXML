@@ -85,3 +85,56 @@ jobs:
           ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
         run: ctest --output-on-failure --build-config Debug
+  
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+ 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-13 g++-13 libc6-dev gcovr
+ 
+      - name: Configure CMake with coverage
+        env:
+          CC: gcc-13
+          CXX: g++-13
+        run: >
+          cmake -B ${{ github.workspace }}/build-coverage
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON
+          -DENABLE_DOCUMENTATION=OFF
+          -DOnyxXML_USE_ICONV=ON
+          -DOnyxXML_COVERAGE=ON
+ 
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build-coverage --config Debug --parallel
+ 
+      - name: Run tests
+        working-directory: ${{ github.workspace }}/build-coverage
+        run: ctest --output-on-failure --build-config Debug
+ 
+      - name: Generate coverage report
+        working-directory: ${{ github.workspace }}
+        run: >
+          gcovr --root .
+          --object-directory build-coverage
+          --filter 'include/onyxxml/.*'
+          --filter 'src/.*'
+          --exclude '.*_deps.*'
+          --exclude '.*/test/.*'
+          --print-summary
+          --html-details coverage.html
+          --xml coverage.xml
+ 
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.html
+            coverage.xml
+          retention-days: 30
