@@ -7,7 +7,7 @@ AttributeViewNode::AttributeViewNode(Node* owner, size_t index)
 }
 
 AttributeViewNode::AttributeViewNode(AttributeViewNode&& other) noexcept
-    : owner{owner}, index{index}, Node{std::move(other)} {
+    : owner{other.owner}, index{other.index}, Node{std::move(other)} {
     this->parent = owner;
 }
 
