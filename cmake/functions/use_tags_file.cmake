@@ -22,13 +22,15 @@ function(use_tags_file compileTarget tags_path cross_compilation)
                 "${GENERATED_TAGS_CPP}")
 
         if (cross_compilation)
+            find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
             if(NOT DEFINED OnyxXML_XML_PYTHON_CODEGEN_SCRIPT OR NOT EXISTS "${OnyxXML_XML_PYTHON_CODEGEN_SCRIPT}")
                 message(FATAL_ERROR "OnyxXML: Python codegen script not found at '${OnyxXML_XML_PYTHON_CODEGEN_SCRIPT}'. Ensure OnyxXML is installed correctly.")
             endif()
 
             add_custom_command(
                 OUTPUT "${GENERATED_TAGS_H}" "${GENERATED_TAGS_CPP}" "${GENERATED_TAGS_COMPILE_H}"
-                COMMAND "python" "${OnyxXML_XML_PYTHON_CODEGEN_SCRIPT}" "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
+                COMMAND "${Python3_EXECUTABLE}" "${OnyxXML_XML_PYTHON_CODEGEN_SCRIPT}" "${tags_path}" "${DYNAMIC_TAGS_DIRECTORY}" "${COMPILE_TAGS_DIRECTORY}"
                 DEPENDS "${tags_path}" "${OnyxXML_XML_PYTHON_CODEGEN_SCRIPT}"
                 COMMENT "Running the generate executable to generate the xml tags files"
                 VERBATIM
