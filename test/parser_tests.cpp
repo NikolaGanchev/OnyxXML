@@ -96,6 +96,31 @@ TEST_CASE("DomParser works with many attributes") {
     REQUIRE(output.deepEquals(*prStream.root));
 }
 
+TEST_CASE("DomParser works with namespaces") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input =
+        "<prefix1:tag prefix2:name=\"value\" xmlns:prefix1=\"uri\" "
+        "xmlns:prefix2=\"uri2\"><prefix2:tag><prefix1:tag "
+        "/></prefix2:tag></prefix1:tag>";
+    std::stringstream inputStream(input);
+
+    GenericNode output{
+        "prefix1:tag",
+        NonVoid,
+        Attribute("prefix2:name", "value"),
+        Attribute("xmlns:prefix1", "uri"),
+        Attribute("xmlns:prefix2", "uri2"),
+        GenericNode("prefix2:tag", NonVoid, GenericNode("prefix1:tag", Void))};
+
+    ParseResult pr = DomParser::parse(input);
+    ParseResult prStream = DomParser::parse(inputStream);
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
 TEST_CASE("DomParser expands entities in text") {
     using namespace onyx::tags;
     using namespace onyx::parser;
@@ -585,6 +610,34 @@ TEST_CASE("DomParser throws \"Premature end in processing instruction\"") {
     std::string input = "<?";
     std::stringstream inputStream(input);
     std::string message = "Premature end of document";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"A namespace prefix on an attribute must resolve to a "
+    "declared namespace URI\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<tag attr:name=\"value\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message =
+        "A namespace prefix on an attribute must resolve to a declared "
+        "namespace URI";
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"A namespace prefix on a tag name must resolve to a "
+    "declared namespace URI\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<prefix:tag></prefix:tag>";
+    std::stringstream inputStream(input);
+    std::string message =
+        "A namespace prefix on a tag name must resolve to a declared namespace "
+        "URI";
     REQUIRE_THROWS_WITH(DomParser::parse(input), message);
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }

@@ -230,6 +230,12 @@ struct ParseState {
         attributeNames;
     std::vector<StringType> attributeValues;
     std::vector<StackType> stack;
+
+    struct NamespaceDecl {
+        CursorStringType prefix;
+        std::size_t depth;
+    };
+    std::vector<NamespaceDecl> namespaces;
 };
 
 template <typename StringType>
@@ -991,6 +997,19 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
             }
         }
 
+        if constexpr (Config::validate &&
+                      Config::validateNamespacePrefixesResolve) {
+            if (attributeNameWithSeparator.second !=
+                attributeNameWithSeparator.first.npos) {
+                if (attributeNameWithSeparator.first.starts_with("xmlns:")) {
+                    state.namespaces.emplace_back(
+                        attributeNameWithSeparator.first.substr(
+                            attributeNameWithSeparator.second + 1),
+                        state.stack.size());
+                }
+            }
+        }
+
         // Only safe to use CursorStringType::size_type as StringType::size_type
         // because TextTransformationMode::NONE should not shift indexes
         state.attributeNames.emplace_back(
@@ -1055,6 +1074,32 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
     if (couldHaveAttributes) {
         /* Invariant - either at start of attribute or at > */
         parseAttributes<Config>(state, pos, policy, validateUTF8);
+
+        if constexpr (Config::validate &&
+                      Config::validateNamespacePrefixesResolve) {
+            for (const auto& attributeName : state.attributeNames) {
+                if (attributeName.second != attributeName.first.npos) {
+                    if (!attributeName.first.starts_with("xmlns:") &&
+                        !attributeName.first.starts_with("xml:")) {
+                        bool resolved = false;
+                        for (const typename State::NamespaceDecl& decl :
+                             state.namespaces) {
+                            if (decl.prefix.size() != attributeName.second)
+                                continue;
+                            if (attributeName.first.starts_with(decl.prefix)) {
+                                resolved = true;
+                                break;
+                            }
+                        }
+                        if (!resolved) {
+                            throw std::invalid_argument(
+                                "A namespace prefix on an attribute must "
+                                "resolve to a declared namespace URI");
+                        }
+                    }
+                }
+            }
+        }
     }
 
     bool isSelfClosing = false;
@@ -1081,6 +1126,25 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
         if constexpr (Config::validate) {
             throw std::invalid_argument("No tag close for tag " +
                                         std::string(qname.second.value()));
+        }
+    }
+    if constexpr (Config::validate &&
+                  Config::validateNamespacePrefixesResolve) {
+        if (qname.first != std::nullopt && qname.first != "xml" &&
+            qname.first != "xmlns") {
+            bool resolved = false;
+            for (const typename State::NamespaceDecl& decl : state.namespaces) {
+                if (decl.prefix.size() != qname.first.value().size()) continue;
+                if (qname.first == decl.prefix) {
+                    resolved = true;
+                    break;
+                }
+            }
+            if (!resolved) {
+                throw std::invalid_argument(
+                    "A namespace prefix on a tag name must "
+                    "resolve to a declared namespace URI");
+            }
         }
     }
 
@@ -1126,6 +1190,14 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
             std::move(policy.transformText(std::move(qname.second.value()),
                                            TextTransformationMode::NONE)),
             state.stack, pos);
+
+        if constexpr (Config::validate &&
+                      Config::validateNamespacePrefixesResolve) {
+            while (!state.namespaces.empty() &&
+                   state.namespaces.back().depth == state.stack.size()) {
+                state.namespaces.pop_back();
+            }
+        }
     }
 }
 
