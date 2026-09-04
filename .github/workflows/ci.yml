@@ -133,7 +133,7 @@ jobs:
           --html-details coverage.html
           --xml coverage.xml | tee gcovr-summary.txt
         
-          RAW_COVERAGE=$(grep '^lines:' gcovr-summary.txt | awk '{print $2}' | tr -d '%')
+          RAW_COVERAGE=$(awk '/lines:/ {print $2}' gcovr-summary.txt | tr -d '%')
           echo "Extracted coverage: $RAW_COVERAGE"
 
           COVERAGE_INT=$(echo "$RAW_COVERAGE" | tr -d '.')
