@@ -3,17 +3,16 @@
 ![CI](https://github.com/NikolaGanchev/OnyxXML/actions/workflows/ci.yml/badge.svg)
 ![Coverage Badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NikolaGanchev/OnyxXML/badges/coverage-badge.json)
 
-OnyxXML is a C++ library designed to streamline XML document construction, parsing, and indexing without sacrificing performance or safety. By combining dynamic tree building, compile-time generation, and a hybrid approach, along with advanced dynamic query and editing tools, OnyxXML offers unparalleled flexibility. Whether you need a fully static document generated at compile time or a richly dynamic structure in your application, OnyxXML delivers with zero runtime recursion, thorough memory safety, and an intuitive API.
+OnyxXML is a C++ XML library focused on API design as a first priority, hoping to bring expressive, modern and safe APIs while not sacrificing performance and compliance. This is achieved via modern C++ features, exhaustive and rigorous automated testing, and granular control over behavior. OnyxXML provides multiple standout features, such as a fluent runtime API for constructing XML trees, the ability to construct owning or non-owning trees, compile-time construction of XML, a highly generic fully-iterative parser backend to tailor to specific applications needs, coupled with multiple optimized frontends and a custom fully-iterative XPath 1.0 execution pipeline that compiles queries into virtual machine bytecode. OnyxXML aims to be completely recursion-free and memory-safe. OnyxXML currently has an extensive automated test suite containing over 500 tests and over 1700 assertions within them.
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Installation](#installation)
+1. [Installation](#installation)
    - [As an Installed Package](#as-an-installed-package)
    - [Via FetchContent](#via-fetchcontent)
-3. [Tag Definitions Generation using CMake](#tag-definitions-generation-using-cmake)
-4. [Documentation](#documentation)
-5. [Usage Examples](#usage-examples)
+2. [Tag Definitions Generation using CMake](#tag-definitions-generation-using-cmake)
+3. [Documentation](#documentation)
+4. [Usage Examples](#usage-examples)
    - [Dynamic API](#dynamic-api)
    - [Indexing API](#indexing-api)
      - [AttributeNameIndex](#attributenameindex)
@@ -34,14 +33,8 @@ OnyxXML is a C++ library designed to streamline XML document construction, parsi
    - [XPath 1.0 Support](#xpath-10-support)
    - [Text Handling](#text-handling)
    - [Other Provided Nodes](#other-provided-nodes)
-6. [License](#license)
-7. [Roadmap](#roadmap)
-
-## Overview
-
-OnyxXML blends modern C++ best practices with rigorous testing to guarantee safe XML handling at any scale.&#x20;
-
-The library’s dynamic API lets you assemble document trees at runtime with a clear, XML-centric syntax, while its compile-time module generates fully formed XML strings without incurring any runtime overhead. For scenarios requiring both static and dynamic segments, the hybrid API constructs a compile-time blueprint that you can later manipulate dynamically. Advanced features such as indexing, non-owning nodes, and arena-based allocation ensure you maintain high performance without manual memory management.
+5. [License](#license)
+6. [Roadmap](#roadmap)
 
 ## Installation
 
