@@ -89,6 +89,8 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -96,7 +98,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-13 g++-13 libc6-dev gcovr
+          sudo apt-get install -y gcc-13 g++-13 libc6-dev gcovr bc
  
       - name: Configure CMake with coverage
         env:
@@ -118,6 +120,7 @@ jobs:
         run: ctest --output-on-failure --build-config Debug
  
       - name: Generate coverage report
+        id: coverage
         working-directory: ${{ github.workspace }}
         run: >
           gcovr --root .
@@ -128,8 +131,17 @@ jobs:
           --exclude '.*/test/.*'
           --print-summary
           --html-details coverage.html
-          --xml coverage.xml
- 
+          --xml coverage.xml | tee gcovr-summary.txt
+        
+          COVERAGE=$(grep '^lines:' gcovr-summary.txt | awk '{print $2}' | tr -d '%')
+
+          if (( $(echo "$COVERAGE >= 80" | bc -l) )); then COLOR="brightgreen"
+          elif (( $(echo "$COVERAGE >= 60" | bc -l) )); then COLOR="yellow"
+          else COLOR="red"; fi
+
+          echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
+          echo "color=$COLOR" >> "$GITHUB_OUTPUT"
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
@@ -138,3 +150,37 @@ jobs:
             coverage.html
             coverage.xml
           retention-days: 30
+
+      - name: Publish coverage badge data
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        env:
+          COVERAGE: ${{ steps.coverage.outputs.coverage }}
+          COLOR: ${{ steps.coverage.outputs.color }}
+        run: |
+          mkdir -p /tmp/badge-publish
+          cat > /tmp/badge-publish/coverage-badge.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "coverage",
+            "message": "${COVERAGE}%",
+            "color": "${COLOR}"
+          }
+          EOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          rm -rf /tmp/badges-worktree
+          if git fetch origin badges:refs/remotes/origin/badges 2>/dev/null; then
+            git worktree add /tmp/badges-worktree origin/badges
+            cd /tmp/badges-worktree
+            git checkout -B badges
+          else
+            git worktree add --orphan -b badges /tmp/badges-worktree
+            cd /tmp/badges-worktree
+          fi
+
+          cp /tmp/badge-publish/coverage-badge.json .
+          git add coverage-badge.json
+          git commit -m "Update coverage badge data" || echo "No changes to commit"
+          git push origin badges --force
