@@ -2204,3 +2204,52 @@ TEST_CASE(
     REQUIRE(*second == "localname");
     REQUIRE(pos.current() == ' ');
 }
+
+TEST_CASE("readQName fails to read invalid NCName") {
+    using namespace onyx::parser;
+    std::string_view input = "123ncname";
+    StringCursor pos(input);
+
+    auto [first, second] = readQName(pos);
+
+    REQUIRE(first.empty());
+    REQUIRE(second == 0);
+    REQUIRE(pos.current() == '1');
+}
+
+TEST_CASE("readQName successfully reads one NCName with no separator") {
+    using namespace onyx::parser;
+    std::string_view input = "name rest";
+    StringCursor pos(input);
+
+    auto [first, second] = readQName(pos);
+
+    REQUIRE(first == "name");
+    REQUIRE(second == first.npos);
+    REQUIRE(pos.current() == 'n');
+}
+
+TEST_CASE("readQName fails to read name where only second NCName is invalid") {
+    using namespace onyx::parser;
+    std::string_view input = "prefix:123";
+    StringCursor pos(input);
+
+    auto [first, second] = readQName(pos);
+
+    REQUIRE(first == "");
+    REQUIRE(second == 0);
+    REQUIRE(pos.current() == 'p');
+}
+
+TEST_CASE("readQName successfully reads a QName with two NCName parts") {
+    using namespace onyx::parser;
+    std::string_view input = "prefix:localname rest";
+    StringCursor pos(input);
+
+    auto [first, second] = readQName(pos);
+
+    REQUIRE(first == "prefix:localname");
+    REQUIRE(second == 6);
+    REQUIRE(pos.current() == 'p');
+}
+

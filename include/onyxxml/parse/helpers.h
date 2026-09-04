@@ -305,7 +305,9 @@ readQName(Cursor& pos)
     pos.swapDefault();
     // read second nc name
     if (pos.current() == ':') {
-        cursorIndex = pos.getCapturedSize() - 1;
+        pos.swapDefault();
+        cursorIndex = pos.getCapturedSize();
+        pos.swapDefault();
         pos.advance();
         if (!isNCNameStartChar(pos)) {
             pos.swapDefault();
