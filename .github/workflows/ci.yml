@@ -122,32 +122,41 @@ jobs:
       - name: Generate coverage report
         id: coverage
         working-directory: ${{ github.workspace }}
-        run: >
-          gcovr --root .
-          --object-directory build-coverage
-          --filter 'include/onyxxml/.*'
-          --filter 'src/.*'
-          --exclude '.*_deps.*'
-          --exclude '.*/test/.*'
-          --print-summary
-          --html-details coverage.html
-          --xml coverage.xml | tee gcovr-summary.txt
+        run: |
+          gcovr --root . \
+          --object-directory build-coverage \
+          --filter 'include/onyxxml/.*' \
+          --filter 'src/.*' \
+          --exclude '.*_deps.*' \
+          --exclude '.*/test/.*' \
+          --print-summary \
+          --html-details coverage.html \
+          --xml coverage.xml
         
-          RAW_COVERAGE=$(awk '/lines:/ {print $2}' gcovr-summary.txt | tr -d '%')
-          echo "Extracted coverage: $RAW_COVERAGE"
+          python3 - << 'EOF'
+          import xml.etree.ElementTree as ET
+          import os
 
-          COVERAGE_INT=$(echo "$RAW_COVERAGE" | tr -d '.')
+          tree = ET.parse('coverage.xml')
+          root = tree.getroot()
+          
+          line_rate = float(root.attrib.get('line-rate', 0.0))
+          coverage_percentage = round(line_rate * 100, 1)
 
-          if [ "$COVERAGE_INT" -ge 800 ]; then
-            ASSIGNED_COLOR="brightgreen"
-          elif [ "$COVERAGE_INT" -ge 600 ]; then
-            ASSIGNED_COLOR="yellow"
-          else
-            ASSIGNED_COLOR="red"
-          fi
+          if coverage_percentage >= 80.0:
+              color = "brightgreen"
+          elif coverage_percentage >= 60.0:
+              color = "yellow"
+          else:
+              color = "red"
 
-          echo "coverage=$RAW_COVERAGE" >> "$GITHUB_OUTPUT"
-          echo "color=$ASSIGNED_COLOR" >> "$GITHUB_OUTPUT"
+          print(f"Extracted coverage: {coverage_percentage}%")
+          print(f"Assigned color: {color}")
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"coverage={coverage_percentage}\n")
+              f.write(f"color={color}\n")
+          EOF
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
