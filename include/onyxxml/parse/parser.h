@@ -995,6 +995,57 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
             if (state.attributeNames.size() >= Config::maxAttributeCount) {
                 throw std::invalid_argument("Tag has too many attributes");
             }
+
+            if ((attributeNameWithSeparator.second !=
+                     attributeNameWithSeparator.first.npos &&
+                 attributeNameWithSeparator.first.starts_with("xmlns:")) ||
+                attributeNameWithSeparator.first == "xmlns") {
+                if (attributeNameWithSeparator.first == "xmlns:xml") {
+                    if (attributeValue !=
+                        "http://www.w3.org/XML/1998/namespace") {
+                        throw std::invalid_argument(
+                            "Cannot bind 'xml' prefix to a namespace "
+                            "different from "
+                            "'http://www.w3.org/XML/1998/namespace'");
+                    }
+                }
+                if (attributeNameWithSeparator.first == "xmlns:xmlns") {
+                    throw std::invalid_argument(
+                        "Cannot declare prefix 'xmlns'");
+                }
+
+                if (attributeValue == "http://www.w3.org/XML/1998/namespace") {
+                    if (attributeNameWithSeparator.first == "xmlns") {
+                        throw std::invalid_argument(
+                            "Cannot declare namespace name "
+                            "'http://www.w3.org/XML/1998/namespace' as the "
+                            "default namespace because it is "
+                            "bound by definition to 'xml'");
+                    } else {
+                        throw std::invalid_argument(
+                            "Cannot bind namespace name "
+                            "'http://www.w3.org/XML/1998/namespace' to a "
+                            "prefix different from 'xml' because it is "
+                            "bound "
+                            "by definition to 'xml'");
+                    }
+                }
+
+                if (attributeValue == "http://www.w3.org/2000/xmlns/") {
+                    if (attributeNameWithSeparator.first == "xmlns") {
+                        throw std::invalid_argument(
+                            "Cannot declare namespace name "
+                            "'http://www.w3.org/2000/xmlns/' as the "
+                            "default namespace because it is "
+                            "bound by definition to 'xmlns'");
+                    } else {
+                        throw std::invalid_argument(
+                            "Cannot bind namespace name "
+                            "'http://www.w3.org/2000/xmlns/' because it is "
+                            "bound by definition to 'xmlns'");
+                    }
+                }
+            }
         }
 
         if constexpr (Config::validate &&
@@ -1058,6 +1109,11 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
         } else if (qname.second == std::nullopt) {
             throw std::invalid_argument(
                 "Invalid tag name containing only prefix part");
+        }
+
+        if (qname.first != std::nullopt && qname.first == "xmlns") {
+            throw std::invalid_argument(
+                "A tag name cannot have the prefix 'xmlns'");
         }
     }
 
@@ -1130,8 +1186,7 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
     }
     if constexpr (Config::validate &&
                   Config::validateNamespacePrefixesResolve) {
-        if (qname.first != std::nullopt && qname.first != "xml" &&
-            qname.first != "xmlns") {
+        if (qname.first != std::nullopt && qname.first != "xml") {
             bool resolved = false;
             for (const typename State::NamespaceDecl& decl : state.namespaces) {
                 if (decl.prefix.size() != qname.first.value().size()) continue;

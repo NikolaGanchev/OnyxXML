@@ -1396,6 +1396,111 @@ TEST_CASE("DomParser throws \"& outside of entities not allowed.\" on text") {
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
+TEST_CASE("DomParser throws \"A tag name cannot have the prefix 'xmlns'\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<xmlns:tag></xmlns:tag>";
+    std::stringstream inputStream(input);
+    std::string message = "A tag name cannot have the prefix 'xmlns'";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Cannot bind 'xml' prefix to a namespace different from "
+    "'http://www.w3.org/XML/1998/namespace'\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<tag xmlns:xml=\"http://example.com\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message =
+        "Cannot bind 'xml' prefix to a namespace different from "
+        "'http://www.w3.org/XML/1998/namespace'";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE("DomParser throws \"Cannot declare prefix 'xmlns'\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<tag xmlns:xmlns=\"http://example.com\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message = "Cannot declare prefix 'xmlns'";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Cannot declare namespace name "
+    "'http://www.w3.org/XML/1998/namespace' as the default namespace because "
+    "it is bound by definition to 'xml'\"") {
+    using namespace onyx::parser;
+
+    std::string input =
+        "<tag xmlns=\"http://www.w3.org/XML/1998/namespace\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message =
+        "Cannot declare namespace name 'http://www.w3.org/XML/1998/namespace' "
+        "as the default namespace because it is bound by definition to 'xml'";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Cannot bind namespace name "
+    "'http://www.w3.org/XML/1998/namespace' to a prefix different from 'xml' "
+    "because it is bound by definition to 'xml'\"") {
+    using namespace onyx::parser;
+
+    std::string input =
+        "<tag xmlns:other=\"http://www.w3.org/XML/1998/namespace\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message =
+        "Cannot bind namespace name 'http://www.w3.org/XML/1998/namespace' to "
+        "a prefix different from 'xml' because it is bound by definition to "
+        "'xml'";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Cannot declare namespace name "
+    "'http://www.w3.org/2000/xmlns/' as the default namespace because it is "
+    "bound by definition to 'xmlns'\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<tag xmlns=\"http://www.w3.org/2000/xmlns/\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message =
+        "Cannot declare namespace name 'http://www.w3.org/2000/xmlns/' as the "
+        "default namespace because it is bound by definition to 'xmlns'";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Cannot bind namespace name "
+    "'http://www.w3.org/2000/xmlns/' because it is bound by definition to "
+    "'xmlns'\"") {
+    using namespace onyx::parser;
+
+    std::string input =
+        "<tag xmlns:other=\"http://www.w3.org/2000/xmlns/\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message =
+        "Cannot bind namespace name 'http://www.w3.org/2000/xmlns/' because it "
+        "is bound by definition to 'xmlns'";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
 #include <iostream>
 
 class SaxListenerLogger : public virtual onyx::parser::SaxListener {
