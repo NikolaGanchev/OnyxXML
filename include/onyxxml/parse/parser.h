@@ -1000,6 +1000,12 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
                      attributeNameWithSeparator.first.npos &&
                  attributeNameWithSeparator.first.starts_with("xmlns:")) ||
                 attributeNameWithSeparator.first == "xmlns") {
+                if (attributeNameWithSeparator.first != "xmlns") {
+                    if (attributeValue == "") {
+                        throw std::invalid_argument(
+                            "Cannot bind prefix to empty namespace name");
+                    }
+                }
                 if (attributeNameWithSeparator.first == "xmlns:xml") {
                     if (attributeValue !=
                         "http://www.w3.org/XML/1998/namespace") {

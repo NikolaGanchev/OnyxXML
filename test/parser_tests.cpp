@@ -1501,6 +1501,17 @@ TEST_CASE(
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
+TEST_CASE("DomParser throws \"Cannot bind prefix to empty namespace name\"") {
+    using namespace onyx::parser;
+
+    std::string input = "<tag xmlns:prefix=\"\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message = "Cannot bind prefix to empty namespace name";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
 #include <iostream>
 
 class SaxListenerLogger : public virtual onyx::parser::SaxListener {
