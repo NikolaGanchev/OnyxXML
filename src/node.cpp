@@ -437,7 +437,7 @@ bool Node::shallowEquals(const Node& other) const {
     if (this == &other) return true;
     if (this->isVoid() != other.isVoid()) return false;
     if (this->getTagName() != other.getTagName()) return false;
-    if (this->getNamespaceURI() != other.getNamespaceURI()) return false;
+    if (this->getNamespaceName() != other.getNamespaceName()) return false;
     if (this->attributes.size() != other.attributes.size()) return false;
     if (this->getChildrenCount() != other.getChildrenCount()) return false;
 
@@ -1012,7 +1012,7 @@ std::optional<std::string_view> Node::resolveAttributeNamespacePrefix(
     return resolveNamespacePrefixWithDefaults(prefix);
 }
 
-std::optional<std::string_view> Node::getNamespaceURI() const {
+std::optional<std::string_view> Node::getNamespaceName() const {
     return resolveNamespacePrefixWithDefaults(this->getNamespacePrefix());
 }
 }  // namespace onyx::dynamic

@@ -2632,8 +2632,8 @@ TEST_CASE("getNCNameWithoutNamespace resolves with prefix",
             "price");
 }
 
-TEST_CASE("getNamespaceURI resolves empty prefix to null",
-          "[Node::getNamespaceURI]") {
+TEST_CASE("getNamespaceName resolves empty prefix to null",
+          "[Node::getNamespaceName]") {
     using namespace onyx::tags;
 
     GenericNode library(
@@ -2645,11 +2645,11 @@ TEST_CASE("getNamespaceURI resolves empty prefix to null",
     Node* tracked = library.getFirstChild()->getLastChild();
 
     REQUIRE(tracked->getTagName() == "price");
-    REQUIRE(tracked->getNamespaceURI() == std::nullopt);
+    REQUIRE(tracked->getNamespaceName() == std::nullopt);
 }
 
-TEST_CASE("getNamespaceURI resolves prefix with no declared namespace to null",
-          "[Node::getNamespaceURI]") {
+TEST_CASE("getNamespaceName resolves prefix with no declared namespace to null",
+          "[Node::getNamespaceName]") {
     using namespace onyx::tags;
 
     GenericNode library(
@@ -2660,12 +2660,12 @@ TEST_CASE("getNamespaceURI resolves prefix with no declared namespace to null",
     Node* tracked = library.getFirstChild()->getLastChild();
 
     REQUIRE(tracked->getTagName() == "price");
-    REQUIRE(tracked->getNamespaceURI() == std::nullopt);
+    REQUIRE(tracked->getNamespaceName() == std::nullopt);
 }
 
 TEST_CASE(
-    "getNamespaceURI resolves prefix with declared empty namespace to null",
-    "[Node::getNamespaceURI]") {
+    "getNamespaceName resolves prefix with declared empty namespace to null",
+    "[Node::getNamespaceName]") {
     using namespace onyx::tags;
 
     GenericNode library(
@@ -2678,11 +2678,12 @@ TEST_CASE(
     Node* tracked = library.getFirstChild()->getLastChild();
 
     REQUIRE(tracked->getTagName() == "price");
-    REQUIRE(tracked->getNamespaceURI() == std::nullopt);
+    REQUIRE(tracked->getNamespaceName() == std::nullopt);
 }
 
-TEST_CASE("getNamespaceURI resolves prefix with declared namespace on ancestor",
-          "[Node::getNamespaceURI]") {
+TEST_CASE(
+    "getNamespaceName resolves prefix with declared namespace on ancestor",
+    "[Node::getNamespaceName]") {
     using namespace onyx::tags;
 
     GenericNode library(
@@ -2694,11 +2695,11 @@ TEST_CASE("getNamespaceURI resolves prefix with declared namespace on ancestor",
     Node* tracked = library.getFirstChild()->getLastChild();
 
     REQUIRE(tracked->getTagName() == "price");
-    REQUIRE(tracked->getNamespaceURI() == "uri");
+    REQUIRE(tracked->getNamespaceName() == "uri");
 }
 
-TEST_CASE("getNamespaceURI resolves prefix with declared namespace on self",
-          "[Node::getNamespaceURI]") {
+TEST_CASE("getNamespaceName resolves prefix with declared namespace on self",
+          "[Node::getNamespaceName]") {
     using namespace onyx::tags;
 
     GenericNode library(
@@ -2711,13 +2712,13 @@ TEST_CASE("getNamespaceURI resolves prefix with declared namespace on self",
     Node* tracked = library.getFirstChild()->getLastChild();
 
     REQUIRE(tracked->getTagName() == "price");
-    REQUIRE(tracked->getNamespaceURI() == "uri3");
+    REQUIRE(tracked->getNamespaceName() == "uri3");
 }
 
 TEST_CASE(
-    "getNamespaceURI resolves empty prefix with declared default namespace on "
+    "getNamespaceName resolves empty prefix with declared default namespace on "
     "self",
-    "[Node::getNamespaceURI]") {
+    "[Node::getNamespaceName]") {
     using namespace onyx::tags;
 
     GenericNode library(
@@ -2730,13 +2731,13 @@ TEST_CASE(
     Node* tracked = library.getFirstChild()->getLastChild();
 
     REQUIRE(tracked->getTagName() == "price");
-    REQUIRE(tracked->getNamespaceURI() == "uri3");
+    REQUIRE(tracked->getNamespaceName() == "uri3");
 }
 
 TEST_CASE(
-    "getNamespaceURI resolves empty prefix with declared default namespace on "
+    "getNamespaceName resolves empty prefix with declared default namespace on "
     "ancestor",
-    "[Node::getNamespaceURI]") {
+    "[Node::getNamespaceName]") {
     using namespace onyx::tags;
 
     GenericNode library(
@@ -2748,12 +2749,12 @@ TEST_CASE(
     Node* tracked = library.getFirstChild()->getLastChild();
 
     REQUIRE(tracked->getTagName() == "price");
-    REQUIRE(tracked->getNamespaceURI() == "uri2");
+    REQUIRE(tracked->getNamespaceName() == "uri2");
 }
 
 TEST_CASE(
-    "getNamespaceURI resolves empty prefix with no default namespace to null",
-    "[Node::getNamespaceURI]") {
+    "getNamespaceName resolves empty prefix with no default namespace to null",
+    "[Node::getNamespaceName]") {
     using namespace onyx::tags;
 
     GenericNode library(
@@ -2765,13 +2766,13 @@ TEST_CASE(
     Node* tracked = library.getFirstChild()->getLastChild();
 
     REQUIRE(tracked->getTagName() == "price");
-    REQUIRE(tracked->getNamespaceURI() == std::nullopt);
+    REQUIRE(tracked->getNamespaceName() == std::nullopt);
 }
 
 TEST_CASE(
-    "getNamespaceURI resolves 'xml' prefix to "
+    "getNamespaceName resolves 'xml' prefix to "
     "'http://www.w3.org/XML/1998/namespace'",
-    "[Node::getNamespaceURI]") {
+    "[Node::getNamespaceName]") {
     using namespace onyx::tags;
 
     GenericNode library(
@@ -2784,7 +2785,7 @@ TEST_CASE(
     Node* tracked = library.getFirstChild()->getLastChild();
 
     REQUIRE(tracked->getTagName() == "price");
-    REQUIRE(tracked->getNamespaceURI() ==
+    REQUIRE(tracked->getNamespaceName() ==
             "http://www.w3.org/XML/1998/namespace");
 }
 

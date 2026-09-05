@@ -564,8 +564,9 @@ class Node {
     virtual std::optional<std::string_view> getNamespacePrefix() const;
 
     /**
-     * @brief Get the resolved namespace URI. Returns std::nullopt if the
-     * namespace URI could not be resolved.
+     * @brief Get the resolved namespace name, which is a URI. Returns
+     * std::nullopt if the namespace name could not be resolved from the prefix
+     * or if this Node has no namespace prefix.
      *
      * This function will honor undeclaring of prefixes which is legal under
      * 'Namespaces in XML 1.1' but illegal under 'Namespaces in XML 1.0'.
@@ -578,7 +579,7 @@ class Node {
      *
      * @return std::optional<std::string_view>
      */
-    std::optional<std::string_view> getNamespaceURI() const;
+    std::optional<std::string_view> getNamespaceName() const;
 
     /**
      * @brief Resolve the namespace URI from this Node's viewpoint. Returns
