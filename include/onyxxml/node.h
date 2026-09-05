@@ -583,6 +583,17 @@ class Node {
         std::optional<std::string_view> prefix) const;
 
     /**
+     * @brief Resolve the namespace URI from this Node's viewpoint. Returns
+     * std::nullopt if the namespace URI could not be resolved. If the prefix is
+     * std::nullopt or "", the URI will always be std::nullopt
+     *
+     * @param prefix The namespace prefix
+     * @return std::optional<std::string_view>
+     */
+    std::optional<std::string_view> resolveAttributeNamespacePrefix(
+        std::optional<std::string_view> prefix) const;
+
+    /**
      * @brief Returns whether the current Node is in a tree
      *
      * @return true

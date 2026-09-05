@@ -999,6 +999,13 @@ std::optional<std::string_view> Node::resolveTagNamespacePrefix(
     return std::nullopt;
 }
 
+std::optional<std::string_view> Node::resolveAttributeNamespacePrefix(
+    std::optional<std::string_view> prefix) const {
+    if (!prefix.has_value() || prefix == "") return std::nullopt;
+
+    return resolveTagNamespacePrefix(prefix);
+}
+
 std::optional<std::string_view> Node::getNamespaceURI() const {
     return resolveTagNamespacePrefix(this->getNamespacePrefix());
 }
