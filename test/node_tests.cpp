@@ -2619,6 +2619,20 @@ TEST_CASE("setNamespacePrefix works", "[NamespaceNode::setNamespacePrefix]") {
     REQUIRE(index.updateCalledCount == 1);
 }
 
+TEST_CASE("setTagName works", "[GenericNode::setTagName]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    GenericNode node("prefix:name", NonVoid);
+    IndexFixture index = index::createIndex<IndexFixture>(&node);
+    REQUIRE(node.getNamespacePrefix() == "prefix");
+    REQUIRE(node.getTagName() == "name");
+    node.setTagName("other");
+    REQUIRE(node.getNamespacePrefix() == "prefix");
+    REQUIRE(node.getTagName() == "other");
+    REQUIRE(index.updateCalledCount == 1);
+}
+
 TEST_CASE("getNamespacePrefix resolves empty prefix to null",
           "[Attribute::getNamespacePrefix]") {
     using namespace onyx::dynamic;

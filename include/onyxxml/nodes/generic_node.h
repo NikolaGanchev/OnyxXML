@@ -153,6 +153,13 @@ class GenericNode : public NamespaceNode {
     explicit GenericNode(Node&& other) noexcept;
 
     /**
+     * @brief Sets the tag name only, without affecting the namespace prefix.
+     *
+     * @param newName
+     */
+    void setTagName(std::string newName);
+
+    /**
      * @brief GenericNode move assignment from a Node
      *
      * @param other

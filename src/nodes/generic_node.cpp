@@ -70,6 +70,11 @@ GenericNode::GenericNode(NonOwningNodeTag, util::QualifiedName qualifiedName,
                   std::move(attributes),
                   std::move(children)} {}
 
+void GenericNode::setTagName(std::string newName) {
+    this->tag = newName;
+    this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+}
+
 const std::string& GenericNode::getTagName() const { return this->tag; }
 
 bool GenericNode::isVoid() const {
