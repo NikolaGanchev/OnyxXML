@@ -573,12 +573,13 @@ class Node {
 
     /**
      * @brief Resolve the namespace URI from this Node's viewpoint. Returns
-     * std::nullopt if the namespace URI could not be resolved.
+     * std::nullopt if the namespace URI could not be resolved. Honors default
+     * namespace declarations.
      *
      * @param prefix The namespace prefix
      * @return std::optional<std::string_view>
      */
-    std::optional<std::string_view> resolveNamespacePrefix(
+    std::optional<std::string_view> resolveTagNamespacePrefix(
         std::optional<std::string_view> prefix) const;
 
     /**
