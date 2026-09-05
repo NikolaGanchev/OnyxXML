@@ -226,13 +226,14 @@ struct ParseState {
     bool firstTag = true;
     bool foundXmlDeclaration = false;
     bool foundDoctype = false;
-    std::vector<std::pair<StringType, typename StringType::size_type>>
-        attributeNames;
+    using AttributeName = std::pair<StringType, typename StringType::size_type>;
+    std::vector<AttributeName> attributeNames;
     std::vector<StringType> attributeValues;
     std::vector<StackType> stack;
 
     struct NamespaceDecl {
         CursorStringType prefix;
+        CursorStringType name;
         std::size_t depth;
     };
     std::vector<NamespaceDecl> namespaces;
@@ -982,15 +983,6 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
             }
         }
 
-        if constexpr (Config::validate && Config::validateDuplicateAttributes) {
-            for (size_t i = 0; i < state.attributeNames.size(); i++) {
-                if (state.attributeNames[i].first ==
-                    attributeNameWithSeparator.first) {
-                    throw std::invalid_argument("Duplicate attribute name");
-                }
-            }
-        }
-
         if constexpr (Config::validate) {
             if (state.attributeNames.size() >= Config::maxAttributeCount) {
                 throw std::invalid_argument("Tag has too many attributes");
@@ -1000,12 +992,34 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
                      attributeNameWithSeparator.first.npos &&
                  attributeNameWithSeparator.first.starts_with("xmlns:")) ||
                 attributeNameWithSeparator.first == "xmlns") {
+                // To validate uniqueness with namespaces available resolving
+                // the namespace names is needed. But to be able to resolve the
+                // namespace names, there cannot be duplicates. The only
+                // attributes that can be literally checked for uniqueness are
+                // those who have a prefix of 'xml' or 'xmlns' since those have
+                // a name by definition and their name cannot be bound to any
+                // other prefix or are the attribute 'xmlns'.
+                // This loop specifically checks for namespace declarations so
+                // they can be safely resolved later.
+                if (Config::validateNamespacePrefixesResolve &&
+                    Config::validateDuplicateAttributes) {
+                    for (size_t i = 0; i < state.attributeNames.size(); i++) {
+                        if (state.attributeNames[i].first ==
+                            attributeNameWithSeparator.first) {
+                            throw std::invalid_argument(
+                                "Duplicate namespace declaration in "
+                                "attributes");
+                        }
+                    }
+                }
+
                 if (attributeNameWithSeparator.first != "xmlns") {
                     if (attributeValue == "") {
                         throw std::invalid_argument(
                             "Cannot bind prefix to empty namespace name");
                     }
                 }
+
                 if (attributeNameWithSeparator.first == "xmlns:xml") {
                     if (attributeValue !=
                         "http://www.w3.org/XML/1998/namespace") {
@@ -1062,7 +1076,7 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
                     state.namespaces.emplace_back(
                         attributeNameWithSeparator.first.substr(
                             attributeNameWithSeparator.second + 1),
-                        state.stack.size());
+                        attributeValue, state.stack.size());
                 }
             }
         }
@@ -1085,6 +1099,29 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
             }
         }
     }
+}
+
+/**
+ * @brief Resolves the namespace name of an attribute which has a prefix. It
+ * should already be validated that the attribute name resolves. If a namespace
+ * prefix is encountered that cannot be resolved, an std::logic_error is thrown.
+ *
+ */
+template <typename Config, typename Policy>
+ONYX_INLINE const ParseState<Config, Policy>::NamespaceDecl&
+resolveAttributeNamespaceName(
+    ParseState<Config, Policy>& state,
+    typename ParseState<Config, Policy>::AttributeName& attributeName) {
+    using State = ParseState<Config, Policy>;
+    for (const typename State::NamespaceDecl& decl : state.namespaces) {
+        if (decl.prefix.size() != attributeName.second) continue;
+        if (attributeName.first.starts_with(decl.prefix)) {
+            return decl;
+        }
+    }
+
+    throw std::logic_error(
+        "Found unresolvable prefix in already validated attribute names");
 }
 
 /**
@@ -1146,8 +1183,9 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
                         bool resolved = false;
                         for (const typename State::NamespaceDecl& decl :
                              state.namespaces) {
-                            if (decl.prefix.size() != attributeName.second)
+                            if (decl.prefix.size() != attributeName.second) {
                                 continue;
+                            }
                             if (attributeName.first.starts_with(decl.prefix)) {
                                 resolved = true;
                                 break;
@@ -1157,6 +1195,89 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
                             throw std::invalid_argument(
                                 "A namespace prefix on an attribute must "
                                 "resolve to a declared namespace URI");
+                        }
+                    }
+                }
+            }
+        }
+
+        if constexpr (Config::validate && Config::validateDuplicateAttributes) {
+            if constexpr (Config::validateNamespacePrefixesResolve) {
+                for (std::size_t i = 0; i < state.attributeNames.size(); i++) {
+                    typename State::AttributeName attrName =
+                        state.attributeNames[i];
+                    // Namespace declaration attributes already are validated
+                    // for uniqueness in parseAttributes
+                    if ((attrName.second != attrName.first.npos &&
+                         attrName.first.starts_with("xmlns:")) ||
+                        attrName.first == "xmlns") {
+                        continue;
+                    }
+
+                    // The name corresponding to prefix 'xml' is
+                    // 'http://www.w3.org/XML/1998/namespace' by definition and
+                    // no other prefix can be bound to it.
+                    // Attribute names without a prefix are not impacted by
+                    // default namespaces and all belong to the empty namespace.
+                    // In short, attribute names starting with 'xml:' or that
+                    // have no prefix can be literally checked
+                    if (attrName.second == attrName.first.npos ||
+                        attrName.first.starts_with("xml:")) {
+                        for (std::size_t j = i + 1;
+                             j < state.attributeNames.size(); j++) {
+                            if (state.attributeNames[j].first ==
+                                attrName.first) {
+                                throw std::invalid_argument(
+                                    "Duplicate attribute name");
+                            }
+                        }
+                    } else {
+                        const typename State::NamespaceDecl&
+                            namespaceDeclaration =
+                                resolveAttributeNamespaceName(
+                                    state, state.attributeNames[i]);
+                        for (std::size_t j = i + 1;
+                             j < state.attributeNames.size(); j++) {
+                            typename State::AttributeName otherAttrName =
+                                state.attributeNames[j];
+                            std::size_t lenAfterSeparator =
+                                attrName.first.length() - attrName.second;
+                            std::size_t otherLenAfterSeparator =
+                                otherAttrName.first.length() -
+                                otherAttrName.second;
+
+                            if (lenAfterSeparator != otherLenAfterSeparator) {
+                                continue;
+                            }
+
+                            if (attrName.first.compare(
+                                    attrName.second + 1, std::string::npos,
+                                    otherAttrName.first,
+                                    otherAttrName.second + 1,
+                                    std::string::npos) != 0) {
+                                continue;
+                            }
+
+                            const typename State::NamespaceDecl&
+                                otherNamespaceDeclaration =
+                                    resolveAttributeNamespaceName(
+                                        state, otherAttrName);
+                            if (namespaceDeclaration.name ==
+                                otherNamespaceDeclaration.name) {
+                                throw std::invalid_argument(
+                                    "Duplicate attribute name");
+                            }
+                        }
+                    }
+                }
+            } else {
+                for (std::size_t i = 0; i < state.attributeNames.size(); i++) {
+                    for (std::size_t j = i + 1; j < state.attributeNames.size();
+                         j++) {
+                        if (state.attributeNames[i].first ==
+                            state.attributeNames[j].first) {
+                            throw std::invalid_argument(
+                                "Duplicate attribute name");
                         }
                     }
                 }

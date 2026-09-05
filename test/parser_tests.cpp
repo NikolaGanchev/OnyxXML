@@ -96,6 +96,34 @@ TEST_CASE("DomParser works with many attributes") {
     REQUIRE(output.deepEquals(*prStream.root));
 }
 
+TEST_CASE("DomParser works with namespace-differentiated attributes") {
+    using namespace onyx::tags;
+    using namespace onyx::parser;
+
+    std::string input =
+        "<div lib:name=\"value\" name2=\"value\" other:name=\"value1\" "
+        "xmlns:lib=\"value\" xmlns:other=\"value1\"><div lib:name=\"value\" "
+        "other:name=\"value1\"></div></div>";
+    std::stringstream inputStream(input);
+
+    GenericNode output{
+        "div",
+        NonVoid,
+        Attribute("lib:name", "value"),
+        Attribute("name2", "value"),
+        Attribute("other:name", "value1"),
+        Attribute("xmlns:lib", "value"),
+        Attribute("xmlns:other", "value1"),
+        GenericNode("div", NonVoid, Attribute("lib:name", "value"),
+                    Attribute("other:name", "value1"))};
+
+    ParseResult pr = DomParser::parse(input);
+    ParseResult prStream = DomParser::parse(inputStream);
+
+    REQUIRE(output.deepEquals(*pr.root));
+    REQUIRE(output.deepEquals(*prStream.root));
+}
+
 TEST_CASE("DomParser works with namespaces") {
     using namespace onyx::tags;
     using namespace onyx::parser;
@@ -1123,6 +1151,63 @@ TEST_CASE("DomParser throws \"Duplicate attribute name\"") {
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
 
+TEST_CASE(
+    "DomParser throws \"Duplicate attribute name\" with 'xml' namespace "
+    "prefixes") {
+    using namespace onyx::parser;
+
+    std::string xml =
+        "<div xml:name=\"value\" xml:name2=\"value\" "
+        "xml:name=\"value1\"></div>";
+    std::stringstream inputStream(xml);
+    std::string message = "Duplicate attribute name";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Duplicate attribute name\" with namespaces on self") {
+    using namespace onyx::parser;
+
+    std::string xml =
+        "<div lib:name=\"value\" name2=\"value\" other:name=\"value1\" "
+        "xmlns:lib=\"value\" xmlns:other=\"value\"></div>";
+    std::stringstream inputStream(xml);
+    std::string message = "Duplicate attribute name";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Duplicate attribute name\" with namespaces on "
+    "ancestors") {
+    using namespace onyx::parser;
+
+    std::string xml =
+        "<div xmlns:other=\"value\"><div xmlns:lib=\"value\"><div "
+        "lib:name=\"value\" name2=\"value\" "
+        "other:name=\"value1\"></div></div></div>";
+    std::stringstream inputStream(xml);
+    std::string message = "Duplicate attribute name";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Duplicate attribute name\" with namespaces on "
+    "ancestor and self") {
+    using namespace onyx::parser;
+
+    std::string xml =
+        "<div xmlns:other=\"value\"><div><div "
+        "lib:name=\"value\" name2=\"value\" "
+        "other:name=\"value1\" xmlns:lib=\"value\"></div></div></div>";
+    std::stringstream inputStream(xml);
+    std::string message = "Duplicate attribute name";
+    REQUIRE_THROWS_WITH(DomParser::parse(xml), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
 TEST_CASE("DomParser throws \"Multiple Document Type Declarations found\"") {
     using namespace onyx::parser;
 
@@ -1507,6 +1592,35 @@ TEST_CASE("DomParser throws \"Cannot bind prefix to empty namespace name\"") {
     std::string input = "<tag xmlns:prefix=\"\"></tag>";
     std::stringstream inputStream(input);
     std::string message = "Cannot bind prefix to empty namespace name";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Duplicate namespace declaration in attributes\" with "
+    "prefixes") {
+    using namespace onyx::parser;
+
+    std::string input =
+        "<tag xmlns:prefix=\"valid\" xmlns:prefix1=\"valid\" "
+        "xmlns:prefix=\"valid2\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message = "Duplicate namespace declaration in attributes";
+
+    REQUIRE_THROWS_WITH(DomParser::parse(input), message);
+    REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
+}
+
+TEST_CASE(
+    "DomParser throws \"Duplicate namespace declaration in attributes\" with "
+    "default namespace declaration") {
+    using namespace onyx::parser;
+
+    std::string input =
+        "<tag xmlns=\"valid\" xmlns:prefix1=\"valid\" xmlns=\"valid2\"></tag>";
+    std::stringstream inputStream(input);
+    std::string message = "Duplicate namespace declaration in attributes";
 
     REQUIRE_THROWS_WITH(DomParser::parse(input), message);
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
@@ -2421,4 +2535,3 @@ TEST_CASE("readQName successfully reads a QName with two NCName parts") {
     REQUIRE(second == 6);
     REQUIRE(pos.current() == 'p');
 }
-
