@@ -437,29 +437,33 @@ bool Node::shallowEquals(const Node& other) const {
     if (this == &other) return true;
     if (this->isVoid() != other.isVoid()) return false;
     if (this->getTagName() != other.getTagName()) return false;
+    if (this->getNamespaceURI() != other.getNamespaceURI()) return false;
     if (this->attributes.size() != other.attributes.size()) return false;
     if (this->getChildrenCount() != other.getChildrenCount()) return false;
 
-    std::vector<const Attribute*> attributes1;
-    std::vector<const Attribute*> attributes2;
+    using AttributePair =
+        std::pair<std::optional<std::string_view>, std::string_view>;
+
+    std::vector<AttributePair> attributes1;
+    std::vector<AttributePair> attributes2;
 
     for (size_t i = 0; i < this->attributes.size(); i++) {
-        attributes1.push_back(&(this->attributes[i]));
-        attributes2.push_back(&(other.attributes[i]));
+        attributes1.emplace_back(
+            this->resolveAttributeNamespacePrefix(
+                this->attributes[i].getNamespacePrefix()),
+            this->attributes[i].getNCNameWithoutNamespace());
+        attributes2.emplace_back(
+            other.resolveAttributeNamespacePrefix(
+                other.attributes[i].getNamespacePrefix()),
+            other.attributes[i].getNCNameWithoutNamespace());
     }
 
-    std::sort(attributes1.begin(), attributes1.end(),
-              [](const Attribute* lhs, const Attribute* rhs) {
-                  return lhs->getName() < rhs->getName();
-              });
+    std::sort(attributes1.begin(), attributes1.end());
 
-    std::sort(attributes2.begin(), attributes2.end(),
-              [](const Attribute* lhs, const Attribute* rhs) {
-                  return lhs->getName() < rhs->getName();
-              });
+    std::sort(attributes2.begin(), attributes2.end());
 
     for (size_t i = 0; i < attributes1.size(); i++) {
-        if ((*attributes1[i]) != (*attributes2[i])) {
+        if (attributes1[i] != attributes2[i]) {
             return false;
         }
     }

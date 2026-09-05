@@ -1642,6 +1642,78 @@ TEST_CASE("Node deepEquals() works", "[Node]") {
     CHECK(!root->deepEquals(obj));
 }
 
+TEST_CASE("Node deepEquals() works with namespaces", "[Node]") {
+    using namespace onyx::tags;
+
+    GenericNode root("lib:library", NonVoid,
+                     Attribute("xmlns:lib", "http://example.com/lib"),
+                     GenericNode("lib:book", NonVoid, Attribute("id", "1"),
+                                 GenericNode("lib:title", NonVoid,
+                                             Text("C++ Namespaces Guide"))));
+
+    std::unique_ptr<Node> copy = root.deepCopy();
+    REQUIRE(copy);
+    CHECK(root.deepEquals(*copy));
+}
+
+TEST_CASE(
+    "Node deepEquals() works with nodes same namespace prefixes but different "
+    "URIs",
+    "[Node]") {
+    using namespace onyx::tags;
+    GenericNode root("lib:library", NonVoid,
+                     Attribute("xmlns:lib", "http://example.com/lib"),
+                     GenericNode("lib:book", NonVoid, Attribute("id", "1"),
+                                 GenericNode("lib:title", NonVoid,
+                                             Text("C++ Namespaces Guide"))));
+
+    GenericNode differentNamespace(
+        "lib:library", NonVoid,
+        Attribute("xmlns:lib", "http://example.com/other"),
+        GenericNode(
+            "lib:book", NonVoid, Attribute("id", "1"),
+            GenericNode("lib:title", NonVoid, Text("C++ Namespaces Guide"))));
+
+    CHECK_FALSE(root.deepEquals(differentNamespace));
+}
+
+TEST_CASE("Node deepEquals() works with nodes with missing prefixes",
+          "[Node]") {
+    using namespace onyx::tags;
+    GenericNode root("lib:library", NonVoid,
+                     Attribute("xmlns:lib", "http://example.com/lib"),
+                     GenericNode("lib:book", NonVoid, Attribute("id", "1"),
+                                 GenericNode("lib:title", NonVoid,
+                                             Text("C++ Namespaces Guide"))));
+
+    GenericNode withoutNamespace(
+        "library", NonVoid,
+        GenericNode(
+            "book", NonVoid, Attribute("id", "1"),
+            GenericNode("title", NonVoid, Text("C++ Namespaces Guide"))));
+
+    CHECK_FALSE(root.deepEquals(withoutNamespace));
+}
+
+TEST_CASE("Node deepEquals() works with nodes with different prefixes",
+          "[Node]") {
+    using namespace onyx::tags;
+    GenericNode root("lib:library", NonVoid,
+                     Attribute("xmlns:lib", "http://example.com/lib"),
+                     GenericNode("lib:book", NonVoid, Attribute("id", "1"),
+                                 GenericNode("lib:title", NonVoid,
+                                             Text("C++ Namespaces Guide"))));
+
+    GenericNode differentChild(
+        "lib:library", NonVoid,
+        Attribute("xmlns:lib", "http://example.com/lib"),
+        GenericNode(
+            "lib:book", NonVoid, Attribute("id", "1"),
+            GenericNode("lib2:title", NonVoid, Text("C++ Namespaces Guide"))));
+
+    CHECK_FALSE(root.deepEquals(differentChild));
+}
+
 TEST_CASE("Single Node has depth 0", "[Node]") {
     using namespace onyx::tags;
 
