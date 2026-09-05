@@ -2607,6 +2607,18 @@ TEST_CASE("getStringValue handles __DangerousRawText",
     CHECK(d.getStringValue() == "Safe<span>Unsafe</span>");
 }
 
+TEST_CASE("setNamespacePrefix works", "[NamespaceNode::setNamespacePrefix]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    GenericNode node("prefix", "name", NonVoid);
+    IndexFixture index = index::createIndex<IndexFixture>(&node);
+    REQUIRE(node.getNamespacePrefix() == "prefix");
+    node.setNamespacePrefix("prefix2");
+    REQUIRE(node.getNamespacePrefix() == "prefix2");
+    REQUIRE(index.updateCalledCount == 1);
+}
+
 TEST_CASE("getNamespacePrefix resolves empty prefix to null",
           "[Attribute::getNamespacePrefix]") {
     using namespace onyx::dynamic;

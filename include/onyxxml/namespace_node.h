@@ -82,6 +82,13 @@ class NamespaceNode : public Node {
     NamespaceNode& operator=(Node&& other) noexcept;
 
     virtual std::optional<std::string_view> getNamespacePrefix() const override;
+
+    /**
+     * @brief Set the namespace prefix.
+     *
+     * @param newPrefix
+     */
+    void setNamespacePrefix(std::string newPrefix);
 };
 
 template <typename... Args>

@@ -42,4 +42,9 @@ std::optional<std::string_view> NamespaceNode::getNamespacePrefix() const {
                ? std::nullopt
                : std::optional(std::string_view(namespacePrefix));
 }
+
+void NamespaceNode::setNamespacePrefix(std::string newPrefix) {
+    this->namespacePrefix = newPrefix;
+    this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+}
 }  // namespace onyx::dynamic
