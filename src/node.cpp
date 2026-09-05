@@ -958,7 +958,7 @@ std::optional<std::string_view> Node::getNamespacePrefix() const {
     return std::nullopt;
 }
 
-std::optional<std::string_view> Node::resolveTagNamespacePrefix(
+std::optional<std::string_view> Node::resolveNamespacePrefixWithDefaults(
     std::optional<std::string_view> prefix) const {
     const Node* current = this;
 
@@ -1007,10 +1007,10 @@ std::optional<std::string_view> Node::resolveAttributeNamespacePrefix(
     std::optional<std::string_view> prefix) const {
     if (!prefix.has_value() || prefix == "") return std::nullopt;
 
-    return resolveTagNamespacePrefix(prefix);
+    return resolveNamespacePrefixWithDefaults(prefix);
 }
 
 std::optional<std::string_view> Node::getNamespaceURI() const {
-    return resolveTagNamespacePrefix(this->getNamespacePrefix());
+    return resolveNamespacePrefixWithDefaults(this->getNamespacePrefix());
 }
 }  // namespace onyx::dynamic

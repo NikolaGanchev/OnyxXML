@@ -579,7 +579,7 @@ class Node {
      * @param prefix The namespace prefix
      * @return std::optional<std::string_view>
      */
-    std::optional<std::string_view> resolveTagNamespacePrefix(
+    std::optional<std::string_view> resolveNamespacePrefixWithDefaults(
         std::optional<std::string_view> prefix) const;
 
     /**
