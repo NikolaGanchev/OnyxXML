@@ -2633,6 +2633,17 @@ TEST_CASE("setTagName works", "[GenericNode::setTagName]") {
     REQUIRE(index.updateCalledCount == 1);
 }
 
+TEST_CASE("setIsVoid works", "[GenericNode::setIsVoid]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    GenericNode node("prefix:name", NonVoid);
+    IndexFixture index = index::createIndex<IndexFixture>(&node);
+    REQUIRE_FALSE(node.isVoid());
+    node.setIsVoid(Void);
+    REQUIRE(node.isVoid());
+}
+
 TEST_CASE("getNamespacePrefix resolves empty prefix to null",
           "[Attribute::getNamespacePrefix]") {
     using namespace onyx::dynamic;

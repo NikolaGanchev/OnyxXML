@@ -160,6 +160,13 @@ class GenericNode : public NamespaceNode {
     void setTagName(std::string newName);
 
     /**
+     * @brief Set whether the node is void.
+     *
+     * @param type
+     */
+    void setIsVoid(Type type);
+
+    /**
      * @brief GenericNode move assignment from a Node
      *
      * @param other

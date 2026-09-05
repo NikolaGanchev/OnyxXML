@@ -75,6 +75,12 @@ void GenericNode::setTagName(std::string newName) {
     this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
 }
 
+void GenericNode::setIsVoid(Type type) {
+    this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
+
+    this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+}
+
 const std::string& GenericNode::getTagName() const { return this->tag; }
 
 bool GenericNode::isVoid() const {
