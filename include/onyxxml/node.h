@@ -128,8 +128,10 @@ class Node {
     class Index;
     using Handle = NodeHandle;
 
+   protected:
+    enum IndexPropagationMessage : uint8_t;
+
    private:
-    enum IndexPropagationMessage : uint8_t { UPDATE, PUT, REMOVE };
     /**
      * @brief An observable constant std::string reference.
      * Behaves as a pointer, but the assignment operator is overriden to invoke
@@ -380,14 +382,6 @@ class Node {
      * @param message The type of update to the index to apply
      */
     void propagateIndexUpdateUp(Node* updated, IndexPropagationMessage message);
-
-    /**
-     * @brief Updates all indices of the Node with the provided Node and
-     * propagates up the update
-     *
-     * @param message The type of update to the index to apply
-     */
-    void updateAndPropagateUp(IndexPropagationMessage message);
 
    public:
     /**
@@ -1152,6 +1146,15 @@ class Node {
     };
 
    protected:
+    enum IndexPropagationMessage : uint8_t { UPDATE, PUT, REMOVE };
+    /**
+     * @brief Updates all indices of the Node with the provided Node and
+     * propagates up the update
+     *
+     * @param message The type of update to the index to apply
+     */
+    void updateAndPropagateUp(IndexPropagationMessage message);
+
     /**
      * @brief Get the value of a flag
      *
