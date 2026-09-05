@@ -979,6 +979,8 @@ std::optional<std::string_view> Node::resolveNamespacePrefixWithDefaults(
             current = current->parent;
         }
     } else {
+        if (prefix == "xml") return "http://www.w3.org/XML/1998/namespace";
+        if (prefix == "xmlns") return "http://www.w3.org/2000/xmlns/";
         while (current) {
             for (auto it = current->attributes.begin();
                  it != current->attributes.end(); it++) {

@@ -2768,6 +2768,46 @@ TEST_CASE(
     REQUIRE(tracked->getNamespaceURI() == std::nullopt);
 }
 
+TEST_CASE(
+    "getNamespaceURI resolves 'xml' prefix to "
+    "'http://www.w3.org/XML/1998/namespace'",
+    "[Node::getNamespaceURI]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:xml",
+                  "uri2"),  // Invalid declaration of 'xml' is ignored
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("xml:price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceURI() ==
+            "http://www.w3.org/XML/1998/namespace");
+}
+
+TEST_CASE(
+    "resolveAttributeNamespacePrefix resolves 'xmlns' prefix to "
+    "'http://www.w3.org/2000/xmlns/'",
+    "[Node::resolveAttributeNamespacePrefix]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:xmlns",
+                  "uri2"),  // Invalid declaration of 'xmlns' is ignored
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->resolveAttributeNamespacePrefix("xmlns") ==
+            "http://www.w3.org/2000/xmlns/");
+}
+
 TEST_CASE("QualifiedName resolves empty prefix to \"\"", "[QualifiedName]") {
     using namespace onyx::dynamic::tags::util;
     REQUIRE(QualifiedName("price").prefix == "");

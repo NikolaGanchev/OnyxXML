@@ -567,6 +567,15 @@ class Node {
      * @brief Get the resolved namespace URI. Returns std::nullopt if the
      * namespace URI could not be resolved.
      *
+     * This function will honor undeclaring of prefixes which is legal under
+     * 'Namespaces in XML 1.1' but illegal under 'Namespaces in XML 1.0'.
+     *
+     * Resolves prefix 'xml' to 'http://www.w3.org/XML/1998/namespace', ignoring
+     * any namespace declarations (since the 'xml' prefix cannot be bound to any
+     * other namespace name).
+     * Resolves prefix 'xmlns' to 'http://www.w3.org/2000/xmlns/' despite it
+     * being invalid as a prefix for a tag name.
+     *
      * @return std::optional<std::string_view>
      */
     std::optional<std::string_view> getNamespaceURI() const;
@@ -575,6 +584,14 @@ class Node {
      * @brief Resolve the namespace URI from this Node's viewpoint. Returns
      * std::nullopt if the namespace URI could not be resolved. Honors default
      * namespace declarations.
+     *
+     * This function will honor undeclaring of prefixes which is legal under
+     * 'Namespaces in XML 1.1' but illegal under 'Namespaces in XML 1.0'.
+     *
+     * Resolves prefix 'xml' to 'http://www.w3.org/XML/1998/namespace', ignoring
+     * any namespace declarations (since the 'xml' prefix cannot be bound to any
+     * other namespace name).
+     * Resolves prefix 'xmlns' to 'http://www.w3.org/2000/xmlns/'.
      *
      * @param prefix The namespace prefix
      * @return std::optional<std::string_view>
@@ -585,7 +602,15 @@ class Node {
     /**
      * @brief Resolve the namespace URI from this Node's viewpoint. Returns
      * std::nullopt if the namespace URI could not be resolved. If the prefix is
-     * std::nullopt or "", the URI will always be std::nullopt
+     * std::nullopt or "", the URI will always be std::nullopt.
+     *
+     * This function will honor undeclaring of prefixes which is legal under
+     * 'Namespaces in XML 1.1' but illegal under 'Namespaces in XML 1.0'.
+     *
+     * Resolves prefix 'xml' to 'http://www.w3.org/XML/1998/namespace', ignoring
+     * any namespace declarations (since the 'xml' prefix cannot be bound to any
+     * other namespace name).
+     * Resolves prefix 'xmlns' to 'http://www.w3.org/2000/xmlns/'.
      *
      * @param prefix The namespace prefix
      * @return std::optional<std::string_view>
