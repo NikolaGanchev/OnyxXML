@@ -64,23 +64,38 @@ void VirtualMachine::DocumentOrder::buildIndex(Node* root) {
 }
 
 bool VirtualMachine::DocumentOrder::compare(Node* a, Node* b) {
-    if (a->getXPathType() == Node::XPathType::ATTRIBUTE) {
-        a = a->getParentNode();
-    }
-
-    if (b->getXPathType() == Node::XPathType::ATTRIBUTE) {
-        b = b->getParentNode();
-    }
-
-    if (a->getXPathType() == Node::XPathType::ROOT) {
-        return true;
-    }
-
-    if (b->getXPathType() == Node::XPathType::ROOT) {
+    if (a == b) {
         return false;
     }
 
-    return documentOrderMap[a] < documentOrderMap[b];
+    Node* parentA = (a->getXPathType() == Node::XPathType::ATTRIBUTE)
+                        ? a->getParentNode()
+                        : a;
+    Node* parentB = (b->getXPathType() == Node::XPathType::ATTRIBUTE)
+                        ? b->getParentNode()
+                        : b;
+
+    // Both resolve to the exact same element (for example, two attributes on
+    // the same node or a node and its own attribute)
+    if (parentA == parentB) {
+        // Elements come before their own attributes in document order
+        if (a == parentA) return true;
+        if (b == parentB) return false;
+
+        // When both are attributes of the same parent, disambiguate by the
+        // pointer to provide stable ordering
+        return a < b;
+    }
+
+    bool aIsRoot = (parentA->getXPathType() == Node::XPathType::ROOT);
+    bool bIsRoot = (parentB->getXPathType() == Node::XPathType::ROOT);
+
+    if (aIsRoot != bIsRoot) {
+        // true if a is root, false if b is root
+        return aIsRoot;
+    }
+
+    return documentOrderMap[parentA] < documentOrderMap[parentB];
 }
 
 VirtualMachine::ExecutionContext::ExecutionContext()
@@ -436,12 +451,12 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
 
                     if (nodeMatchesTest(&tempAttr, axis, nodeTest)) {
                         // TODO AttributeViewNodes need to be pointer level
-                        // identical for the union to work This means we must
-                        // return existing nodes Currently, this is done using a
-                        // slow linear search This can be optimized heavily via
-                        // a second structure or replacing the vector
-                        // alltogether, but the memory impact needs to be
-                        // considered
+                        // identical for the union to work.
+                        // This means we must return existing nodes.
+                        // Currently, this is done using a slow linear search.
+                        // This can be optimized heavily via a second structure
+                        // or replacing the vector alltogether, but the memory
+                        // impact needs to be considered.
                         bool found = false;
                         for (size_t j = 0; j < ec.temporaryNodes.size(); j++) {
                             if (ec.temporaryNodes[j]->getXPathType() ==

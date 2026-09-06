@@ -124,7 +124,7 @@ class VirtualMachine {
 
         /**
          * @brief Compare equivalent to < by document order. With other words,
-         * a < b iff a is before b in document order.
+         * a < b iff a is before b in document order. A strict weak ordering.
          *
          * @param a
          * @param b
