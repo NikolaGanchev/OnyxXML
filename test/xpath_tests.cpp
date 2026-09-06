@@ -3729,3 +3729,181 @@ TEST_CASE("XPath name() empty nodeset and initial context evaluation") {
         XPathQuery("name(/root/* | /root)").execute(&doc, emptyResolver);
     REQUIRE(resDocOrder.object.asString() == "root");
 }
+
+TEST_CASE("XPath namespace-uri() on elements and attributes") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("item", NonVoid, Attribute("id", "101"),
+                    Attribute("pref:flag", "active"),
+                    Attribute("xmlns:pref", "http://example.com/pref")),
+        GenericNode("pref:gadget", NonVoid,
+                    Attribute("xmlns:pref", "http://example.com/pref"),
+                    Attribute("rawAttr", "val")),
+        GenericNode("plain", NonVoid));
+
+    auto resolver = [](std::string_view p) -> std::string {
+        if (p == "p") return "http://example.com/pref";
+        return "";
+    };
+
+    XPathQuery::Result resPrefElem =
+        XPathQuery("namespace-uri(/root/p:gadget)").execute(&doc, resolver);
+    REQUIRE(resPrefElem.object.asString() == "http://example.com/pref");
+
+    XPathQuery::Result resNoNsElem =
+        XPathQuery("namespace-uri(/root/plain)").execute(&doc, resolver);
+    REQUIRE(resNoNsElem.object.asString() == "");
+
+    XPathQuery::Result resPrefAttr =
+        XPathQuery("namespace-uri(/root/item/@p:flag)").execute(&doc, resolver);
+    REQUIRE(resPrefAttr.object.asString() == "http://example.com/pref");
+
+    XPathQuery::Result resPlainAttr =
+        XPathQuery("namespace-uri(/root/item/@id)").execute(&doc, resolver);
+    REQUIRE(resPlainAttr.object.asString() == "");
+}
+
+TEST_CASE("XPath namespace-uri() default namespace behavior") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("container", NonVoid,
+                    Attribute("xmlns", "http://example.com/default"),
+                    GenericNode("box", NonVoid, Attribute("weight", "10kg")));
+
+    auto resolver = [](std::string_view p) -> std::string {
+        if (p == "d") return "http://example.com/default";
+        return "";
+    };
+
+    XPathQuery::Result resElem =
+        XPathQuery("namespace-uri(/d:container/d:box)").execute(&doc, resolver);
+    REQUIRE(resElem.object.asString() == "http://example.com/default");
+
+    XPathQuery::Result resAttr =
+        XPathQuery("namespace-uri(/d:container/d:box/@weight)")
+            .execute(&doc, resolver);
+    REQUIRE(resAttr.object.asString() == "");
+}
+
+TEST_CASE("XPath namespace-uri() test on all node types") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    Attribute("xmlns:m", "http://example.com/meta"),
+                    Attribute("xml:lang", "en"), Comment("Sample comment"),
+                    ProcessingInstruction("render-target", "format=\"pdf\""),
+                    GenericNode("leaf", NonVoid, Text("Plain text child")));
+
+    auto resolver = [](std::string_view p) -> std::string {
+        if (p == "meta") return "http://example.com/meta";
+        return "";
+    };
+
+    XPathQuery::Result resDoc =
+        XPathQuery("namespace-uri(/root/..)").execute(&doc, resolver);
+    REQUIRE(resDoc.object.asString() == "");
+
+    XPathQuery::Result resText =
+        XPathQuery("namespace-uri(//text())").execute(&doc, resolver);
+    REQUIRE(resText.object.asString() == "");
+
+    XPathQuery::Result resComment =
+        XPathQuery("namespace-uri(//comment())").execute(&doc, resolver);
+    REQUIRE(resComment.object.asString() == "");
+
+    XPathQuery::Result resPI =
+        XPathQuery("namespace-uri(//processing-instruction())")
+            .execute(&doc, resolver);
+    REQUIRE(resPI.object.asString() == "");
+
+    XPathQuery::Result resXmlAttr =
+        XPathQuery("namespace-uri(/root/@xml:lang)").execute(&doc, resolver);
+    REQUIRE(resXmlAttr.object.asString() ==
+            "http://www.w3.org/XML/1998/namespace");
+
+    XPathQuery::Result resNs =
+        XPathQuery("namespace-uri(/root/namespace::m)").execute(&doc, resolver);
+    REQUIRE(resNs.object.asString() == "");
+
+    XPathQuery::Result resNsXml =
+        XPathQuery("namespace-uri(/root/namespace::xml)")
+            .execute(&doc, resolver);
+    REQUIRE(resNsXml.object.asString() == "");
+}
+
+TEST_CASE(
+    "XPath namespace-uri() default context node evaluation in predicates") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "feed", NonVoid,
+        GenericNode("a:entry", NonVoid,
+                    Attribute("xmlns:a", "http://example.com/alpha"),
+                    Attribute("id", "1")),
+        GenericNode("b:entry", NonVoid,
+                    Attribute("xmlns:b", "http://example.com/beta"),
+                    Attribute("id", "2")),
+        GenericNode("entry", NonVoid, Attribute("id", "3")));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resAlpha =
+        XPathQuery("/feed/*[namespace-uri() = 'http://example.com/alpha']")
+            .execute(&doc, emptyResolver);
+    REQUIRE(resAlpha.object.asNodeset().size() == 1);
+    REQUIRE(resAlpha.object.asNodeset()[0]->getAttributeValue("id") == "1");
+
+    XPathQuery::Result resNone = XPathQuery("/feed/*[namespace-uri() = '']")
+                                     .execute(&doc, emptyResolver);
+    REQUIRE(resNone.object.asNodeset().size() == 1);
+    REQUIRE(resNone.object.asNodeset()[0]->getAttributeValue("id") == "3");
+
+    GenericNode attrDoc(
+        "root", NonVoid,
+        GenericNode("node", NonVoid, Attribute("custom:flag", "yes"),
+                    Attribute("xmlns:custom", "http://example.com/custom"),
+                    Attribute("plain", "no")));
+
+    XPathQuery::Result resAttrs =
+        XPathQuery(
+            "/root/node/@*[namespace-uri() = 'http://example.com/custom']")
+            .execute(&attrDoc, emptyResolver);
+    REQUIRE(resAttrs.object.asNodeset().size() == 1);
+    REQUIRE(resAttrs.object.asNodeset()[0]->getStringValue() == "yes");
+}
+
+TEST_CASE("XPath namespace-uri() document order and empty set edge cases") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("a:first", NonVoid,
+                    Attribute("xmlns:a", "http://example.com/first")),
+        GenericNode("b:second", NonVoid,
+                    Attribute("xmlns:b", "http://example.com/second")),
+        GenericNode("c:third", NonVoid,
+                    Attribute("xmlns:c", "http://example.com/third")));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resEmpty =
+        XPathQuery("namespace-uri(/root/missing)").execute(&doc, emptyResolver);
+    REQUIRE(resEmpty.object.asString() == "");
+
+    XPathQuery::Result resMultiOrder =
+        XPathQuery("namespace-uri(/root/*[3] | /root/*[1] | /root/*[2])")
+            .execute(&doc, emptyResolver);
+    REQUIRE(resMultiOrder.object.asString() == "http://example.com/first");
+
+    XPathQuery::Result resReverse =
+        XPathQuery("namespace-uri(/root/*[3]/preceding-sibling::*)")
+            .execute(&doc, emptyResolver);
+    REQUIRE(resReverse.object.asString() == "http://example.com/first");
+}

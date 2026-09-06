@@ -105,6 +105,21 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
         });
 
     registry.emplace(
+        FUNCTION_CODE::NAMESPACE_URI_1,
+        [](Context context, Stack stack) -> XPathObject {
+            if (stack.size() < 1) {
+                throw std::runtime_error("namespace-uri needs one argument");
+            }
+
+            if (!stack.top().isNodeset()) {
+                throw std::runtime_error(
+                    "namespace-uri needs a nodeset argument");
+            }
+
+            return XPathObject(functions::namespaceURI(stack.top()));
+        });
+
+    registry.emplace(
         FUNCTION_CODE::STRING_1,
         [](Context context, Stack stack) -> XPathObject {
             if (stack.size() < 1) {

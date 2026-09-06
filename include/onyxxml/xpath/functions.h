@@ -38,4 +38,6 @@ double stringLength(const std::string& str);
 std::string name(const XPathObject& obj);
 
 std::string localName(const XPathObject& obj);
+
+std::string namespaceURI(const XPathObject& obj);
 };  // namespace onyx::dynamic::xpath::functions

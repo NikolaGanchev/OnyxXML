@@ -426,4 +426,34 @@ std::string localName(const XPathObject& obj) {
             return "";
     }
 }
+
+std::string namespaceURI(const XPathObject& obj) {
+    const std::vector<Node*>& arg = obj.asNodeset();
+    if (arg.empty()) return "";
+
+    Node* node = arg[0];
+
+    switch (node->getXPathType()) {
+        case Node::XPathType::ELEMENT: {
+            std::optional<std::string_view> uri = node->getNamespaceName();
+            if (!uri.has_value()) return "";
+
+            return std::string(uri.value());
+        }
+        case Node::XPathType::ATTRIBUTE: {
+            AttributeViewNode* attrNode = static_cast<AttributeViewNode*>(node);
+            std::optional<std::string_view> prefix =
+                attrNode->getReferencedAttribute().getNamespacePrefix();
+
+            std::optional<std::string_view> uri =
+                attrNode->getParentNode()->resolveAttributeNamespacePrefix(
+                    prefix);
+            if (!uri.has_value()) return "";
+
+            return std::string(uri.value());
+        }
+        default:
+            return "";
+    }
+}
 };  // namespace onyx::dynamic::xpath::functions
