@@ -1383,3 +1383,321 @@ TEST_CASE("TagNameIndex move assignment updates internal index state properly",
     doc.addChild(GenericNode("p:item", NonVoid));
     REQUIRE(indexNoNs.get().size() == 2);
 }
+
+TEST_CASE(
+    "TagIndex unprefixed getByTagName strictly matches tags with no namespace",
+    "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string ns = "http://example.com/ns";
+
+    GenericNode doc{"root",
+                    NonVoid,
+                    Attribute("xmlns:p", ns),
+                    GenericNode("item", NonVoid),
+                    GenericNode("p:item", NonVoid),
+                    GenericNode("item", NonVoid),
+                    GenericNode("other", NonVoid)};
+
+    auto index = index::createIndex<index::TagIndex>(&doc);
+    auto results = index.getByTagName("item");
+
+    REQUIRE(results.size() == 2);
+    for (auto* node : results) {
+        CHECK(node->getTagName() == "item");
+        auto nodeNs = node->getNamespaceName();
+        CHECK((!nodeNs.has_value() || nodeNs->empty()));
+    }
+}
+
+TEST_CASE("TagIndex expanded name lookup matches exact URI and local name",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsA = "http://example.com/a";
+    const std::string nsB = "http://example.com/b";
+
+    GenericNode doc{"root",
+                    NonVoid,
+                    Attribute("xmlns:a", nsA),
+                    Attribute("xmlns:b", nsB),
+                    GenericNode("item", NonVoid),
+                    GenericNode("a:item", NonVoid),
+                    GenericNode("a:item", NonVoid),
+                    GenericNode("b:item", NonVoid)};
+
+    auto index = index::createIndex<index::TagIndex>(&doc);
+
+    auto resultsA = index.getByTagName(nsA, "item");
+    REQUIRE(resultsA.size() == 2);
+    for (auto* node : resultsA) {
+        CHECK(node->getTagName() == "item");
+        CHECK(node->getNamespaceName() == nsA);
+    }
+
+    auto resultsB = index.getByTagName(nsB, "item");
+    REQUIRE(resultsB.size() == 1);
+    CHECK(resultsB[0]->getTagName() == "item");
+    CHECK(resultsB[0]->getNamespaceName() == nsB);
+
+    auto resultsUnprefixed = index.getByTagName("", "item");
+    REQUIRE(resultsUnprefixed.size() == 1);
+}
+
+TEST_CASE("TagIndex getByLocalName matches across all namespaces",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsA = "http://example.com/a";
+    const std::string nsB = "http://example.com/b";
+
+    GenericNode doc{"root",
+                    NonVoid,
+                    Attribute("xmlns:a", nsA),
+                    Attribute("xmlns:b", nsB),
+                    GenericNode("item", NonVoid),
+                    GenericNode("a:item", NonVoid),
+                    GenericNode("b:item", NonVoid),
+                    GenericNode("other", NonVoid)};
+
+    auto index = index::createIndex<index::TagIndex>(&doc);
+    auto results = index.getByLocalName("item");
+
+    REQUIRE(results.size() == 3);
+}
+
+TEST_CASE(
+    "TagIndex getByNamespace returns all elements belonging to target URI",
+    "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string ns = "http://example.com/suite";
+
+    GenericNode doc{"root",
+                    NonVoid,
+                    Attribute("xmlns:p", ns),
+                    GenericNode("p:header", NonVoid),
+                    GenericNode("p:body", NonVoid),
+                    GenericNode("p:item", NonVoid),
+                    GenericNode("footer", NonVoid)};
+
+    auto index = index::createIndex<index::TagIndex>(&doc);
+    auto results = index.getByNamespace(ns);
+
+    REQUIRE(results.size() == 3);
+    for (auto* node : results) {
+        CHECK(node->getNamespaceName() == ns);
+    }
+}
+
+TEST_CASE("TagIndex resolves elements inheriting default namespaces",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string defaultNs = "http://example.com/default";
+
+    GenericNode doc{"root",
+                    NonVoid,
+                    Attribute("xmlns", defaultNs),
+                    GenericNode("item", NonVoid),
+                    GenericNode("item", NonVoid),
+                    GenericNode("container", NonVoid, Attribute("xmlns", ""),
+                                GenericNode("item", NonVoid))};
+
+    auto index = index::createIndex<index::TagIndex>(&doc);
+
+    auto defaultResults = index.getByTagName(defaultNs, "item");
+    REQUIRE(defaultResults.size() == 2);
+
+    auto noNsResults = index.getByTagName("item");
+    REQUIRE(noNsResults.size() == 1);
+}
+
+TEST_CASE("TagIndex resolves shadowed prefix declarations across subtrees",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsV1 = "http://example.com/v1";
+    const std::string nsV2 = "http://example.com/v2";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:p", nsV1),
+                    GenericNode("p:node", NonVoid),
+                    GenericNode("sub", NonVoid, Attribute("xmlns:p", nsV2),
+                                GenericNode("p:node", NonVoid))};
+
+    auto index = index::createIndex<index::TagIndex>(&doc);
+
+    auto resultsV1 = index.getByTagName(nsV1, "node");
+    REQUIRE(resultsV1.size() == 1);
+    CHECK(resultsV1[0]->getNamespaceName() == nsV1);
+
+    auto resultsV2 = index.getByTagName(nsV2, "node");
+    REQUIRE(resultsV2.size() == 1);
+    CHECK(resultsV2[0]->getNamespaceName() == nsV2);
+}
+
+TEST_CASE("TagIndex updates correctly when setTagName is called",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string ns = "http://example.com/ns";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:p", ns)};
+    auto index = index::createIndex<index::TagIndex>(&doc);
+
+    std::unique_ptr<GenericNode> child =
+        std::make_unique<GenericNode>("p:initial", NonVoid);
+    GenericNode* childPtr = child.get();
+    doc.addChild(std::move(child));
+
+    REQUIRE(index.getByTagName(ns, "initial").size() == 1);
+    REQUIRE(index.getByTagName(ns, "renamed").empty());
+
+    childPtr->setTagName("renamed");
+
+    REQUIRE(index.getByTagName(ns, "initial").empty());
+    REQUIRE(index.getByTagName(ns, "renamed").size() == 1);
+    CHECK(index.getByTagName(ns, "renamed")[0] == childPtr);
+}
+
+TEST_CASE("TagIndex updates correctly when setNamespacePrefix is called",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsA = "http://example.com/a";
+    const std::string nsB = "http://example.com/b";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:a", nsA),
+                    Attribute("xmlns:b", nsB)};
+
+    auto index = index::createIndex<index::TagIndex>(&doc);
+
+    std::unique_ptr<GenericNode> child =
+        std::make_unique<GenericNode>("entry", NonVoid);
+    GenericNode* childPtr = child.get();
+    doc.addChild(std::move(child));
+
+    REQUIRE(index.getByTagName("entry").size() == 1);
+    REQUIRE(index.getByTagName(nsA, "entry").empty());
+    REQUIRE(index.getByTagName(nsB, "entry").empty());
+
+    childPtr->setNamespacePrefix("a");
+
+    REQUIRE(index.getByTagName("entry").empty());
+    REQUIRE(index.getByTagName(nsA, "entry").size() == 1);
+    REQUIRE(index.getByTagName(nsB, "entry").empty());
+
+    childPtr->setNamespacePrefix("b");
+
+    REQUIRE(index.getByTagName("entry").empty());
+    REQUIRE(index.getByTagName(nsA, "entry").empty());
+    REQUIRE(index.getByTagName(nsB, "entry").size() == 1);
+
+    childPtr->setNamespacePrefix("");
+
+    REQUIRE(index.getByTagName("entry").size() == 1);
+    REQUIRE(index.getByTagName(nsA, "entry").empty());
+    REQUIRE(index.getByTagName(nsB, "entry").empty());
+}
+
+TEST_CASE("TagIndex updates when ancestor namespace bindings mutate",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsOld = "http://example.com/old";
+    const std::string nsNew = "http://example.com/new";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:p", nsOld)};
+    std::unique_ptr<GenericNode> child =
+        std::make_unique<GenericNode>("p:item", NonVoid);
+    doc.addChild(std::move(child));
+
+    auto index = index::createIndex<index::TagIndex>(&doc);
+
+    REQUIRE(index.getByTagName(nsOld, "item").size() == 1);
+    REQUIRE(index.getByTagName(nsNew, "item").empty());
+
+    doc.setAttributeValue("xmlns:p", nsNew);
+
+    REQUIRE(index.getByTagName(nsOld, "item").empty());
+    REQUIRE(index.getByTagName(nsNew, "item").size() == 1);
+}
+
+TEST_CASE("TagIndex handles node addition and removal correctly",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string ns = "http://example.com/ns";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:p", ns)};
+    auto index = index::createIndex<index::TagIndex>(&doc);
+
+    std::unique_ptr<GenericNode> child =
+        std::make_unique<GenericNode>("p:data", NonVoid);
+    Node* childRef = doc.addChild(std::move(child));
+
+    REQUIRE(index.getByTagName(ns, "data").size() == 1);
+
+    doc.removeChild(childRef);
+
+    REQUIRE(index.getByTagName(ns, "data").empty());
+    REQUIRE(index.getByNamespace(ns).empty());
+
+    doc.addChild(GenericNode("p:data", NonVoid));
+    REQUIRE(index.getByTagName(ns, "data").size() == 1);
+}
+
+TEST_CASE("TagIndex move constructor transfers maps and keeps tracking updates",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string ns = "http://example.com/ns";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:p", ns),
+                    GenericNode("p:item", NonVoid)};
+
+    auto index = index::createIndex<index::TagIndex>(&doc);
+    index::TagIndex movedIndex{std::move(index)};
+
+    REQUIRE(!index.isValid());
+    REQUIRE(movedIndex.getByTagName(ns, "item").size() == 1);
+
+    doc.addChild(GenericNode("p:item", NonVoid));
+
+    REQUIRE(movedIndex.getByTagName(ns, "item").size() == 2);
+}
+
+TEST_CASE("TagIndex move assignment transfers maps and updates correctly",
+          "[TagIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string ns = "http://example.com/ns";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:p", ns),
+                    GenericNode("p:item", NonVoid)};
+
+    GenericNode emptyDoc{"empty", NonVoid};
+
+    auto indexMain = index::createIndex<index::TagIndex>(&doc);
+    auto indexEmpty = index::createIndex<index::TagIndex>(&emptyDoc);
+
+    indexEmpty = std::move(indexMain);
+
+    REQUIRE(!indexMain.isValid());
+    REQUIRE(indexEmpty.getByTagName(ns, "item").size() == 1);
+
+    doc.addChild(GenericNode("p:item", NonVoid));
+    REQUIRE(indexEmpty.getByTagName(ns, "item").size() == 2);
+}
