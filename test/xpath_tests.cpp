@@ -2188,6 +2188,22 @@ TEST_CASE("XPath execute concat() with many arguments") {
     REQUIRE(res.asString() == "abcde");
 }
 
+TEST_CASE(
+    "XPath execute substring-after() with second argument longer than 1 "
+    "character") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid);
+
+    XPathQuery::Result res1 =
+        XPathQuery("substring-after('1999/04/01','/04')").execute(&doc);
+    XPathObject& res = res1.object;
+
+    REQUIRE(res.isString());
+    REQUIRE(res.asString() == "/01");
+}
+
 TEST_CASE("XPath execute arithmetic (1 + 2 * 3 * (6 div 2) - 3)") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
@@ -2202,7 +2218,7 @@ TEST_CASE("XPath execute arithmetic (1 + 2 * 3 * (6 div 2) - 3)") {
     REQUIRE(res.asNumber() == Catch::Approx(14));
 }
 
-TEST_CASE("XPath execute axis precedence (ancestor vs paren-ancestor)") {
+TEST_CASE("XPath execute axis precedence (ancestor vs parent-ancestor)") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::dynamic::tags;
     using namespace onyx::dynamic;

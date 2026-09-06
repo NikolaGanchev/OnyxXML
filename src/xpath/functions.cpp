@@ -217,7 +217,7 @@ std::string stringAfter(const std::string& str1, const std::string& str2) {
         return std::string("");
     }
 
-    return str1.substr(i + 1);
+    return str1.substr(i + str2.length());
 }
 
 std::string translate(const std::string& str1, const std::string& str2,
