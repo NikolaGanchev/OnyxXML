@@ -1,6 +1,6 @@
 #include "xpath/compiler.h"
 
-#include "nodes/util/qualified_name.h"
+#include "nodes/util/qualified_name_view.h"
 #include "xpath/calculate_mode.h"
 #include "xpath/compare_mode.h"
 
@@ -21,7 +21,7 @@ std::pair<std::string, std::string> resolveQName(
         return {"", std::string(testStr)};
     }
 
-    tags::util::QualifiedName qn(testStr);
+    tags::util::QualifiedNameView qn(testStr);
     std::string prefix = std::string(qn.prefix);
     std::string local = std::string(qn.name);
 

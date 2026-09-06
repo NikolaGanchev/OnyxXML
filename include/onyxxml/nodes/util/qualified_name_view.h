@@ -16,7 +16,7 @@ namespace onyx::dynamic::tags::util {
  * should ne aware that its contents are not guaranteed to exist beyond the call
  * to the function using it as argument.
  */
-struct QualifiedName {
+struct QualifiedNameView {
     /**
      * @brief The namespace prefix
      *
@@ -29,11 +29,11 @@ struct QualifiedName {
     std::string_view name;
 
     /**
-     * @brief Construct a QualifiedName from std::string_view, possibly at
+     * @brief Construct a QualifiedNameView from std::string_view, possibly at
      * compile time
      *
      */
-    constexpr QualifiedName(std::string_view name) {
+    constexpr QualifiedNameView(std::string_view name) {
         std::size_t separatorPos = name.find(":");
         if (separatorPos == std::string_view::npos) {
             prefix = "";
@@ -46,18 +46,19 @@ struct QualifiedName {
     }
 
     /**
-     * @brief Construct a QualifiedName from const char*, possibly at
+     * @brief Construct a QualifiedNameView from const char*, possibly at
      * compile time
      *
      */
-    constexpr QualifiedName(const char* name)
-        : QualifiedName(std::string_view(name)) {}
+    constexpr QualifiedNameView(const char* name)
+        : QualifiedNameView(std::string_view(name)) {}
 
     /**
-     * @brief Construct a QualifiedName from std::string&&, possibly at
+     * @brief Construct a QualifiedNameView from std::string&&, possibly at
      * compile time. Does not actually take ownership of the string or copy it.
      *
      */
-    QualifiedName(std::string&& name) : QualifiedName(std::string_view(name)) {}
+    QualifiedNameView(std::string&& name)
+        : QualifiedNameView(std::string_view(name)) {}
 };
 }  // namespace onyx::dynamic::tags::util

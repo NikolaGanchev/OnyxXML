@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../namespace_node.h"
-#include "util/qualified_name.h"
+#include "util/qualified_name_view.h"
 
 namespace onyx::dynamic::tags {
 
@@ -43,13 +43,13 @@ class GenericNode : public NamespaceNode {
      * @brief Construct a new owning GenericNode.
      *
      * @tparam Args
-     * @param qualifiedName A qualified name that includes the name of the node
-     * and may or not include a namespace prefix
+     * @param qualifiedNameView A qualified name view that includes the name of
+     * the node and may or not include a namespace prefix
      * @param type Void or NonVoid
      * @param args Forwarded to the Node constructor
      */
     template <typename... Args>
-    explicit GenericNode(util::QualifiedName qualifiedName, Type type,
+    explicit GenericNode(util::QualifiedNameView qualifiedNameView, Type type,
                          Args&&... args);
 
     /**
@@ -65,11 +65,11 @@ class GenericNode : public NamespaceNode {
     /**
      * @brief Construct an empty owning GenericNode object
      *
-     * @param qualifiedName A qualified name that includes the name of the node
-     * and may or not include a namespace prefix
+     * @param qualifiedNameView A qualified name view that includes the name of
+     * the node and may or not include a namespace prefix
      * @param type Void or NonVoid
      */
-    explicit GenericNode(util::QualifiedName qualifiedName, Type type);
+    explicit GenericNode(util::QualifiedNameView qualifiedNameView, Type type);
 
     /**
      * @brief Construct a fully runtime owning GenericNode object
@@ -87,13 +87,13 @@ class GenericNode : public NamespaceNode {
     /**
      * @brief Construct a fully runtime owning GenericNode object
      *
-     * @param qualifiedName A qualified name that includes the name of the node
-     * and may or not include a namespace prefix
+     * @param qualifiedNameView A qualified name view that includes the name of
+     * the node and may or not include a namespace prefix
      * @param type Void or NonVoid
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
-    explicit GenericNode(util::QualifiedName qualifiedName, Type type,
+    explicit GenericNode(util::QualifiedNameView qualifiedNameView, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children);
 
@@ -110,12 +110,12 @@ class GenericNode : public NamespaceNode {
     /**
      * @brief Construct an empty non-owning GenericNode object
      *
-     * @param qualifiedName A qualified name that includes the name of the node
-     * and may or not include a namespace prefix
+     * @param qualifiedNameView A qualified name view that includes the name of
+     * the node and may or not include a namespace prefix
      * @param type Void or NonVoid
      */
-    explicit GenericNode(NonOwningNodeTag, util::QualifiedName qualifiedName,
-                         Type type);
+    explicit GenericNode(NonOwningNodeTag,
+                         util::QualifiedNameView qualifiedNameView, Type type);
 
     /**
      * @brief Construct a fully runtime non-owning GenericNode object
@@ -134,14 +134,15 @@ class GenericNode : public NamespaceNode {
     /**
      * @brief Construct a fully runtime non-owning GenericNode object
      *
-     * @param qualifiedName A qualified name that includes the name of the node
-     * and may or not include a namespace prefix
+     * @param qualifiedNameView A qualified name view that includes the name of
+     * the node and may or not include a namespace prefix
      * @param type Void or NonVoid
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
-    explicit GenericNode(NonOwningNodeTag, util::QualifiedName qualifiedName,
-                         Type type, std::vector<Attribute> attributes,
+    explicit GenericNode(NonOwningNodeTag,
+                         util::QualifiedNameView qualifiedNameView, Type type,
+                         std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children);
 
     /**
@@ -208,9 +209,9 @@ GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
 }
 
 template <typename... Args>
-GenericNode::GenericNode(util::QualifiedName qualifiedName, Type type,
+GenericNode::GenericNode(util::QualifiedNameView qualifiedNameView, Type type,
                          Args&&... args)
-    : GenericNode(std::string(qualifiedName.prefix),
-                  std::string(qualifiedName.name), type,
+    : GenericNode(std::string(qualifiedNameView.prefix),
+                  std::string(qualifiedNameView.name), type,
                   std::forward<Args>(args)...) {}
 }  // namespace onyx::dynamic::tags

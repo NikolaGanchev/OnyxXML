@@ -10,9 +10,9 @@ GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
     this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
 }
 
-GenericNode::GenericNode(util::QualifiedName qualifiedName, Type type)
-    : GenericNode(std::string(qualifiedName.prefix),
-                  std::string(qualifiedName.name), type) {}
+GenericNode::GenericNode(util::QualifiedNameView qualifiedNameView, Type type)
+    : GenericNode(std::string(qualifiedNameView.prefix),
+                  std::string(qualifiedNameView.name), type) {}
 
 GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
                          Type type, std::vector<Attribute> attributes,
@@ -27,12 +27,12 @@ GenericNode::GenericNode(std::string namespacePrefix, std::string tagName,
     }
 }
 
-GenericNode::GenericNode(util::QualifiedName qualifiedName, Type type,
+GenericNode::GenericNode(util::QualifiedNameView qualifiedNameView, Type type,
                          std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children)
-    : GenericNode{std::string(qualifiedName.prefix),
-                  std::string(qualifiedName.name), type, std::move(attributes),
-                  std::move(children)} {}
+    : GenericNode{std::string(qualifiedNameView.prefix),
+                  std::string(qualifiedNameView.name), type,
+                  std::move(attributes), std::move(children)} {}
 
 GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
                          std::string tagName, Type type)
@@ -41,10 +41,10 @@ GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
     this->setFlag<FlagBitIndices::BIT_IS_VOID>(type == Type::Void);
 }
 
-GenericNode::GenericNode(NonOwningNodeTag, util::QualifiedName qualifiedName,
-                         Type type)
-    : GenericNode(NonOwning, std::string(qualifiedName.prefix),
-                  std::string(qualifiedName.name), type) {}
+GenericNode::GenericNode(NonOwningNodeTag,
+                         util::QualifiedNameView qualifiedNameView, Type type)
+    : GenericNode(NonOwning, std::string(qualifiedNameView.prefix),
+                  std::string(qualifiedNameView.name), type) {}
 
 GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
                          std::string tagName, Type type,
@@ -60,12 +60,13 @@ GenericNode::GenericNode(NonOwningNodeTag, std::string namespacePrefix,
     }
 }
 
-GenericNode::GenericNode(NonOwningNodeTag, util::QualifiedName qualifiedName,
-                         Type type, std::vector<Attribute> attributes,
+GenericNode::GenericNode(NonOwningNodeTag,
+                         util::QualifiedNameView qualifiedNameView, Type type,
+                         std::vector<Attribute> attributes,
                          std::vector<NodeHandle>&& children)
     : GenericNode{NonOwning,
-                  std::string(qualifiedName.prefix),
-                  std::string(qualifiedName.name),
+                  std::string(qualifiedNameView.prefix),
+                  std::string(qualifiedNameView.name),
                   type,
                   std::move(attributes),
                   std::move(children)} {}

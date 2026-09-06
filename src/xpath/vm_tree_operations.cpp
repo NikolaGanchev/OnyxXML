@@ -9,7 +9,7 @@
 #include "nodes/namespace_view_node.h"
 #include "nodes/processing_instruction_node.h"
 #include "nodes/root_view_node.h"
-#include "nodes/util/qualified_name.h"
+#include "nodes/util/qualified_name_view.h"
 #include "xpath/axis.h"
 #include "xpath/virtual_machine.h"
 

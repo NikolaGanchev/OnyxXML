@@ -3,7 +3,7 @@
 #include <optional>
 
 #include "catch2/catch_all.hpp"
-#include "nodes/util/qualified_name.h"
+#include "nodes/util/qualified_name_view.h"
 #include "onyx.h"
 #include "util.h"
 
@@ -2862,52 +2862,59 @@ TEST_CASE(
             "http://www.w3.org/2000/xmlns/");
 }
 
-TEST_CASE("QualifiedName resolves empty prefix to \"\"", "[QualifiedName]") {
+TEST_CASE("QualifiedNameView resolves empty prefix to \"\"",
+          "[QualifiedNameView]") {
     using namespace onyx::dynamic::tags::util;
-    REQUIRE(QualifiedName("price").prefix == "");
+    REQUIRE(QualifiedNameView("price").prefix == "");
 }
 
-TEST_CASE("QualifiedName resolves prefix", "[QualifiedName]") {
+TEST_CASE("QualifiedNameView resolves prefix", "[QualifiedNameView]") {
     using namespace onyx::dynamic::tags::util;
-    REQUIRE(QualifiedName("lib:price").prefix == "lib");
+    REQUIRE(QualifiedNameView("lib:price").prefix == "lib");
 }
 
-TEST_CASE("QualifiedName resolves name with no prefix", "[QualifiedName]") {
+TEST_CASE("QualifiedNameView resolves name with no prefix",
+          "[QualifiedNameView]") {
     using namespace onyx::dynamic::tags::util;
-    REQUIRE(QualifiedName("price").name == "price");
+    REQUIRE(QualifiedNameView("price").name == "price");
 }
 
-TEST_CASE("QualifiedName resolves name with prefix", "[QualifiedName]") {
+TEST_CASE("QualifiedNameView resolves name with prefix",
+          "[QualifiedNameView]") {
     using namespace onyx::dynamic::tags::util;
-    REQUIRE(QualifiedName("lib:price").name == "price");
-}
-
-TEST_CASE(
-    "QualifiedName resolves prefix with no prefix and 0th character separator",
-    "[QualifiedName]") {
-    using namespace onyx::dynamic::tags::util;
-    REQUIRE(QualifiedName(":price").prefix == "");
+    REQUIRE(QualifiedNameView("lib:price").name == "price");
 }
 
 TEST_CASE(
-    "QualifiedName resolves name with no prefix and 0th character separator",
-    "[QualifiedName]") {
+    "QualifiedNameView resolves prefix with no prefix and 0th character "
+    "separator",
+    "[QualifiedNameView]") {
     using namespace onyx::dynamic::tags::util;
-    REQUIRE(QualifiedName(":price").name == "price");
+    REQUIRE(QualifiedNameView(":price").prefix == "");
 }
 
 TEST_CASE(
-    "QualifiedName resolves prefix with no name and last character separator",
-    "[QualifiedName]") {
+    "QualifiedNameView resolves name with no prefix and 0th character "
+    "separator",
+    "[QualifiedNameView]") {
     using namespace onyx::dynamic::tags::util;
-    REQUIRE(QualifiedName("lib:").prefix == "lib");
+    REQUIRE(QualifiedNameView(":price").name == "price");
 }
 
 TEST_CASE(
-    "QualifiedName resolves name with no name and last character separatorr",
-    "[QualifiedName]") {
+    "QualifiedNameView resolves prefix with no name and last character "
+    "separator",
+    "[QualifiedNameView]") {
     using namespace onyx::dynamic::tags::util;
-    REQUIRE(QualifiedName("lib:").name == "");
+    REQUIRE(QualifiedNameView("lib:").prefix == "lib");
+}
+
+TEST_CASE(
+    "QualifiedNameView resolves name with no name and last character "
+    "separatorr",
+    "[QualifiedNameView]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedNameView("lib:").name == "");
 }
 
 namespace {
