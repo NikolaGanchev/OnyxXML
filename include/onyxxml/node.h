@@ -135,7 +135,8 @@ class Node {
 
    private:
     /**
-     * @brief An observable constant std::string reference.
+     * @brief An observable constant std::string reference for an attribute.
+     * Bound to an attribute name and not an actual string pointer in the tree.
      * Behaves as a pointer, but the assignment operator is overriden to invoke
      * a callback on assignment. The string inside cannot be otherwise modified
      * and is always returned as a constant value.
@@ -143,10 +144,10 @@ class Node {
     class ObservableStringRef {
        private:
         /**
-         * @brief The pointer to the string
+         * @brief The attribute name
          *
          */
-        std::string* ptr;
+        std::string name;
         /**
          * @brief The Node that will be updated
          *
@@ -157,10 +158,10 @@ class Node {
         /**
          * @brief Construct a new Observable String Ref object
          *
-         * @param ref The std::string pointer
+         * @param name The attribute name
          * @param callback The callback function for reassignment
          */
-        ObservableStringRef(std::string* ref, Node* origin);
+        ObservableStringRef(std::string name, Node* origin);
 
         /**
          * @brief Implicit cast to const std::string*
@@ -171,7 +172,7 @@ class Node {
 
         /**
          * @brief Achieves pointer behaviour by overriding -> to return the
-         * underlying std::string
+         * std::string* for the attribute
          *
          * @return const std::string*
          */
@@ -180,7 +181,7 @@ class Node {
 
         /**
          * @brief Achieves pointer behaviour by overriding * to return the
-         * underlying std::string
+         * std::string* for the attribute
          *
          * @return const std::string*
          */
@@ -207,13 +208,14 @@ class Node {
         bool operator!=(const std::string& str) const;
 
         /**
-         * @brief Custom reassignment. Swaps the internal ptr for the new one
+         * @brief Custom reassignment. Sets the attribute value for the new one
          * and invokes callback
          *
-         * @param newPtr The new std::string that ptr should point to
+         * @param newValue The new std::string that should be the attribute
+         * value
          * @return ObservableStringRef& this
          */
-        ObservableStringRef& operator=(std::string newPtr);
+        ObservableStringRef& operator=(std::string newValue);
     };
 
     /**

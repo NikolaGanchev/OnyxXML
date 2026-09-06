@@ -836,35 +836,32 @@ std::string Node::serializePretty(const std::string& indentationSequence,
     return strResult;
 }
 
-Node::ObservableStringRef::ObservableStringRef(std::string* ref, Node* origin)
-    : ptr(ref), origin(origin) {}
+Node::ObservableStringRef::ObservableStringRef(std::string name, Node* origin)
+    : name(std::move(name)), origin(origin) {}
 
 Node::ObservableStringRef::operator const std::string*() const {
-    return this->ptr;
+    return &(this->origin->getAttributeValue(name));
 }
 
 const std::string* Node::ObservableStringRef::operator->() const {
-    return this->ptr;
+    return &(this->origin->getAttributeValue(name));
 }
 
 const std::string& Node::ObservableStringRef::operator*() const {
-    return *this->ptr;
+    return this->origin->getAttributeValue(name);
 }
 
 bool Node::ObservableStringRef::operator==(const std::string& str) const {
-    return *this->ptr == str;
+    return this->origin->getAttributeValue(name) == str;
 }
 
 bool Node::ObservableStringRef::operator!=(const std::string& str) const {
-    return !(*this == str);
+    return !(this->origin->getAttributeValue(name) == str);
 }
 
 Node::ObservableStringRef& Node::ObservableStringRef::operator=(
-    std::string newPtr) {
-    if (*this->ptr != newPtr) {
-        *this->ptr = newPtr;
-        this->origin->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
-    }
+    std::string newValue) {
+    this->origin->setAttributeValue(name, newValue);
     return *this;
 }
 
@@ -875,7 +872,7 @@ Node::ObservableStringRef Node::operator[](const std::string& name) {
 
     for (auto& attr : this->attributes) {
         if (attr.getName() == name) {
-            return ObservableStringRef(&(attr.getValueMutable()), this);
+            return ObservableStringRef(name, this);
         }
     }
 
