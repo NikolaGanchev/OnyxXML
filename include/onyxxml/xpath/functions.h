@@ -34,4 +34,6 @@ std::string translate(const std::string& str1, const std::string& str2,
 std::string normalizeSpace(const std::string& str);
 
 double stringLength(const std::string& str);
+
+std::string localName(const XPathObject& obj);
 };  // namespace onyx::dynamic::xpath::functions

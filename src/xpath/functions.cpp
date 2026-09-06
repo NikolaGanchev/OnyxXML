@@ -3,9 +3,16 @@
 #include <array>
 #include <charconv>
 #include <limits>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <variant>
 
+#include "attribute.h"
+#include "node.h"
+#include "nodes/attribute_view_node.h"
+#include "nodes/namespace_view_node.h"
+#include "nodes/processing_instruction_node.h"
 #include "parse/helpers.h"
 #include "parse/string_cursor.h"
 
@@ -368,5 +375,32 @@ double stringLength(const std::string& str) {
     }
 
     return count;
+}
+
+std::string localName(const XPathObject& obj) {
+    const std::vector<Node*>& arg = obj.asNodeset();
+    if (arg.empty()) return "";
+
+    Node* node = arg[0];
+
+    switch (node->getXPathType()) {
+        case Node::XPathType::ELEMENT: {
+            return node->getTagName();
+        }
+        case Node::XPathType::ATTRIBUTE: {
+            return std::string(static_cast<AttributeViewNode*>(node)
+                                   ->getReferencedAttribute()
+                                   .getNCNameWithoutNamespace());
+        }
+        case Node::XPathType::NAMESPACE: {
+            return std::string(
+                static_cast<NamespaceViewNode*>(node)->getPrefix());
+        }
+        case Node::XPathType::PROCESSING_INSTRUCTION: {
+            return static_cast<tags::ProcessingInstruction*>(node)->getTarget();
+        }
+        default:
+            return "";
+    }
 }
 };  // namespace onyx::dynamic::xpath::functions

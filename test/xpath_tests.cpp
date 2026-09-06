@@ -3314,6 +3314,35 @@ TEST_CASE("XPath namespace axis ancestor inheritance and shadowing") {
     REQUIRE(resAllChild.object.asNodeset().size() == 4);
 }
 
+TEST_CASE(
+    "XPath namespace axis default namespace declaration and undeclaration") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    Attribute("xmlns", "http://example.com/default"),
+                    GenericNode("item1", NonVoid),
+                    GenericNode("item2", NonVoid, Attribute("xmlns", "")));
+
+    auto resolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resAllItem1 =
+        XPathQuery(
+            "/*[local-name()='root']/*[local-name()='item1']/namespace::node()")
+            .execute(&doc, resolver);
+    // Should have 2 nodes, 'xml' and default ''
+    REQUIRE(resAllItem1.object.asNodeset().size() == 2);
+
+    XPathQuery::Result resAllItem2 =
+        XPathQuery(
+            "/*[local-name()='root']/*[local-name()='item2']/namespace::node()")
+            .execute(&doc, resolver);
+    // Only 'xml' should remain
+    REQUIRE(resAllItem2.object.asNodeset().size() == 1);
+    REQUIRE(static_cast<NamespaceViewNode*>(resAllItem2.object.asNodeset()[0])
+                ->getPrefix() == "xml");
+}
+
 TEST_CASE("XPath namespace axis document order") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
@@ -3420,4 +3449,168 @@ TEST_CASE("XPath namespace axis parent axis navigation") {
     REQUIRE(resParent.object.asNodeset().size() == 1);
     REQUIRE(resParent.object.asNodeset()[0]->getAttributeValue("id") ==
             "target");
+}
+
+TEST_CASE("XPath local-name() strips prefix on elements and attributes") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("item", NonVoid, Attribute("id", "101"),
+                    Attribute("pref:flag", "active"),
+                    Attribute("xmlns:pref", "http://example.com/pref")),
+        GenericNode("pref:gadget", NonVoid,
+                    Attribute("xmlns:pref", "http://example.com/pref"),
+                    Attribute("pref:serial", "XYZ-99")));
+
+    auto resolver = [](std::string_view p) -> std::string {
+        if (p == "p") return "http://example.com/pref";
+        return "";
+    };
+
+    XPathQuery::Result resElem =
+        XPathQuery("local-name(/root/item)").execute(&doc, resolver);
+    REQUIRE(resElem.object.asString() == "item");
+
+    XPathQuery::Result resPrefElem =
+        XPathQuery("local-name(/root/p:gadget)").execute(&doc, resolver);
+    REQUIRE(resPrefElem.object.asString() == "gadget");
+
+    XPathQuery::Result resAttr =
+        XPathQuery("local-name(/root/item/@id)").execute(&doc, resolver);
+    REQUIRE(resAttr.object.asString() == "id");
+
+    XPathQuery::Result resPrefAttr =
+        XPathQuery("local-name(/root/item/@p:flag)").execute(&doc, resolver);
+    REQUIRE(resPrefAttr.object.asString() == "flag");
+
+    XPathQuery::Result resPrefAttr2 =
+        XPathQuery("local-name(/root/p:gadget/@p:serial)")
+            .execute(&doc, resolver);
+    REQUIRE(resPrefAttr2.object.asString() == "serial");
+}
+
+TEST_CASE("XPath local-name() test on all node types") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    Attribute("xmlns:ns", "http://example.com/ns"),
+                    Attribute("xmlns", "http://example.com/default"),
+                    Comment("Sample comment"),
+                    ProcessingInstruction("render-target", "format=\"pdf\""),
+                    GenericNode("leaf", NonVoid, Text("Plain text child")));
+
+    auto resolver = [](std::string_view p) -> std::string {
+        if (p == "d") return "http://example.com/default";
+        if (p == "n") return "http://example.com/ns";
+        return "";
+    };
+
+    XPathQuery::Result resDoc =
+        XPathQuery("local-name(/*[local-name()='root']/..)")
+            .execute(&doc, resolver);
+    REQUIRE(resDoc.object.asString() == "");
+
+    XPathQuery::Result resText =
+        XPathQuery("local-name(//text())").execute(&doc, resolver);
+    REQUIRE(resText.object.asString() == "");
+
+    XPathQuery::Result resComment =
+        XPathQuery("local-name(//comment())").execute(&doc, resolver);
+    REQUIRE(resComment.object.asString() == "");
+
+    XPathQuery::Result resPI =
+        XPathQuery("local-name(//processing-instruction())")
+            .execute(&doc, resolver);
+    REQUIRE(resPI.object.asString() == "render-target");
+
+    XPathQuery::Result resNsPref =
+        XPathQuery("local-name(/*[local-name()='root']/namespace::ns)")
+            .execute(&doc, resolver);
+    REQUIRE(resNsPref.object.asString() == "ns");
+
+    XPathQuery::Result resNsXml =
+        XPathQuery("local-name(/*[local-name()='root']/namespace::xml)")
+            .execute(&doc, resolver);
+    REQUIRE(resNsXml.object.asString() == "xml");
+
+    XPathQuery::Result resNsDef =
+        XPathQuery(
+            "local-name(/*[local-name()='root']/namespace::*[. = "
+            "'http://example.com/default'])")
+            .execute(&doc, resolver);
+    REQUIRE(resNsDef.object.asString() == "");
+}
+
+TEST_CASE(
+    "XPath local-name() default context node evaluation inside predicates") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "catalog", NonVoid,
+        GenericNode("ns1:entry", NonVoid,
+                    Attribute("xmlns:ns1", "http://example.com/ns1"),
+                    Attribute("code", "E1")),
+        GenericNode("ns2:entry", NonVoid,
+                    Attribute("xmlns:ns2", "http://example.com/ns2"),
+                    Attribute("code", "E2")),
+        GenericNode("entry", NonVoid, Attribute("code", "E3")),
+        GenericNode("summary", NonVoid, Attribute("code", "S1")));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resEntries =
+        XPathQuery("/catalog/*[local-name() = 'entry']")
+            .execute(&doc, emptyResolver);
+    REQUIRE(resEntries.object.asNodeset().size() == 3);
+    REQUIRE(resEntries.object.asNodeset()[0]->getAttributeValue("code") ==
+            "E1");
+    REQUIRE(resEntries.object.asNodeset()[1]->getAttributeValue("code") ==
+            "E2");
+    REQUIRE(resEntries.object.asNodeset()[2]->getAttributeValue("code") ==
+            "E3");
+
+    GenericNode attrDoc(
+        "root", NonVoid,
+        GenericNode("data", NonVoid, Attribute("a:key", "val1"),
+                    Attribute("b:key", "val2"), Attribute("other", "val3"),
+                    Attribute("xmlns:a", "http://example.com/a"),
+                    Attribute("xmlns:b", "http://example.com/b")));
+
+    XPathQuery::Result resAttrs =
+        XPathQuery("/root/data/@*[local-name() = 'key']")
+            .execute(&attrDoc, emptyResolver);
+    REQUIRE(resAttrs.object.asNodeset().size() == 2);
+}
+
+TEST_CASE(
+    "XPath local-name() nodeset document order and empty set edge cases") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("container", NonVoid,
+                    GenericNode("first", NonVoid, Text("1")),
+                    GenericNode("second", NonVoid, Text("2")),
+                    GenericNode("third", NonVoid, Text("3")));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resEmpty = XPathQuery("local-name(/container/missing)")
+                                      .execute(&doc, emptyResolver);
+    REQUIRE(resEmpty.object.asString() == "");
+
+    XPathQuery::Result resMultiOrder =
+        XPathQuery(
+            "local-name(/container/third | /container/first | "
+            "/container/second)")
+            .execute(&doc, emptyResolver);
+    REQUIRE(resMultiOrder.object.asString() == "first");
+
+    XPathQuery::Result resReverse =
+        XPathQuery("local-name(/container/third/preceding-sibling::*)")
+            .execute(&doc, emptyResolver);
+    REQUIRE(resReverse.object.asString() == "first");
 }
