@@ -41,22 +41,12 @@ class TagNameIndex : public Node::Index {
     bool update(Node* node) override;
 
     /**
-     * @brief Construct a new TagNameIndex object by a given root and tag name
-     * which is copied.
+     * @brief Construct a new TagNameIndex object by a given root and tag name.
      *
      * @param root
      * @param tagName
      */
-    explicit TagNameIndex(Node* root, std::string& tagName);
-
-    /**
-     * @brief Construct a new TagNameIndex object by a given root and tag name
-     * which is moved.
-     *
-     * @param root
-     * @param tagName
-     */
-    explicit TagNameIndex(Node* root, std::string&& tagName);
+    explicit TagNameIndex(Node* root, std::string tagName);
 
    public:
     /**

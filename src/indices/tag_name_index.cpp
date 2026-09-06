@@ -2,10 +2,7 @@
 
 namespace onyx::dynamic::index {
 
-TagNameIndex::TagNameIndex(Node* root, std::string& tagName)
-    : tagName(tagName), Index(root), index{} {};
-
-TagNameIndex::TagNameIndex(Node* root, std::string&& tagName)
+TagNameIndex::TagNameIndex(Node* root, std::string tagName)
     : tagName(std::move(tagName)), Index(root), index{} {};
 
 bool TagNameIndex::putIfNeeded(Node* node) {
