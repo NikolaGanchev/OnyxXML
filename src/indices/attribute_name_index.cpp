@@ -1,26 +1,64 @@
 #include "indices/attribute_name_index.h"
 
-namespace onyx::dynamic::index {
+#include "index.h"
 
-AttributeNameIndex::AttributeNameIndex(Node* root, std::string attributeName)
-    : attributeName(std::move(attributeName)), Index(root), index{} {};
+namespace onyx::dynamic::index {
+AttributeNameIndex::AttributeNameIndex(Node* root, std::string localName)
+    : Index(root), namespaceUri{""}, localName(std::move(localName)), index{} {}
+
+AttributeNameIndex::AttributeNameIndex(Node* root, std::string namespaceUri,
+                                       std::string localName)
+    : Index(root),
+      namespaceUri{std::move(namespaceUri)},
+      localName(std::move(localName)),
+      index{} {}
+
+AttributeNameIndex::AttributeNameIndex(Node* root, AnyNamespaceTag,
+                                       std::string localName)
+    : Index(root),
+      namespaceUri{std::nullopt},
+      localName(std::move(localName)),
+      index{} {}
+
+std::optional<std::string_view> AttributeNameIndex::findMatchingAttributeValue(
+    Node* node) const {
+    for (const auto& attr : node->getAttributes()) {
+        if (attr.getNCNameWithoutNamespace() != this->localName) {
+            continue;
+        }
+
+        if (!this->namespaceUri.has_value()) {
+            return attr.getValue();
+        }
+
+        std::optional<std::string_view> resolvedUri =
+            node->resolveAttributeNamespacePrefix(attr.getNamespacePrefix());
+        std::string_view uri = resolvedUri ? resolvedUri.value() : "";
+
+        if (uri == this->namespaceUri.value()) {
+            return attr.getValue();
+        }
+    }
+
+    return std::nullopt;
+}
 
 bool AttributeNameIndex::putIfNeeded(Node* node) {
-    if (node->hasAttribute(this->attributeName)) {
-        const std::string& value = node->getAttributeValue(this->attributeName);
-        if (this->index.contains(value)) {
-            // Protect from double insertion
-            for (auto obj : this->index[value]) {
-                if (obj == node) return false;
-            }
-
-            index[value].push_back(node);
-        } else {
-            index[value] = {node};
-        }
-        return true;
+    std::optional<std::string_view> attrVal = findMatchingAttributeValue(node);
+    if (!attrVal.has_value()) {
+        return false;
     }
-    return false;
+
+    std::string value(attrVal.value());
+    if (this->index.contains(value)) {
+        for (auto* obj : this->index[value]) {
+            if (obj == node) return false;
+        }
+        this->index[value].push_back(node);
+    } else {
+        this->index[value] = {node};
+    }
+    return true;
 }
 
 bool AttributeNameIndex::removeIfNeeded(Node* node) {
@@ -37,11 +75,14 @@ bool AttributeNameIndex::removeIfNeeded(Node* node) {
 }
 
 bool AttributeNameIndex::update(Node* node) {
-    if (node->hasAttribute(this->attributeName)) {
-        for (auto& obj :
-             getByValue(node->getAttributeValue(this->attributeName))) {
-            if (obj == node) {
-                return false;
+    std::optional<std::string_view> attrVal = findMatchingAttributeValue(node);
+    if (attrVal) {
+        std::string valStr(attrVal.value());
+        if (this->index.contains(valStr)) {
+            for (auto* obj : this->index[valStr]) {
+                if (obj == node) {
+                    return false;
+                }
             }
         }
     }

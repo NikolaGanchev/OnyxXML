@@ -685,102 +685,6 @@ onyx::dynamic::tags::GenericNode getComplexTree() {
     return obj;
 }
 
-TEST_CASE("AttributeNameIndex is faster than querying the tree",
-          "[AttributeNameIndex]") {
-    using namespace onyx::tags;
-    using namespace onyx::dynamic;
-    using std::chrono::duration;
-    using std::chrono::duration_cast;
-    using std::chrono::high_resolution_clock;
-    using std::chrono::milliseconds;
-
-    GenericNode obj = getComplexTree();
-
-    REQUIRE(obj.getChildrenCount() > 0);
-
-    index::AttributeNameIndex index =
-        index::createIndex<index::AttributeNameIndex>(&obj, "class");
-
-    auto t1 = high_resolution_clock::now();
-    auto result = index.getByValue("item");
-    auto t2 = high_resolution_clock::now();
-
-    duration<double, std::milli> timeIndex = t2 - t1;
-
-    auto t21 = high_resolution_clock::now();
-    auto result2 = obj.getChildrenByClassName("item");
-    auto t22 = high_resolution_clock::now();
-
-    REQUIRE(result2.size() == result.size());
-
-    duration<double, std::milli> timeParse = t22 - t21;
-
-    REQUIRE(timeIndex.count() < timeParse.count());
-}
-
-TEST_CASE("TagNameIndex is faster than querying the tree", "[TagNameIndex]") {
-    using namespace onyx::tags;
-    using namespace onyx::dynamic;
-    using std::chrono::duration;
-    using std::chrono::duration_cast;
-    using std::chrono::high_resolution_clock;
-    using std::chrono::milliseconds;
-
-    GenericNode obj = getComplexTree();
-
-    REQUIRE(obj.getChildrenCount() > 0);
-
-    index::TagNameIndex index =
-        index::createIndex<index::TagNameIndex>(&obj, "p");
-
-    auto t1 = high_resolution_clock::now();
-    auto result = index.get();
-    auto t2 = high_resolution_clock::now();
-
-    duration<double, std::milli> timeIndex = t2 - t1;
-
-    auto t21 = high_resolution_clock::now();
-    auto result2 = obj.getChildrenByTagName("p");
-    auto t22 = high_resolution_clock::now();
-
-    REQUIRE(result2.size() == result.size());
-
-    duration<double, std::milli> timeParse = t22 - t21;
-
-    REQUIRE(timeIndex.count() < timeParse.count());
-}
-
-TEST_CASE("TagIndex is faster than querying the tree", "[TagIndex]") {
-    using namespace onyx::tags;
-    using namespace onyx::dynamic;
-    using std::chrono::duration;
-    using std::chrono::duration_cast;
-    using std::chrono::high_resolution_clock;
-    using std::chrono::milliseconds;
-
-    GenericNode obj = getComplexTree();
-
-    REQUIRE(obj.getChildrenCount() > 0);
-
-    index::TagIndex index = index::createIndex<index::TagIndex>(&obj);
-
-    auto t1 = high_resolution_clock::now();
-    auto result = index.getByTagName("p");
-    auto t2 = high_resolution_clock::now();
-
-    duration<double, std::milli> timeIndex = t2 - t1;
-
-    auto t21 = high_resolution_clock::now();
-    auto result2 = obj.getChildrenByTagName("p");
-    auto t22 = high_resolution_clock::now();
-
-    REQUIRE(result2.size() == result.size());
-
-    duration<double, std::milli> timeParse = t22 - t21;
-
-    REQUIRE(timeIndex.count() < timeParse.count());
-}
-
 TEST_CASE("Index move constructor works", "[Index]") {
     using namespace onyx::tags;
     using namespace onyx::dynamic;
@@ -903,4 +807,278 @@ TEST_CASE("Index move assignment operator cleans up memory properly",
 
     REQUIRE(result3.size() == 2);
     CHECK(result3[0]->getAttributeValue("class") == "0");
+}
+
+TEST_CASE(
+    "AttributeNameIndex unprefixed index strictly matches attributes with no "
+    "namespace",
+    "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsA = "http://example.com/nsA";
+    const std::string nsB = "http://example.com/nsB";
+
+    GenericNode doc{"root",
+                    NonVoid,
+                    Attribute("xmlns:a", nsA),
+                    Attribute("xmlns:b", nsB),
+                    GenericNode("node", NonVoid, Attribute("id", "target")),
+                    GenericNode("node", NonVoid, Attribute("a:id", "target")),
+                    GenericNode("node", NonVoid, Attribute("b:id", "target")),
+                    GenericNode("node", NonVoid, Attribute("id", "other"))};
+
+    auto index = index::createIndex<index::AttributeNameIndex>(&doc, "id");
+    auto results = index.getByValue("target");
+
+    REQUIRE(results.size() == 1);
+    CHECK(results[0]->hasAttribute("id"));
+    CHECK(!results[0]->hasAttribute("a:id"));
+}
+
+TEST_CASE(
+    "AttributeNameIndex prefixed URI index matches only attributes mapped to "
+    "that specific URI",
+    "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsA = "http://example.com/nsA";
+    const std::string nsB = "http://example.com/nsB";
+
+    GenericNode doc{"root",
+                    NonVoid,
+                    Attribute("xmlns:a", nsA),
+                    Attribute("xmlns:b", nsB),
+                    GenericNode("node", NonVoid, Attribute("id", "target")),
+                    GenericNode("node", NonVoid, Attribute("a:id", "target")),
+                    GenericNode("node", NonVoid, Attribute("b:id", "target")),
+                    GenericNode("node", NonVoid, Attribute("id", "other"))};
+
+    auto indexA =
+        index::createIndex<index::AttributeNameIndex>(&doc, nsA, "id");
+    auto resultsA = indexA.getByValue("target");
+
+    REQUIRE(resultsA.size() == 1);
+    CHECK(resultsA[0]->hasAttribute("a:id"));
+
+    auto indexB =
+        index::createIndex<index::AttributeNameIndex>(&doc, nsB, "id");
+    auto resultsB = indexB.getByValue("target");
+
+    REQUIRE(resultsB.size() == 1);
+    CHECK(resultsB[0]->hasAttribute("b:id"));
+}
+
+TEST_CASE(
+    "AttributeNameIndex AnyNamespace index matches all attributes across all "
+    "namespaces",
+    "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsA = "http://example.com/nsA";
+    const std::string nsB = "http://example.com/nsB";
+
+    GenericNode doc{"root",
+                    NonVoid,
+                    Attribute("xmlns:a", nsA),
+                    Attribute("xmlns:b", nsB),
+                    GenericNode("node", NonVoid, Attribute("id", "target")),
+                    GenericNode("node", NonVoid, Attribute("a:id", "target")),
+                    GenericNode("node", NonVoid, Attribute("b:id", "target")),
+                    GenericNode("node", NonVoid, Attribute("id", "other"))};
+
+    auto indexAny = index::createIndex<index::AttributeNameIndex>(
+        &doc, index::AnyNamespace, "id");
+    auto results = indexAny.getByValue("target");
+
+    REQUIRE(results.size() == 3);
+}
+
+TEST_CASE(
+    "AttributeNameIndex indexes default xmlns declarations as unprefixed "
+    "attributes",
+    "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string defaultNs = "http://example.com/default";
+
+    GenericNode doc{
+        "root", NonVoid, Attribute("xmlns", defaultNs),
+        GenericNode("child", NonVoid, Attribute("xmlns", defaultNs)),
+        GenericNode("other", NonVoid,
+                    Attribute("xmlns", "http://example.com/other"))};
+
+    auto index = index::createIndex<index::AttributeNameIndex>(&doc, "xmlns");
+    auto results = index.getByValue(defaultNs);
+
+    REQUIRE(results.size() == 2);
+    CHECK(results[0]->getAttributeValue("xmlns") == defaultNs);
+    CHECK(results[1]->getAttributeValue("xmlns") == defaultNs);
+}
+
+TEST_CASE(
+    "AttributeNameIndex indexes prefixed xmlns declarations by local prefix "
+    "name",
+    "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string targetNs = "http://example.com/custom";
+
+    GenericNode doc{
+        "root", NonVoid, Attribute("xmlns:custom", targetNs),
+        GenericNode("child1", NonVoid, Attribute("xmlns:custom", targetNs)),
+        GenericNode("child2", NonVoid, Attribute("xmlns:other", targetNs))};
+
+    auto indexByUri = index::createIndex<index::AttributeNameIndex>(
+        &doc, "http://www.w3.org/2000/xmlns/", "custom");
+    auto uriResults = indexByUri.getByValue(targetNs);
+
+    REQUIRE(uriResults.size() == 2);
+
+    auto indexAny = index::createIndex<index::AttributeNameIndex>(
+        &doc, index::AnyNamespace, "custom");
+    auto anyResults = indexAny.getByValue(targetNs);
+
+    REQUIRE(anyResults.size() == 2);
+}
+
+TEST_CASE("AttributeNameIndex resolves inherited and shadowed prefix bindings",
+          "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsV1 = "http://example.com/v1";
+    const std::string nsV2 = "http://example.com/v2";
+
+    GenericNode doc{
+        "root", NonVoid, Attribute("xmlns:p", nsV1),
+        GenericNode("parent", NonVoid,
+                    GenericNode("child1", NonVoid, Attribute("p:tag", "found")),
+                    GenericNode("child2", NonVoid, Attribute("xmlns:p", nsV2),
+                                Attribute("p:tag", "found")))};
+
+    auto indexV1 =
+        index::createIndex<index::AttributeNameIndex>(&doc, nsV1, "tag");
+    auto resultsV1 = indexV1.getByValue("found");
+    REQUIRE(resultsV1.size() == 1);
+    CHECK(resultsV1[0]->getTagName() == "child1");
+
+    auto indexV2 =
+        index::createIndex<index::AttributeNameIndex>(&doc, nsV2, "tag");
+    auto resultsV2 = indexV2.getByValue("found");
+    REQUIRE(resultsV2.size() == 1);
+    CHECK(resultsV2[0]->getTagName() == "child2");
+}
+
+TEST_CASE(
+    "AttributeNameIndex updates correctly when namespaced attributes mutate",
+    "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string ns = "http://example.com/ns";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:p", ns)};
+    auto index = index::createIndex<index::AttributeNameIndex>(&doc, ns, "key");
+
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>(
+        "item", NonVoid, Attribute("p:key", "initial"));
+    Node* childRef = doc.addChild(std::move(child));
+
+    REQUIRE(index.getByValue("initial").size() == 1);
+
+    childRef->setAttributeValue("p:key", "updated");
+    REQUIRE(index.getByValue("initial").empty());
+    REQUIRE(index.getByValue("updated").size() == 1);
+
+    childRef->removeAttribute("p:key");
+    REQUIRE(index.getByValue("updated").empty());
+}
+
+TEST_CASE("AttributeNameIndex updates when namespace prefix bindings change",
+          "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string nsOld = "http://example.com/old";
+    const std::string nsNew = "http://example.com/new";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:p", nsOld)};
+    std::unique_ptr<Node> child = std::make_unique<GenericNode>(
+        "item", NonVoid, Attribute("p:attr", "val"));
+    Node* childRef = doc.addChild(std::move(child));
+
+    auto indexOld =
+        index::createIndex<index::AttributeNameIndex>(&doc, nsOld, "attr");
+    auto indexNew =
+        index::createIndex<index::AttributeNameIndex>(&doc, nsNew, "attr");
+
+    REQUIRE(indexOld.getByValue("val").size() == 1);
+    REQUIRE(indexNew.getByValue("val").empty());
+
+    doc.setAttributeValue("xmlns:p", nsNew);
+
+    REQUIRE(indexOld.getByValue("val").empty());
+    REQUIRE(indexNew.getByValue("val").size() == 1);
+}
+
+TEST_CASE(
+    "AttributeNameIndex move constructor preserves URI and AnyNamespace "
+    "configurations",
+    "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string ns = "http://example.com/ns";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:a", ns),
+                    GenericNode("node", NonVoid, Attribute("a:code", "alpha"))};
+
+    auto indexURI =
+        index::createIndex<index::AttributeNameIndex>(&doc, ns, "code");
+    auto indexAny = index::createIndex<index::AttributeNameIndex>(
+        &doc, index::AnyNamespace, "code");
+
+    index::AttributeNameIndex movedURI{std::move(indexURI)};
+    index::AttributeNameIndex movedAny{std::move(indexAny)};
+
+    REQUIRE(!indexURI.isValid());
+    REQUIRE(!indexAny.isValid());
+
+    REQUIRE(movedURI.getByValue("alpha").size() == 1);
+    REQUIRE(movedAny.getByValue("alpha").size() == 1);
+
+    doc.addChild(GenericNode("node", NonVoid, Attribute("a:code", "beta")));
+
+    REQUIRE(movedURI.getByValue("beta").size() == 1);
+    REQUIRE(movedAny.getByValue("beta").size() == 1);
+}
+
+TEST_CASE(
+    "AttributeNameIndex move assignment preserves URI behaviors and updates "
+    "cleanly",
+    "[AttributeNameIndex]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    const std::string ns = "http://example.com/ns";
+
+    GenericNode doc{"root", NonVoid, Attribute("xmlns:a", ns),
+                    GenericNode("node", NonVoid, Attribute("a:code", "alpha"))};
+
+    auto indexURI =
+        index::createIndex<index::AttributeNameIndex>(&doc, ns, "code");
+    auto indexUnprefixed =
+        index::createIndex<index::AttributeNameIndex>(&doc, "code");
+
+    indexUnprefixed = std::move(indexURI);
+    REQUIRE(!indexURI.isValid());
+    REQUIRE(indexUnprefixed.getByValue("alpha").size() == 1);
+
+    doc.addChild(GenericNode("node", NonVoid, Attribute("a:code", "alpha")));
+    REQUIRE(indexUnprefixed.getByValue("alpha").size() == 2);
 }

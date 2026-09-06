@@ -19,6 +19,12 @@ template <typename T>
 concept isIndex = std::derived_from<T, Node::Index>;
 
 /**
+ * @brief Utility tag type used to match across any namespace.
+ */
+struct AnyNamespaceTag {};
+inline constexpr AnyNamespaceTag AnyNamespace{};
+
+/**
  * @brief Creates an Index of type T using the provided args.
  *
  * @tparam T
