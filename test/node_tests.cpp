@@ -867,7 +867,7 @@ TEST_CASE(
     using doc = Document<with_namespace<>>;
     using doc2 = Document<with_namespace_void<>>;
 
-    tags::EmptyNode root(tags::with_namespace(""));
+    tags::EmptyNode root(tags::with_namespace{});
     tags::EmptyNode root1(tags::with_namespace_void(""));
 
     CHECK(doc::dynamicTree()->deepEquals(root));

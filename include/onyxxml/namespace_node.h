@@ -16,9 +16,10 @@ class NamespaceNode : public Node {
      * @brief The namespace prefix of the Node.
      *
      */
-    std::string namespacePrefix;
+    std::string namespacePrefix = "";
 
    public:
+    using Node::Node;
     /**
      * @brief Construct a new owning NamespaceNode.
      *
@@ -39,7 +40,7 @@ class NamespaceNode : public Node {
     /**
      * @brief Construct a fully runtime owning NamespaceNode object
      *
-     * @param namespacePrefix The namespace prefix of this Node]
+     * @param namespacePrefix The namespace prefix of this Node
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
@@ -50,14 +51,14 @@ class NamespaceNode : public Node {
     /**
      * @brief Construct an empty non-owning NamespaceNode object
      *
-     * @param namespacePrefix The namespace prefix of this Node]
+     * @param namespacePrefix The namespace prefix of this Node
      */
     explicit NamespaceNode(NonOwningNodeTag, std::string namespacePrefix);
 
     /**
      * @brief Construct a fully runtime non-owning NamespaceNode object
      *
-     * @param namespacePrefix The namespace prefix of this Node]
+     * @param namespacePrefix The namespace prefix of this Node
      * @param attributes Attributes to be forwarded to the Node constructor
      * @param children Children to be forwarded to the Node constructor
      */
