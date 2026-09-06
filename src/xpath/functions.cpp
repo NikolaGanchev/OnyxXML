@@ -255,43 +255,67 @@ std::string stringAfter(const std::string& str1, const std::string& str2) {
 
 std::string translate(const std::string& str1, const std::string& str2,
                       const std::string& str3) {
-    std::stringstream result;
+    std::vector<std::string_view> replacements;
+    parser::StringCursor c3(str3);
+    while (!c3.isEOF()) {
+        const char* start = c3.ptr;
+        if (text::getUnicodeCodepoint(c3) == 0 && c3.isEOF()) {
+            break;
+        }
+        c3.advance(1);
+        replacements.emplace_back(start, c3.ptr - start);
+    }
 
-    // Values
-    // -1: Character not found in str2
-    // -2: Character found in str2 but no corresponding char in str3
-    // 0..255: The replacement character
-    std::vector<int> map(256, -1);
+    // Map codepoint in str2 to a replacement byte slice in str3
+    // An empty std::string_view represents character deletion.
+    std::unordered_map<uint32_t, std::string_view> map;
+    parser::StringCursor c2(str2);
+    size_t charIndex = 0;
 
-    for (size_t i = 0; i < str2.length(); ++i) {
-        unsigned char key = static_cast<unsigned char>(str2[i]);
+    while (!c2.isEOF()) {
+        uint32_t codepoint = text::getUnicodeCodepoint(c2);
+        if (codepoint == 0 && c2.isEOF()) {
+            break;
+        }
+        c2.advance(1);
 
-        // XPath spec: "If a character occurs more than once in the second
-        // argument string, then the first occurrence determines the replacement
-        // character." We only set the rule if this character hasn't been
-        // processed yet
-        if (map[key] == -1) {
-            if (i < str3.length()) {
-                map[key] = static_cast<unsigned char>(str3[i]);
+        // First occurrence determines the replacement
+        if (map.find(codepoint) == map.end()) {
+            if (charIndex < replacements.size()) {
+                map[codepoint] = replacements[charIndex];
             } else {
-                map[key] = -2;
+                // Delete a character
+                map[codepoint] = std::string_view();
             }
         }
+        charIndex++;
     }
 
-    for (char c : str1) {
-        unsigned char index = static_cast<unsigned char>(c);
-        int action = map[index];
+    std::string result;
+    result.reserve(str1.size());
 
-        if (action == -1) {
-            result << c;
-        } else if (action == -2) {
+    parser::StringCursor c1(str1);
+    while (!c1.isEOF()) {
+        const char* start = c1.ptr;
+        uint32_t codepoint = text::getUnicodeCodepoint(c1);
+        if (codepoint == 0 && c1.isEOF()) {
+            break;
+        }
+        c1.advance(1);
+        const char* end = c1.ptr;
+
+        auto it = map.find(codepoint);
+        if (it == map.end()) {
+            // If not in str2, preserve original character slice
+            result.append(start, end - start);
         } else {
-            result << static_cast<char>(action);
+            // If in str2, append mapped slice
+            // If the slice is empty, the character is dropped
+            result.append(it->second);
         }
     }
 
-    return result.str();
+    return result;
 }
 
 std::string normalizeSpace(const std::string& str) {

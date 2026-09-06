@@ -2415,6 +2415,41 @@ TEST_CASE("XPath execute translate") {
     REQUIRE(res2.object.asString() == "ata");
 }
 
+TEST_CASE("XPath translate handles unicode") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid);
+
+    XPathQuery::Result res1 =
+        XPathQuery("translate('αβγδε', 'αγ', 'ΑΓ')").execute(&doc);
+    REQUIRE(res1.object.asString() == "ΑβΓδε");
+
+    XPathQuery::Result res2 =
+        XPathQuery("translate('你好世界', '你好世', '您安')").execute(&doc);
+    REQUIRE(res2.object.asString() == "您安界");
+
+    XPathQuery::Result res3 =
+        XPathQuery("translate('🍎🍌🍇🍉', '🍌🍉', '🍓🍍')").execute(&doc);
+    REQUIRE(res3.object.asString() == "🍎🍓🍇🍍");
+
+    XPathQuery::Result res4 =
+        XPathQuery("translate('hello свят', 'eя', '⭐i')").execute(&doc);
+    REQUIRE(res4.object.asString() == "h⭐llo свiт");
+
+    XPathQuery::Result res5 =
+        XPathQuery("translate('Кола', 'КолКа', 'стоВл')").execute(&doc);
+    REQUIRE(res5.object.asString() == "стол");
+
+    XPathQuery::Result res6 =
+        XPathQuery("translate('⭐Hello⭐World⭐', '⭐', '')").execute(&doc);
+    REQUIRE(res6.object.asString() == "HelloWorld");
+
+    XPathQuery::Result res7 =
+        XPathQuery("translate('café', 'é', 'eXYZ')").execute(&doc);
+    REQUIRE(res7.object.asString() == "cafe");
+}
+
 TEST_CASE("XPath execute parent abbreviation (..) and self (.)") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;

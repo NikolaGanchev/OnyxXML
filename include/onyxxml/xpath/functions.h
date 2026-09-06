@@ -28,14 +28,6 @@ std::string stringBefore(const std::string& str1, const std::string& str2);
 
 std::string stringAfter(const std::string& str1, const std::string& str2);
 
-/**
- * @brief Currently does not handle UTF-8
- *
- * @param str1
- * @param str2
- * @param str3
- * @return std::string
- */
 std::string translate(const std::string& str1, const std::string& str2,
                       const std::string& str3);
 
