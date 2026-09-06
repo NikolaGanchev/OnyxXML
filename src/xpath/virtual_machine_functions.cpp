@@ -282,11 +282,18 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
                          return XPathObject(false);
                      });
 
-    registry.emplace(FUNCTION_CODE::LANG_1,
-                     [](Context context, Stack stack) -> XPathObject {
-                         // TODO
-                         return XPathObject(false);
-                     });
+    registry.emplace(
+        FUNCTION_CODE::LANG_1, [](Context context, Stack stack) -> XPathObject {
+            if (stack.size() < 1) {
+                throw std::runtime_error("lang needs one argument");
+            }
+
+            std::string str = stack.top().asString();
+
+            stack.pop();
+            return XPathObject(
+                functions::lang(str, context.contextSet[context.currentIndex]));
+        });
 
     registry.emplace(
         FUNCTION_CODE::NUMBER_1,

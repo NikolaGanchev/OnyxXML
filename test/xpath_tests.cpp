@@ -2447,6 +2447,174 @@ TEST_CASE("XPath substring handles unicode") {
     REQUIRE(res7.object.asString() == "αβγδε");
 }
 
+TEST_CASE("XPath lang() function: exact and case-insensitive matching") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    GenericNode("para", NonVoid, Attribute("id", "p1"),
+                                Attribute("xml:lang", "en")),
+                    GenericNode("para", NonVoid, Attribute("id", "p2"),
+                                Attribute("xml:lang", "EN")),
+                    GenericNode("para", NonVoid, Attribute("id", "p3"),
+                                Attribute("xml:lang", "fr")),
+                    GenericNode("para", NonVoid, Attribute("id", "p4")));
+
+    auto res1 = XPathQuery("/root/para[lang('en')]").execute(&doc);
+    REQUIRE(res1.object.asNodeset().size() == 2);
+    CHECK(res1.object.asNodeset()[0]->getAttributeValue("id") == "p1");
+    CHECK(res1.object.asNodeset()[1]->getAttributeValue("id") == "p2");
+
+    auto res2 = XPathQuery("/root/para[lang('EN')]").execute(&doc);
+    REQUIRE(res2.object.asNodeset().size() == 2);
+
+    auto res3 = XPathQuery("/root/para[lang('eN')]").execute(&doc);
+    REQUIRE(res3.object.asNodeset().size() == 2);
+
+    auto res4 = XPathQuery("/root/para[lang('fr')]").execute(&doc);
+    REQUIRE(res4.object.asNodeset().size() == 1);
+    CHECK(res4.object.asNodeset()[0]->getAttributeValue("id") == "p3");
+
+    auto res5 = XPathQuery("/root/para[lang('de')]").execute(&doc);
+    REQUIRE(res5.object.asNodeset().empty());
+}
+
+TEST_CASE("XPath lang() function: sublanguage prefix matching with hyphen") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic::xpath;
+
+    GenericNode doc("root", NonVoid,
+                    GenericNode("item", NonVoid, Attribute("id", "us"),
+                                Attribute("xml:lang", "en-US")),
+                    GenericNode("item", NonVoid, Attribute("id", "gb"),
+                                Attribute("xml:lang", "en-GB")),
+                    GenericNode("item", NonVoid, Attribute("id", "cockney"),
+                                Attribute("xml:lang", "en-cockney")),
+                    GenericNode("item", NonVoid, Attribute("id", "prefix_only"),
+                                Attribute("xml:lang", "english")));
+
+    auto resEn = XPathQuery("/root/item[lang('en')]").execute(&doc);
+    REQUIRE(resEn.object.asNodeset().size() == 3);
+    CHECK(resEn.object.asNodeset()[0]->getAttributeValue("id") == "us");
+    CHECK(resEn.object.asNodeset()[1]->getAttributeValue("id") == "gb");
+    CHECK(resEn.object.asNodeset()[2]->getAttributeValue("id") == "cockney");
+
+    for (auto* node : resEn.object.asNodeset()) {
+        CHECK(node->getAttributeValue("id") != "prefix_only");
+    }
+
+    auto resUs = XPathQuery("/root/item[lang('en-us')]").execute(&doc);
+    REQUIRE(resUs.object.asNodeset().size() == 1);
+    CHECK(resUs.object.asNodeset()[0]->getAttributeValue("id") == "us");
+
+    GenericNode baseOnly("item", NonVoid, Attribute("xml:lang", "en"));
+    auto resNarrow = XPathQuery("/item[lang('en-us')]").execute(&baseOnly);
+    REQUIRE(resNarrow.object.asNodeset().empty());
+}
+
+TEST_CASE(
+    "XPath lang() function: ancestor hierarchy inheritance and shadowing") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic::xpath;
+
+    GenericNode doc(
+        "doc", NonVoid, Attribute("xml:lang", "en"),
+        GenericNode(
+            "section", NonVoid, Attribute("id", "sec-en"),
+            GenericNode("p", NonVoid, Attribute("id", "p-inherited")),
+            GenericNode("span", NonVoid, Attribute("id", "span-inherited"))),
+        GenericNode(
+            "section", NonVoid, Attribute("id", "sec-de"),
+            Attribute("xml:lang", "de-AT"),
+            GenericNode("p", NonVoid, Attribute("id", "p-de-inherited")),
+            GenericNode("span", NonVoid, Attribute("id", "span-shadowed-en"),
+                        Attribute("xml:lang", "en"))));
+
+    auto resInherited = XPathQuery("//p[lang('en')]").execute(&doc);
+    REQUIRE(resInherited.object.asNodeset().size() == 1);
+    CHECK(resInherited.object.asNodeset()[0]->getAttributeValue("id") ==
+          "p-inherited");
+
+    auto resDe = XPathQuery("//p[lang('de')]").execute(&doc);
+    REQUIRE(resDe.object.asNodeset().size() == 1);
+    CHECK(resDe.object.asNodeset()[0]->getAttributeValue("id") ==
+          "p-de-inherited");
+
+    auto resShadow = XPathQuery("//span[lang('en')]").execute(&doc);
+    REQUIRE(resShadow.object.asNodeset().size() == 2);
+    CHECK(resShadow.object.asNodeset()[0]->getAttributeValue("id") ==
+          "span-inherited");
+    CHECK(resShadow.object.asNodeset()[1]->getAttributeValue("id") ==
+          "span-shadowed-en");
+}
+
+TEST_CASE("XPath lang() function: non-element context nodes") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic::xpath;
+
+    GenericNode doc(
+        "root", NonVoid, Attribute("xml:lang", "en-GB"),
+        GenericNode("title", NonVoid, Attribute("type", "heading"),
+                    Text("Sample Title")),
+        GenericNode("summary", NonVoid, Attribute("type", "overview"),
+                    Text("Sample Summary")));
+
+    auto resText = XPathQuery("/root/title/text()[lang('en')]").execute(&doc);
+    REQUIRE(resText.object.asNodeset().size() == 1);
+    CHECK(resText.object.asNodeset()[0]->getStringValue() == "Sample Title");
+
+    auto resAttr = XPathQuery("/root/title/@type[lang('en')]").execute(&doc);
+    REQUIRE(resAttr.object.asNodeset().size() == 1);
+    CHECK(resAttr.object.asNodeset()[0]->getStringValue() == "heading");
+
+    auto resMismatch =
+        XPathQuery("/root/title/text()[lang('fr')]").execute(&doc);
+    REQUIRE(resMismatch.object.asNodeset().empty());
+}
+
+TEST_CASE("XPath lang() function: argument coercion") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+    using namespace onyx::dynamic::xpath;
+
+    GenericNode doc(
+        "root", NonVoid, Attribute("xml:lang", "fr"),
+        GenericNode("meta", NonVoid, Attribute("lang-ref", "FR")),
+        GenericNode("entry", NonVoid, Attribute("id", "target"), Text("fr")));
+
+    auto resNodeArg =
+        XPathQuery("/root/entry[lang(/root/entry/text())]").execute(&doc);
+    REQUIRE(resNodeArg.object.asNodeset().size() == 1);
+    CHECK(resNodeArg.object.asNodeset()[0]->getAttributeValue("id") ==
+          "target");
+
+    auto resAttrArg =
+        XPathQuery("/root/entry[lang(/root/meta/@lang-ref)]").execute(&doc);
+    REQUIRE(resAttrArg.object.asNodeset().size() == 1);
+    CHECK(resAttrArg.object.asNodeset()[0]->getAttributeValue("id") ==
+          "target");
+}
+
+TEST_CASE("XPath lang() direct function evaluation") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    GenericNode target("item", NonVoid, Attribute("xml:lang", "en-US-variant"));
+
+    CHECK(xpath::functions::lang("en", &target) == true);
+    CHECK(xpath::functions::lang("en-us", &target) == true);
+    CHECK(xpath::functions::lang("en-US", &target) == true);
+    CHECK(xpath::functions::lang("en-us-variant", &target) == true);
+
+    CHECK(xpath::functions::lang("en-gb", &target) == false);
+    CHECK(xpath::functions::lang("en-usa", &target) == false);
+
+    CHECK(xpath::functions::lang("en", nullptr) == false);
+
+    GenericNode orphan("orphan", NonVoid);
+    CHECK(xpath::functions::lang("en", &orphan) == false);
+}
+
 TEST_CASE("XPath execute translate") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;

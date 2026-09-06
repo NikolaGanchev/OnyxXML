@@ -456,4 +456,61 @@ std::string namespaceURI(const XPathObject& obj) {
             return "";
     }
 }
+
+namespace {
+
+bool caseInsensitiveEquals(std::string_view lhs, std::string_view rhs) {
+    if (lhs.size() != rhs.size()) return false;
+    for (size_t i = 0; i < lhs.size(); ++i) {
+        if (std::tolower(static_cast<unsigned char>(lhs[i])) !=
+            std::tolower(static_cast<unsigned char>(rhs[i]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+}  // namespace
+
+bool lang(const std::string& targetLang, Node* contextNode) {
+    if (!contextNode) {
+        return false;
+    }
+
+    Node* current = contextNode;
+    std::optional<std::string_view> langVal;
+
+    while (current) {
+        if (current->getXPathType() == Node::XPathType::ELEMENT) {
+            for (const auto& attr : current->getAttributes()) {
+                if (attr.getName() == "xml:lang") {
+                    langVal = attr.getValue();
+                    break;
+                }
+            }
+            if (langVal.has_value()) {
+                break;
+            }
+        }
+        current = current->getParentNode();
+    }
+
+    if (!langVal.has_value()) {
+        return false;
+    }
+
+    std::string_view actual = langVal.value();
+
+    if (caseInsensitiveEquals(actual, targetLang)) {
+        return true;
+    }
+
+    if (actual.size() > targetLang.size() && actual[targetLang.size()] == '-' &&
+        caseInsensitiveEquals(actual.substr(0, targetLang.size()),
+                              targetLang)) {
+        return true;
+    }
+
+    return false;
+}
 };  // namespace onyx::dynamic::xpath::functions

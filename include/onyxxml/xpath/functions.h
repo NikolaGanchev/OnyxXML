@@ -40,4 +40,6 @@ std::string name(const XPathObject& obj);
 std::string localName(const XPathObject& obj);
 
 std::string namespaceURI(const XPathObject& obj);
+
+bool lang(const std::string& targetLang, Node* contextNode);
 };  // namespace onyx::dynamic::xpath::functions
