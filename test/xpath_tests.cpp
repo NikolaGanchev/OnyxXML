@@ -3048,19 +3048,17 @@ TEST_CASE("XPath execute built-in 'xml' namespace matching") {
         GenericNode("para", NonVoid, Attribute("id", "3"),
                     Attribute("xml:lang", "bg"), Text("Български текст")));
 
-    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
-
     XPathQuery::Result resXmlLang =
-        XPathQuery("/root/para[@xml:lang='en']", emptyResolver).execute(&doc);
+        XPathQuery("/root/para[@xml:lang='en']").execute(&doc);
     REQUIRE(resXmlLang.object.asNodeset().size() == 1);
     REQUIRE(resXmlLang.object.asNodeset()[0]->getAttributeValue("id") == "1");
 
     XPathQuery::Result resAllXmlLang =
-        XPathQuery("/root/para/@xml:lang", emptyResolver).execute(&doc);
+        XPathQuery("/root/para/@xml:lang").execute(&doc);
     REQUIRE(resAllXmlLang.object.asNodeset().size() == 2);
 
     XPathQuery::Result resNoNsLang =
-        XPathQuery("/root/para/@lang", emptyResolver).execute(&doc);
+        XPathQuery("/root/para/@lang").execute(&doc);
     REQUIRE(resNoNsLang.object.asNodeset().size() == 1);
     REQUIRE(
         resNoNsLang.object.asNodeset()[0]->getParentNode()->getAttributeValue(
@@ -3604,11 +3602,8 @@ TEST_CASE(
         GenericNode("entry", NonVoid, Attribute("code", "E3")),
         GenericNode("summary", NonVoid, Attribute("code", "S1")));
 
-    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
-
     XPathQuery::Result resEntries =
-        XPathQuery("/catalog/*[local-name() = 'entry']", emptyResolver)
-            .execute(&doc);
+        XPathQuery("/catalog/*[local-name() = 'entry']").execute(&doc);
     REQUIRE(resEntries.object.asNodeset().size() == 3);
     REQUIRE(resEntries.object.asNodeset()[0]->getAttributeValue("code") ==
             "E1");
@@ -3625,8 +3620,7 @@ TEST_CASE(
                     Attribute("xmlns:b", "http://example.com/b")));
 
     XPathQuery::Result resAttrs =
-        XPathQuery("/root/data/@*[local-name() = 'key']", emptyResolver)
-            .execute(&attrDoc);
+        XPathQuery("/root/data/@*[local-name() = 'key']").execute(&attrDoc);
     REQUIRE(resAttrs.object.asNodeset().size() == 2);
 }
 
@@ -3640,24 +3634,19 @@ TEST_CASE(
                     GenericNode("second", NonVoid, Text("2")),
                     GenericNode("third", NonVoid, Text("3")));
 
-    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
-
     XPathQuery::Result resEmpty =
-        XPathQuery("local-name(/container/missing)", emptyResolver)
-            .execute(&doc);
+        XPathQuery("local-name(/container/missing)").execute(&doc);
     REQUIRE(resEmpty.object.asString() == "");
 
     XPathQuery::Result resMultiOrder =
         XPathQuery(
             "local-name(/container/third | /container/first | "
-            "/container/second)",
-            emptyResolver)
+            "/container/second)")
             .execute(&doc);
     REQUIRE(resMultiOrder.object.asString() == "first");
 
     XPathQuery::Result resReverse =
-        XPathQuery("local-name(/container/third/preceding-sibling::*)",
-                   emptyResolver)
+        XPathQuery("local-name(/container/third/preceding-sibling::*)")
             .execute(&doc);
     REQUIRE(resReverse.object.asString() == "first");
 }
@@ -3706,16 +3695,13 @@ TEST_CASE("XPath name() zero-argument context sensitivity") {
         GenericNode("magazine", NonVoid, Attribute("category", "periodical")),
         GenericNode("newspaper", NonVoid));
 
-    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
-
     XPathQuery::Result resFilter =
-        XPathQuery("/catalog/*[name() = 'book']", emptyResolver).execute(&doc);
+        XPathQuery("/catalog/*[name() = 'book']").execute(&doc);
     REQUIRE(resFilter.object.asNodeset().size() == 1);
     REQUIRE(resFilter.object.asNodeset()[0]->getTagName() == "book");
 
     XPathQuery::Result resAttrFilter =
-        XPathQuery("/catalog/*/@*[name() = 'category']", emptyResolver)
-            .execute(&doc);
+        XPathQuery("/catalog/*/@*[name() = 'category']").execute(&doc);
     REQUIRE(resAttrFilter.object.asNodeset().size() == 2);
 }
 
@@ -3766,14 +3752,12 @@ TEST_CASE("XPath name() empty nodeset and initial context evaluation") {
 
     GenericNode doc("root", NonVoid, GenericNode("child", NonVoid));
 
-    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
-
     XPathQuery::Result resEmpty =
-        XPathQuery("name(/root/nonexistent)", emptyResolver).execute(&doc);
+        XPathQuery("name(/root/nonexistent)").execute(&doc);
     REQUIRE(resEmpty.object.asString() == "");
 
     XPathQuery::Result resDocOrder =
-        XPathQuery("name(/root/* | /root)", emptyResolver).execute(&doc);
+        XPathQuery("name(/root/* | /root)").execute(&doc);
     REQUIRE(resDocOrder.object.asString() == "root");
 }
 
@@ -3898,18 +3882,14 @@ TEST_CASE(
                     Attribute("id", "2")),
         GenericNode("entry", NonVoid, Attribute("id", "3")));
 
-    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
-
     XPathQuery::Result resAlpha =
-        XPathQuery("/feed/*[namespace-uri() = 'http://example.com/alpha']",
-                   emptyResolver)
+        XPathQuery("/feed/*[namespace-uri() = 'http://example.com/alpha']")
             .execute(&doc);
     REQUIRE(resAlpha.object.asNodeset().size() == 1);
     REQUIRE(resAlpha.object.asNodeset()[0]->getAttributeValue("id") == "1");
 
     XPathQuery::Result resNone =
-        XPathQuery("/feed/*[namespace-uri() = '']", emptyResolver)
-            .execute(&doc);
+        XPathQuery("/feed/*[namespace-uri() = '']").execute(&doc);
     REQUIRE(resNone.object.asNodeset().size() == 1);
     REQUIRE(resNone.object.asNodeset()[0]->getAttributeValue("id") == "3");
 
@@ -3921,8 +3901,7 @@ TEST_CASE(
 
     XPathQuery::Result resAttrs =
         XPathQuery(
-            "/root/node/@*[namespace-uri() = 'http://example.com/custom']",
-            emptyResolver)
+            "/root/node/@*[namespace-uri() = 'http://example.com/custom']")
             .execute(&attrDoc);
     REQUIRE(resAttrs.object.asNodeset().size() == 1);
     REQUIRE(resAttrs.object.asNodeset()[0]->getStringValue() == "yes");
@@ -3941,21 +3920,17 @@ TEST_CASE("XPath namespace-uri() document order and empty set edge cases") {
         GenericNode("c:third", NonVoid,
                     Attribute("xmlns:c", "http://example.com/third")));
 
-    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
-
     XPathQuery::Result resEmpty =
-        XPathQuery("namespace-uri(/root/missing)", emptyResolver).execute(&doc);
+        XPathQuery("namespace-uri(/root/missing)").execute(&doc);
     REQUIRE(resEmpty.object.asString() == "");
 
     XPathQuery::Result resMultiOrder =
-        XPathQuery("namespace-uri(/root/*[3] | /root/*[1] | /root/*[2])",
-                   emptyResolver)
+        XPathQuery("namespace-uri(/root/*[3] | /root/*[1] | /root/*[2])")
             .execute(&doc);
     REQUIRE(resMultiOrder.object.asString() == "http://example.com/first");
 
     XPathQuery::Result resReverse =
-        XPathQuery("namespace-uri(/root/*[3]/preceding-sibling::*)",
-                   emptyResolver)
+        XPathQuery("namespace-uri(/root/*[3]/preceding-sibling::*)")
             .execute(&doc);
     REQUIRE(resReverse.object.asString() == "http://example.com/first");
 }
@@ -4073,9 +4048,8 @@ TEST_CASE(
                     GenericNode("title", NonVoid, Text("Beta")),
                     GenericNode("para", NonVoid, Text("Second paragraph"))));
 
-    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
     XPathQuery::Result initialQuery =
-        XPathQuery("/root/section[@id = 'sec2']", emptyResolver).execute(&doc);
+        XPathQuery("/root/section[@id = 'sec2']").execute(&doc);
 
     std::map<std::pair<std::string, std::string>, XPathObject> variables{
         {{"", "selectedSection"}, initialQuery.object}};
@@ -4086,13 +4060,12 @@ TEST_CASE(
     };
 
     XPathQuery::Result resPath =
-        XPathQuery("$selectedSection/title", emptyResolver)
-            .execute(&doc, varProvider);
+        XPathQuery("$selectedSection/title").execute(&doc, varProvider);
     REQUIRE(resPath.object.asNodeset().size() == 1);
     REQUIRE(resPath.object.asNodeset()[0]->getStringValue() == "Beta");
 
     XPathQuery::Result resPred =
-        XPathQuery("$selectedSection[para = 'Second paragraph']", emptyResolver)
+        XPathQuery("$selectedSection[para = 'Second paragraph']")
             .execute(&doc, varProvider);
     REQUIRE(resPred.object.asNodeset().size() == 1);
     REQUIRE(resPred.object.asNodeset()[0]->getAttributeValue("id") == "sec2");
