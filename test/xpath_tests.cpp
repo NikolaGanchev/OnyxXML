@@ -3068,3 +3068,110 @@ TEST_CASE("XPath execute undeclared namespace prefix throws") {
                             .execute(&doc, emptyResolver),
                         "Could not resolve namespace prefix in query");
 }
+
+TEST_CASE("XPath execute prefix wildcard element matching (prefix:*)") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    GenericNode("a:title", NonVoid, Attribute("id", "1"),
+                                Attribute("xmlns:a", "http://example.com/ns1"),
+                                Text("Title 1")),
+                    GenericNode("a:summary", NonVoid, Attribute("id", "2"),
+                                Attribute("xmlns:a", "http://example.com/ns1"),
+                                Text("Summary 1")),
+                    GenericNode("b:title", NonVoid, Attribute("id", "3"),
+                                Attribute("xmlns:b", "http://example.com/ns2"),
+                                Text("Title 2")),
+                    GenericNode("title", NonVoid, Attribute("id", "4"),
+                                Text("No Namespace Title")));
+
+    auto resolver = [](std::string_view prefix) -> std::string {
+        if (prefix == "x") return "http://example.com/ns1";
+        if (prefix == "y") return "http://example.com/ns2";
+        return "";
+    };
+
+    XPathQuery::Result resNs1 = XPathQuery("/root/x:*").execute(&doc, resolver);
+    REQUIRE(resNs1.object.asNodeset().size() == 2);
+    REQUIRE(resNs1.object.asNodeset()[0]->getAttributeValue("id") == "1");
+    REQUIRE(resNs1.object.asNodeset()[1]->getAttributeValue("id") == "2");
+
+    XPathQuery::Result resNs2 = XPathQuery("/root/y:*").execute(&doc, resolver);
+    REQUIRE(resNs2.object.asNodeset().size() == 1);
+    REQUIRE(resNs2.object.asNodeset()[0]->getAttributeValue("id") == "3");
+
+    XPathQuery::Result resAll = XPathQuery("/root/*").execute(&doc, resolver);
+    REQUIRE(resAll.object.asNodeset().size() == 4);
+}
+
+TEST_CASE("XPath execute prefix wildcard attribute matching (@prefix:*)") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("item", NonVoid, Attribute("id", "1"),
+                    Attribute("meta:author", "Alice"),
+                    Attribute("meta:date", "2026"),
+                    Attribute("xmlns:meta", "http://example.com/meta"),
+                    Attribute("xml:lang", "en"), Attribute("class", "card")));
+
+    auto resolver = [](std::string_view prefix) -> std::string {
+        if (prefix == "m") return "http://example.com/meta";
+        return "";
+    };
+
+    XPathQuery::Result resMetaAttrs =
+        XPathQuery("/root/item/@m:*").execute(&doc, resolver);
+    REQUIRE(resMetaAttrs.object.asNodeset().size() == 2);
+
+    XPathQuery::Result resXmlAttrs =
+        XPathQuery("/root/item/@xml:*").execute(&doc, resolver);
+    REQUIRE(resXmlAttrs.object.asNodeset().size() == 1);
+    REQUIRE(resXmlAttrs.object.asNodeset()[0]->getStringValue() == "en");
+
+    XPathQuery::Result resAllAttrs =
+        XPathQuery("/root/item/@*").execute(&doc, resolver);
+    REQUIRE(resAllAttrs.object.asNodeset().size() == 6);
+}
+
+TEST_CASE("XPath execute prefix wildcard in predicates") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "catalog", NonVoid,
+        GenericNode(
+            "book", NonVoid, Attribute("id", "1"),
+            GenericNode("meta:data", NonVoid,
+                        Attribute("xmlns:meta", "http://example.com/meta"),
+                        Text("Available"))),
+        GenericNode(
+            "book", NonVoid, Attribute("id", "2"),
+            GenericNode("description", NonVoid, Text("No custom metadata"))));
+
+    auto resolver = [](std::string_view prefix) -> std::string {
+        if (prefix == "m") return "http://example.com/meta";
+        return "";
+    };
+
+    XPathQuery::Result res =
+        XPathQuery("/catalog/book[m:*]").execute(&doc, resolver);
+    REQUIRE(res.object.asNodeset().size() == 1);
+    REQUIRE(res.object.asNodeset()[0]->getAttributeValue("id") == "1");
+}
+
+TEST_CASE("XPath execute undeclared prefix wildcard throws") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    GenericNode("item", NonVoid, Attribute("attr", "1")));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+
+    REQUIRE_THROWS(XPathQuery("/root/unknown:*").execute(&doc, emptyResolver));
+    REQUIRE_THROWS(
+        XPathQuery("/root/item/@unknown:*").execute(&doc, emptyResolver));
+}

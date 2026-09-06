@@ -106,13 +106,17 @@ bool VirtualMachine::nodeMatchesTest(Node* node, AXIS axis,
 
             const Attribute& attribute = node->getReferencedAttribute();
 
-            return node->getParentNode()->resolveAttributeNamespacePrefix(
-                       attribute.getNamespacePrefix()) ==
-                       namespaceNameOptional &&
+            std::optional<std::string_view> principalNamespaceName =
+                node->getParentNode()->resolveAttributeNamespacePrefix(
+                    attribute.getNamespacePrefix());
+
+            if (principalNamespaceName != namespaceNameOptional) return false;
+
+            return qn.name == "*" ||
                    attribute.getNCNameWithoutNamespace() == qn.name;
         } else {
-            return node->getNamespaceName() == namespaceNameOptional &&
-                   node->getTagName() == qn.name;
+            if (node->getNamespaceName() != namespaceNameOptional) return false;
+            return qn.name == "*" || node->getTagName() == qn.name;
         }
     }
 
