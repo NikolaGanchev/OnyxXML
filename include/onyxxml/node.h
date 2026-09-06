@@ -29,6 +29,7 @@ class DomParser;
 namespace xpath {
 class RootViewNode;
 class AttributeViewNode;
+class NamespaceViewNode;
 }  // namespace xpath
 
 /**
@@ -123,6 +124,7 @@ class Node {
     friend parser::DomParser;
     friend xpath::RootViewNode;
     friend xpath::AttributeViewNode;
+    friend xpath::NamespaceViewNode;
 
    public:
     class Index;

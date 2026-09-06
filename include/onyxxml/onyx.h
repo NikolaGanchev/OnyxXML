@@ -26,6 +26,7 @@
 #include "nodes/foreach_node.h"
 #include "nodes/generic_node.h"
 #include "nodes/if_node.h"
+#include "nodes/namespace_view_node.h"
 #include "nodes/processing_instruction_node.h"
 #include "nodes/root_view_node.h"
 #include "nodes/text_node.h"
@@ -41,6 +42,7 @@
 #include "xpath/virtual_machine.h"
 #include "xpath/xpath_object.h"
 #include "xpath/xpath_query.h"
+
 
 #if __has_include("dynamic/tags.h")
 #include "dynamic/tags.h"
