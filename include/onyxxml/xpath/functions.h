@@ -35,5 +35,7 @@ std::string normalizeSpace(const std::string& str);
 
 double stringLength(const std::string& str);
 
+std::string name(const XPathObject& obj);
+
 std::string localName(const XPathObject& obj);
 };  // namespace onyx::dynamic::xpath::functions

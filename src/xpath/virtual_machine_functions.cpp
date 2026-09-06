@@ -91,11 +91,18 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
             return XPathObject(functions::localName(stack.top()));
         });
 
-    registry.emplace(FUNCTION_CODE::NAME_1,
-                     [](Context context, Stack stack) -> XPathObject {
-                         // TODO
-                         return XPathObject("");
-                     });
+    registry.emplace(
+        FUNCTION_CODE::NAME_1, [](Context context, Stack stack) -> XPathObject {
+            if (stack.size() < 1) {
+                throw std::runtime_error("name needs one argument");
+            }
+
+            if (!stack.top().isNodeset()) {
+                throw std::runtime_error("name needs a nodeset argument");
+            }
+
+            return XPathObject(functions::name(stack.top()));
+        });
 
     registry.emplace(
         FUNCTION_CODE::STRING_1,

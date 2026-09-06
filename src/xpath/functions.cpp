@@ -377,6 +377,29 @@ double stringLength(const std::string& str) {
     return count;
 }
 
+std::string name(const XPathObject& obj) {
+    const std::vector<Node*>& arg = obj.asNodeset();
+    if (arg.empty()) return "";
+
+    Node* node = arg[0];
+
+    switch (node->getXPathType()) {
+        case Node::XPathType::ELEMENT: {
+            std::optional<std::string_view> prefix = node->getNamespacePrefix();
+            if (!prefix.has_value()) return node->getTagName();
+
+            return std::string(prefix.value()) + ":" + node->getTagName();
+        }
+        case Node::XPathType::ATTRIBUTE: {
+            return static_cast<AttributeViewNode*>(node)
+                ->getReferencedAttribute()
+                .getName();
+        }
+        default:
+            return localName(obj);
+    }
+}
+
 std::string localName(const XPathObject& obj) {
     const std::vector<Node*>& arg = obj.asNodeset();
     if (arg.empty()) return "";

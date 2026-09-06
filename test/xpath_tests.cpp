@@ -3614,3 +3614,118 @@ TEST_CASE(
             .execute(&doc, emptyResolver);
     REQUIRE(resReverse.object.asString() == "first");
 }
+
+TEST_CASE("XPath name() function on elements and attributes") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("item", NonVoid, Attribute("id", "item-1"),
+                    Attribute("pref:flag", "true"),
+                    Attribute("xmlns:pref", "http://example.com/pref")),
+        GenericNode("pref:box", NonVoid,
+                    Attribute("xmlns:pref", "http://example.com/pref")));
+
+    auto resolver = [](std::string_view p) -> std::string {
+        if (p == "p") return "http://example.com/pref";
+        return "";
+    };
+
+    XPathQuery::Result resElem =
+        XPathQuery("name(/root/item)").execute(&doc, resolver);
+    REQUIRE(resElem.object.asString() == "item");
+
+    XPathQuery::Result resPrefElem =
+        XPathQuery("name(/root/p:box)").execute(&doc, resolver);
+    REQUIRE(resPrefElem.object.asString() == "pref:box");
+
+    XPathQuery::Result resAttr =
+        XPathQuery("name(/root/item/@id)").execute(&doc, resolver);
+    REQUIRE(resAttr.object.asString() == "id");
+
+    XPathQuery::Result resPrefAttr =
+        XPathQuery("name(/root/item/@p:flag)").execute(&doc, resolver);
+    REQUIRE(resPrefAttr.object.asString() == "pref:flag");
+}
+
+TEST_CASE("XPath name() zero-argument context sensitivity") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "catalog", NonVoid,
+        GenericNode("book", NonVoid, Attribute("category", "fiction")),
+        GenericNode("magazine", NonVoid, Attribute("category", "periodical")),
+        GenericNode("newspaper", NonVoid));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resFilter =
+        XPathQuery("/catalog/*[name() = 'book']").execute(&doc, emptyResolver);
+    REQUIRE(resFilter.object.asNodeset().size() == 1);
+    REQUIRE(resFilter.object.asNodeset()[0]->getTagName() == "book");
+
+    XPathQuery::Result resAttrFilter =
+        XPathQuery("/catalog/*/@*[name() = 'category']")
+            .execute(&doc, emptyResolver);
+    REQUIRE(resAttrFilter.object.asNodeset().size() == 2);
+}
+
+TEST_CASE("XPath name() complex test on all node types") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    Attribute("xmlns:m", "http://example.com/meta"),
+                    Comment("Sample comment"),
+                    ProcessingInstruction("custom-engine", "mode=\"strict\""),
+                    GenericNode("leaf", NonVoid, Text("Some raw text node")));
+
+    auto resolver = [](std::string_view p) -> std::string {
+        if (p == "meta") return "http://example.com/meta";
+        return "";
+    };
+
+    XPathQuery::Result resRoot =
+        XPathQuery("name(/root/..)").execute(&doc, resolver);
+    REQUIRE(resRoot.object.asString() == "");
+
+    XPathQuery::Result resText =
+        XPathQuery("name(/root/leaf/text())").execute(&doc, resolver);
+    REQUIRE(resText.object.asString() == "");
+
+    XPathQuery::Result resComment =
+        XPathQuery("name(/root/comment())").execute(&doc, resolver);
+    REQUIRE(resComment.object.asString() == "");
+
+    XPathQuery::Result resPI =
+        XPathQuery("name(/root/processing-instruction())")
+            .execute(&doc, resolver);
+    REQUIRE(resPI.object.asString() == "custom-engine");
+
+    XPathQuery::Result resNs =
+        XPathQuery("name(/root/namespace::m)").execute(&doc, resolver);
+    REQUIRE(resNs.object.asString() == "m");
+
+    XPathQuery::Result resNsXml =
+        XPathQuery("name(/root/namespace::xml)").execute(&doc, resolver);
+    REQUIRE(resNsXml.object.asString() == "xml");
+}
+
+TEST_CASE("XPath name() empty nodeset and initial context evaluation") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid, GenericNode("child", NonVoid));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resEmpty =
+        XPathQuery("name(/root/nonexistent)").execute(&doc, emptyResolver);
+    REQUIRE(resEmpty.object.asString() == "");
+
+    XPathQuery::Result resDocOrder =
+        XPathQuery("name(/root/* | /root)").execute(&doc, emptyResolver);
+    REQUIRE(resDocOrder.object.asString() == "root");
+}
