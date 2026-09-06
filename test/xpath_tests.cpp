@@ -3212,3 +3212,212 @@ TEST_CASE("XPath attribute axis ignores namespace declarations") {
         XPathQuery("/root/*[not(@xmlns)]").execute(&doc, resolver);
     REQUIRE(resNotXmlns.object.asNodeset().size() == 1);
 }
+
+TEST_CASE("XPath namespace axis implicit xml namespace node") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid);
+
+    auto resolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resAll =
+        XPathQuery("/root/namespace::*").execute(&doc, resolver);
+    REQUIRE(resAll.object.asNodeset().size() == 1);
+
+    Node* nsNode = resAll.object.asNodeset()[0];
+    REQUIRE(nsNode->getXPathType() == Node::XPathType::NAMESPACE);
+    REQUIRE(static_cast<NamespaceViewNode*>(nsNode)->getPrefix() == "xml");
+    REQUIRE(nsNode->getStringValue() == "http://www.w3.org/XML/1998/namespace");
+
+    XPathQuery::Result resDirectXml =
+        XPathQuery("/root/namespace::xml").execute(&doc, resolver);
+    REQUIRE(resDirectXml.object.asNodeset().size() == 1);
+    REQUIRE(resDirectXml.object.asNodeset()[0]->getStringValue() ==
+            "http://www.w3.org/XML/1998/namespace");
+}
+
+TEST_CASE("XPath namespace axis local namespace declarations") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    GenericNode("item", NonVoid,
+                                Attribute("xmlns:a", "http://example.com/nsA"),
+                                Attribute("xmlns:b", "http://example.com/nsB"),
+                                Attribute("id", "1")));
+
+    auto resolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resA =
+        XPathQuery("/root/item/namespace::a").execute(&doc, resolver);
+    REQUIRE(resA.object.asNodeset().size() == 1);
+    REQUIRE(resA.object.asNodeset()[0]->getStringValue() ==
+            "http://example.com/nsA");
+
+    XPathQuery::Result resB =
+        XPathQuery("/root/item/namespace::b").execute(&doc, resolver);
+    REQUIRE(resB.object.asNodeset().size() == 1);
+    REQUIRE(resB.object.asNodeset()[0]->getStringValue() ==
+            "http://example.com/nsB");
+
+    XPathQuery::Result resWildcard =
+        XPathQuery("/root/item/namespace::*").execute(&doc, resolver);
+    REQUIRE(resWildcard.object.asNodeset().size() == 3);
+
+    XPathQuery::Result resMissing =
+        XPathQuery("/root/item/namespace::nonexistent").execute(&doc, resolver);
+    REQUIRE(resMissing.object.asNodeset().empty());
+}
+
+TEST_CASE("XPath namespace axis ancestor inheritance and shadowing") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    // root declares a and b
+    // parent shadows a and declares c
+    // child inherits parent's a, parent's c, and root's b and implicit xml
+    GenericNode doc(
+        "root", NonVoid, Attribute("xmlns:a", "http://example.com/a_root"),
+        Attribute("xmlns:b", "http://example.com/b_root"),
+        GenericNode("parent", NonVoid,
+                    Attribute("xmlns:a", "http://example.com/a_parent"),
+                    Attribute("xmlns:c", "http://example.com/c_parent"),
+                    GenericNode("child", NonVoid, Attribute("id", "target"))));
+
+    auto resolver = [](std::string_view) -> std::string { return ""; };
+
+    // child inherits 'b' from root
+    XPathQuery::Result resInheritedB =
+        XPathQuery("//child/namespace::b").execute(&doc, resolver);
+    REQUIRE(resInheritedB.object.asNodeset().size() == 1);
+    REQUIRE(resInheritedB.object.asNodeset()[0]->getStringValue() ==
+            "http://example.com/b_root");
+
+    // child sees shadowed 'a' from parent, not root
+    XPathQuery::Result resShadowedA =
+        XPathQuery("//child/namespace::a").execute(&doc, resolver);
+    REQUIRE(resShadowedA.object.asNodeset().size() == 1);
+    REQUIRE(resShadowedA.object.asNodeset()[0]->getStringValue() ==
+            "http://example.com/a_parent");
+
+    // child sees 'c' from parent
+    XPathQuery::Result resInheritedC =
+        XPathQuery("//child/namespace::c").execute(&doc, resolver);
+    REQUIRE(resInheritedC.object.asNodeset().size() == 1);
+    REQUIRE(resInheritedC.object.asNodeset()[0]->getStringValue() ==
+            "http://example.com/c_parent");
+
+    // child has 4 namespace nodes - 'xml', 'a', 'b' and 'c'
+    XPathQuery::Result resAllChild =
+        XPathQuery("//child/namespace::*").execute(&doc, resolver);
+    REQUIRE(resAllChild.object.asNodeset().size() == 4);
+}
+
+TEST_CASE("XPath namespace axis document order") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("item", NonVoid, Attribute("id", "1"),
+                    Attribute("class", "card"),
+                    Attribute("xmlns:foo", "http://example.com/foo")));
+
+    auto resolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resUnion =
+        XPathQuery("/root/item | /root/item/@* | /root/item/namespace::*")
+            .execute(&doc, resolver);
+
+    const std::vector<Node*>& nodes = resUnion.object.asNodeset();
+    // 1 element ('item') + 2 namespaces ('xml', 'foo') + 2 attributes ('id',
+    // 'class') = 5 nodes
+    REQUIRE(nodes.size() == 5);
+
+    REQUIRE(nodes[0]->getXPathType() == Node::XPathType::ELEMENT);
+    REQUIRE(nodes[0]->getTagName() == "item");
+
+    REQUIRE(nodes[1]->getXPathType() == Node::XPathType::NAMESPACE);
+    REQUIRE(nodes[2]->getXPathType() == Node::XPathType::NAMESPACE);
+
+    REQUIRE(nodes[3]->getXPathType() == Node::XPathType::ATTRIBUTE);
+    REQUIRE(nodes[4]->getXPathType() == Node::XPathType::ATTRIBUTE);
+
+    REQUIRE(nodes[3]->getStringValue() == "1");
+    REQUIRE(nodes[4]->getStringValue() == "card");
+}
+
+TEST_CASE("XPath namespace axis node test filtering") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("item", NonVoid,
+                    Attribute("xmlns:a", "http://example.com/a"),
+                    Text("child text"), GenericNode("nested", NonVoid)));
+
+    auto resolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resNodeTest =
+        XPathQuery("/root/item/namespace::node()").execute(&doc, resolver);
+    REQUIRE(resNodeTest.object.asNodeset().size() == 2);
+
+    XPathQuery::Result resTextTest =
+        XPathQuery("/root/item/namespace::text()").execute(&doc, resolver);
+    REQUIRE(resTextTest.object.asNodeset().empty());
+
+    XPathQuery::Result resCommentTest =
+        XPathQuery("/root/item/namespace::comment()").execute(&doc, resolver);
+    REQUIRE(resCommentTest.object.asNodeset().empty());
+}
+
+TEST_CASE("XPath namespace axis within predicates") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("elem", NonVoid, Attribute("id", "1"),
+                    Attribute("xmlns:sec", "http://example.com/security")),
+        GenericNode("elem", NonVoid, Attribute("id", "2"),
+                    Attribute("xmlns:pub", "http://example.com/public")));
+
+    auto resolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resPrefixPred =
+        XPathQuery("/root/elem[namespace::sec]").execute(&doc, resolver);
+    REQUIRE(resPrefixPred.object.asNodeset().size() == 1);
+    REQUIRE(resPrefixPred.object.asNodeset()[0]->getAttributeValue("id") ==
+            "1");
+
+    XPathQuery::Result resUriPred =
+        XPathQuery("/root/elem[namespace::* = 'http://example.com/public']")
+            .execute(&doc, resolver);
+    REQUIRE(resUriPred.object.asNodeset().size() == 1);
+    REQUIRE(resUriPred.object.asNodeset()[0]->getAttributeValue("id") == "2");
+
+    XPathQuery::Result resCount =
+        XPathQuery("/root/elem[count(namespace::*) = 2]")
+            .execute(&doc, resolver);
+    REQUIRE(resCount.object.asNodeset().size() == 2);
+}
+
+TEST_CASE("XPath namespace axis parent axis navigation") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("item", NonVoid, Attribute("id", "target"),
+                    Attribute("xmlns:custom", "http://example.com/custom")));
+
+    auto resolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resParent =
+        XPathQuery("/root/item/namespace::custom/..").execute(&doc, resolver);
+    REQUIRE(resParent.object.asNodeset().size() == 1);
+    REQUIRE(resParent.object.asNodeset()[0]->getAttributeValue("id") ==
+            "target");
+}

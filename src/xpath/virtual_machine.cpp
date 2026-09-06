@@ -3,6 +3,7 @@
 #include <stack>
 
 #include "nodes/attribute_view_node.h"
+#include "nodes/namespace_view_node.h"
 #include "nodes/root_view_node.h"
 #include "xpath/axis.h"
 #include "xpath/calculate_mode.h"
@@ -65,12 +66,23 @@ bool VirtualMachine::DocumentOrder::compare(Node* a, Node* b) {
         return false;
     }
 
-    Node* parentA = (a->getXPathType() == Node::XPathType::ATTRIBUTE)
-                        ? a->getParentNode()
-                        : a;
-    Node* parentB = (b->getXPathType() == Node::XPathType::ATTRIBUTE)
-                        ? b->getParentNode()
-                        : b;
+    Node* parentA = nullptr;
+    if (a->getXPathType() == Node::XPathType::ATTRIBUTE) {
+        parentA = a->getParentNode();
+    } else if (a->getXPathType() == Node::XPathType::NAMESPACE) {
+        parentA = static_cast<NamespaceViewNode*>(a)->getRealNode();
+    } else {
+        parentA = a;
+    }
+
+    Node* parentB = nullptr;
+    if (b->getXPathType() == Node::XPathType::ATTRIBUTE) {
+        parentB = b->getParentNode();
+    } else if (b->getXPathType() == Node::XPathType::NAMESPACE) {
+        parentB = static_cast<NamespaceViewNode*>(b)->getRealNode();
+    } else {
+        parentB = b;
+    }
 
     // Both resolve to the exact same element (for example, two attributes on
     // the same node or a node and its own attribute)
@@ -79,9 +91,24 @@ bool VirtualMachine::DocumentOrder::compare(Node* a, Node* b) {
         if (a == parentA) return true;
         if (b == parentB) return false;
 
+        // Namespace nodes come before attribute nodes in document order
+        int typeA = (a->getXPathType() == Node::XPathType::NAMESPACE) ? 1 : 2;
+        int typeB = (b->getXPathType() == Node::XPathType::NAMESPACE) ? 1 : 2;
+
+        if (typeA != typeB) {
+            return typeA < typeB;
+        }
+
+        // If both are namespaces, stabilize sort by prefix string
+        if (typeA == 1) {
+            return static_cast<NamespaceViewNode*>(a)->getPrefix() <
+                   static_cast<NamespaceViewNode*>(b)->getPrefix();
+        }
+
         // When both are attributes of the same parent, disambiguate by the
-        // pointer to provide stable ordering
-        return a < b;
+        // attribute offset to provide stable ordering
+        return static_cast<AttributeViewNode*>(a)->getAttributeOffset() <
+               static_cast<AttributeViewNode*>(b)->getAttributeOffset();
     }
 
     bool aIsRoot = (parentA->getXPathType() == Node::XPathType::ROOT);
@@ -514,7 +541,71 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
             break;
         };
         case AXIS::NAMESPACE: {
-            throw std::runtime_error("Unsupported axis used.");
+            if (contextNode->getXPathType() == Node::XPathType::ELEMENT) {
+                std::unordered_map<std::string_view, std::string_view>
+                    activeNamespaces;
+
+                activeNamespaces["xml"] =
+                    "http://www.w3.org/XML/1998/namespace";
+
+                Node* currentAncestor = contextNode;
+                while (currentAncestor) {
+                    if (currentAncestor->getXPathType() ==
+                        Node::XPathType::ELEMENT) {
+                        for (const Attribute& attr :
+                             currentAncestor->getAttributes()) {
+                            if (attr.getName() == "xmlns") {
+                                if (activeNamespaces.find("") ==
+                                    activeNamespaces.end()) {
+                                    activeNamespaces[""] = attr.getValue();
+                                }
+                            } else if (attr.getName().starts_with("xmlns:")) {
+                                std::string_view prefix =
+                                    attr.getNCNameWithoutNamespace();
+                                if (activeNamespaces.find(prefix) ==
+                                    activeNamespaces.end()) {
+                                    activeNamespaces[prefix] = attr.getValue();
+                                }
+                            }
+                        }
+                    }
+                    currentAncestor = currentAncestor->getParentNode();
+                }
+
+                for (const auto& [prefix, uri] : activeNamespaces) {
+                    // In XPath 1.0, xmlns="" undeclares the default namespace.
+                    // It does not generate a namespace node.
+                    if (prefix == "" && uri == "") continue;
+
+                    std::unique_ptr<NamespaceViewNode> nsNode =
+                        std::make_unique<NamespaceViewNode>(contextNode, prefix,
+                                                            uri);
+                    Node* temp = nsNode.get();
+
+                    if (nodeMatchesTest(temp, axis, nodeTest, ec)) {
+                        bool found = false;
+                        for (size_t j = 0; j < ec.temporaryNodes.size(); j++) {
+                            if (ec.temporaryNodes[j]->getXPathType() ==
+                                Node::XPathType::NAMESPACE) {
+                                NamespaceViewNode* ptr =
+                                    static_cast<NamespaceViewNode*>(
+                                        ec.temporaryNodes[j].get());
+                                if (ptr->getRealNode() == contextNode &&
+                                    ptr->getPrefix() == prefix) {
+                                    nodeset.push_back(ptr);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!found) {
+                            ec.temporaryNodes.push_back(std::move(nsNode));
+                            nodeset.push_back(temp);
+                        }
+                    }
+                }
+            }
             break;
         };
         default: {

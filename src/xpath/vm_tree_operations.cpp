@@ -6,6 +6,7 @@
 #include "attribute.h"
 #include "nodes/attribute_view_node.h"
 #include "nodes/comment_node.h"
+#include "nodes/namespace_view_node.h"
 #include "nodes/processing_instruction_node.h"
 #include "nodes/root_view_node.h"
 #include "nodes/util/qualified_name.h"
@@ -42,9 +43,13 @@ bool VirtualMachine::nodeMatchesTest(Node* node, AXIS axis,
 
     if (type == Node::XPathType::OTHER) return false;
 
-    Node::XPathType principalType = (axis == AXIS::ATTRIBUTE)
-                                        ? Node::XPathType::ATTRIBUTE
-                                        : Node::XPathType::ELEMENT;
+    Node::XPathType principalType = Node::XPathType::ELEMENT;
+    if (axis == AXIS::ATTRIBUTE) {
+        principalType = Node::XPathType::ATTRIBUTE;
+
+    } else if (axis == AXIS::NAMESPACE) {
+        principalType = Node::XPathType::NAMESPACE;
+    }
 
     if (test == "node()") return true;
     if (test == "text()") return type == Node::XPathType::TEXT;
@@ -98,6 +103,17 @@ bool VirtualMachine::nodeMatchesTest(Node* node, AXIS axis,
 
     if (type == principalType) {
         tags::util::QualifiedName qn(test);
+
+        if (type == Node::XPathType::NAMESPACE) {
+            NamespaceViewNode* nsNode = static_cast<NamespaceViewNode*>(node);
+
+            // Namespace nodes do not possess a namespace URI of their own
+            // So if the query has a prefix (for example, 'namespace::foo:bar'),
+            // it fails.
+            if (!qn.prefix.empty()) return false;
+
+            return qn.name == "*" || nsNode->getPrefix() == qn.name;
+        }
 
         std::string resolvedNamespaceName = resolveNamespace(qn.prefix, ec);
 
