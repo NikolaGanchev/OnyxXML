@@ -35,21 +35,12 @@ class AttributeNameIndex : public Node::Index {
 
     /**
      * @brief Construct a new AttributeNameIndex object by a given root and
-     * attribute name which is copied.
+     * attribute name.
      *
      * @param root
      * @param attributeName
      */
-    explicit AttributeNameIndex(Node* root, std::string& attributeName);
-
-    /**
-     * @brief Construct a new AttributeNameIndex object by a given root and
-     * attribute name which is moved.
-     *
-     * @param root
-     * @param attributeName
-     */
-    explicit AttributeNameIndex(Node* root, std::string&& attributeName);
+    explicit AttributeNameIndex(Node* root, std::string attributeName);
 
    public:
     /**

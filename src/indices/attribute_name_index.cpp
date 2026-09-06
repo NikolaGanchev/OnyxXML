@@ -2,10 +2,7 @@
 
 namespace onyx::dynamic::index {
 
-AttributeNameIndex::AttributeNameIndex(Node* root, std::string& attributeName)
-    : attributeName(attributeName), Index(root), index{} {};
-
-AttributeNameIndex::AttributeNameIndex(Node* root, std::string&& attributeName)
+AttributeNameIndex::AttributeNameIndex(Node* root, std::string attributeName)
     : attributeName(std::move(attributeName)), Index(root), index{} {};
 
 bool AttributeNameIndex::putIfNeeded(Node* node) {
