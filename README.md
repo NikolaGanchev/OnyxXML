@@ -96,6 +96,7 @@ The file is CSV-like and must contain the following columns (with headers in the
 
 - **canonical**: The tag name as used in XML (e.g., `product`, `item`).
 - **is\_void**: `1` if the tag is self-closing (void), or `0` otherwise.
+- **supports\_namespace\_prefix**: `1` if the tag should be able to have a namespace prefix, or `0` otherwise.
 - **dynamic**: The dynamic API class name to generate, or empty to skip.
 - **compile**: The compile-time API class name, or empty to skip.
 
@@ -104,10 +105,10 @@ The last 2 columns are optional when writing out tag names.
 Example:
 
 ```csv
-canonical,is_void,dynamic,compile
-product,0
-separator,1
-auto,0,dauto,cauto
+canonical,is_void,supports_namespace_prefixdynamic,compile
+product,0,1
+separator,1,1
+auto,0,0,dauto,cauto
 ```
 
 ## Documentation

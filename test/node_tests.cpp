@@ -858,6 +858,22 @@ TEST_CASE("Template XML runtime api enforces given indentation rules",
     CHECK(doc::dynamicTree()->serializePretty("    ", true) == expected);
 }
 
+TEST_CASE(
+    "Template tag with backed by runtime class with namespace prefix converts "
+    "correctly") {
+    using namespace onyx::ctags;
+    using namespace onyx;
+
+    using doc = Document<with_namespace<>>;
+    using doc2 = Document<with_namespace_void<>>;
+
+    tags::EmptyNode root(tags::with_namespace(""));
+    tags::EmptyNode root1(tags::with_namespace_void(""));
+
+    CHECK(doc::dynamicTree()->deepEquals(root));
+    CHECK(doc2::dynamicTree()->deepEquals(root1));
+}
+
 TEST_CASE("XML fragment using template runtime api serializes correctly",
           "[Node]") {
     using namespace onyx::ctags;
