@@ -29,6 +29,8 @@ OnyxXML is a C++ library designed to streamline XML document construction, parsi
      - [Creating a custom frontend](#creating-a-custom-frontend)
    - [GenericNode API](#genericnode-api)
    - [XPath 1.0 Support](#xpath-10-support)
+     -[Querying with XML Namespaces](#querying-with-xml-namespaces)
+     -[Querying with variables](#querying-with-variables)
    - [Text Handling](#text-handling)
    - [Other Provided Nodes](#other-provided-nodes)
 6. [License](#license)
@@ -141,9 +143,33 @@ std::string xmlOutput = catalog.serializePretty("\t", true);
 
 This example builds a product catalog at runtime using tag helpers generated from your XML dialect.
 
+If a node supports namespace prefixes, i.e., it was generated with the `supports_namespace_prefix` option or inherits `NamespaceNode` or `VoidNamespaceNode`, one can, but does not need to, specify a namespace prefix when creating the node. The node will default to the empty namespace prefix if not specified. Otherwise, the namespace prefix is the first argument of the constructor, after the `NonOwning` ownership tag if applicable. Below is provided an example where all nodes support namespace prefixes.
+
+```cpp
+using namespace onyx::tags;
+
+auto catalog = catalog("lib",
+    Attribute("version","1.0"),
+    Attribute("xmlns:lib","https://example.com/lib"),
+    product("lib",
+        Attribute("lib:id","123"),
+        name("lib", Text("Gadget")),
+        price("lib", Text("19.99")),
+        description("lib", Text("A versatile gadget."))
+    ),
+    product( // Because "lib" is not specified, this is strictly a different node from "lib:product"
+        Attribute("id","124"),
+        name(Text("Widget")),
+        price(Text("29.99"))
+    )
+);
+
+std::string xmlOutput = catalog.serializePretty("\t", true);
+```
+
 ### Indexing API
 
-OnyxXML provides three built-in index types for efficient tree queries and caching. You can also extend the indexing API to define custom indices. For more information on creating a custom index, refer to [the index header](include/onyxxml/index.h).
+OnyxXML provides three built-in index types for efficient tree queries and caching. You can also extend the indexing API to define custom indices. For more information on creating a custom index, refer to [the index header](include/onyxxml/index.h). Indexes are namespace aware. They can be given no namespace URI, matching the empty namespace, a specific URI to search for, or the special `AnyNamespace` tag which matches any possible namespace URI.
 
 #### AttributeNameIndex
 
@@ -151,20 +177,35 @@ OnyxXML provides three built-in index types for efficient tree queries and cachi
 using namespace onyx::tags;
 using namespace onyx::dynamic;
 
+const std::string authNs = "http://example.com/auth";
+
 // Build a server settings document
-GenericNode serverConfig("server", false,
-    Attribute("host","localhost"),
+GenericNode serverConfig(
+    "server", NonVoid,
+    Attribute("xmlns:auth", authNs),
+    Attribute("host", "localhost"),
     database(
-        user(Attribute("name","admin")),
-        user(Attribute("name","guest"))
+        user(Attribute("name", "admin"), Attribute("auth:role", "root")),
+        user(Attribute("name", "guest"), Attribute("auth:role", "viewer"))
     )
 );
 
-// Index by "name" attribute
+// Index by "name" attribute and no namespace
 auto attrIdx = index::createIndex<index::AttributeNameIndex>(&serverConfig, "name");
 auto users = attrIdx.getByValue("guest");
 REQUIRE(users.size() == 1);
 CHECK(users[0]->getAttributeValue("name") == "guest");
+
+// Index by "role" attribute with "http://example.com/auth" namespace
+auto authIdx = index::createIndex<index::AttributeNameIndex>(&serverConfig, authNs, "role");
+auto admins = authIdx.getByValue("root");
+REQUIRE(admins.size() == 1);
+CHECK(admins[0]->getAttributeValue("name") == "admin");
+
+// Index by "role" attribute with any namespace
+auto anyRoleIdx = index::createIndex<index::AttributeNameIndex>(&serverConfig, index::AnyNamespace, "role");
+auto viewers = anyRoleIdx.getByValue("viewer");
+REQUIRE(viewers.size() == 1);
 ```
 
 #### TagIndex
@@ -172,19 +213,35 @@ CHECK(users[0]->getAttributeValue("name") == "guest");
 ```cpp
 using namespace onyx::dynamic;
 
+const std::string shopNs = "http://example.com/shop";
+const std::string shipNs = "http://example.com/shipping";
+
 // Create an order document
 order orderDoc(
-    item(Text("Foo")),
-    item(Text("Bar")),
-    shipment()
+    Attribute("xmlns:shop", shopNs),
+    Attribute("xmlns:ship", shipNs),
+    item("shop", Text("Foo")),
+    item("shop", Text("Bar")),
+    item("ship", Text("Tracking Info")),
+    summary(Text("Standard Order"))
 );
-
-// Index tags by name
 auto tagIdx = index::createIndex<index::TagIndex>(&orderDoc);
-auto items = tagIdx.getByTagName("item");
-REQUIRE(items.size() == 2);
-auto shipments = tagIdx.getByTagName("shipment");
-REQUIRE(shipments.size() == 1);
+
+// Search for elements with the empty namespace and the exact tag name
+auto summaries = tagIdx.getByTagName("summary");
+REQUIRE(summaries.size() == 1);
+
+// Search for elements with the exact namespace URI and tag name
+auto shopItems = tagIdx.getByTagName(shopNs, "item");
+REQUIRE(shopItems.size() == 2);
+
+// Search for elements with the tag name across any namespace
+auto allItems = tagIdx.getByLocalName("item");
+REQUIRE(allItems.size() == 3);
+
+// Search for elements with the exact namespace URI
+auto allShipElements = tagIdx.getByNamespace(shipNs);
+REQUIRE(allShipElements.size() == 1);
 ```
 
 #### TagNameIndex
@@ -192,17 +249,30 @@ REQUIRE(shipments.size() == 1);
 ```cpp
 using namespace onyx::dynamic;
 
+const std::string storeNs = "http://example.com/store";
+const std::string warehouseNs = "http://example.com/warehouse";
+
 // Build an inventory list
 inventory inv(
-    product(Text("Foo")),
-    product(Text("Bar")),
+    Attribute("xmlns:store", storeNs),
+    Attribute("xmlns:wh", warehouseNs),
+    product("store", Text("Foo")),
+    product("store", Text("Bar")),
+    product("wh", Text("Pallet")),
     product(Text("Baz"))
 );
 
-// Index specifically "product" tags
-auto nameIdx = index::createIndex<index::TagNameIndex>(&inv, "product");
-auto products = nameIdx.get();
-REQUIRE(products.size() == 3);
+// Search for tag names product with the empty namespace
+auto noNsIdx = index::createIndex<index::TagNameIndex>(&inv, "product");
+REQUIRE(noNsIdx.get().size() == 1);
+
+// Search for tag names product with the "http://example.com/store" namespace URI
+auto storeIdx = index::createIndex<index::TagNameIndex>(&inv, storeNs, "product");
+REQUIRE(storeIdx.get().size() == 2);
+
+// Search for tag names product with any namespace
+auto allProductsIdx = index::createIndex<index::TagNameIndex>(&inv, index::AnyNamespace, "product");
+REQUIRE(allProductsIdx.get().size() == 4);
 ```
 
 You may define custom indices by inheriting from `Node::Index` and implementing its methods. Neither storage methods nor query methods are provided by the base class.
@@ -226,6 +296,7 @@ static_assert(std::string(xml.data()).find("<price>9.99</price>") != std::string
 ```
 
 All serialization logic is resolved at compile time, ensuring zero-cost runtime performance.
+The compile-time API does not currently support namespaces for generated tags. Use `GenericNode` instead.
 
 ### Hybrid API
 
@@ -287,8 +358,8 @@ Returning pointers instead of fixed types for polymorphism is also available.
 using namespace onyx::tags;
 
 // Construct nodes without ownership semantics
-GenericNode root(NonOwning, "items", false);
-GenericNode* leaf = new GenericNode(NonOwning, "item", false);
+GenericNode root(NonOwning, "items", NonVoid);
+GenericNode* leaf = new GenericNode(NonOwning, "item", NonVoid);
 root.addChild(leaf);
 
 // Caller is responsible for leaf’s lifetime; root will not delete it
@@ -307,7 +378,7 @@ builder.preallocate<GenericNode>().preallocate<Text>();
 Arena arena = builder.build();
 
 // Allocate many nodes efficiently
-GenericNode* container = arena.allocate<GenericNode>("container", false);
+GenericNode* container = arena.allocate<GenericNode>("container", NonVoid);
 Text* entry = arena.allocate<Text>("entry data");
 container->addChild(entry);
 ```
@@ -319,6 +390,8 @@ The arena allocator bulk-allocates objects of specified types in contiguous memo
 The library provides a non-recursive, fast, configurable, policy-based XML parser backend. 
 
 The parser has a high level of [XML 1.0 Specification](https://www.w3.org/TR/xml/) compliance, including standard-compliant text expansion (newlines and embedded entities), encoding support, implementation for the optional encoding autodetection support (Appendix F of the [XML 1.0 Specification](https://www.w3.org/TR/xml/)), strict validation of UTF-8 content, strict validation of content rules (such as `--` not being allowed on comments, or `]]>` not being allowed outside of CDATA sequences), strict validation of XML declarations. 
+
+The parser also implements [Namespaces in XML 1.0](https://www.w3.org/TR/xml-names/). It is namespace-aware in validation and parsing, including, but not limited to, validating that namespace prefixes resolve correctly, validation of reserved prefixes and namespace names, and validation of attribute uniqueness in a namespace-aware fashion.
 
 The parser can read isolated fragments of XML. This in turn means that by default, it allows documents without a single root. For example:
 ```xml
@@ -370,9 +443,9 @@ class ConcreteSaxListener : public SaxListener {
     void onComment(std::string text) override {};
     void onCData(std::string text) override {};
     void onInstruction(std::string tag, std::string instruction) override {};
-    void onTagOpen(std::string name, bool isSelfClosing,
+    void onTagOpen(std::string namespacePrefix, std::string name, bool isSelfClosing,
                    std::vector<Attribute> attributes) override {};
-    void onTagClose(std::string name) override {};
+    void onTagClose(std::string namespacePrefix, std::string name) override {};
     void onXMLDeclaration(std::string version, std::string encoding,
                           bool hasEncoding, bool isStandalone,
                           bool hasStandalone) override {};
@@ -465,14 +538,21 @@ Further examples can be read in [`dom_parser.cpp`](src/parse/dom_parser.cpp) and
 
 ### GenericNode API
 
-`GenericNode` serves as the universal node type used by the DOM parser and dynamic API when no specific tag class is generated. It accepts a tag name and a void flag as the first two arguments and the remaining arguments are as per normal Node constructors.
+`GenericNode` serves as the universal node type used by the DOM parser and dynamic API when no specific tag class is generated. It accepts a qualified tag name and a void flag as the first two arguments and the remaining arguments are as per normal Node constructors. For performance-critical sections, constructors are provided which take a namespace prefix and a tag name. This is useful to avoid the performance penalty of the splitting that GenericNode does if the application splits a qualified name or generates the two parts anyway. If the qualified name is hardcoded, GenericNode will find the separator at compile-time, minimizing the performance penalty.
 
 ```cpp
 using namespace onyx::dynamic;
 
-GenericNode custom("customTag", false,
+GenericNode custom("prefix:customTag", NonVoid,
     Attribute("key", "value"),
-    GenericNode("child", true)
+    GenericNode("child", Void)
+);
+
+// In this case, since the string "prefix:customTag" is known at compile-time, 
+// the above is equivalent to:
+GenericNode custom("prefix", "customTag", NonVoid,
+    Attribute("key", "value"),
+    GenericNode("child", Void)
 );
 
 std::string output = custom.serialize();
@@ -485,7 +565,7 @@ A compile-time `GenericNode` struct also exists:
 ```cpp
 using namespace onyx::ctags;
 using MyDoc = Document<
-    GenericNode<"catalog", false,
+    GenericNode<"prefix:catalog", NonVoid,
         product<Attribute<"id","001">,
             name<Text<"Gizmo">>,
             price<Text<"9.99">>
@@ -496,11 +576,11 @@ using MyDoc = Document<
 
 ### XPath 1.0 Support
 
-OnyxXML includes a fully custom XPath 1.0 engine. The engine uses a custom pipeline to lex, parse and compile XPath queries into custom bytecode, which is then executed by a stack-based virtual machine. The engine is fully iterative. The engine also supports attribute nodes and the special XPath 1.0 root node via the classes `AttributeViewNode` and `RootViewNode`.
+OnyxXML includes a fully custom XPath 1.0 engine. The engine uses a custom pipeline to lex, parse and compile XPath queries into custom bytecode, which is then executed by a stack-based virtual machine. The engine is fully iterative. The engine also supports attribute nodes, namespace nodes and the special XPath 1.0 root node via the classes `AttributeViewNode`, `NamespaceViewNode` and `RootViewNode`.
 
-XML Namespaces are not currently supported by the XPath engine. The engine also does NOT explicitly handle UTF-8 content, especially in string functions.
+XML Namespaces are fully supported by the XPath engine and the engine fully handles Unicode in the XPath 1.0 functions. All XPath 1.0 functions are implemented.
 
-Not all functions are supported. In particular, `name`, `local-name` and `lang` are not supported yet. `id` is implemented in a specification-compliant manner and returns the empty string, as the library does not support DTDs. However, this may be unexpected behavior for some users.
+The function `id` is implemented in a specification-compliant manner and returns the empty string, as the library does not support DTDs. However, this may be unexpected behavior for some users.
 
 The pipeline should correctly execute valid XPath queries, but it is not guaranteed to reject all invalid ones. It has been reasonably tested against many wrong queries with missing brackets/parenthesis, invalid names, wrong syntax structure, but does not validate the complete XPath 1.0 grammar. This is because it currently lacks a semantic analysis step, which will likely be built in the future. In general, an invalid query will either be rejected or successfully complete with a reasonably expected result given the query. Queries can be rejected at different stages, such as the Lexer, Parser, Compiler or at execution. This means that an `XPathQuery` object may be constructed successfully using an invalid query, but fail at execution.
 
@@ -510,14 +590,14 @@ Outside of these constraints, the engine follows the XPath 1.0 specification as 
 using namespace onyx::dynamic::xpath;
 using namespace onyx::dynamic::tags;
 
-GenericNode store("store", false,
-    GenericNode("book", false, Attribute("category", "fiction"),
-        GenericNode("title", false, Text("Book1")),
-        GenericNode("price", false, Text("10"))
+GenericNode store("store", NonVoid,
+    GenericNode("book", NonVoid, Attribute("category", "fiction"),
+        GenericNode("title", NonVoid, Text("Book1")),
+        GenericNode("price", NonVoid, Text("10"))
     ),
-    GenericNode("book", false, Attribute("category", "code"),
-        GenericNode("title", false, Text("Book2")),
-        GenericNode("price", false, Text("55"))
+    GenericNode("book", NonVoid, Attribute("category", "code"),
+        GenericNode("title", NonVoid, Text("Book2")),
+        GenericNode("price", NonVoid, Text("55"))
     )
 );
 
@@ -531,13 +611,97 @@ if (result.object.isNodeset()) {
 }
 ```
 
+#### Querying with XML Namespaces
+
+Prefixes in XPath queries are decoupled from document prefixes and resolved using a resolver function passed to the `XPathQuery` and evaluated at compilation. Namespaced attributes and elements are matched against their resolved expanded names.
+
+```cpp
+using namespace onyx::dynamic::xpath;
+using namespace onyx::dynamic::tags;
+
+const std::string bookNs = "http://example.com/books";
+const std::string metaNs = "http://example.com/metadata";
+
+// Document uses 'b' for bookNs and declares metaNs on an attribute
+GenericNode catalog("catalog", NonVoid,
+    Attribute("xmlns:b", bookNs),
+    Attribute("xmlns:meta", metaNs),
+    GenericNode("b:item", NonVoid,
+        Attribute("meta:status", "available"),
+        GenericNode("b:title", NonVoid, Text("Book 1")),
+        GenericNode("b:rating", NonVoid, Text("4.9"))
+    ),
+    GenericNode("b:item", NonVoid,
+        Attribute("meta:status", "archived"),
+        GenericNode("b:title", NonVoid, Text("Book 2")),
+        GenericNode("b:rating", NonVoid, Text("3.2"))
+    )
+);
+
+// Map query prefixes (e.g. 'book' and 'm') to target namespace URIs
+auto nsResolver = [&](std::string_view prefix) -> std::string {
+    if (prefix == "book") return bookNs;
+    if (prefix == "m") return metaNs;
+    return "";
+};
+
+// Query uses local prefixes 'book' and 'm'
+XPathQuery query("/catalog/book:item[@m:status = 'available' and book:rating > 4.0]/book:title", nsResolver);
+XPathQuery::Result result = query.execute(&catalog);
+
+REQUIRE(result.object.isNodeset());
+const std::vector<Node*>& nodes = result.object.asNodeset();
+REQUIRE(nodes.size() == 1);
+CHECK(nodes[0]->getStringValue() == "Book 1");
+```
+
+#### Querying with variables
+
+Queries support runtime variables. They are evaluated via a resolver function passed before execution to `XPathQuery::execute`. Variable names are qualified names and can have namespace prefixes and URIs.
+
+```cpp
+using namespace onyx::dynamic::xpath;
+using namespace onyx::dynamic::tags;
+
+GenericNode inventory("inventory", NonVoid,
+    GenericNode("item", NonVoid, Attribute("sku", "A100"),
+        GenericNode("name", NonVoid, Text("Desk")),
+        GenericNode("price", NonVoid, Text("250"))
+    ),
+    GenericNode("item", NonVoid, Attribute("sku", "B200"),
+        GenericNode("name", NonVoid, Text("Chair")),
+        GenericNode("price", NonVoid, Text("75"))
+    )
+);
+
+auto varResolver = [](std::string_view uri, std::string_view varName) -> XPathObject {
+    if (varName == "maxPrice") {
+        return XPathObject(100.0);
+    }
+    if (varName == "targetSku") {
+        return XPathObject(std::string("B200"));
+    }
+    throw std::logic_error("Unknown variable");
+};
+
+// Filter items using bound variables
+XPathQuery query("/inventory/item[@sku = $targetSku and price <= $maxPrice]/name");
+XPathQuery::Result result = query.execute(&inventory, varResolver);
+
+REQUIRE(result.object.isNodeset());
+const std::vector<Node*>& nodes = result.object.asNodeset();
+REQUIRE(nodes.size() == 1);
+CHECK(nodes[0]->getStringValue() == "Chair");
+```
+
 ### Text Handling
+
 The `Text` node escapes XML-sensitive characters by default. It has an optional second boolean argument (`escapeMultiByte`), which, when set to `true`, converts Unicode characters (e.g., emojis) into their numeric entity references; by default (`false`), original Unicode is preserved. This is included for legacy systems, where Unicode may cause security vulnerabilities. The `Attribute` class escapes by default, which can be turned off using a constructor parameter and has the same Unicode escaping functionality which is false by default and can be turned on using a second constructor parameter.
 
 ```cpp
 using namespace onyx::dynamic;
 
-GenericNode cdiv("div", false,
+GenericNode cdiv("div", NonVoid,
     Text("😊", true) // escapeMultiByte is true
 );
 
@@ -548,10 +712,9 @@ If you need raw text, you may use the `__DangerousRawText` Node.
 
 It is also important to note that the compile-time `Text` and `Attribute` structs do not provide any escaping. What you write is what you get.
 
-
 ### Other Provided Nodes
 
-Nodes are provided for some special XML constructs - `CDATA`, `DOCTYPE`, processing instructions, XML declaration, comments. Equivalents are also available for the compile-time API. 
+Nodes are provided for some special XML constructs - `CDATA`, `DOCTYPE`, processing instructions, XML declaration, comments. Equivalents are also available for the compile-time API.
 `EmptyNode` is also provided for the dynamic API. It acts as a dummy root for fragments that have multiple sibling roots. This role is served by `Document` in the compile-time API.
 
 ## License
@@ -560,7 +723,6 @@ OnyxXML is distributed under the Apache License 2.0. See [LICENSE](LICENSE) fo
 
 ## Roadmap
 
-- Namespaces
 - Semantic analyzer for XPath
 - DOCTYPE Declaration support
 - Testing with the [`W3C XML Conformance Test Suites`](https://www.w3.org/XML/Test/)
