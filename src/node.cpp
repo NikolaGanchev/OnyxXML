@@ -599,17 +599,33 @@ const std::string& Node::getAttributeValue(const std::string& name) const {
 
 void Node::setAttributeValue(const std::string& name,
                              const std::string& newValue) {
+    bool exists = false;
+    bool updated = false;
     for (auto& attr : this->attributes) {
         if (attr.getName() == name) {
-            attr.setValue(newValue);
+            if (attr.getValue() != newValue) {
+                attr.setValue(newValue);
+                updated = true;
+            }
 
-            updateAndPropagateUp(IndexPropagationMessage::UPDATE);
-            return;
+            exists = true;
         }
     }
 
-    this->attributes.emplace_back(name, newValue);
-    updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+    if (!exists) {
+        this->attributes.emplace_back(name, newValue);
+        updated = true;
+    }
+    if (updated) {
+        if (name.starts_with("xmlns:") || name == "xmlns") {
+            this->iterativeProcessor([this](Node* obj) -> void {
+                this->propagateIndexUpdateUp(obj,
+                                             IndexPropagationMessage::UPDATE);
+            });
+        } else {
+            updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+        }
+    }
 }
 
 void Node::removeAttribute(const std::string& name) {
@@ -618,7 +634,14 @@ void Node::removeAttribute(const std::string& name) {
         if (index->getName() == name) {
             this->attributes.erase(index);
 
-            updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+            if (name.starts_with("xmlns:") || name == "xmlns") {
+                this->iterativeProcessor([this](Node* obj) -> void {
+                    this->propagateIndexUpdateUp(
+                        obj, IndexPropagationMessage::UPDATE);
+                });
+            } else {
+                updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+            }
 
             return;
         }
