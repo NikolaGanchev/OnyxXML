@@ -7,6 +7,7 @@
 #include "compile_attribute.h"
 #include "compile_string.h"
 #include "compile_string_utils.h"
+#include "node.h"
 
 namespace onyx::compile {
 

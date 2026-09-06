@@ -3,7 +3,6 @@
 namespace onyx::dynamic::xpath {
 RootViewNode::RootViewNode(Node* child) : Node{NonOwning} {
     this->firstChild = child;
-    this->lastChild = child;
 }
 
 const std::string& RootViewNode::getTagName() const {

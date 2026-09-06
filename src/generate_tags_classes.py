@@ -2,7 +2,7 @@ import io
 import os
 from collections import namedtuple
 
-Tag = namedtuple('Tag', ['tagName', 'isVoid', 'dynamicName', 'compileName'])
+Tag = namedtuple('Tag', ['tagName', 'isVoid', 'supportsNamespacePrefix', 'dynamicName', 'compileName'])
 
 def read_tags(tags_file_path):
     tags = []
@@ -22,6 +22,10 @@ def read_tags(tags_file_path):
                 
                 is_void_char = line[0]
                 is_void = (is_void_char != '0')
+                line = line[2:]
+                
+                supports_namespace_prefix_char = line[0]
+                supports_namespace_prefix = (supports_namespace_prefix_char != '0')
                 line = line[1:]
                 
                 dynamic_name = tag_name
@@ -34,7 +38,7 @@ def read_tags(tags_file_path):
                     line = line[next_comma+1:]
                     compile_name = line.strip()
                 
-                tags.append(Tag(tag_name, is_void, dynamic_name, compile_name))
+                tags.append(Tag(tag_name, is_void, supports_namespace_prefix, dynamic_name, compile_name))
                 
     except FileNotFoundError:
         print(f"File '{tags_file_path}' not found.")
@@ -51,7 +55,9 @@ def generate_dynamic(tags, output_path):
     
     header_content.write('#pragma once\n')
     header_content.write('#include "onyxxml/node.h"\n')
-    header_content.write('#include "onyxxml/void_node.h"\n\n')
+    header_content.write('#include "onyxxml/namespace_node.h"\n')
+    header_content.write('#include "onyxxml/void_node.h"\n')
+    header_content.write('#include "onyxxml/void_namespace_node.h"\n\n')
     header_content.write('namespace onyx::dynamic::tags {\n')
     
     cpp_content.write('#include "tags.h"\n\n')
@@ -59,9 +65,10 @@ def generate_dynamic(tags, output_path):
     
     for tag in tags:
         if not tag.isVoid:
-            header_content.write(f'class {tag.dynamicName} : public Node {{\n')
+            parent_node = "NamespaceNode" if tag.supportsNamespacePrefix else "Node"
+            header_content.write(f'class {tag.dynamicName} : public {parent_node} {{\n')
             header_content.write('   public:\n')
-            header_content.write('    using Node::Node;\n')
+            header_content.write(f'    using {parent_node}::{parent_node};\n')
             header_content.write('    bool isVoid() const override;\n')
             header_content.write('    const std::string& getTagName() const override;\n')
             header_content.write('    std::unique_ptr<Node> shallowCopy() const override;\n')
@@ -72,17 +79,23 @@ def generate_dynamic(tags, output_path):
             cpp_content.write('    return name;\n')
             cpp_content.write('}\n')
             
+            ns_prefix_arg = (
+                'this->getNamespacePrefix().has_value() ? std::string(this->getNamespacePrefix().value()) : std::string(""), '
+                if tag.supportsNamespacePrefix
+                else ""
+            )
             cpp_content.write(f'std::unique_ptr<Node> {tag.dynamicName}::shallowCopy() const {{\n')
-            cpp_content.write(f'    return std::make_unique<{tag.dynamicName}>(this->getAttributes(), std::vector<NodeHandle>{{}});\n')
+            cpp_content.write(f'    return std::make_unique<{tag.dynamicName}>({ns_prefix_arg}this->getAttributes(), std::vector<NodeHandle>{{}});\n')
             cpp_content.write('}\n')
             
             cpp_content.write(f'bool {tag.dynamicName}::isVoid() const {{\n')
             cpp_content.write(f'    return {int(tag.isVoid)};\n')
             cpp_content.write('}\n')
         else:
-            header_content.write(f'class {tag.dynamicName} : public VoidNode {{\n')
+            parent_node = "VoidNamespaceNode" if tag.supportsNamespacePrefix else "VoidNode"
+            header_content.write(f'class {tag.dynamicName} : public {parent_node} {{\n')
             header_content.write('    public:\n')
-            header_content.write('    using VoidNode::VoidNode;\n')
+            header_content.write(f'    using {parent_node}::{parent_node};\n')
             header_content.write('    const std::string& getTagName() const override;\n')
             header_content.write('    std::unique_ptr<Node> shallowCopy() const override;\n')
             header_content.write('};\n')
@@ -92,8 +105,13 @@ def generate_dynamic(tags, output_path):
             cpp_content.write('    return name;\n')
             cpp_content.write('}\n')
             
+            ns_prefix_arg = (
+                'this->getNamespacePrefix().has_value() ? std::string(this->getNamespacePrefix().value()) : std::string(""), '
+                if tag.supportsNamespacePrefix
+                else ""
+            )
             cpp_content.write(f'std::unique_ptr<Node> {tag.dynamicName}::shallowCopy() const {{\n')
-            cpp_content.write(f'    return std::make_unique<{tag.dynamicName}>(this->getAttributes());\n')
+            cpp_content.write(f'    return std::make_unique<{tag.dynamicName}>({ns_prefix_arg}this->getAttributes());\n')
             cpp_content.write('}\n')
     
     header_content.write('}\n\n')
@@ -134,9 +152,10 @@ def generate_compile(tags, output_path):
         header_content.write(f'    static consteval std::array<char, size() + 1> serialize() {{\n')
         header_content.write(f'        return DocumentUtils::{serialize_method}<size(), Children...>("{tag.tagName}");\n')
         header_content.write('    }\n')
-        
+
+        nsArg = "\"\"" if tag.supportsNamespacePrefix else ""
         header_content.write('    static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {\n')
-        header_content.write(f'        std::unique_ptr<onyx::dynamic::tags::{tag.dynamicName}> node = std::make_unique<onyx::dynamic::tags::{tag.dynamicName}>();\n')
+        header_content.write(f'        std::unique_ptr<onyx::dynamic::tags::{tag.dynamicName}> node = std::make_unique<onyx::dynamic::tags::{tag.dynamicName}>({nsArg});\n')
         header_content.write('        (DocumentUtils::parseChildren<Children>(node.get()), ...);\n')
         header_content.write('        return node;\n')
         header_content.write('    }\n    };\n')

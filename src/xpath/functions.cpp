@@ -3,9 +3,16 @@
 #include <array>
 #include <charconv>
 #include <limits>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <variant>
 
+#include "attribute.h"
+#include "node.h"
+#include "nodes/attribute_view_node.h"
+#include "nodes/namespace_view_node.h"
+#include "nodes/processing_instruction_node.h"
 #include "parse/helpers.h"
 #include "parse/string_cursor.h"
 
@@ -183,21 +190,54 @@ std::string substring(const std::string& str, double start, double length) {
 
     double limit = start + length;
 
+    // Per the XPath spec, if start or limit is NaN, return empty string
     if (std::isnan(start) || std::isnan(limit)) {
         return "";
     }
 
+    // XPath dictates 1-based character positions
     double lower = std::max(1.0, start);
-    double upper = std::min(static_cast<double>(str.length()) + 1.0, limit);
+    double upper = limit;
 
     if (lower >= upper) {
         return "";
     }
 
-    size_t startIndex = static_cast<size_t>(lower - 1.0);
-    size_t count = static_cast<size_t>(upper - lower);
+    size_t startCharIndex = static_cast<size_t>(lower);
+    size_t endCharIndex = (upper > std::numeric_limits<size_t>::max())
+                              ? std::numeric_limits<size_t>::max()
+                              : static_cast<size_t>(upper);
 
-    return str.substr(startIndex, count);
+    parser::StringCursor cursor(str);
+    size_t currentChar = 1;
+
+    // Advance cursor to the start character position
+    while (!cursor.isEOF() && currentChar < startCharIndex) {
+        if (text::getUnicodeCodepoint(cursor) == 0 && cursor.isEOF()) {
+            break;
+        }
+        cursor.advance(1);
+        currentChar++;
+    }
+
+    if (cursor.isEOF()) {
+        return "";
+    }
+
+    const char* byteStart = cursor.ptr;
+
+    // Advance cursor to the end character position
+    while (!cursor.isEOF() && currentChar < endCharIndex) {
+        if (text::getUnicodeCodepoint(cursor) == 0 && cursor.isEOF()) {
+            break;
+        }
+        cursor.advance(1);
+        currentChar++;
+    }
+
+    const char* byteEnd = cursor.ptr;
+
+    return std::string(byteStart, byteEnd - byteStart);
 }
 
 std::string stringBefore(const std::string& str1, const std::string& str2) {
@@ -217,48 +257,72 @@ std::string stringAfter(const std::string& str1, const std::string& str2) {
         return std::string("");
     }
 
-    return str1.substr(i + 1);
+    return str1.substr(i + str2.length());
 }
 
 std::string translate(const std::string& str1, const std::string& str2,
                       const std::string& str3) {
-    std::stringstream result;
+    std::vector<std::string_view> replacements;
+    parser::StringCursor c3(str3);
+    while (!c3.isEOF()) {
+        const char* start = c3.ptr;
+        if (text::getUnicodeCodepoint(c3) == 0 && c3.isEOF()) {
+            break;
+        }
+        c3.advance(1);
+        replacements.emplace_back(start, c3.ptr - start);
+    }
 
-    // Values
-    // -1: Character not found in str2
-    // -2: Character found in str2 but no corresponding char in str3
-    // 0..255: The replacement character
-    std::vector<int> map(256, -1);
+    // Map codepoint in str2 to a replacement byte slice in str3
+    // An empty std::string_view represents character deletion.
+    std::unordered_map<uint32_t, std::string_view> map;
+    parser::StringCursor c2(str2);
+    size_t charIndex = 0;
 
-    for (size_t i = 0; i < str2.length(); ++i) {
-        unsigned char key = static_cast<unsigned char>(str2[i]);
+    while (!c2.isEOF()) {
+        uint32_t codepoint = text::getUnicodeCodepoint(c2);
+        if (codepoint == 0 && c2.isEOF()) {
+            break;
+        }
+        c2.advance(1);
 
-        // XPath spec: "If a character occurs more than once in the second
-        // argument string, then the first occurrence determines the replacement
-        // character." We only set the rule if this character hasn't been
-        // processed yet
-        if (map[key] == -1) {
-            if (i < str3.length()) {
-                map[key] = static_cast<unsigned char>(str3[i]);
+        // First occurrence determines the replacement
+        if (map.find(codepoint) == map.end()) {
+            if (charIndex < replacements.size()) {
+                map[codepoint] = replacements[charIndex];
             } else {
-                map[key] = -2;
+                // Delete a character
+                map[codepoint] = std::string_view();
             }
         }
+        charIndex++;
     }
 
-    for (char c : str1) {
-        unsigned char index = static_cast<unsigned char>(c);
-        int action = map[index];
+    std::string result;
+    result.reserve(str1.size());
 
-        if (action == -1) {
-            result << c;
-        } else if (action == -2) {
+    parser::StringCursor c1(str1);
+    while (!c1.isEOF()) {
+        const char* start = c1.ptr;
+        uint32_t codepoint = text::getUnicodeCodepoint(c1);
+        if (codepoint == 0 && c1.isEOF()) {
+            break;
+        }
+        c1.advance(1);
+        const char* end = c1.ptr;
+
+        auto it = map.find(codepoint);
+        if (it == map.end()) {
+            // If not in str2, preserve original character slice
+            result.append(start, end - start);
         } else {
-            result << static_cast<char>(action);
+            // If in str2, append mapped slice
+            // If the slice is empty, the character is dropped
+            result.append(it->second);
         }
     }
 
-    return result.str();
+    return result;
 }
 
 std::string normalizeSpace(const std::string& str) {
@@ -295,5 +359,158 @@ std::string normalizeSpace(const std::string& str) {
     }
 
     return res;
+}
+
+double stringLength(const std::string& str) {
+    double count = 0.0;
+    parser::StringCursor cursor(str);
+
+    while (!cursor.isEOF()) {
+        uint32_t cp = text::getUnicodeCodepoint(cursor);
+        if (cp == 0 && cursor.isEOF()) {
+            break;
+        }
+        cursor.advance(1);
+        count++;
+    }
+
+    return count;
+}
+
+std::string name(const XPathObject& obj) {
+    const std::vector<Node*>& arg = obj.asNodeset();
+    if (arg.empty()) return "";
+
+    Node* node = arg[0];
+
+    switch (node->getXPathType()) {
+        case Node::XPathType::ELEMENT: {
+            std::optional<std::string_view> prefix = node->getNamespacePrefix();
+            if (!prefix.has_value()) return node->getTagName();
+
+            return std::string(prefix.value()) + ":" + node->getTagName();
+        }
+        case Node::XPathType::ATTRIBUTE: {
+            return static_cast<AttributeViewNode*>(node)
+                ->getReferencedAttribute()
+                .getName();
+        }
+        default:
+            return localName(obj);
+    }
+}
+
+std::string localName(const XPathObject& obj) {
+    const std::vector<Node*>& arg = obj.asNodeset();
+    if (arg.empty()) return "";
+
+    Node* node = arg[0];
+
+    switch (node->getXPathType()) {
+        case Node::XPathType::ELEMENT: {
+            return node->getTagName();
+        }
+        case Node::XPathType::ATTRIBUTE: {
+            return std::string(static_cast<AttributeViewNode*>(node)
+                                   ->getReferencedAttribute()
+                                   .getNCNameWithoutNamespace());
+        }
+        case Node::XPathType::NAMESPACE: {
+            return std::string(
+                static_cast<NamespaceViewNode*>(node)->getPrefix());
+        }
+        case Node::XPathType::PROCESSING_INSTRUCTION: {
+            return static_cast<tags::ProcessingInstruction*>(node)->getTarget();
+        }
+        default:
+            return "";
+    }
+}
+
+std::string namespaceURI(const XPathObject& obj) {
+    const std::vector<Node*>& arg = obj.asNodeset();
+    if (arg.empty()) return "";
+
+    Node* node = arg[0];
+
+    switch (node->getXPathType()) {
+        case Node::XPathType::ELEMENT: {
+            std::optional<std::string_view> uri = node->getNamespaceName();
+            if (!uri.has_value()) return "";
+
+            return std::string(uri.value());
+        }
+        case Node::XPathType::ATTRIBUTE: {
+            AttributeViewNode* attrNode = static_cast<AttributeViewNode*>(node);
+            std::optional<std::string_view> prefix =
+                attrNode->getReferencedAttribute().getNamespacePrefix();
+
+            std::optional<std::string_view> uri =
+                attrNode->getParentNode()->resolveAttributeNamespacePrefix(
+                    prefix);
+            if (!uri.has_value()) return "";
+
+            return std::string(uri.value());
+        }
+        default:
+            return "";
+    }
+}
+
+namespace {
+
+bool caseInsensitiveEquals(std::string_view lhs, std::string_view rhs) {
+    if (lhs.size() != rhs.size()) return false;
+    for (size_t i = 0; i < lhs.size(); ++i) {
+        if (std::tolower(static_cast<unsigned char>(lhs[i])) !=
+            std::tolower(static_cast<unsigned char>(rhs[i]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+}  // namespace
+
+bool lang(const std::string& targetLang, Node* contextNode) {
+    if (!contextNode) {
+        return false;
+    }
+
+    Node* current = contextNode;
+    std::optional<std::string_view> langVal;
+
+    while (current) {
+        if (current->getXPathType() == Node::XPathType::ELEMENT) {
+            for (const auto& attr : current->getAttributes()) {
+                if (attr.getName() == "xml:lang") {
+                    langVal = attr.getValue();
+                    break;
+                }
+            }
+            if (langVal.has_value()) {
+                break;
+            }
+        }
+        current = current->getParentNode();
+    }
+
+    if (!langVal.has_value()) {
+        return false;
+    }
+
+    std::string_view actual = langVal.value();
+
+    if (caseInsensitiveEquals(actual, targetLang)) {
+        return true;
+    }
+
+    if (actual.size() > targetLang.size() && actual[targetLang.size()] == '-' &&
+        caseInsensitiveEquals(actual.substr(0, targetLang.size()),
+                              targetLang)) {
+        return true;
+    }
+
+    return false;
 }
 };  // namespace onyx::dynamic::xpath::functions

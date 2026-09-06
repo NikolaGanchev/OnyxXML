@@ -17,7 +17,7 @@
 namespace onyx::compile {
 
 /**
- * @brief A struct for creating XML/HTML documents with an alternative syntax,
+ * @brief A struct for creating XML documents with an alternative syntax,
  * using templates:
  *
  * @code{.cpp}
@@ -97,8 +97,7 @@ struct Document {
             return obj;
         } else {
             (([&] {
-                 if constexpr (onyx::compile::ctags::isAttribute<
-                                   Children>) {
+                 if constexpr (onyx::compile::ctags::isAttribute<Children>) {
                      throw "Trying to read attribute as root node";
                  } else {
                      obj->addChild(Children::dynamicTree());

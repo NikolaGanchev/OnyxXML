@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
+#include <utility>
 
 #include "../text.h"
 #include "is_cursor.h"
@@ -196,12 +198,31 @@ ONYX_NOINLINE typename Cursor::StringType readNCName(Cursor& pos)
 }
 
 /**
- * @brief A QName is a name of the sort NCName : NCName
+ * @brief A QName is a name of the sort NCName:NCName.
+ * This function returns the split QName in an std::pair of two std::optional.
+ * The following applies to the return value:
+ *
+ * If value.first is std::nullopt:
+ * 1) and value.second is also std::nullopt, the function failed at reading an
+ * NCName alltogether. The cursor was not moved.
+ * 2) and value.second is not std::nullopt, the function succeeded in reading
+ * one NCName but no ':' separator was found. The cursor was moved to the first
+ * byte past the NCName.
+ *
+ * If value.first is not std::nullopt:
+ * 1) and value.second is std::nullopt, the function found ':' but could not
+ * read an NCName. The cursor was moved to the first byte past the separator.
+ * 2) and value.second is not std::nullopt, the function read
+ * a full QName comprising of two NCName parts. The cursor was moved to the
+ * first byte past the QName.
+ *
  *
  * @tparam Cursor
  */
 template <typename Cursor>
-ONYX_NOINLINE typename Cursor::StringType readQName(Cursor& pos)
+ONYX_NOINLINE std::pair<std::optional<typename Cursor::StringType>,
+                        std::optional<typename Cursor::StringType>>
+readQNameAndSplit(Cursor& pos)
     requires(isCursor<Cursor>)
 {
     pos.beginCapture();
@@ -209,18 +230,88 @@ ONYX_NOINLINE typename Cursor::StringType readQName(Cursor& pos)
     // Read first ncname
     if (!isNCNameStartChar(pos)) {
         pos.swapDefault();
-        return typename Cursor::StringType();
+        return {std::nullopt, std::nullopt};
+        ;
     }
     pos.advance();
     while (isNCNameChar(pos)) {
         pos.advance();
     }
+    pos.swapDefault();
+    typename Cursor::StringType firstPart = std::move(pos.getCaptured());
+    pos.advance(firstPart.size());
+    pos.swapDefault();
+
+    if (pos.current() != ':') {
+        pos.swapDefault();
+        return {std::nullopt, std::move(firstPart)};
+    }
+
+    pos.advance();
+
+    pos.swapDefault();
+    pos.advance();
+    pos.swapDefault();
+
+    if (!isNCNameStartChar(pos)) {
+        pos.swapDefault();
+        return {std::move(firstPart), std::nullopt};
+    }
+    pos.advance();
+    while (isNCNameChar(pos)) {
+        pos.advance();
+    }
+    pos.swapDefault();
+
+    typename Cursor::StringType secondPart = std::move(pos.getCaptured());
+    pos.advance(secondPart.size());
+
+    return {std::move(firstPart), std::move(secondPart)};
+}
+
+/**
+ * @brief A QName is a name of the sort NCName : NCName.
+ * This function returns the QName in an std::pair along with a namespace ':'
+ * separator index.
+ * If no QName could be parsed, the return value will be
+ * {typename Cursor::StringType(), 0}.
+ * If a QName is parsed with no separator, the return value will be {typename
+ * Cursor::StringType(), Cursor::StringType::npos}.
+ * If a QName is parsed with a separator, the return value will be the parsed
+ * QName along with the index of the ':' separator.
+ *
+ * @tparam Cursor
+ */
+template <typename Cursor>
+ONYX_NOINLINE std::pair<typename Cursor::StringType,
+                        typename Cursor::StringType::size_type>
+readQName(Cursor& pos)
+    requires(isCursor<Cursor>)
+{
+    pos.beginCapture();
+    pos.swapDefault();
+    // Read first ncname
+    if (!isNCNameStartChar(pos)) {
+        pos.swapDefault();
+        return {typename Cursor::StringType(), 0};
+    }
+    pos.advance();
+    while (isNCNameChar(pos)) {
+        pos.advance();
+    }
+    pos.swapDefault();
+    typename Cursor::StringType::size_type cursorIndex =
+        Cursor::StringType::npos;
+    pos.swapDefault();
     // read second nc name
     if (pos.current() == ':') {
+        pos.swapDefault();
+        cursorIndex = pos.getCapturedSize();
+        pos.swapDefault();
         pos.advance();
         if (!isNCNameStartChar(pos)) {
             pos.swapDefault();
-            return typename Cursor::StringType();
+            return {typename Cursor::StringType(), 0};
         }
         pos.advance();
         while (isNCNameChar(pos)) {
@@ -229,6 +320,6 @@ ONYX_NOINLINE typename Cursor::StringType readQName(Cursor& pos)
     }
     pos.swapDefault();
 
-    return pos.getCaptured();
+    return {pos.getCaptured(), cursorIndex};
 }
 }  // namespace onyx::dynamic::parser

@@ -1,11 +1,16 @@
 #pragma once
+#include <climits>
+#include <concepts>
+#include <cstdint>
 #include <cstring>
 #include <forward_list>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -24,6 +29,7 @@ class DomParser;
 namespace xpath {
 class RootViewNode;
 class AttributeViewNode;
+class NamespaceViewNode;
 }  // namespace xpath
 
 /**
@@ -64,7 +70,7 @@ template <typename T>
 concept isAttribute = std::same_as<T, Attribute>;
 
 /**
- * @brief  Checks if the type T can be used to call Node::addChild(), i.e., if T
+ * @brief Checks if the type T can be used to call Node::addChild(), i.e., if T
  * is a subclass of Node or std::unique_ptr<Node>.
  *
  * @tparam T
@@ -73,6 +79,30 @@ template <typename T>
 concept isValidNodeChild =
     std::same_as<T, std::unique_ptr<Node>> || std::same_as<T, Node*> ||
     std::derived_from<std::decay_t<T>, Node>;
+
+/**
+ * @brief Checks if the Function can be called using a non-const Node pointer
+ * and return ReturnType
+ *
+ * @tparam Function
+ * @tparam ReturnType
+ */
+template <typename Function, typename ReturnType = void>
+concept isNodeCallback = requires(Function f, Node* node) {
+    { f(node) } -> std::same_as<ReturnType>;
+};
+
+/**
+ * @brief Checks if the Function can be called using a const Node pointer
+ * and return ReturnType
+ *
+ * @tparam Function
+ * @tparam ReturnType
+ */
+template <typename Function, typename ReturnType = void>
+concept isConstNodeCallback = requires(Function f, const Node* node) {
+    { f(node) } -> std::same_as<ReturnType>;
+};
 
 struct NonOwningNodeTag {};
 inline constexpr NonOwningNodeTag NonOwning{};
@@ -85,20 +115,28 @@ inline constexpr NonOwningNodeTag NonOwning{};
  * nodes cannot be mixed. Nodes cannot be copied or copy assigned. Moves are
  * allowed.
  *
+ * Siblings are presented as a circular linked list where the next sibling of
+ * the last child is the first child and the previous sibling of the first child
+ * is the last child.
+ *
  */
 class Node {
     friend parser::DomParser;
     friend xpath::RootViewNode;
     friend xpath::AttributeViewNode;
+    friend xpath::NamespaceViewNode;
 
    public:
     class Index;
     using Handle = NodeHandle;
 
+   protected:
+    enum IndexPropagationMessage : uint8_t;
+
    private:
-    enum IndexPropagationMessage : uint8_t { UPDATE, PUT, REMOVE };
     /**
-     * @brief An observable constant std::string reference.
+     * @brief An observable constant std::string reference for an attribute.
+     * Bound to an attribute name and not an actual string pointer in the tree.
      * Behaves as a pointer, but the assignment operator is overriden to invoke
      * a callback on assignment. The string inside cannot be otherwise modified
      * and is always returned as a constant value.
@@ -106,10 +144,10 @@ class Node {
     class ObservableStringRef {
        private:
         /**
-         * @brief The pointer to the string
+         * @brief The attribute name
          *
          */
-        std::string* ptr;
+        std::string name;
         /**
          * @brief The Node that will be updated
          *
@@ -120,10 +158,10 @@ class Node {
         /**
          * @brief Construct a new Observable String Ref object
          *
-         * @param ref The std::string pointer
+         * @param name The attribute name
          * @param callback The callback function for reassignment
          */
-        ObservableStringRef(std::string* ref, Node* origin);
+        ObservableStringRef(std::string name, Node* origin);
 
         /**
          * @brief Implicit cast to const std::string*
@@ -134,7 +172,7 @@ class Node {
 
         /**
          * @brief Achieves pointer behaviour by overriding -> to return the
-         * underlying std::string
+         * std::string* for the attribute
          *
          * @return const std::string*
          */
@@ -143,7 +181,7 @@ class Node {
 
         /**
          * @brief Achieves pointer behaviour by overriding * to return the
-         * underlying std::string
+         * std::string* for the attribute
          *
          * @return const std::string*
          */
@@ -170,25 +208,27 @@ class Node {
         bool operator!=(const std::string& str) const;
 
         /**
-         * @brief Custom reassignment. Swaps the internal ptr for the new one
+         * @brief Custom reassignment. Sets the attribute value for the new one
          * and invokes callback
          *
-         * @param newPtr The new std::string that ptr should point to
+         * @param newValue The new std::string that should be the attribute
+         * value
          * @return ObservableStringRef& this
          */
-        ObservableStringRef& operator=(std::string newPtr);
+        ObservableStringRef& operator=(std::string newValue);
     };
 
     /**
      * @brief Parses over all children of this and constructs a vector including
      * only those that satisfy the condition function.
      *
-     * @param condition A function which returns true if the given child should
-     * be included in the return vector and false if not
+     * @param condition A function which takes a singular Node* argument returns
+     * true if the given child should be included in the return vector and false
+     * if not
      * @return std::vector<Node*>
      */
-    std::vector<Node*> iterativeChildrenParse(
-        const std::function<bool(Node*)>& condition) const;
+    template <typename Function>
+    std::vector<Node*> iterativeChildrenParse(Function condition) const;
 
     /**
      * @brief Attach the child to the back of the linked list. Does not update
@@ -209,12 +249,6 @@ class Node {
      *
      */
     Node* firstChild;
-
-    /**
-     * @brief The last child
-     *
-     */
-    Node* lastChild;
 
     /**
      * @brief The previous sibling
@@ -241,12 +275,16 @@ class Node {
     Node* parent;
 
     /**
-     * @brief Whether this Node is owning. An owning Node must release the
-     * memory of its children upon destruction. Owning Nodes can only contain
-     * owning children. Non-owning Nodes can only contain non-owning children.
+     * @brief The type used for the internal flag variable
      *
      */
-    bool _isOwning;
+    using FlagType = uint8_t;
+
+    /**
+     * @brief The internal flags field
+     *
+     */
+    FlagType flags = 0;
 
     /**
      * @brief A recursive constructor argument move processor. Takes an argument
@@ -348,14 +386,6 @@ class Node {
      * @param message The type of update to the index to apply
      */
     void propagateIndexUpdateUp(Node* updated, IndexPropagationMessage message);
-
-    /**
-     * @brief Updates all indices of the Node with the provided Node and
-     * propagates up the update
-     *
-     * @param message The type of update to the index to apply
-     */
-    void updateAndPropagateUp(IndexPropagationMessage message);
 
    public:
     /**
@@ -522,6 +552,70 @@ class Node {
      * @return false The tag is not void
      */
     virtual bool isVoid() const = 0;
+
+    /**
+     * @brief Get the namespace prefix. Returns std::nullopt if there is no
+     * prefix, which is always true for the base Node class.
+     *
+     * @return std::optional<std::string_view>
+     */
+    virtual std::optional<std::string_view> getNamespacePrefix() const;
+
+    /**
+     * @brief Get the resolved namespace name, which is a URI. Returns
+     * std::nullopt if the namespace name could not be resolved from the prefix
+     * or if this Node has no namespace prefix.
+     *
+     * This function will honor undeclaring of prefixes which is legal under
+     * 'Namespaces in XML 1.1' but illegal under 'Namespaces in XML 1.0'.
+     *
+     * Resolves prefix 'xml' to 'http://www.w3.org/XML/1998/namespace', ignoring
+     * any namespace declarations (since the 'xml' prefix cannot be bound to any
+     * other namespace name).
+     * Resolves prefix 'xmlns' to 'http://www.w3.org/2000/xmlns/' despite it
+     * being invalid as a prefix for a tag name.
+     *
+     * @return std::optional<std::string_view>
+     */
+    std::optional<std::string_view> getNamespaceName() const;
+
+    /**
+     * @brief Resolve the namespace URI from this Node's viewpoint. Returns
+     * std::nullopt if the namespace URI could not be resolved. Honors default
+     * namespace declarations.
+     *
+     * This function will honor undeclaring of prefixes which is legal under
+     * 'Namespaces in XML 1.1' but illegal under 'Namespaces in XML 1.0'.
+     *
+     * Resolves prefix 'xml' to 'http://www.w3.org/XML/1998/namespace', ignoring
+     * any namespace declarations (since the 'xml' prefix cannot be bound to any
+     * other namespace name).
+     * Resolves prefix 'xmlns' to 'http://www.w3.org/2000/xmlns/'.
+     *
+     * @param prefix The namespace prefix
+     * @return std::optional<std::string_view>
+     */
+    std::optional<std::string_view> resolveNamespacePrefixWithDefaults(
+        std::optional<std::string_view> prefix) const;
+
+    /**
+     * @brief Resolve the namespace URI from this Node's viewpoint. Returns
+     * std::nullopt if the namespace URI could not be resolved. If the prefix is
+     * std::nullopt or "", the URI will always be std::nullopt.
+     *
+     * This function will honor undeclaring of prefixes which is legal under
+     * 'Namespaces in XML 1.1' but illegal under 'Namespaces in XML 1.0'.
+     *
+     * Resolves prefix 'xml' to 'http://www.w3.org/XML/1998/namespace', ignoring
+     * any namespace declarations (since the 'xml' prefix cannot be bound to any
+     * other namespace name).
+     * Resolves prefix 'xmlns' to 'http://www.w3.org/2000/xmlns/'.
+     *
+     * @param prefix The namespace prefix
+     * @return std::optional<std::string_view>
+     */
+    std::optional<std::string_view> resolveAttributeNamespacePrefix(
+        std::optional<std::string_view> prefix) const;
 
     /**
      * @brief Returns whether the current Node is in a tree
@@ -905,14 +999,16 @@ class Node {
     const Node* getLastChild() const;
 
     /**
-     * @brief Get a const reference to the previous sibling
+     * @brief Get a const reference to the previous sibling. Wraps around a
+     * circular list.
      *
      * @return const Node*
      */
     const Node* getPrevSibling() const;
 
     /**
-     * @brief Get a const reference to the next sibling
+     * @brief Get a const reference to the next sibling. Wraps around a circular
+     * list.
      *
      * @return const Node*
      */
@@ -933,14 +1029,15 @@ class Node {
     Node* getLastChild();
 
     /**
-     * @brief Get a reference to the previous sibling
+     * @brief Get a reference to the previous sibling. Wraps around a circular
+     * list.
      *
      * @return Node*
      */
     Node* getPrevSibling();
 
     /**
-     * @brief Get a reference to the next sibling
+     * @brief Get a reference to the next sibling. Wraps around a circular list.
      *
      * @return Node*
      */
@@ -958,9 +1055,59 @@ class Node {
      * @brief Invokes the process callback over this and all its children.
      * Parses iteratively.
      *
-     * @param process The process function
+     * @param process The process function. The function must declare a singular
+     * Node* argument.
      */
-    void iterativeProcessor(const std::function<void(Node*)>& process);
+    template <typename Function>
+    void iterativeProcessor(Function process);
+
+    /**
+     * @brief Invokes the process callback over all the children of the Node in
+     * forward order.
+     *
+     * @tparam Function
+     * @param process The process function. The function must declare a singular
+     * Node* argument.
+     */
+    template <typename Function>
+    void iterateDirectChildren(Function process)
+        requires(isNodeCallback<Function>);
+
+    /**
+     * @brief Invokes the process callback over all the children of the Node in
+     * forward order.
+     *
+     * @tparam Function
+     * @param process The process function. The function must declare a singular
+     * const Node* argument.
+     */
+    template <typename Function>
+    void iterateDirectChildren(Function process) const
+        requires(isConstNodeCallback<Function>);
+
+    /**
+     * @brief Invokes the process callback over all the children of the Node in
+     * reverse order.
+     *
+     * @tparam Function
+     * @param process The process function. The function must declare a singular
+     * Node* argument.
+     */
+    template <typename Function>
+    void iterateDirectChildrenReverse(Function process)
+        requires(isNodeCallback<Function>);
+
+    /**
+     * @brief Invokes the process callback over all the children of the Node in
+     * reverse order.
+     *
+     * @tparam Function
+     * @param process The process function. The function must declare a singular
+     * const Node* argument.
+     */
+    template <typename Function>
+    void iterateDirectChildrenReverse(Function process) const
+        requires(isConstNodeCallback<Function>);
 
     enum class XPathType {
         ROOT,
@@ -974,7 +1121,63 @@ class Node {
     };
 
     virtual XPathType getXPathType() const;
+
+    /**
+     * @brief Returns the number of flags this class supports.
+     * Only works when CHAR_BIT == 8.
+     *
+     * @return consteval
+     */
+    static consteval std::size_t maxFlagBits() {
+        static_assert(CHAR_BIT == 8, "Flags requires 8-bit bytes.");
+        return sizeof(FlagType) * 8;
+    }
+
+    /**
+     * @brief Contains the bit indices this class claims ownership over
+     *
+     */
+    enum FlagBitIndices : std::size_t {
+        /**
+         * @brief Whether this Node is owning. An owning Node must release the
+         * memory of its children upon destruction. Owning Nodes can only
+         * contain owning children. Non-owning Nodes can only contain non-owning
+         * children.
+         *
+         */
+        BIT_IS_OWNING = 0,
+        NEXT_BIT
+    };
+
+   protected:
+    enum IndexPropagationMessage : uint8_t { UPDATE, PUT, REMOVE };
+    /**
+     * @brief Updates all indices of the Node with the provided Node and
+     * propagates up the update
+     *
+     * @param message The type of update to the index to apply
+     */
+    void updateAndPropagateUp(IndexPropagationMessage message);
+
+    /**
+     * @brief Get the value of a flag
+     *
+     */
+    template <std::size_t Bit>
+    bool getFlag() const
+        requires(Bit < maxFlagBits());
+
+    /**
+     * @brief Set the value of a flag
+     *
+     */
+    template <std::size_t Bit>
+    void setFlag(bool value)
+        requires(Bit < maxFlagBits());
 };
+
+static_assert(Node::FlagBitIndices::NEXT_BIT <= Node::maxFlagBits(),
+              "Node flags bit overflow");
 }  // namespace onyx::dynamic
 
 template <typename... Args>
@@ -982,12 +1185,11 @@ onyx::dynamic::Node::Node(Args&&... args)
     requires(onyx::dynamic::isValidNodeConstructorType<Args> && ...)
     : attributes{},
       firstChild{nullptr},
-      lastChild{nullptr},
-      prevSibling{nullptr},
-      nextSibling{nullptr},
+      prevSibling{this},
+      nextSibling{this},
       parent{nullptr},
-      indices{},
-      _isOwning(true) {
+      indices{} {
+    setFlag<FlagBitIndices::BIT_IS_OWNING>(true);
     (processConstructorArgs(std::forward<Args>(args)), ...);
 }
 
@@ -1013,7 +1215,7 @@ onyx::dynamic::Node* onyx::dynamic::Node::addChild(T&& newChild)
             "Attempted to add child to " + getTagName() +
             "  that is already a child of another Object.");
     }
-    if (newChild._isOwning != this->_isOwning) {
+    if (newChild.isOwning() != this->isOwning()) {
         throw std::runtime_error("Attempted to add child to " + getTagName() +
                                  " with different owning mode.");
     }
@@ -1041,7 +1243,7 @@ void onyx::dynamic::Node::processConstructorObjectMove(T&& child)
             "Attempted to construct Node with a child that is already a child "
             "of another Node.");
     }
-    if (child._isOwning != this->_isOwning) {
+    if (child.isOwning() != this->isOwning()) {
         processConstructorObjectMoveCleanup();
         throw std::runtime_error(
             "Attempted to add child to Node with different owning mode.");
@@ -1073,4 +1275,133 @@ onyx::dynamic::NodeHandle onyx::dynamic::Node::replaceChild(
 
     childToReplace->parent->addChild(std::move(newChild));
     return childToReplace->parent->removeChild(childToReplace);
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterativeProcessor(Function process) {
+    std::vector<Node*> s;
+
+    s.push_back(this);
+
+    while (!s.empty()) {
+        Node* obj = s.back();
+
+        process(obj);
+
+        s.pop_back();
+
+        obj->iterateDirectChildrenReverse(
+            [&s](Node* child) { s.push_back(child); });
+    }
+}
+
+template <typename Function>
+std::vector<onyx::dynamic::Node*> onyx::dynamic::Node::iterativeChildrenParse(
+    Function condition) const {
+    std::vector<Node*> s;
+    std::vector<Node*> result;
+
+    this->iterateDirectChildrenReverse(
+        [&s](const Node* child) { s.push_back(const_cast<Node*>(child)); });
+
+    while (!s.empty()) {
+        Node* obj = s.back();
+
+        if (condition(obj)) {
+            result.push_back(obj);
+        }
+
+        s.pop_back();
+
+        obj->iterateDirectChildrenReverse(
+            [&s](Node* child) { s.push_back(child); });
+    }
+
+    return result;
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterateDirectChildren(Function process)
+    requires(isNodeCallback<Function>)
+{
+    Node* current = this->firstChild;
+    Node* original = current;
+    Node* copy;
+    if (current) {
+        do {
+            copy = current->nextSibling;
+            process(current);
+            current = copy;
+        } while (current != original);
+    }
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterateDirectChildren(Function process) const
+    requires(isConstNodeCallback<Function>)
+{
+    const Node* current = this->firstChild;
+    const Node* original = current;
+    Node* copy;
+    if (current) {
+        do {
+            copy = current->nextSibling;
+            process(current);
+            current = copy;
+        } while (current != original);
+    }
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterateDirectChildrenReverse(Function process)
+    requires(isNodeCallback<Function>)
+{
+    Node* current = this->firstChild;
+    if (!current) return;
+    current = this->firstChild->prevSibling;
+    Node* original = current;
+    Node* copy;
+    if (current) {
+        do {
+            copy = current->prevSibling;
+            process(current);
+            current = copy;
+        } while (current != original);
+    }
+}
+
+template <typename Function>
+void onyx::dynamic::Node::iterateDirectChildrenReverse(Function process) const
+    requires(isConstNodeCallback<Function>)
+{
+    const Node* current = this->firstChild;
+    if (!current) return;
+    current = this->firstChild->prevSibling;
+    const Node* original = current;
+    Node* copy;
+    if (current) {
+        do {
+            copy = current->prevSibling;
+            process(current);
+            current = copy;
+        } while (current != original);
+    }
+}
+
+template <std::size_t Bit>
+bool onyx::dynamic::Node::getFlag() const
+    requires(Bit < maxFlagBits())
+{
+    return (flags & (1 << Bit)) != 0;
+}
+
+template <std::size_t Bit>
+void onyx::dynamic::Node::setFlag(bool value)
+    requires(Bit < maxFlagBits())
+{
+    if (value) {
+        flags |= (1 << Bit);
+    } else {
+        flags &= ~(1 << Bit);
+    }
 }

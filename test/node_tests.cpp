@@ -1,16 +1,20 @@
 #include <chrono>
+#include <memory>
+#include <optional>
 
 #include "catch2/catch_all.hpp"
+#include "nodes/util/qualified_name_view.h"
 #include "onyx.h"
+#include "util.h"
 
-TEST_CASE("HTML is generated", "[Node]") {
+TEST_CASE("XML is generated", "[Node]") {
     using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
     Node::setSortAttributes(true);
 
-    GenericNode obj{"html", false, Attribute("lang", "en"),
-                    Attribute("theme", "dark"), GenericNode("head", false)};
+    GenericNode obj{"html", NonVoid, Attribute("lang", "en"),
+                    Attribute("theme", "dark"), GenericNode("head", NonVoid)};
 
     std::string expected =
         "<html lang=\"en\" theme=\"dark\">\n\t<head></head>\n</html>";
@@ -21,8 +25,8 @@ TEST_CASE("HTML is generated", "[Node]") {
 TEST_CASE("Attribute remove works", "[Node]") {
     using namespace onyx::tags;
 
-    GenericNode obj{"html", false, Attribute("lang", "en"),
-                    Attribute("theme", "dark"), GenericNode("head", false)};
+    GenericNode obj{"html", NonVoid, Attribute("lang", "en"),
+                    Attribute("theme", "dark"), GenericNode("head", NonVoid)};
 
     obj.removeAttribute("lang");
 
@@ -32,7 +36,7 @@ TEST_CASE("Attribute remove works", "[Node]") {
 TEST_CASE("Constructor throws on Attribute repetition", "[Node]") {
     using namespace onyx::tags;
 
-    REQUIRE_THROWS_WITH(GenericNode("div", false, Attribute("name", "1"),
+    REQUIRE_THROWS_WITH(GenericNode("div", NonVoid, Attribute("name", "1"),
                                     Attribute("name", "2")),
                         "Adding duplicate Attribute");
 }
@@ -61,7 +65,7 @@ TEST_CASE("Vector constructor works", "[Node]") {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("Complex test case generates pretty html", "[Node]") {
+TEST_CASE("Complex test case generates pretty XML", "[Node]") {
     using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
@@ -69,95 +73,96 @@ TEST_CASE("Complex test case generates pretty html", "[Node]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
 
         GenericNode(
-            "head", false,
-            GenericNode("meta", true, Attribute("charset", "UTF-8")),
+            "head", NonVoid,
+            GenericNode("meta", Void, Attribute("charset", "UTF-8")),
             GenericNode(
-                "meta", true, Attribute("name", "viewport"),
+                "xml:meta", Void, Attribute("name", "viewport"),
                 Attribute("content", "width=device-width, initial-scale=1.0")),
-            GenericNode("title", false, Text("Complex Test Page")),
-            GenericNode("link", true, Attribute("rel", "stylesheet"),
+            GenericNode("title", NonVoid, Text("Complex Test Page")),
+            GenericNode("link", Void, Attribute("xml:rel", "stylesheet"),
                         Attribute("href", "/styles/main.css"))),
 
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "header", false,
+                "header", NonVoid,
                 GenericNode(
-                    "nav", false,
+                    "nav", NonVoid,
                     GenericNode(
-                        "ul", false,
-                        GenericNode(
-                            "li", false,
-                            GenericNode("a", false, Attribute("href", "#home"),
-                                        Text("Home"))),
-                        GenericNode(
-                            "li", false,
-                            GenericNode("a", false, Attribute("href", "#about"),
-                                        Text("About Us")))))),
+                        "ul", NonVoid,
+                        GenericNode("li", NonVoid,
+                                    GenericNode("a", NonVoid,
+                                                Attribute("href", "#home"),
+                                                Text("Home"))),
+                        GenericNode("li", NonVoid,
+                                    GenericNode("a", NonVoid,
+                                                Attribute("href", "#about"),
+                                                Text("About Us")))))),
 
             GenericNode(
-                "main", false,
+                "xml:main", NonVoid,
                 GenericNode(
-                    "section", false, Attribute("id", "introduction"),
-                    GenericNode("h1", false, Text("Introduction")),
-                    GenericNode("p", false,
+                    "section", NonVoid, Attribute("id", "introduction"),
+                    GenericNode("h1", NonVoid, Text("Introduction")),
+                    GenericNode("p", NonVoid,
                                 Text("Welcome to the complex HTML structure "
                                      "test case.")),
-                    GenericNode("p", false,
+                    GenericNode("p", NonVoid,
                                 Text("This test includes various nested "
                                      "elements, attributes, and content.")),
                     GenericNode(
-                        "form", false, Attribute("name", "contact-form"),
-                        GenericNode("label", false, Attribute("for", "name"),
+                        "form", NonVoid, Attribute("name", "contact-form"),
+                        GenericNode("label", NonVoid, Attribute("for", "name"),
                                     Text("Your Name:")),
-                        GenericNode("input", true, Attribute("type", "text"),
+                        GenericNode("input", Void, Attribute("type", "text"),
                                     Attribute("id", "name"),
                                     Attribute("name", "name")),
-                        GenericNode("label", false, Attribute("for", "email"),
+                        GenericNode("label", NonVoid, Attribute("for", "email"),
                                     Text("Your Email:")),
-                        GenericNode("input", true, Attribute("type", "email"),
+                        GenericNode("input", Void, Attribute("type", "email"),
                                     Attribute("id", "email"),
                                     Attribute("name", "email")),
-                        GenericNode("button", false,
+                        GenericNode("button", NonVoid,
                                     Attribute("type", "submit"),
                                     Text("Submit")))),
 
                 GenericNode(
-                    "section", false, Attribute("id", "features"),
-                    GenericNode("h2", false, Text("Features")),
-                    GenericNode("ul", false,
-                                GenericNode("li", false, Text("Feature 1")),
-                                GenericNode("li", false, Text("Feature 2")),
-                                GenericNode("li", false, Text("Feature 3"))),
-                    GenericNode("p", false,
+                    "section", NonVoid, Attribute("id", "features"),
+                    GenericNode("h2", NonVoid, Text("Features")),
+                    GenericNode("ul", NonVoid,
+                                GenericNode("li", NonVoid, Text("Feature 1")),
+                                GenericNode("li", NonVoid, Text("Feature 2")),
+                                GenericNode("li", NonVoid, Text("Feature 3"))),
+                    GenericNode("p", NonVoid,
                                 Text("These are the key features of the "
                                      "application.")))),
 
             GenericNode(
-                "footer", false,
-                GenericNode("p", false, Text("© 2025 Complex HTML Test Page")),
-                GenericNode("a", false,
+                "footer", NonVoid,
+                GenericNode("p", NonVoid,
+                            Text("© 2025 Complex HTML Test Page")),
+                GenericNode("a", NonVoid,
                             Attribute("href", "https://www.example.com"),
                             Text("Privacy Policy"))))};
 
     std::string expected =
         "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<meta "
-        "charset=\"UTF-8\"/>\n\t\t<meta content=\"width=device-width, "
+        "charset=\"UTF-8\"/>\n\t\t<xml:meta content=\"width=device-width, "
         "initial-scale=1.0\" name=\"viewport\"/>\n\t\t<title>\n\t\t\tComplex "
         "Test Page\n\t\t</title>\n\t\t<link href=\"/styles/main.css\" "
-        "rel=\"stylesheet\"/>\n\t</"
+        "xml:rel=\"stylesheet\"/>\n\t</"
         "head>\n\t<body>\n\t\t<header>\n\t\t\t<nav>\n\t\t\t\t<ul>\n\t\t\t\t\t<"
         "li>\n\t\t\t\t\t\t<a "
         "href=\"#home\">\n\t\t\t\t\t\t\tHome\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</"
         "li>\n\t\t\t\t\t<li>\n\t\t\t\t\t\t<a "
         "href=\"#about\">\n\t\t\t\t\t\t\tAbout "
         "Us\n\t\t\t\t\t\t</a>\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t</"
-        "nav>\n\t\t</header>\n\t\t<main>\n\t\t\t<section "
+        "nav>\n\t\t</header>\n\t\t<xml:main>\n\t\t\t<section "
         "id=\"introduction\">\n\t\t\t\t<h1>\n\t\t\t\t\tIntroduction\n\t\t\t\t</"
         "h1>\n\t\t\t\t<p>\n\t\t\t\t\tWelcome to the complex HTML structure "
         "test case.\n\t\t\t\t</p>\n\t\t\t\t<p>\n\t\t\t\t\tThis test includes "
@@ -178,7 +183,7 @@ TEST_CASE("Complex test case generates pretty html", "[Node]") {
         "3\n\t\t\t\t\t</li>\n\t\t\t\t</ul>\n\t\t\t\t<p>\n\t\t\t\t\tThese are "
         "the key features of the "
         "application.\n\t\t\t\t</p>\n\t\t\t</section>\n\t\t</"
-        "main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test "
+        "xml:main>\n\t\t<footer>\n\t\t\t<p>\n\t\t\t\t© 2025 Complex HTML Test "
         "Page\n\t\t\t</p>\n\t\t\t<a "
         "href=\"https://www.example.com\">\n\t\t\t\tPrivacy "
         "Policy\n\t\t\t</a>\n\t\t</footer>\n\t</body>\n</html>";
@@ -186,7 +191,7 @@ TEST_CASE("Complex test case generates pretty html", "[Node]") {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("Complex test case generates non-pretty html", "[Node]") {
+TEST_CASE("Complex test case generates non-pretty XML", "[Node]") {
     using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
@@ -194,90 +199,92 @@ TEST_CASE("Complex test case generates non-pretty html", "[Node]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
 
         GenericNode(
-            "head", false,
-            GenericNode("meta", true, Attribute("charset", "UTF-8")),
+            "head", NonVoid,
+            GenericNode("meta", Void, Attribute("charset", "UTF-8")),
             GenericNode(
-                "meta", true, Attribute("name", "viewport"),
+                "xml:meta", Void, Attribute("xml:name", "viewport"),
                 Attribute("content", "width=device-width, initial-scale=1.0")),
-            GenericNode("title", false, Text("Complex Test Page")),
-            GenericNode("link", true, Attribute("rel", "stylesheet"),
+            GenericNode("title", NonVoid, Text("Complex Test Page")),
+            GenericNode("link", Void, Attribute("rel", "stylesheet"),
                         Attribute("href", "/styles/main.css"))),
 
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "header", false,
+                "header", NonVoid,
                 GenericNode(
-                    "nav", false,
+                    "nav", NonVoid,
                     GenericNode(
-                        "ul", false,
-                        GenericNode(
-                            "li", false,
-                            GenericNode("a", false, Attribute("href", "#home"),
-                                        Text("Home"))),
-                        GenericNode(
-                            "li", false,
-                            GenericNode("a", false, Attribute("href", "#about"),
-                                        Text("About Us")))))),
+                        "ul", NonVoid,
+                        GenericNode("li", NonVoid,
+                                    GenericNode("a", NonVoid,
+                                                Attribute("href", "#home"),
+                                                Text("Home"))),
+                        GenericNode("li", NonVoid,
+                                    GenericNode("a", NonVoid,
+                                                Attribute("href", "#about"),
+                                                Text("About Us")))))),
 
             GenericNode(
-                "main", false,
+                "xml:main", NonVoid,
                 GenericNode(
-                    "section", false, Attribute("id", "introduction"),
-                    GenericNode("h1", false, Text("Introduction")),
-                    GenericNode("p", false,
+                    "section", NonVoid, Attribute("id", "introduction"),
+                    GenericNode("h1", NonVoid, Text("Introduction")),
+                    GenericNode("p", NonVoid,
                                 Text("Welcome to the complex HTML structure "
                                      "test case.")),
-                    GenericNode("p", false,
+                    GenericNode("p", NonVoid,
                                 Text("This test includes various nested "
                                      "elements, attributes, and content.")),
                     GenericNode(
-                        "form", false, Attribute("name", "contact-form"),
-                        GenericNode("label", false, Attribute("for", "name"),
+                        "form", NonVoid, Attribute("name", "contact-form"),
+                        GenericNode("label", NonVoid, Attribute("for", "name"),
                                     Text("Your Name:")),
-                        GenericNode("input", true, Attribute("type", "text"),
+                        GenericNode("input", Void, Attribute("type", "text"),
                                     Attribute("id", "name"),
                                     Attribute("name", "name")),
-                        GenericNode("label", false, Attribute("for", "email"),
+                        GenericNode("label", NonVoid, Attribute("for", "email"),
                                     Text("Your Email:")),
-                        GenericNode("input", true, Attribute("type", "email"),
+                        GenericNode("input", Void, Attribute("type", "email"),
                                     Attribute("id", "email"),
                                     Attribute("name", "email")),
-                        GenericNode("button", false,
+                        GenericNode("button", NonVoid,
                                     Attribute("type", "submit"),
                                     Text("Submit")))),
 
                 GenericNode(
-                    "section", false, Attribute("id", "features"),
-                    GenericNode("h2", false, Text("Features")),
-                    GenericNode("ul", false,
-                                GenericNode("li", false, Text("Feature 1")),
-                                GenericNode("li", false, Text("Feature 2")),
-                                GenericNode("li", false, Text("Feature 3"))),
-                    GenericNode("p", false,
+                    "section", NonVoid, Attribute("id", "features"),
+                    GenericNode("h2", NonVoid, Text("Features")),
+                    GenericNode("ul", NonVoid,
+                                GenericNode("li", NonVoid, Text("Feature 1")),
+                                GenericNode("li", NonVoid, Text("Feature 2")),
+                                GenericNode("li", NonVoid, Text("Feature 3"))),
+                    GenericNode("p", NonVoid,
                                 Text("These are the key features of the "
                                      "application.")))),
 
             GenericNode(
-                "footer", false,
-                GenericNode("p", false, Text("© 2025 Complex HTML Test Page")),
-                GenericNode("a", false,
+                "footer", NonVoid,
+                GenericNode("p", NonVoid,
+                            Text("© 2025 Complex HTML Test Page")),
+                GenericNode("a", NonVoid,
                             Attribute("href", "https://www.example.com"),
                             Text("Privacy Policy"))))};
 
     std::string expected =
-        "<html lang=\"en\" theme=\"dark\"><head><meta charset=\"UTF-8\"/><meta "
-        "name=\"viewport\" content=\"width=device-width, "
+        "<html lang=\"en\" theme=\"dark\"><head><meta "
+        "charset=\"UTF-8\"/><xml:meta "
+        "xml:name=\"viewport\" content=\"width=device-width, "
         "initial-scale=1.0\"/><title>Complex Test Page</title><link "
         "rel=\"stylesheet\" "
         "href=\"/styles/main.css\"/></head><body><header><nav><ul><li><a "
         "href=\"#home\">Home</a></li><li><a href=\"#about\">About "
-        "Us</a></li></ul></nav></header><main><section "
+        "Us</a></li></ul></nav></header><xml:main><section "
         "id=\"introduction\"><h1>Introduction</h1><p>Welcome to the complex "
         "HTML structure test case.</p><p>This test includes various nested "
         "elements, attributes, and content.</p><form "
@@ -288,7 +295,8 @@ TEST_CASE("Complex test case generates non-pretty html", "[Node]") {
         "type=\"submit\">Submit</button></form></section><section "
         "id=\"features\"><h2>Features</h2><ul><li>Feature 1</li><li>Feature "
         "2</li><li>Feature 3</li></ul><p>These are the key features of the "
-        "application.</p></section></main><footer><p>© 2025 Complex HTML Test "
+        "application.</p></section></xml:main><footer><p>© 2025 Complex HTML "
+        "Test "
         "Page</p><a href=\"https://www.example.com\">Privacy "
         "Policy</a></footer></body></html>";
     CHECK(expected == obj.serialize());
@@ -297,25 +305,25 @@ TEST_CASE("Complex test case generates non-pretty html", "[Node]") {
 TEST_CASE("GenericNode can't be given children if void", "[GenericNode]") {
     using namespace onyx::tags;
 
-    REQUIRE_THROWS(GenericNode{"img", true, GenericNode{"div", false}});
+    REQUIRE_THROWS(GenericNode{"img", Void, GenericNode{"div", NonVoid}});
 
-    std::unique_ptr<Node> d = std::make_unique<GenericNode>("div", false);
+    std::unique_ptr<Node> d = std::make_unique<GenericNode>("div", NonVoid);
 
     std::vector<NodeHandle> vec;
     vec.push_back(std::move(d));
 
-    REQUIRE_THROWS(GenericNode{"img", true, {}, std::move(vec)});
+    REQUIRE_THROWS(GenericNode{"img", Void, {}, std::move(vec)});
 }
 
 TEST_CASE("Node::addChild() throws if used on a void node",
           "[Node::addChild]") {
     using namespace onyx::tags;
 
-    GenericNode image{"img", true};
+    GenericNode image{"img", Void};
 
-    REQUIRE_THROWS(image.addChild(GenericNode{"div", false}));
+    REQUIRE_THROWS(image.addChild(GenericNode{"div", NonVoid}));
 
-    std::unique_ptr<Node> d = std::make_unique<GenericNode>("div", false);
+    std::unique_ptr<Node> d = std::make_unique<GenericNode>("div", NonVoid);
 
     REQUIRE_THROWS(image.addChild(std::move(d)));
 }
@@ -328,18 +336,18 @@ TEST_CASE("Children return by tag name works", "[Node]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("id", "0"),
-                GenericNode("div", false, Attribute("id", "1"),
-                            GenericNode("div", false, Attribute("id", "2"))),
-                GenericNode("div", false, Attribute("id", "3")),
-                GenericNode("div", false, Attribute("id", "4"))))};
+                "div", NonVoid, Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("id", "2"))),
+                GenericNode("div", NonVoid, Attribute("id", "3")),
+                GenericNode("div", NonVoid, Attribute("id", "4"))))};
 
     auto children = obj.getChildrenByTagName("div");
 
@@ -356,20 +364,20 @@ TEST_CASE("Children return by id works", "[Node]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("id", "0"),
-                GenericNode("div", false, Attribute("id", "1"),
-                            GenericNode("div", false, Attribute("id", "2"),
-                                        GenericNode("p", false,
+                "div", NonVoid, Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("id", "2"),
+                                        GenericNode("p", NonVoid,
                                                     Attribute("id", "11")))),
-                GenericNode("div", false, Attribute("id", "3")),
-                GenericNode("div", false, Attribute("id", "4"))))};
+                GenericNode("div", NonVoid, Attribute("id", "3")),
+                GenericNode("div", NonVoid, Attribute("id", "4"))))};
 
     auto children = obj.getChildrenById("11");
 
@@ -387,23 +395,24 @@ TEST_CASE("Children return by name works", "[Node]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("name", "d"), Attribute("id", "0"),
-                GenericNode(
-                    "div", false, Attribute("name", "d"), Attribute("id", "1"),
-                    GenericNode("div", false, Attribute("name", "d"),
-                                Attribute("id", "2"),
-                                GenericNode("p", false, Attribute("name", "p"),
-                                            Attribute("id", "11")))),
-                GenericNode("div", false, Attribute("name", "d"),
+                "div", NonVoid, Attribute("name", "d"), Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("name", "d"),
+                            Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("name", "d"),
+                                        Attribute("id", "2"),
+                                        GenericNode("p", NonVoid,
+                                                    Attribute("name", "p"),
+                                                    Attribute("id", "11")))),
+                GenericNode("div", NonVoid, Attribute("name", "d"),
                             Attribute("id", "3")),
-                GenericNode("div", false, Attribute("name", "d"),
+                GenericNode("div", NonVoid, Attribute("name", "d"),
                             Attribute("id", "4"))))};
 
     auto children = obj.getChildrenByName("d");
@@ -427,23 +436,24 @@ TEST_CASE("Children return by class name works", "[Node]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("class", "d"), Attribute("id", "0"),
-                GenericNode(
-                    "div", false, Attribute("class", "d"), Attribute("id", "1"),
-                    GenericNode("div", false, Attribute("class", "d"),
-                                Attribute("id", "2"),
-                                GenericNode("p", false, Attribute("class", "p"),
-                                            Attribute("id", "11")))),
-                GenericNode("div", false, Attribute("class", "d"),
+                "div", NonVoid, Attribute("class", "d"), Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("class", "d"),
+                            Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("class", "d"),
+                                        Attribute("id", "2"),
+                                        GenericNode("p", NonVoid,
+                                                    Attribute("class", "p"),
+                                                    Attribute("id", "11")))),
+                GenericNode("div", NonVoid, Attribute("class", "d"),
                             Attribute("id", "3")),
-                GenericNode("div", false, Attribute("class", "d"),
+                GenericNode("div", NonVoid, Attribute("class", "d"),
                             Attribute("id", "4"))))};
 
     auto children = obj.getChildrenByClassName("d");
@@ -469,23 +479,24 @@ TEST_CASE("Children return by attribute works", "[Node]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("class", "d"), Attribute("id", "0"),
-                GenericNode(
-                    "div", false, Attribute("class", "d"), Attribute("id", "1"),
-                    GenericNode("div", false, Attribute("class", "d"),
-                                Attribute("id", "2"),
-                                GenericNode("p", false, Attribute("class", "p"),
-                                            Attribute("id", "11")))),
-                GenericNode("div", false, Attribute("class", "d"),
+                "div", NonVoid, Attribute("class", "d"), Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("class", "d"),
+                            Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("class", "d"),
+                                        Attribute("id", "2"),
+                                        GenericNode("p", NonVoid,
+                                                    Attribute("class", "p"),
+                                                    Attribute("id", "11")))),
+                GenericNode("div", NonVoid, Attribute("class", "d"),
                             Attribute("id", "3")),
-                GenericNode("div", false, Attribute("class", "d"),
+                GenericNode("div", NonVoid, Attribute("class", "d"),
                             Attribute("id", "4"))))};
 
     auto children = obj.getChildrenByAttribute("class", "d");
@@ -505,23 +516,24 @@ TEST_CASE("Children return by attribute name works", "[Node]") {
 
     GenericNode obj{
         "html",
-        false,
+        NonVoid,
         Attribute("lang", "en"),
         Attribute("theme", "dark"),
-        GenericNode("head", false),
+        GenericNode("head", NonVoid),
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("class", "a"), Attribute("id", "0"),
-                GenericNode(
-                    "div", false, Attribute("class", "b"), Attribute("id", "1"),
-                    GenericNode("div", false, Attribute("class", "c"),
-                                Attribute("id", "2"),
-                                GenericNode("p", false, Attribute("class", "d"),
-                                            Attribute("id", "3")))),
-                GenericNode("div", false, Attribute("class", "e"),
+                "div", NonVoid, Attribute("class", "a"), Attribute("id", "0"),
+                GenericNode("div", NonVoid, Attribute("class", "b"),
+                            Attribute("id", "1"),
+                            GenericNode("div", NonVoid, Attribute("class", "c"),
+                                        Attribute("id", "2"),
+                                        GenericNode("p", NonVoid,
+                                                    Attribute("class", "d"),
+                                                    Attribute("id", "3")))),
+                GenericNode("div", NonVoid, Attribute("class", "e"),
                             Attribute("id", "4")),
-                GenericNode("div", false, Attribute("class", "f"),
+                GenericNode("div", NonVoid, Attribute("class", "f"),
                             Attribute("id", "5"))))};
 
     auto children = obj.getChildrenByAttributeName("class");
@@ -540,16 +552,16 @@ TEST_CASE("Child add works", "[Node]") {
     Node::setSortAttributes(true);
 
     GenericNode obj{"html",
-                    false,
+                    NonVoid,
                     Attribute("lang", "en"),
                     Attribute("theme", "dark"),
-                    GenericNode("head", false),
-                    GenericNode("body", false)};
+                    GenericNode("head", NonVoid),
+                    GenericNode("body", NonVoid)};
 
     auto body = obj.getChildrenByTagName("body");
 
     std::unique_ptr<Node> child =
-        std::make_unique<GenericNode>("div", false, Attribute("id", "1"));
+        std::make_unique<GenericNode>("div", NonVoid, Attribute("id", "1"));
 
     body[0]->addChild(std::move(child));
 
@@ -567,17 +579,18 @@ TEST_CASE("Child remove works", "[Node]") {
     Node::setSortAttributes(true);
 
     std::unique_ptr<Node> child =
-        std::make_unique<GenericNode>("div", false, Attribute("id", "1"));
+        std::make_unique<GenericNode>("div", NonVoid, Attribute("id", "1"));
 
     std::vector<NodeHandle> vec;
     vec.push_back(std::move(child));
 
-    GenericNode obj{"html",
-                    false,
-                    Attribute("lang", "en"),
-                    Attribute("theme", "dark"),
-                    GenericNode("head", false),
-                    GenericNode("body", false, {}, std::move(vec))};
+    GenericNode obj{
+        "html",
+        NonVoid,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", NonVoid),
+        GenericNode("body", NonVoid, std::vector<Attribute>{}, std::move(vec))};
 
     auto children = obj.getChildrenById("1");
 
@@ -601,11 +614,11 @@ TEST_CASE("Operator [] works for attribute access", "[Node]") {
     Node::setSortAttributes(true);
 
     GenericNode obj{"html",
-                    false,
+                    NonVoid,
                     Attribute("lang", "en"),
                     Attribute("theme", "dark"),
-                    GenericNode("head", false),
-                    GenericNode("body", false)};
+                    GenericNode("head", NonVoid),
+                    GenericNode("body", NonVoid)};
 
     CHECK(obj["lang"] == "en");
 
@@ -622,16 +635,16 @@ TEST_CASE("Operator += works for child add", "[Node]") {
     Node::setSortAttributes(true);
 
     GenericNode obj{"html",
-                    false,
+                    NonVoid,
                     Attribute("lang", "en"),
                     Attribute("theme", "dark"),
-                    GenericNode("head", false),
-                    GenericNode("body", false)};
+                    GenericNode("head", NonVoid),
+                    GenericNode("body", NonVoid)};
 
     auto children = obj.getChildrenByTagName("body");
 
     std::unique_ptr<Node> child =
-        std::make_unique<GenericNode>("div", false, Attribute("id", "1"));
+        std::make_unique<GenericNode>("div", NonVoid, Attribute("id", "1"));
 
     REQUIRE(children.size() == 1);
     *(children[0]) += std::move(child);
@@ -642,7 +655,7 @@ TEST_CASE("Operator += works for child add", "[Node]") {
     CHECK(children[0]->isInTree());
 }
 
-TEST_CASE("Complex html with dynamic tags", "[Node]") {
+TEST_CASE("Complex XML with dynamic tags", "[Node]") {
     using namespace onyx::tags;
 
     Node::setIndentationSequence("\t");
@@ -732,26 +745,26 @@ TEST_CASE("Complex html with dynamic tags", "[Node]") {
     CHECK(expected == obj.serializePretty("\t", true));
 }
 
-TEST_CASE("Empty html tree has size 1", "[Node::size()]") {
+TEST_CASE("Empty XML tree has size 1", "[Node::size()]") {
     using namespace onyx::tags;
     html root;
     REQUIRE(root.size() == 1);
 }
 
-TEST_CASE("Html tree with one child has size 2", "[Node::size()]") {
+TEST_CASE("XML tree with one child has size 2", "[Node::size()]") {
     using namespace onyx::tags;
     html root;
     root.addChild(body());
     REQUIRE(root.size() == 2);
 }
 
-TEST_CASE("Html tree with 5 nodes has size 6", "[Node::size()]") {
+TEST_CASE("XML tree with 5 nodes has size 6", "[Node::size()]") {
     using namespace onyx::tags;
     html root{p(), p(), p(), p(), p()};
     REQUIRE(root.size() == 6);
 }
 
-TEST_CASE("Html tree with 5001 nodes has size 5001", "[Node::size()]") {
+TEST_CASE("XML tree with 5001 nodes has size 5001", "[Node::size()]") {
     using namespace onyx::tags;
     html root;
     for (int i = 0; i < 1000; i++) {
@@ -816,7 +829,7 @@ TEST_CASE("3000 tags serialize in under 50ms", "[Node]") {
     REQUIRE(time.count() < 50);
 }
 
-TEST_CASE("Template html runtime api serializes correctly", "[Node]") {
+TEST_CASE("Template XML runtime api serializes correctly", "[Node]") {
     using namespace onyx::ctags;
 
     std::string doc1 = Document<html<Attribute<"lang", "en">, head<>,
@@ -830,7 +843,7 @@ TEST_CASE("Template html runtime api serializes correctly", "[Node]") {
     CHECK(doc1 == expected);
 }
 
-TEST_CASE("Template html runtime api enforces given indentation rules",
+TEST_CASE("Template XML runtime api enforces given indentation rules",
           "[Node]") {
     using namespace onyx::ctags;
 
@@ -845,7 +858,23 @@ TEST_CASE("Template html runtime api enforces given indentation rules",
     CHECK(doc::dynamicTree()->serializePretty("    ", true) == expected);
 }
 
-TEST_CASE("HTML fragment using template runtime api serializes correctly",
+TEST_CASE(
+    "Template tag with backed by runtime class with namespace prefix converts "
+    "correctly") {
+    using namespace onyx::ctags;
+    using namespace onyx;
+
+    using doc = Document<with_namespace<>>;
+    using doc2 = Document<with_namespace_void<>>;
+
+    tags::EmptyNode root(tags::with_namespace{});
+    tags::EmptyNode root1(tags::with_namespace_void{});
+
+    CHECK(doc::dynamicTree()->deepEquals(root));
+    CHECK(doc2::dynamicTree()->deepEquals(root1));
+}
+
+TEST_CASE("XML fragment using template runtime api serializes correctly",
           "[Node]") {
     using namespace onyx::ctags;
 
@@ -914,7 +943,7 @@ TEST_CASE("Special templated runtime api tags are serialized correctly") {
           "publication_year>\n\t</book>\n</library>");
 }
 
-TEST_CASE("Complex templated runtime api html with constant tags", "[Node]") {
+TEST_CASE("Complex templated runtime api XML with constant tags", "[Node]") {
     using namespace onyx::ctags;
 
     std::string doc4 = Document<html<
@@ -969,7 +998,7 @@ TEST_CASE("Complex templated runtime api html with constant tags", "[Node]") {
     CHECK(expected == doc4);
 }
 
-TEST_CASE("HTML is correctly serialized") {
+TEST_CASE("XML is correctly serialized") {
     using namespace onyx::ctags;
 
     using doc = Document<
@@ -1106,7 +1135,7 @@ TEST_CASE("Multiple text nodes are serialized in sequence") {
           "<html><head></head><body>Hello world!</body></html>");
 }
 
-TEST_CASE("Text properly escapes html", "[dynamic::tags::Text]") {
+TEST_CASE("Text properly escapes XML", "[dynamic::tags::Text]") {
     using namespace onyx::tags;
 
     std::string textToEscape =
@@ -1130,7 +1159,7 @@ TEST_CASE("Text properly escapes html", "[dynamic::tags::Text]") {
     CHECK(d.serializePretty("\t", true) == expected);
 }
 
-TEST_CASE("Attribute properly escapes html", "[dynamic::Attribute]") {
+TEST_CASE("Attribute properly escapes XML", "[dynamic::Attribute]") {
     using namespace onyx::tags;
 
     std::string textToEscape =
@@ -1230,9 +1259,9 @@ TEST_CASE("Text does not escape unicode when multi-byte escaping is disabled",
 TEST_CASE("XML comments are generated") {
     using namespace onyx::tags;
 
-    GenericNode obj{"html", false, Attribute("lang", "en"),
+    GenericNode obj{"html", NonVoid, Attribute("lang", "en"),
                     Attribute("theme", "dark"),
-                    GenericNode("head", false, Comment("A comment."))};
+                    GenericNode("head", NonVoid, Comment("A comment."))};
 
     std::string expected =
         "<html lang=\"en\" theme=\"dark\">\n\t<head>\n\t\t<!--A "
@@ -1245,8 +1274,8 @@ TEST_CASE("XML comments are escaped") {
     using namespace onyx::tags;
 
     GenericNode obj{
-        "html", false, Attribute("lang", "en"), Attribute("theme", "dark"),
-        GenericNode("head", false,
+        "html", NonVoid, Attribute("lang", "en"), Attribute("theme", "dark"),
+        GenericNode("head", NonVoid,
                     Comment("A comment. - --><dangerous>sequence."))};
 
     std::string expected =
@@ -1260,8 +1289,8 @@ TEST_CASE("XML CDATA sections are generated") {
     using namespace onyx::tags;
 
     GenericNode obj{
-        "html", false, Attribute("lang", "en"), Attribute("theme", "dark"),
-        GenericNode("head", false,
+        "html", NonVoid, Attribute("lang", "en"), Attribute("theme", "dark"),
+        GenericNode("head", NonVoid,
                     CData("A CDATA section can contain arbitrary characters, "
                           "like >, <, =, \", \' and even &!"))};
 
@@ -1277,9 +1306,9 @@ TEST_CASE("XML CDATA sections are escaped") {
     using namespace onyx::tags;
 
     GenericNode obj{
-        "html", false, Attribute("lang", "en"), Attribute("theme", "dark"),
+        "html", NonVoid, Attribute("lang", "en"), Attribute("theme", "dark"),
         GenericNode(
-            "head", false,
+            "head", NonVoid,
             CData("A CDATA section is only forbidden from containing ]]>!"))};
 
     std::string expected =
@@ -1294,7 +1323,7 @@ TEST_CASE("XML processing instructions are generated") {
     using namespace onyx::tags;
 
     GenericNode obj{
-        "root", false, Attribute("lang", "en"),
+        "root", NonVoid, Attribute("lang", "en"),
         ProcessingInstruction("templater", "doSomething 5 > 4 somethingElse")};
 
     std::string expected =
@@ -1307,7 +1336,7 @@ TEST_CASE("XML processing instructions are generated") {
 TEST_CASE("XML processing instructions are escaped") {
     using namespace onyx::tags;
 
-    GenericNode obj{"root", false, Attribute("lang", "en"),
+    GenericNode obj{"root", NonVoid, Attribute("lang", "en"),
                     ProcessingInstruction(
                         "templater", "doSomething 5 > 4 ?> somethingElse")};
 
@@ -1322,8 +1351,8 @@ TEST_CASE("DOCTYPEs are generated") {
     using namespace onyx::tags;
 
     EmptyNode obj{Doctype("some_list SYSTEM \"example.dtd\""),
-                  GenericNode("html", false, Attribute("lang", "en"),
-                              GenericNode("head", false))};
+                  GenericNode("html", NonVoid, Attribute("lang", "en"),
+                              GenericNode("head", NonVoid))};
 
     std::string expected =
         "<!DOCTYPE some_list SYSTEM \"example.dtd\"><html "
@@ -1430,7 +1459,7 @@ TEST_CASE(
     using namespace onyx::tags;
 
     EmptyNode root(XmlDeclaration("1.0", "ISO-8859-1", true),
-                   GenericNode("node", true));
+                   GenericNode("node", Void));
     std::string serialized = root.serialize();
     REQUIRE(serialized ==
             "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" "
@@ -1442,7 +1471,7 @@ TEST_CASE(
     "(defaults)") {
     using namespace onyx::tags;
 
-    EmptyNode root(XmlDeclaration("1.0"), GenericNode("node", true));
+    EmptyNode root(XmlDeclaration("1.0"), GenericNode("node", Void));
     std::string serialized = root.serialize();
     REQUIRE(serialized == "<?xml version=\"1.0\"?><node/>");
 }
@@ -1452,7 +1481,7 @@ TEST_CASE(
     using namespace onyx::tags;
 
     EmptyNode root(XmlDeclaration("1.0", "UTF-8", false),
-                   GenericNode("node", true));
+                   GenericNode("node", Void));
     std::string serialized = root.serialize();
     REQUIRE(
         serialized ==
@@ -1463,8 +1492,8 @@ TEST_CASE("__DangerousRawText works", "[DangerousRawText]") {
     using namespace onyx::tags;
 
     GenericNode obj{
-        "html", false, Attribute("lang", "en"), Attribute("theme", "dark"),
-        GenericNode("head", false,
+        "html", NonVoid, Attribute("lang", "en"), Attribute("theme", "dark"),
+        GenericNode("head", NonVoid,
                     __DangerousRawText("<h1> Injected title! </h1>"))};
 
     std::string expected =
@@ -1530,7 +1559,7 @@ TEST_CASE("Node deepCopy creates a new instance with identical attributes",
           "[Node]") {
     using namespace onyx::tags;
 
-    GenericNode obj{"html", false, Attribute("class", "test"),
+    GenericNode obj{"html", NonVoid, Attribute("class", "test"),
                     Attribute("id", "1"), html(Attribute("class", "test"))};
 
     // Create a deep copy of the original node
@@ -1629,6 +1658,78 @@ TEST_CASE("Node deepEquals() works", "[Node]") {
     CHECK(!root->deepEquals(obj));
 }
 
+TEST_CASE("Node deepEquals() works with namespaces", "[Node]") {
+    using namespace onyx::tags;
+
+    GenericNode root("lib:library", NonVoid,
+                     Attribute("xmlns:lib", "http://example.com/lib"),
+                     GenericNode("lib:book", NonVoid, Attribute("id", "1"),
+                                 GenericNode("lib:title", NonVoid,
+                                             Text("C++ Namespaces Guide"))));
+
+    std::unique_ptr<Node> copy = root.deepCopy();
+    REQUIRE(copy);
+    CHECK(root.deepEquals(*copy));
+}
+
+TEST_CASE(
+    "Node deepEquals() works with nodes same namespace prefixes but different "
+    "URIs",
+    "[Node]") {
+    using namespace onyx::tags;
+    GenericNode root("lib:library", NonVoid,
+                     Attribute("xmlns:lib", "http://example.com/lib"),
+                     GenericNode("lib:book", NonVoid, Attribute("id", "1"),
+                                 GenericNode("lib:title", NonVoid,
+                                             Text("C++ Namespaces Guide"))));
+
+    GenericNode differentNamespace(
+        "lib:library", NonVoid,
+        Attribute("xmlns:lib", "http://example.com/other"),
+        GenericNode(
+            "lib:book", NonVoid, Attribute("id", "1"),
+            GenericNode("lib:title", NonVoid, Text("C++ Namespaces Guide"))));
+
+    CHECK_FALSE(root.deepEquals(differentNamespace));
+}
+
+TEST_CASE("Node deepEquals() works with nodes with missing prefixes",
+          "[Node]") {
+    using namespace onyx::tags;
+    GenericNode root("lib:library", NonVoid,
+                     Attribute("xmlns:lib", "http://example.com/lib"),
+                     GenericNode("lib:book", NonVoid, Attribute("id", "1"),
+                                 GenericNode("lib:title", NonVoid,
+                                             Text("C++ Namespaces Guide"))));
+
+    GenericNode withoutNamespace(
+        "library", NonVoid,
+        GenericNode(
+            "book", NonVoid, Attribute("id", "1"),
+            GenericNode("title", NonVoid, Text("C++ Namespaces Guide"))));
+
+    CHECK_FALSE(root.deepEquals(withoutNamespace));
+}
+
+TEST_CASE("Node deepEquals() works with nodes with different prefixes",
+          "[Node]") {
+    using namespace onyx::tags;
+    GenericNode root("lib:library", NonVoid,
+                     Attribute("xmlns:lib", "http://example.com/lib"),
+                     GenericNode("lib:book", NonVoid, Attribute("id", "1"),
+                                 GenericNode("lib:title", NonVoid,
+                                             Text("C++ Namespaces Guide"))));
+
+    GenericNode differentChild(
+        "lib:library", NonVoid,
+        Attribute("xmlns:lib", "http://example.com/lib"),
+        GenericNode(
+            "lib:book", NonVoid, Attribute("id", "1"),
+            GenericNode("lib2:title", NonVoid, Text("C++ Namespaces Guide"))));
+
+    CHECK_FALSE(root.deepEquals(differentChild));
+}
+
 TEST_CASE("Single Node has depth 0", "[Node]") {
     using namespace onyx::tags;
 
@@ -1682,14 +1783,14 @@ TEST_CASE("Node move properly handle indices", "[Node]") {
     using namespace onyx::tags;
 
     GenericNode obj{
-        "html", false,
+        "html", NonVoid,
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("class", "container"),
-                GenericNode("div", false, Attribute("class", "item")),
-                GenericNode("div", false, Attribute("class", "item")),
-                GenericNode("div", false, Attribute("class", "item"))))};
+                "div", NonVoid, Attribute("class", "container"),
+                GenericNode("div", NonVoid, Attribute("class", "item")),
+                GenericNode("div", NonVoid, Attribute("class", "item")),
+                GenericNode("div", NonVoid, Attribute("class", "item"))))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -1710,17 +1811,17 @@ TEST_CASE("Nodes get removed from indices upon destruction in non-owning trees",
     using namespace onyx;
     using namespace onyx::tags;
 
-    GenericNode obj{NonOwning, "html", false};
+    GenericNode obj{NonOwning, "html", NonVoid};
 
     index::AttributeNameIndex index =
         index::createIndex<index::AttributeNameIndex>(&obj, "class");
 
     REQUIRE(index.getRoot() == &obj);
 
-    Node* child = new GenericNode(NonOwning, "div", false);
+    Node* child = new GenericNode(NonOwning, "div", NonVoid);
     child->setAttributeValue("class", "item");
 
-    Node* child1 = new GenericNode(NonOwning, "div", false);
+    Node* child1 = new GenericNode(NonOwning, "div", NonVoid);
     child1->setAttributeValue("class", "item");
 
     obj.addChild(child);
@@ -1739,9 +1840,9 @@ TEST_CASE("Nodes get removed from parents upon destruction in non-owning trees",
     using namespace onyx;
     using namespace onyx::tags;
 
-    GenericNode obj{NonOwning, "html", false};
+    GenericNode obj{NonOwning, "html", NonVoid};
 
-    Node* child = new GenericNode(NonOwning, "div", false);
+    Node* child = new GenericNode(NonOwning, "div", NonVoid);
     child->setAttributeValue("class", "item");
 
     obj.addChild(child);
@@ -1758,14 +1859,14 @@ TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
     using namespace onyx::tags;
 
     GenericNode obj{
-        "html", false,
+        "html", NonVoid,
         GenericNode(
-            "body", false,
+            "body", NonVoid,
             GenericNode(
-                "div", false, Attribute("class", "container"),
-                GenericNode("div", false, Attribute("class", "item")),
-                GenericNode("div", false, Attribute("class", "item")),
-                GenericNode("div", false, Attribute("class", "item"))))};
+                "div", NonVoid, Attribute("class", "container"),
+                GenericNode("div", NonVoid, Attribute("class", "item")),
+                GenericNode("div", NonVoid, Attribute("class", "item")),
+                GenericNode("div", NonVoid, Attribute("class", "item"))))};
 
     REQUIRE(obj.getChildrenCount() > 0);
 
@@ -1774,7 +1875,7 @@ TEST_CASE("Node move assignment properly disowns resources", "[Node]") {
 
     REQUIRE(index.getRoot() == &obj);
 
-    obj = std::move(GenericNode("html", false));
+    obj = std::move(GenericNode("html", NonVoid));
     REQUIRE_FALSE(index.isValid());
 }
 
@@ -1933,17 +2034,18 @@ TEST_CASE("Child replace works", "[Node]") {
     using namespace onyx::tags;
 
     std::unique_ptr<Node> child =
-        std::make_unique<GenericNode>("div", false, Attribute("id", "1"));
+        std::make_unique<GenericNode>("div", NonVoid, Attribute("id", "1"));
 
     std::vector<NodeHandle> vec;
     vec.push_back(std::move(child));
 
-    GenericNode obj{"html",
-                    false,
-                    Attribute("lang", "en"),
-                    Attribute("theme", "dark"),
-                    GenericNode("head", false),
-                    GenericNode("body", false, {}, std::move(vec))};
+    GenericNode obj{
+        "html",
+        NonVoid,
+        Attribute("lang", "en"),
+        Attribute("theme", "dark"),
+        GenericNode("head", NonVoid),
+        GenericNode("body", NonVoid, std::vector<Attribute>{}, std::move(vec))};
 
     auto children = obj.getChildrenById("1");
 
@@ -1953,7 +2055,7 @@ TEST_CASE("Child replace works", "[Node]") {
     Node* parent = children[0]->getParentNode();
 
     std::unique_ptr<Node> child2 =
-        std::make_unique<GenericNode>("div", false, Attribute("id", "2"));
+        std::make_unique<GenericNode>("div", NonVoid, Attribute("id", "2"));
 
     NodeHandle result = obj.replaceChild(children[0], std::move(child2));
 
@@ -2003,7 +2105,7 @@ TEST_CASE("Owning NodeHandle reports owning and retains pointer",
           "[NodeHandle]") {
     using namespace onyx::tags;
 
-    auto up = std::make_unique<GenericNode>("div", false);
+    auto up = std::make_unique<GenericNode>("div", NonVoid);
     Node* raw = up.get();
 
     NodeHandle h(std::move(up));
@@ -2015,7 +2117,7 @@ TEST_CASE("Owning NodeHandle reports owning and retains pointer",
 TEST_CASE("Can construct owning NodeHandle with raw pointer", "[NodeHandle]") {
     using namespace onyx::tags;
 
-    GenericNode* node = new GenericNode("span", false);
+    GenericNode* node = new GenericNode("span", NonVoid);
 
     NodeHandle h(node, true);
 
@@ -2027,7 +2129,7 @@ TEST_CASE("Non-owning NodeHandle reports non-owning and retains pointer",
           "[NodeHandle]") {
     using namespace onyx::tags;
 
-    GenericNode* node = new GenericNode("span", false);
+    GenericNode* node = new GenericNode("span", NonVoid);
 
     NodeHandle h(node, false);
 
@@ -2040,7 +2142,7 @@ TEST_CASE("Non-owning NodeHandle reports non-owning and retains pointer",
 
 TEST_CASE("releaseRaw transfers pointer and resets handle", "[NodeHandle]") {
     using namespace onyx::tags;
-    auto up = std::make_unique<GenericNode>("p", false);
+    auto up = std::make_unique<GenericNode>("p", NonVoid);
     Node* raw = up.get();
 
     NodeHandle h(std::move(up));
@@ -2060,7 +2162,7 @@ TEST_CASE("toUnique on owning handle yields unique_ptr and becomes non-owning",
           "[NodeHandle]") {
     using namespace onyx::tags;
 
-    auto up = std::make_unique<GenericNode>("section", false);
+    auto up = std::make_unique<GenericNode>("section", NonVoid);
     Node* raw = up.get();
     NodeHandle h(std::move(up));
 
@@ -2074,7 +2176,7 @@ TEST_CASE("toUnique on owning handle yields unique_ptr and becomes non-owning",
 
 TEST_CASE("toUnique on non-owning handle throws logic_error", "[NodeHandle]") {
     using namespace onyx::tags;
-    GenericNode* node = new GenericNode("header", false);
+    GenericNode* node = new GenericNode("header", NonVoid);
 
     NodeHandle h(node, false);
 
@@ -2086,7 +2188,7 @@ TEST_CASE("toUnique on non-owning handle throws logic_error", "[NodeHandle]") {
 
 TEST_CASE("Move constructor transfers pointer and ownership", "[NodeHandle]") {
     using namespace onyx::tags;
-    auto up = std::make_unique<GenericNode>("footer", false);
+    auto up = std::make_unique<GenericNode>("footer", NonVoid);
     Node* raw = up.get();
 
     NodeHandle h1(std::move(up));
@@ -2101,13 +2203,13 @@ TEST_CASE("Move constructor transfers pointer and ownership", "[NodeHandle]") {
 
 TEST_CASE("Move assignment transfers pointer and ownership", "[NodeHandle]") {
     using namespace onyx::tags;
-    auto up1 = std::make_unique<GenericNode>("article", false);
+    auto up1 = std::make_unique<GenericNode>("article", NonVoid);
     Node* raw = up1.get();
 
     NodeHandle h1(std::move(up1));
     REQUIRE(h1.owning() == true);
 
-    GenericNode dummy("div", false);
+    GenericNode dummy("div", NonVoid);
     NodeHandle h2(&dummy, false);
     REQUIRE(h2.owning() == false);
 
@@ -2122,9 +2224,9 @@ TEST_CASE("Move assignment transfers pointer and ownership", "[NodeHandle]") {
 TEST_CASE("Non-owning Node does not destroy its children") {
     using namespace onyx::tags;
 
-    Node* body = new GenericNode(NonOwning, "body", false);
+    Node* body = new GenericNode(NonOwning, "body", NonVoid);
     {
-        GenericNode root(NonOwning, "html", false);
+        GenericNode root(NonOwning, "html", NonVoid);
 
         root.addChild(body);
     }
@@ -2140,15 +2242,15 @@ TEST_CASE(
     using namespace onyx::tags;
 
     // This will leak unless move constructor properly cleans up memory
-    REQUIRE_THROWS(GenericNode("html", false, GenericNode("body", false),
-                               GenericNode(NonOwning, "div", false)));
+    REQUIRE_THROWS(GenericNode("html", NonVoid, GenericNode("body", NonVoid),
+                               GenericNode(NonOwning, "div", NonVoid)));
 }
 
 TEST_CASE("Mixing owning and non-owning Nodes causes exception") {
     using namespace onyx::tags;
 
-    GenericNode root("html", false);
-    Node* body = new GenericNode(NonOwning, "body", false);
+    GenericNode root("html", NonVoid);
+    Node* body = new GenericNode(NonOwning, "body", NonVoid);
     REQUIRE_THROWS(root.addChild(body));
 
     delete body;
@@ -2168,7 +2270,7 @@ TEST_CASE("Vector constructor throws when mixing ownership modes", "[Node]") {
         children.emplace_back(std::make_unique<cdiv>(Text(std::to_string(i))));
     }
 
-    Node* nonOwned = new GenericNode("div", false);
+    Node* nonOwned = new GenericNode("div", NonVoid);
 
     children.emplace_back(nonOwned);
 
@@ -2184,7 +2286,7 @@ TEST_CASE("Arena allocates and constructs nodes", "[Arena]") {
 
     Arena arena = builder.build();
 
-    auto* parent = arena.allocate<GenericNode>("html", false);
+    auto* parent = arena.allocate<GenericNode>("html", NonVoid);
     auto* child = arena.allocate<Text>("hello world");
 
     REQUIRE(parent->getTagName() == "html");
@@ -2211,7 +2313,8 @@ TEST_CASE("Arena cleans up memory", "[Arena]") {
 
     {
         Arena arena = builder.build();
-        Node* ptr = parent.addChild(arena.allocate<GenericNode>("html", false));
+        Node* ptr =
+            parent.addChild(arena.allocate<GenericNode>("html", NonVoid));
         for (int i = 0; i < 5; ++i) {
             parent.addChild(arena.allocate<Text>("abc"));
         }
@@ -2234,7 +2337,7 @@ TEST_CASE("AttributeViewNode identifies correctly", "[AttributeViewNode]") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
-    GenericNode owner{"div", false, Attribute("id", "test-id")};
+    GenericNode owner{"div", NonVoid, Attribute("id", "test-id")};
     AttributeViewNode view(&owner, 0);
 
     CHECK(view.getTagName() == ".attribute-view-node");
@@ -2249,7 +2352,7 @@ TEST_CASE("AttributeViewNode references correct attribute index",
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
-    GenericNode owner{"div", false, Attribute("id", "1"),
+    GenericNode owner{"div", NonVoid, Attribute("id", "1"),
                       Attribute("class", "container"),
                       Attribute("data-val", "xyz")};
 
@@ -2273,7 +2376,7 @@ TEST_CASE("AttributeViewNode serializes to empty string",
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
-    GenericNode owner{"span", false, Attribute("hidden", "true")};
+    GenericNode owner{"span", NonVoid, Attribute("hidden", "true")};
     AttributeViewNode view(&owner, 0);
 
     CHECK(view.serialize() == "");
@@ -2285,7 +2388,7 @@ TEST_CASE("AttributeViewNode shallow copy works", "[AttributeViewNode]") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
-    GenericNode owner{"a", false, Attribute("href", "google.com")};
+    GenericNode owner{"a", NonVoid, Attribute("href", "google.com")};
     AttributeViewNode view(&owner, 0);
 
     std::unique_ptr<Node> copy = view.shallowCopy();
@@ -2306,9 +2409,9 @@ TEST_CASE("AttributeViewNode equality compares attribute values",
     using namespace onyx::tags;
     using namespace onyx::dynamic::xpath;
 
-    GenericNode node1{"div", false, Attribute("class", "same")};
-    GenericNode node2{"span", false, Attribute("class1", "same")};
-    GenericNode node3{"div", false, Attribute("class", "different")};
+    GenericNode node1{"div", NonVoid, Attribute("class", "same")};
+    GenericNode node2{"span", NonVoid, Attribute("class1", "same")};
+    GenericNode node3{"div", NonVoid, Attribute("class", "different")};
 
     AttributeViewNode view1(&node1, 0);
     AttributeViewNode view2(&node2, 0);
@@ -2325,7 +2428,7 @@ TEST_CASE("AttributeViewNode equality handles type mismatch",
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
-    GenericNode owner{"div", false, Attribute("id", "1")};
+    GenericNode owner{"div", NonVoid, Attribute("id", "1")};
     AttributeViewNode view(&owner, 0);
 
     CHECK_FALSE(view.shallowEquals(owner));
@@ -2394,7 +2497,7 @@ TEST_CASE("AttributeViewNode returns strictly the attribute value",
     using namespace onyx::dynamic::tags;
     using namespace onyx::dynamic::xpath;
 
-    GenericNode owner{"div", false, Attribute("id", "main-container"),
+    GenericNode owner{"div", NonVoid, Attribute("id", "main-container"),
                       Attribute("class", "hidden"),
                       Attribute("data-val", "123")};
 
@@ -2519,4 +2622,354 @@ TEST_CASE("getStringValue handles __DangerousRawText",
     cdiv d{Text("Safe"), __DangerousRawText("<span>Unsafe</span>")};
 
     CHECK(d.getStringValue() == "Safe<span>Unsafe</span>");
+}
+
+TEST_CASE("setNamespacePrefix works", "[NamespaceNode::setNamespacePrefix]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    GenericNode node("prefix", "name", NonVoid);
+    IndexFixture index = index::createIndex<IndexFixture>(&node);
+    REQUIRE(node.getNamespacePrefix() == "prefix");
+    node.setNamespacePrefix("prefix2");
+    REQUIRE(node.getNamespacePrefix() == "prefix2");
+    REQUIRE(index.updateCalledCount == 1);
+}
+
+TEST_CASE("setTagName works", "[GenericNode::setTagName]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    GenericNode node("prefix:name", NonVoid);
+    IndexFixture index = index::createIndex<IndexFixture>(&node);
+    REQUIRE(node.getNamespacePrefix() == "prefix");
+    REQUIRE(node.getTagName() == "name");
+    node.setTagName("other");
+    REQUIRE(node.getNamespacePrefix() == "prefix");
+    REQUIRE(node.getTagName() == "other");
+    REQUIRE(index.updateCalledCount == 1);
+}
+
+TEST_CASE("setIsVoid works", "[GenericNode::setIsVoid]") {
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    GenericNode node("prefix:name", NonVoid);
+    IndexFixture index = index::createIndex<IndexFixture>(&node);
+    REQUIRE_FALSE(node.isVoid());
+    node.setIsVoid(Void);
+    REQUIRE(node.isVoid());
+}
+
+TEST_CASE("getNamespacePrefix resolves empty prefix to null",
+          "[Attribute::getNamespacePrefix]") {
+    using namespace onyx::dynamic;
+    REQUIRE(Attribute("price", "15").getNamespacePrefix() == std::nullopt);
+}
+
+TEST_CASE("getNamespacePrefix resolves prefix",
+          "[Attribute::getNamespacePrefix]") {
+    using namespace onyx::dynamic;
+    REQUIRE(Attribute("lib:price", "15").getNamespacePrefix() == "lib");
+}
+
+TEST_CASE("getNCNameWithoutNamespace resolves with no prefix",
+          "[Attribute::getNCNameWithoutNamespace]") {
+    using namespace onyx::dynamic;
+    REQUIRE(Attribute("price", "15").getNCNameWithoutNamespace() == "price");
+}
+
+TEST_CASE("getNCNameWithoutNamespace resolves with prefix",
+          "[Attribute::getNCNameWithoutNamespace]") {
+    using namespace onyx::dynamic;
+    REQUIRE(Attribute("lib:price", "15").getNCNameWithoutNamespace() ==
+            "price");
+}
+
+TEST_CASE("getNamespaceName resolves empty prefix to null",
+          "[Node::getNamespaceName]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:notlib", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceName() == std::nullopt);
+}
+
+TEST_CASE("getNamespaceName resolves prefix with no declared namespace to null",
+          "[Node::getNamespaceName]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:notlib", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("lib:price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceName() == std::nullopt);
+}
+
+TEST_CASE(
+    "getNamespaceName resolves prefix with declared empty namespace to null",
+    "[Node::getNamespaceName]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:notlib", "uri2"),
+        GenericNode("book", NonVoid, Attribute("xmlns:lib", ""),
+                    GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("lib:price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceName() == std::nullopt);
+}
+
+TEST_CASE(
+    "getNamespaceName resolves prefix with declared namespace on ancestor",
+    "[Node::getNamespaceName]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:notlib", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("lib:price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceName() == "uri");
+}
+
+TEST_CASE("getNamespaceName resolves prefix with declared namespace on self",
+          "[Node::getNamespaceName]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:notlib", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("lib:price", NonVoid,
+                                Attribute("xmlns:lib", "uri3"), Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceName() == "uri3");
+}
+
+TEST_CASE(
+    "getNamespaceName resolves empty prefix with declared default namespace on "
+    "self",
+    "[Node::getNamespaceName]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("price", NonVoid, Attribute("xmlns", "uri3"),
+                                Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceName() == "uri3");
+}
+
+TEST_CASE(
+    "getNamespaceName resolves empty prefix with declared default namespace on "
+    "ancestor",
+    "[Node::getNamespaceName]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceName() == "uri2");
+}
+
+TEST_CASE(
+    "getNamespaceName resolves empty prefix with no default namespace to null",
+    "[Node::getNamespaceName]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:lib2", "uri2"),
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceName() == std::nullopt);
+}
+
+TEST_CASE(
+    "getNamespaceName resolves 'xml' prefix to "
+    "'http://www.w3.org/XML/1998/namespace'",
+    "[Node::getNamespaceName]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:xml",
+                  "uri2"),  // Invalid declaration of 'xml' is ignored
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("xml:price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->getNamespaceName() ==
+            "http://www.w3.org/XML/1998/namespace");
+}
+
+TEST_CASE(
+    "resolveAttributeNamespacePrefix resolves 'xmlns' prefix to "
+    "'http://www.w3.org/2000/xmlns/'",
+    "[Node::resolveAttributeNamespacePrefix]") {
+    using namespace onyx::tags;
+
+    GenericNode library(
+        "library", NonVoid, Attribute("xmlns:lib", "uri"),
+        Attribute("xmlns:xmlns",
+                  "uri2"),  // Invalid declaration of 'xmlns' is ignored
+        GenericNode("book", NonVoid, GenericNode("name", NonVoid, Text("Book")),
+                    GenericNode("price", NonVoid, Text("10"))));
+
+    Node* tracked = library.getFirstChild()->getLastChild();
+
+    REQUIRE(tracked->getTagName() == "price");
+    REQUIRE(tracked->resolveAttributeNamespacePrefix("xmlns") ==
+            "http://www.w3.org/2000/xmlns/");
+}
+
+TEST_CASE("QualifiedNameView resolves empty prefix to \"\"",
+          "[QualifiedNameView]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedNameView("price").prefix == "");
+}
+
+TEST_CASE("QualifiedNameView resolves prefix", "[QualifiedNameView]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedNameView("lib:price").prefix == "lib");
+}
+
+TEST_CASE("QualifiedNameView resolves name with no prefix",
+          "[QualifiedNameView]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedNameView("price").name == "price");
+}
+
+TEST_CASE("QualifiedNameView resolves name with prefix",
+          "[QualifiedNameView]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedNameView("lib:price").name == "price");
+}
+
+TEST_CASE(
+    "QualifiedNameView resolves prefix with no prefix and 0th character "
+    "separator",
+    "[QualifiedNameView]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedNameView(":price").prefix == "");
+}
+
+TEST_CASE(
+    "QualifiedNameView resolves name with no prefix and 0th character "
+    "separator",
+    "[QualifiedNameView]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedNameView(":price").name == "price");
+}
+
+TEST_CASE(
+    "QualifiedNameView resolves prefix with no name and last character "
+    "separator",
+    "[QualifiedNameView]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedNameView("lib:").prefix == "lib");
+}
+
+TEST_CASE(
+    "QualifiedNameView resolves name with no name and last character "
+    "separatorr",
+    "[QualifiedNameView]") {
+    using namespace onyx::dynamic::tags::util;
+    REQUIRE(QualifiedNameView("lib:").name == "");
+}
+
+namespace {
+// Test fixture class to expose protected getFlag and setFlag methods
+class FlagTestNode : public onyx::tags::GenericNode {
+   public:
+    FlagTestNode()
+        : GenericNode(onyx::dynamic::NonOwning, "div", Type::NonVoid) {}
+
+    template <std::size_t Bit>
+    bool testGetFlag() const {
+        return this->getFlag<Bit>();
+    }
+
+    template <std::size_t Bit>
+    void testSetFlag(bool value) {
+        this->setFlag<Bit>(value);
+    }
+
+    static consteval std::size_t testMaxFlagBits() {
+        return GenericNode::maxFlagBits();
+    }
+};
+}  // namespace
+
+TEST_CASE("Node flags default initialization", "[Node::flags]") {
+    FlagTestNode node;
+    constexpr std::size_t TotalBits = FlagTestNode::testMaxFlagBits();
+
+    forConstexpr<TotalBits>(
+        [&]<std::size_t Bit>() { CHECK_FALSE(node.testGetFlag<Bit>()); });
+}
+
+TEST_CASE("Node setFlag and getFlag operations", "[Node::flags]") {
+    FlagTestNode node;
+    constexpr std::size_t TotalBits = FlagTestNode::testMaxFlagBits();
+
+    forConstexpr<TotalBits>([&]<std::size_t Bit>() {
+        node.testSetFlag<Bit>(true);
+        CHECK(node.testGetFlag<Bit>());
+
+        node.testSetFlag<Bit>(true);
+        CHECK(node.testGetFlag<Bit>());
+
+        forConstexpr<TotalBits>([&]<std::size_t OtherBit>() {
+            if constexpr (OtherBit != Bit) {
+                CHECK_FALSE(node.testGetFlag<OtherBit>());
+            }
+        });
+
+        node.testSetFlag<Bit>(false);
+        CHECK_FALSE(node.testGetFlag<Bit>());
+
+        node.testSetFlag<Bit>(false);
+        CHECK_FALSE(node.testGetFlag<Bit>());
+    });
 }

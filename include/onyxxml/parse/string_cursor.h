@@ -110,6 +110,13 @@ struct StringCursor {
     }
 
     /**
+     * @brief Return the size in characters of the capture.
+     *
+     * @return std::size_t
+     */
+    std::size_t getCapturedSize() { return captured - ptr; }
+
+    /**
      * @brief Checks if the upcoming characters match the expected string.
      * If they do, move the cursor past them and return true.
      *

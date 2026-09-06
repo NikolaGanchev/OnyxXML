@@ -38,11 +38,11 @@ struct Placeholder {
 
    public:
     /**
-     * @brief The invalid tag name ".templater::placeholder" is used to reduce
+     * @brief The invalid tag name ".templater-placeholder" is used to reduce
      * chances of collisions.
      *
      */
-    static constexpr const char* TAG_NAME = ".templater::placeholder";
+    static constexpr const char* TAG_NAME = ".templater-placeholder";
 
     /**
      * @brief The compile-time size of the Placeholder. Does not account for
@@ -75,7 +75,8 @@ struct Placeholder {
      */
     static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {
         return std::make_unique<onyx::dynamic::tags::GenericNode>(
-            TAG_NAME, true, onyx::dynamic::Attribute("name", std::string(Str)));
+            TAG_NAME, onyx::dynamic::tags::GenericNode::Type::Void,
+            onyx::dynamic::Attribute("name", std::string(Str)));
     }
 };
 }  // namespace onyx::compile::ctags

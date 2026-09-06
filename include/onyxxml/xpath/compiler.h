@@ -67,8 +67,11 @@ class Compiler {
     /**
      * @brief Compile the AST
      *
+     * @param  std::function<std::string(std::string_view)>
      * @return std::unique_ptr<Program>
      */
-    std::unique_ptr<Program> compile();
+    std::unique_ptr<Program> compile(
+        std::function<std::string(std::string_view)> namespaceResolver =
+            [](std::string_view namespacePrefix) -> std::string { return ""; });
 };
 };  // namespace onyx::dynamic::xpath

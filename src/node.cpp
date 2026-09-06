@@ -1,8 +1,10 @@
 #include "node.h"
 
 #include <algorithm>
+#include <optional>
 #include <sstream>
 #include <stack>
+#include <string_view>
 #include <unordered_map>
 
 #include "index.h"
@@ -12,44 +14,44 @@ namespace onyx::dynamic {
 Node::Node()
     : attributes{},
       firstChild{nullptr},
-      lastChild{nullptr},
-      prevSibling{nullptr},
-      nextSibling{nullptr},
+      prevSibling{this},
+      nextSibling{this},
       indices{},
-      parent{nullptr},
-      _isOwning(true) {}
+      parent{nullptr} {
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(true);
+}
 
 Node::Node(NonOwningNodeTag)
     : attributes{},
       firstChild{nullptr},
-      lastChild{nullptr},
-      prevSibling{nullptr},
-      nextSibling{nullptr},
+      prevSibling{this},
+      nextSibling{this},
       indices{},
-      parent{nullptr},
-      _isOwning(false) {}
+      parent{nullptr} {
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(false);
+}
 
 Node::Node(Node&& other) noexcept
     : attributes{std::move(other.attributes)},
       firstChild{other.firstChild},
-      lastChild{other.lastChild},
-      prevSibling{nullptr},
-      nextSibling{nullptr},
       indices{std::move(other.indices)},
-      parent{other.parent},
-      _isOwning(other._isOwning) {
+      flags{other.flags},
+      parent{other.parent} {
+    if (other.nextSibling == &other) {
+        this->prevSibling = this;
+        this->nextSibling = this;
+    } else {
+        this->prevSibling = other.prevSibling;
+        this->nextSibling = other.nextSibling;
+    }
+
     other.parent = nullptr;
     other.firstChild = nullptr;
-    other.lastChild = nullptr;
     other.prevSibling = nullptr;
     other.nextSibling = nullptr;
     this->takeOverIndices(other);
 
-    Node* current = this->firstChild;
-    while (current != nullptr) {
-        current->parent = this;
-        current = current->nextSibling;
-    }
+    this->iterateDirectChildren([this](Node* child) { child->parent = this; });
 }
 
 Node::Node(std::vector<Attribute> attributes,
@@ -57,13 +59,12 @@ Node::Node(std::vector<Attribute> attributes,
     : attributes{std::move(attributes)},
       indices{},
       firstChild{nullptr},
-      lastChild{nullptr},
-      prevSibling{nullptr},
-      nextSibling{nullptr},
-      parent{nullptr},
-      _isOwning(true) {
+      prevSibling{this},
+      nextSibling{this},
+      parent{nullptr} {
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(true);
     for (auto& child : children) {
-        if (child.owning() != this->_isOwning) {
+        if (child.owning() != this->isOwning()) {
             throw std::invalid_argument(
                 "Mixing Nodes with different ownership modes");
         }
@@ -71,7 +72,7 @@ Node::Node(std::vector<Attribute> attributes,
 
     for (auto& child : children) {
         this->attachChildBack(child.release());
-        this->lastChild->parent = this;
+        this->firstChild->prevSibling->parent = this;
     }
 }
 
@@ -80,19 +81,18 @@ Node::Node(NonOwningNodeTag, std::vector<Attribute> attributes,
     : attributes{std::move(attributes)},
       indices{},
       firstChild{nullptr},
-      lastChild{nullptr},
-      prevSibling{nullptr},
-      nextSibling{nullptr},
-      parent{nullptr},
-      _isOwning(false) {
+      prevSibling{this},
+      nextSibling{this},
+      parent{nullptr} {
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(false);
     for (auto& child : children) {
-        if (child.owning() != this->_isOwning) {
+        if (child.owning() != this->isOwning()) {
             throw std::invalid_argument(
                 "Mixing Nodes with different ownership modes");
         }
 
         this->attachChildBack(child.release());
-        this->lastChild->parent = this;
+        this->firstChild->prevSibling->parent = this;
     }
 }
 
@@ -101,27 +101,29 @@ Node& Node::operator=(Node&& other) noexcept {
     this->destroy();
     this->attributes = std::move(other.attributes);
     this->firstChild = other.firstChild;
-    this->lastChild = other.lastChild;
-    this->prevSibling = other.prevSibling;
-    this->nextSibling = other.nextSibling;
+    this->flags = other.flags;
+
+    if (other.nextSibling == &other) {
+        this->prevSibling = this;
+        this->nextSibling = this;
+    } else {
+        this->prevSibling = other.prevSibling;
+        this->nextSibling = other.nextSibling;
+    }
 
     other.firstChild = nullptr;
-    other.lastChild = nullptr;
     other.prevSibling = nullptr;
     other.nextSibling = nullptr;
 
     this->indices = std::move(other.indices);
-    this->_isOwning = other._isOwning;
+
+    this->setFlag<FlagBitIndices::BIT_IS_OWNING>(other.isOwning());
 
     this->takeOverIndices(other);
     this->parent = other.parent;
     other.parent = nullptr;
 
-    Node* current = this->firstChild;
-    while (current != nullptr) {
-        current->parent = this;
-        current = current->nextSibling;
-    }
+    this->iterateDirectChildren([this](Node* child) { child->parent = this; });
 
     return *this;
 }
@@ -146,17 +148,7 @@ void Node::processConstructorAttribute(Attribute&& attribute) {
 }
 
 void Node::processConstructorObjectMoveCleanup() {
-    Node* current = this->firstChild;
-    while (current != nullptr) {
-        Node* copy = current;
-        current = current->nextSibling;
-
-        if (current) {
-            current->prevSibling = nullptr;
-        }
-
-        delete copy;
-    }
+    this->iterateDirectChildren([](Node* child) { delete child; });
 }
 
 void Node::destroy() {
@@ -168,7 +160,7 @@ void Node::destroy() {
     // cheap operation)
     // In non-owning trees this is not guaranteed, as the
     // destructor of a Node in the tree can be called arbitrarily
-    if (this->parent && !this->parent->_isOwning) {
+    if (this->parent && !this->parent->isOwning()) {
         this->iterativeProcessor([this](Node* obj) -> void {
             this->propagateIndexUpdateUp(obj, IndexPropagationMessage::REMOVE);
         });
@@ -178,42 +170,32 @@ void Node::destroy() {
         index->invalidate();
     };
 
-    Node* current = this->firstChild;
-    while (current != nullptr) {
-        current->parent = nullptr;
-        current = current->nextSibling;
-    }
+    this->iterateDirectChildren([](Node* child) { child->parent = nullptr; });
 
-    if (this->_isOwning) {
-        while (this->firstChild) {
-            Node* child = this->firstChild;
-
-            this->firstChild = child->nextSibling;
-
+    if (this->isOwning()) {
+        this->iterateDirectChildren([](Node* child) {
             child->parent = nullptr;
             child->prevSibling = nullptr;
             child->nextSibling = nullptr;
 
             delete child;
-        }
-        this->lastChild = nullptr;
+        });
     }
 
-    if (this->parent && !this->parent->_isOwning) {
+    if (this->parent && !this->parent->isOwning()) {
         // In non-owning trees, nodes are not guaranteed to be sequentially
         // destroyed, so they need to manually remove themselves from the
         // parent's children to guarantee no dangling pointers are left
-        if (this->prevSibling) {
-            this->prevSibling->nextSibling = this->nextSibling;
-        } else {
-            this->parent->firstChild = this->nextSibling;
+        if (this == this->parent->firstChild) {
+            if (this == this->nextSibling) {
+                this->parent->firstChild = nullptr;
+            } else {
+                this->parent->firstChild = this->nextSibling;
+            }
         }
 
-        if (this->nextSibling) {
-            this->nextSibling->prevSibling = this->prevSibling;
-        } else {
-            this->parent->lastChild = this->prevSibling;
-        }
+        this->prevSibling->nextSibling = this->nextSibling;
+        this->nextSibling->prevSibling = this->prevSibling;
     }
 }
 
@@ -228,7 +210,7 @@ Node* Node::addChild(NodeHandle newChild) {
         throw std::runtime_error("Attempted to add child to " + getTagName() +
                                  " that is already a child of another Object.");
     }
-    if (newChild.owning() != this->_isOwning) {
+    if (newChild.owning() != this->isOwning()) {
         throw std::runtime_error("Attempted to add child to " + getTagName() +
                                  " with different owning mode.");
     }
@@ -255,11 +237,8 @@ Node* Node::addChild(Node* child) { return addChild(NodeHandle(child, false)); }
 std::vector<Node*> Node::getChildren() const {
     std::vector<Node*> res;
 
-    Node* current = this->firstChild;
-    while (current != nullptr) {
-        res.push_back(current);
-        current = current->nextSibling;
-    }
+    this->iterateDirectChildren(
+        [&res](const Node* child) { res.push_back(const_cast<Node*>(child)); });
 
     return res;
 }
@@ -267,11 +246,8 @@ std::vector<Node*> Node::getChildren() const {
 size_t Node::getChildrenCount() const {
     size_t count = 0;
 
-    Node* current = this->firstChild;
-    while (current != nullptr) {
-        count++;
-        current = current->nextSibling;
-    }
+    this->iterateDirectChildrenReverse(
+        [&count](const Node* current) { count++; });
 
     return count;
 }
@@ -346,59 +322,13 @@ void Node::updateAndPropagateUp(IndexPropagationMessage message) {
     this->propagateIndexUpdateUp(this, message);
 }
 
-void Node::iterativeProcessor(const std::function<void(Node*)>& process) {
-    std::vector<Node*> s;
-
-    s.push_back(this);
-
-    while (!s.empty()) {
-        Node* obj = s.back();
-
-        process(obj);
-
-        s.pop_back();
-
-        Node* current = obj->lastChild;
-        while (current != nullptr) {
-            s.push_back(current);
-            current = current->prevSibling;
-        }
-    }
-}
-
 bool Node::isInTree() const { return this->parent != nullptr; }
 
-Node* Node::getParentNode() const { return this->parent; }
-
-std::vector<Node*> Node::iterativeChildrenParse(
-    const std::function<bool(Node*)>& condition) const {
-    std::vector<Node*> s;
-    std::vector<Node*> result;
-
-    Node* current = this->lastChild;
-    while (current != nullptr) {
-        s.push_back(current);
-        current = current->prevSibling;
-    }
-
-    while (!s.empty()) {
-        Node* obj = s.back();
-
-        if (condition(obj)) {
-            result.push_back(obj);
-        }
-
-        s.pop_back();
-
-        current = obj->lastChild;
-        while (current != nullptr) {
-            s.push_back(current);
-            current = current->prevSibling;
-        }
-    }
-
-    return result;
+bool Node::isOwning() const {
+    return this->getFlag<FlagBitIndices::BIT_IS_OWNING>();
 }
+
+Node* Node::getParentNode() const { return this->parent; }
 
 std::vector<Node*> Node::getChildrenByAttribute(
     const std::string& attribute, const std::string& value) const {
@@ -451,17 +381,16 @@ NodeHandle Node::removeChild(Node* childToRemove) {
 
     if (!foundThis) return nullptr;
 
-    if (childToRemove->prevSibling) {
-        childToRemove->prevSibling->nextSibling = childToRemove->nextSibling;
-    } else {
-        childToRemove->parent->firstChild = childToRemove->nextSibling;
+    if (childToRemove == childToRemove->parent->firstChild) {
+        if (childToRemove->nextSibling == childToRemove) {
+            childToRemove->parent->firstChild = nullptr;
+        } else {
+            childToRemove->parent->firstChild = childToRemove->nextSibling;
+        }
     }
 
-    if (childToRemove->nextSibling) {
-        childToRemove->nextSibling->prevSibling = childToRemove->prevSibling;
-    } else {
-        childToRemove->parent->lastChild = childToRemove->prevSibling;
-    }
+    childToRemove->prevSibling->nextSibling = childToRemove->nextSibling;
+    childToRemove->nextSibling->prevSibling = childToRemove->prevSibling;
 
     childToRemove->iterativeProcessor(
         [this, &childToRemove](Node* obj) -> void {
@@ -469,11 +398,11 @@ NodeHandle Node::removeChild(Node* childToRemove) {
                 obj, IndexPropagationMessage::REMOVE);
         });
 
-    childToRemove->prevSibling = nullptr;
-    childToRemove->nextSibling = nullptr;
+    childToRemove->prevSibling = childToRemove;
+    childToRemove->nextSibling = childToRemove;
     childToRemove->parent = nullptr;
 
-    return NodeHandle(childToRemove, this->_isOwning);
+    return NodeHandle(childToRemove, this->isOwning());
 }
 
 std::unique_ptr<Node> Node::deepCopy() const {
@@ -494,13 +423,11 @@ std::unique_ptr<Node> Node::deepCopy() const {
         const Node* obj = node.obj;
 
         if (!(obj->isVoid())) {
-            Node* current = obj->firstChild;
-            while (current != nullptr) {
+            obj->iterateDirectChildren([&s, &node](const Node* current) {
                 std::unique_ptr<Node> child = current->shallowCopy();
                 s.emplace_back(ParseNode{current, child.get()});
                 node.copy->addChild(std::move(child));
-                current = current->nextSibling;
-            }
+            });
         }
     }
     return root;
@@ -510,29 +437,33 @@ bool Node::shallowEquals(const Node& other) const {
     if (this == &other) return true;
     if (this->isVoid() != other.isVoid()) return false;
     if (this->getTagName() != other.getTagName()) return false;
+    if (this->getNamespaceName() != other.getNamespaceName()) return false;
     if (this->attributes.size() != other.attributes.size()) return false;
     if (this->getChildrenCount() != other.getChildrenCount()) return false;
 
-    std::vector<const Attribute*> attributes1;
-    std::vector<const Attribute*> attributes2;
+    using AttributePair =
+        std::pair<std::optional<std::string_view>, std::string_view>;
+
+    std::vector<AttributePair> attributes1;
+    std::vector<AttributePair> attributes2;
 
     for (size_t i = 0; i < this->attributes.size(); i++) {
-        attributes1.push_back(&(this->attributes[i]));
-        attributes2.push_back(&(other.attributes[i]));
+        attributes1.emplace_back(
+            this->resolveAttributeNamespacePrefix(
+                this->attributes[i].getNamespacePrefix()),
+            this->attributes[i].getNCNameWithoutNamespace());
+        attributes2.emplace_back(
+            other.resolveAttributeNamespacePrefix(
+                other.attributes[i].getNamespacePrefix()),
+            other.attributes[i].getNCNameWithoutNamespace());
     }
 
-    std::sort(attributes1.begin(), attributes1.end(),
-              [](const Attribute* lhs, const Attribute* rhs) {
-                  return lhs->getName() < rhs->getName();
-              });
+    std::sort(attributes1.begin(), attributes1.end());
 
-    std::sort(attributes2.begin(), attributes2.end(),
-              [](const Attribute* lhs, const Attribute* rhs) {
-                  return lhs->getName() < rhs->getName();
-              });
+    std::sort(attributes2.begin(), attributes2.end());
 
     for (size_t i = 0; i < attributes1.size(); i++) {
-        if ((*attributes1[i]) != (*attributes2[i])) {
+        if (attributes1[i] != attributes2[i]) {
             return false;
         }
     }
@@ -560,15 +491,20 @@ bool Node::deepEquals(const Node& other) const {
 
         if (!(obj->isVoid())) {
             Node* current = obj->firstChild;
+            Node* original = current;
             Node* currentOther = other->firstChild;
-            while (current != nullptr && currentOther != nullptr) {
+            Node* originalOther = currentOther;
+            if (current == nullptr || currentOther == nullptr) {
+                continue;
+            }
+            do {
                 // Because of obj->shallowEquals(*other) succeeding, it is
                 // known that at this point the two nodes have the same
                 // amount of children
                 s.emplace_back(ParseNode{current, currentOther});
                 current = current->nextSibling;
                 currentOther = currentOther->nextSibling;
-            }
+            } while (current != original && currentOther != originalOther);
         }
     }
     return true;
@@ -600,18 +536,14 @@ size_t Node::depth() const {
         }
 
         if (!(obj->isVoid())) {
-            Node* current = obj->firstChild;
-            if (current != nullptr) {
+            if (obj->firstChild != nullptr) {
                 depth++;
                 if (depth > maxDepth) {
                     maxDepth = depth;
                 }
                 s.emplace_back(nullptr);
-                current = obj->lastChild;
-                while (current != nullptr) {
-                    s.emplace_back(current);
-                    current = current->prevSibling;
-                }
+                obj->iterateDirectChildrenReverse(
+                    [&s](const Node* child) { s.emplace_back(child); });
             }
         }
     }
@@ -630,12 +562,9 @@ size_t Node::leafCount() const {
         s.pop_back();
 
         if (!(obj->isVoid())) {
-            Node* current = obj->lastChild;
-            if (current != nullptr) {
-                while (current != nullptr) {
-                    s.emplace_back(current);
-                    current = current->prevSibling;
-                }
+            if (obj->firstChild != nullptr) {
+                obj->iterateDirectChildrenReverse(
+                    [&s](const Node* current) { s.emplace_back(current); });
             } else {
                 leaves++;
             }
@@ -670,17 +599,33 @@ const std::string& Node::getAttributeValue(const std::string& name) const {
 
 void Node::setAttributeValue(const std::string& name,
                              const std::string& newValue) {
+    bool exists = false;
+    bool updated = false;
     for (auto& attr : this->attributes) {
         if (attr.getName() == name) {
-            attr.setValue(newValue);
+            if (attr.getValue() != newValue) {
+                attr.setValue(newValue);
+                updated = true;
+            }
 
-            updateAndPropagateUp(IndexPropagationMessage::UPDATE);
-            return;
+            exists = true;
+            break;
         }
     }
 
-    this->attributes.emplace_back(name, newValue);
-    updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+    if (!exists) {
+        this->attributes.emplace_back(name, newValue);
+        updated = true;
+    }
+    if (updated) {
+        if (name.starts_with("xmlns:") || name == "xmlns") {
+            this->iterativeProcessor([this](Node* obj) -> void {
+                obj->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+            });
+        } else {
+            this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+        }
+    }
 }
 
 void Node::removeAttribute(const std::string& name) {
@@ -689,7 +634,13 @@ void Node::removeAttribute(const std::string& name) {
         if (index->getName() == name) {
             this->attributes.erase(index);
 
-            updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+            if (name.starts_with("xmlns:") || name == "xmlns") {
+                this->iterativeProcessor([this](Node* obj) -> void {
+                    obj->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+                });
+            } else {
+                this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+            }
 
             return;
         }
@@ -721,7 +672,13 @@ std::string Node::serialize() const {
                 objSpecialSerializable->specialSerialize(s, result);
                 continue;
             }
-            result << "</" << tagName << ">";
+            result << "</";
+            if (obj->getNamespacePrefix() == std::nullopt) {
+                result << tagName;
+            } else {
+                result << obj->getNamespacePrefix().value() << ":" << tagName;
+            }
+            result << ">";
             s.pop_back();
             continue;
         }
@@ -734,7 +691,12 @@ std::string Node::serialize() const {
             continue;
         }
 
-        result << "<" << tagName;
+        result << "<";
+        if (obj->getNamespacePrefix() == std::nullopt) {
+            result << tagName;
+        } else {
+            result << obj->getNamespacePrefix().value() << ":" << tagName;
+        }
 
         attributes.clear();
         for (size_t i = 0; i < obj->attributes.size(); i++) {
@@ -751,15 +713,21 @@ std::string Node::serialize() const {
         }
 
         if (!(obj->isVoid())) {
-            Node* current = obj->lastChild;
-            if (current != nullptr) {
+            if (obj->firstChild != nullptr) {
                 result << ">";
-                while (current != nullptr) {
+
+                obj->iterateDirectChildrenReverse([&s](const Node* current) {
                     s.emplace_back(SerializationNode{current, false});
-                    current = current->prevSibling;
-                }
+                });
             } else {
-                result << "></" << tagName << ">";
+                result << "></";
+                if (obj->getNamespacePrefix() == std::nullopt) {
+                    result << tagName;
+                } else {
+                    result << obj->getNamespacePrefix().value() << ":"
+                           << tagName;
+                }
+                result << ">";
                 s.pop_back();
                 continue;
             }
@@ -806,7 +774,13 @@ std::string Node::serializePretty(const std::string& indentationSequence,
                     sortAttributes);
                 continue;
             }
-            result << indentation << "</" << tagName << ">\n";
+            result << indentation << "</";
+            if (obj->getNamespacePrefix() == std::nullopt) {
+                result << tagName;
+            } else {
+                result << obj->getNamespacePrefix().value() << ":" << tagName;
+            }
+            result << ">\n";
             s.pop_back();
             continue;
         }
@@ -820,7 +794,12 @@ std::string Node::serializePretty(const std::string& indentationSequence,
             continue;
         }
 
-        result << indentation << "<" << tagName;
+        result << indentation << "<";
+        if (obj->getNamespacePrefix() == std::nullopt) {
+            result << tagName;
+        } else {
+            result << obj->getNamespacePrefix().value() << ":" << tagName;
+        }
 
         attributes.clear();
         for (size_t i = 0; i < obj->attributes.size(); i++) {
@@ -843,17 +822,23 @@ std::string Node::serializePretty(const std::string& indentationSequence,
         }
 
         if (!(obj->isVoid())) {
-            Node* current = obj->lastChild;
-            if (current != nullptr) {
+            if (obj->firstChild != nullptr) {
                 result << ">\n";
                 s.emplace_back(SerializationNode{nullptr, false});
                 indentation += indentationSequence;
-                while (current != nullptr) {
+
+                obj->iterateDirectChildrenReverse([&s](const Node* current) {
                     s.emplace_back(SerializationNode{current, false});
-                    current = current->prevSibling;
-                }
+                });
             } else {
-                result << "></" << tagName << ">\n";
+                result << "></";
+                if (obj->getNamespacePrefix() == std::nullopt) {
+                    result << tagName;
+                } else {
+                    result << obj->getNamespacePrefix().value() << ":"
+                           << tagName;
+                }
+                result << ">\n";
                 s.pop_back();
                 continue;
             }
@@ -873,35 +858,32 @@ std::string Node::serializePretty(const std::string& indentationSequence,
     return strResult;
 }
 
-Node::ObservableStringRef::ObservableStringRef(std::string* ref, Node* origin)
-    : ptr(ref), origin(origin) {}
+Node::ObservableStringRef::ObservableStringRef(std::string name, Node* origin)
+    : name(std::move(name)), origin(origin) {}
 
 Node::ObservableStringRef::operator const std::string*() const {
-    return this->ptr;
+    return &(this->origin->getAttributeValue(name));
 }
 
 const std::string* Node::ObservableStringRef::operator->() const {
-    return this->ptr;
+    return &(this->origin->getAttributeValue(name));
 }
 
 const std::string& Node::ObservableStringRef::operator*() const {
-    return *this->ptr;
+    return this->origin->getAttributeValue(name);
 }
 
 bool Node::ObservableStringRef::operator==(const std::string& str) const {
-    return *this->ptr == str;
+    return this->origin->getAttributeValue(name) == str;
 }
 
 bool Node::ObservableStringRef::operator!=(const std::string& str) const {
-    return !(*this == str);
+    return !(this->origin->getAttributeValue(name) == str);
 }
 
 Node::ObservableStringRef& Node::ObservableStringRef::operator=(
-    std::string newPtr) {
-    if (*this->ptr != newPtr) {
-        *this->ptr = newPtr;
-        this->origin->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
-    }
+    std::string newValue) {
+    this->origin->setAttributeValue(name, newValue);
     return *this;
 }
 
@@ -912,7 +894,7 @@ Node::ObservableStringRef Node::operator[](const std::string& name) {
 
     for (auto& attr : this->attributes) {
         if (attr.getName() == name) {
-            return ObservableStringRef(&(attr.getValueMutable()), this);
+            return ObservableStringRef(name, this);
         }
     }
 
@@ -944,7 +926,9 @@ bool Node::getSortAttributes() { return sortAttributes; }
 
 const Node* Node::getFirstChild() const { return this->firstChild; }
 
-const Node* Node::getLastChild() const { return this->lastChild; }
+const Node* Node::getLastChild() const {
+    return this->firstChild ? this->firstChild->prevSibling : nullptr;
+}
 
 const Node* Node::getPrevSibling() const { return this->prevSibling; }
 
@@ -952,23 +936,24 @@ const Node* Node::getNextSibling() const { return this->nextSibling; }
 
 Node* Node::getFirstChild() { return this->firstChild; }
 
-Node* Node::getLastChild() { return this->lastChild; }
+Node* Node::getLastChild() {
+    return this->firstChild ? this->firstChild->prevSibling : nullptr;
+}
 
 Node* Node::getPrevSibling() { return this->prevSibling; }
 
 Node* Node::getNextSibling() { return this->nextSibling; }
 
 void Node::attachChildBack(Node* child) {
-    child->nextSibling = nullptr;
-
-    if (this->lastChild) {
-        this->lastChild->nextSibling = child;
-        child->prevSibling = this->lastChild;
-        this->lastChild = child;
+    if (this->firstChild) {
+        this->firstChild->prevSibling->nextSibling = child;
+        child->prevSibling = this->firstChild->prevSibling;
+        this->firstChild->prevSibling = child;
+        child->nextSibling = this->firstChild;
     } else {
         this->firstChild = child;
-        this->lastChild = this->firstChild;
-        child->prevSibling = nullptr;
+        child->prevSibling = child;
+        child->nextSibling = child;
     }
 }
 
@@ -987,4 +972,66 @@ std::string Node::getStringValue() const {
 }
 
 Node::XPathType Node::getXPathType() const { return XPathType::ELEMENT; }
+
+std::optional<std::string_view> Node::getNamespacePrefix() const {
+    return std::nullopt;
+}
+
+std::optional<std::string_view> Node::resolveNamespacePrefixWithDefaults(
+    std::optional<std::string_view> prefix) const {
+    const Node* current = this;
+
+    if (!prefix.has_value() || prefix == "") {
+        while (current) {
+            for (auto it = current->attributes.begin();
+                 it != current->attributes.end(); it++) {
+                const std::string& attributeName = it->getName();
+                if (attributeName == "xmlns") {
+                    if (it->getValue() == "") {
+                        return std::nullopt;
+                    } else {
+                        return it->getValue();
+                    }
+                }
+            }
+
+            current = current->parent;
+        }
+    } else {
+        if (prefix == "xml") return "http://www.w3.org/XML/1998/namespace";
+        if (prefix == "xmlns") return "http://www.w3.org/2000/xmlns/";
+        while (current) {
+            for (auto it = current->attributes.begin();
+                 it != current->attributes.end(); it++) {
+                std::optional<std::string_view> attributePrefix =
+                    it->getNamespacePrefix();
+                if (attributePrefix.has_value() &&
+                    attributePrefix.value() == "xmlns") {
+                    if (it->getNCNameWithoutNamespace() == prefix) {
+                        if (it->getValue() == "") {
+                            return std::nullopt;
+                        } else {
+                            return it->getValue();
+                        }
+                    }
+                }
+            }
+
+            current = current->parent;
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::string_view> Node::resolveAttributeNamespacePrefix(
+    std::optional<std::string_view> prefix) const {
+    if (!prefix.has_value() || prefix == "") return std::nullopt;
+
+    return resolveNamespacePrefixWithDefaults(prefix);
+}
+
+std::optional<std::string_view> Node::getNamespaceName() const {
+    return resolveNamespacePrefixWithDefaults(this->getNamespacePrefix());
+}
 }  // namespace onyx::dynamic

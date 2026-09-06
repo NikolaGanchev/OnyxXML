@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <stack>
+#include <string>
+#include <string_view>
 
 #include "axis.h"
 #include "calculate_mode.h"
@@ -124,7 +126,7 @@ class VirtualMachine {
 
         /**
          * @brief Compare equivalent to < by document order. With other words,
-         * a < b iff a is before b in document order.
+         * a < b iff a is before b in document order. A strict weak ordering.
          *
          * @param a
          * @param b
@@ -258,10 +260,12 @@ class VirtualMachine {
      *
      * @param current
      * @param axis
-     * @param test
+     * @param uri
+     * @param localName
      * @param result
      */
-    void collectDescendants(Node* current, AXIS axis, const std::string& test,
+    void collectDescendants(Node* current, AXIS axis, const std::string& uri,
+                            const std::string& localName,
                             std::vector<Node*>& result);
 
     /**
@@ -269,10 +273,12 @@ class VirtualMachine {
      *
      * @param current
      * @param axis
-     * @param test
+     * @param uri
+     * @param localName
      * @param result
      */
-    void collectChildren(Node* current, AXIS axis, const std::string& test,
+    void collectChildren(Node* current, AXIS axis, const std::string& uri,
+                         const std::string& localName,
                          std::vector<Node*>& result);
 
     /**
@@ -280,23 +286,27 @@ class VirtualMachine {
      *
      * @param current
      * @param axis
-     * @param test
+     * @param uri
+     * @param localName
      * @param result
      * @param root
      */
-    void collectParent(Node* current, AXIS axis, const std::string& test,
-                       std::vector<Node*>& result, DocumentRoot& root);
+    void collectParent(Node* current, AXIS axis, const std::string& uri,
+                       const std::string& localName, std::vector<Node*>& result,
+                       DocumentRoot& root);
 
     /**
      * @brief Collect ancestors of the node
      *
      * @param current
      * @param axis
-     * @param test
+     * @param uri
+     * @param localName
      * @param result
      * @param root
      */
-    void collectAncestor(Node* current, AXIS axis, const std::string& test,
+    void collectAncestor(Node* current, AXIS axis, const std::string& uri,
+                         const std::string& localName,
                          std::vector<Node*>& result, DocumentRoot& root);
 
     /**
@@ -304,11 +314,13 @@ class VirtualMachine {
      *
      * @param current
      * @param axis
-     * @param test
+     * @param uri
+     * @param localName
      * @param result
      */
     void collectFollowingSiblings(Node* current, AXIS axis,
-                                  const std::string& test,
+                                  const std::string& uri,
+                                  const std::string& localName,
                                   std::vector<Node*>& result);
 
     /**
@@ -316,11 +328,13 @@ class VirtualMachine {
      *
      * @param current
      * @param axis
-     * @param test
+     * @param uri
+     * @param localName
      * @param result
      */
     void collectPrecedingSiblings(Node* current, AXIS axis,
-                                  const std::string& test,
+                                  const std::string& uri,
+                                  const std::string& localName,
                                   std::vector<Node*>& result);
 
     /**
@@ -328,11 +342,13 @@ class VirtualMachine {
      *
      * @param current
      * @param axis
-     * @param test
+     * @param uri
+     * @param localName
      * @param result
      * @param ec
      */
-    void collectPreceding(Node* current, AXIS axis, const std::string& test,
+    void collectPreceding(Node* current, AXIS axis, const std::string& uri,
+                          const std::string& localName,
                           std::vector<Node*>& result, ExecutionContext& ec);
 
     /**
@@ -340,11 +356,13 @@ class VirtualMachine {
      *
      * @param current
      * @param axis
-     * @param test
+     * @param uri
+     * @param localName
      * @param result
      * @param ec
      */
-    void collectFollowing(Node* current, AXIS axis, const std::string& test,
+    void collectFollowing(Node* current, AXIS axis, const std::string& uri,
+                          const std::string& localName,
                           std::vector<Node*>& result, ExecutionContext& ec);
 
     /**
@@ -352,11 +370,13 @@ class VirtualMachine {
      *
      * @param node
      * @param axis
-     * @param test
+     * @param uri
+     * @param localName
      * @return true
      * @return false
      */
-    bool nodeMatchesTest(Node* node, AXIS axis, const std::string& test);
+    bool nodeMatchesTest(Node* node, AXIS axis, const std::string& uri,
+                         const std::string& localName);
 
    public:
     /**
@@ -403,15 +423,15 @@ class VirtualMachine {
      * execution result.
      *
      * @param current
-     * @param std::function<XPathObject(std::string_view)> Resolves variables
+     * @param variableProvider Resolves variables
      * @return ExecutionResult
      */
     ExecutionResult executeOn(
         Node* current,
-        std::function<XPathObject(std::string_view)> variableProvider =
-            [](std::string_view v) -> XPathObject {
-            throw std::runtime_error("Found unresolved variable reference to " +
-                                     std::string(v));
+        std::function<XPathObject(std::string_view, std::string_view)>
+            variableProvider = [](std::string_view uri,
+                                  std::string_view localName) -> XPathObject {
+            throw std::runtime_error("Found unresolved variable reference");
         });
 };
 }  // namespace onyx::dynamic::xpath

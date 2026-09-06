@@ -54,8 +54,10 @@ struct GenericNode {
      */
     static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {
         std::unique_ptr<onyx::dynamic::tags::GenericNode> node =
-            std::make_unique<onyx::dynamic::tags::GenericNode>(Name.value,
-                                                               isVoid);
+            std::make_unique<onyx::dynamic::tags::GenericNode>(
+                Name.value,
+                isVoid ? onyx::dynamic::tags::GenericNode::Type::Void
+                       : onyx::dynamic::tags::GenericNode::Type::NonVoid);
         (DocumentUtils::parseChildren<Children>(node.get()), ...);
         return node;
     }

@@ -19,6 +19,12 @@ template <typename T>
 concept isIndex = std::derived_from<T, Node::Index>;
 
 /**
+ * @brief Utility tag type used to match across any namespace.
+ */
+struct AnyNamespaceTag {};
+inline constexpr AnyNamespaceTag AnyNamespace{};
+
+/**
  * @brief Creates an Index of type T using the provided args.
  *
  * @tparam T
@@ -66,18 +72,18 @@ std::shared_ptr<T> createIndexSharedPointer(Args&&... args)
 #define BEFRIEND_INDEX_CREATOR_FUNCTIONS                                      \
     template <typename T, typename... Args>                                   \
     friend T onyx::dynamic::index::createIndex(Args&&... args)                \
-        requires(isIndex<T>);                                                 \
+        requires(onyx::dynamic::index::isIndex<T>);                           \
     template <typename T, typename... Args>                                   \
     friend T* onyx::dynamic::index::createIndexPointer(Args&&... args)        \
-        requires(isIndex<T>);                                                 \
+        requires(onyx::dynamic::index::isIndex<T>);                           \
     template <typename T, typename... Args>                                   \
     friend std::unique_ptr<T> onyx::dynamic::index::createIndexUniquePointer( \
         Args&&... args)                                                       \
-        requires(isIndex<T>);                                                 \
+        requires(onyx::dynamic::index::isIndex<T>);                           \
     template <typename T, typename... Args>                                   \
     friend std::shared_ptr<T> onyx::dynamic::index::createIndexSharedPointer( \
         Args&&... args)                                                       \
-        requires(isIndex<T>);
+        requires(onyx::dynamic::index::isIndex<T>);
 
 #define DELETE_INDEX_COPY_OPERATIONS(ClassName) \
     ClassName(ClassName& other) = delete;       \

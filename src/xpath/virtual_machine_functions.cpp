@@ -77,17 +77,47 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
                          return XPathObject("");
                      });
 
-    registry.emplace(FUNCTION_CODE::LOCAL_NAME_1,
-                     [](Context context, Stack stack) -> XPathObject {
-                         // TODO
-                         return XPathObject("");
-                     });
+    registry.emplace(
+        FUNCTION_CODE::LOCAL_NAME_1,
+        [](Context context, Stack stack) -> XPathObject {
+            if (stack.size() < 1) {
+                throw std::runtime_error("local-name needs one argument");
+            }
 
-    registry.emplace(FUNCTION_CODE::NAME_1,
-                     [](Context context, Stack stack) -> XPathObject {
-                         // TODO
-                         return XPathObject("");
-                     });
+            if (!stack.top().isNodeset()) {
+                throw std::runtime_error("local-name needs a nodeset argument");
+            }
+
+            return XPathObject(functions::localName(stack.top()));
+        });
+
+    registry.emplace(
+        FUNCTION_CODE::NAME_1, [](Context context, Stack stack) -> XPathObject {
+            if (stack.size() < 1) {
+                throw std::runtime_error("name needs one argument");
+            }
+
+            if (!stack.top().isNodeset()) {
+                throw std::runtime_error("name needs a nodeset argument");
+            }
+
+            return XPathObject(functions::name(stack.top()));
+        });
+
+    registry.emplace(
+        FUNCTION_CODE::NAMESPACE_URI_1,
+        [](Context context, Stack stack) -> XPathObject {
+            if (stack.size() < 1) {
+                throw std::runtime_error("namespace-uri needs one argument");
+            }
+
+            if (!stack.top().isNodeset()) {
+                throw std::runtime_error(
+                    "namespace-uri needs a nodeset argument");
+            }
+
+            return XPathObject(functions::namespaceURI(stack.top()));
+        });
 
     registry.emplace(
         FUNCTION_CODE::STRING_1,
@@ -184,21 +214,21 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
         FUNCTION_CODE::STRING_LENGTH_1,
         [](Context context, Stack stack) -> XPathObject {
             if (stack.size() < 1) {
-                throw std::runtime_error("string-length needs one arguments");
+                throw std::runtime_error("string-length needs one argument");
             }
 
             std::string str = stack.top().asString();
 
             stack.pop();
 
-            return XPathObject(static_cast<double>(str.length()));
+            return XPathObject(functions::stringLength(str));
         });
 
     registry.emplace(
         FUNCTION_CODE::NORMALIZE_SPACE_1,
         [](Context context, Stack stack) -> XPathObject {
             if (stack.size() < 1) {
-                throw std::runtime_error("normalize-space needs one arguments");
+                throw std::runtime_error("normalize-space needs one argument");
             }
 
             std::string str = functions::normalizeSpace(stack.top().asString());
@@ -252,11 +282,18 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
                          return XPathObject(false);
                      });
 
-    registry.emplace(FUNCTION_CODE::LANG_1,
-                     [](Context context, Stack stack) -> XPathObject {
-                         // TODO
-                         return XPathObject(false);
-                     });
+    registry.emplace(
+        FUNCTION_CODE::LANG_1, [](Context context, Stack stack) -> XPathObject {
+            if (stack.size() < 1) {
+                throw std::runtime_error("lang needs one argument");
+            }
+
+            std::string str = stack.top().asString();
+
+            stack.pop();
+            return XPathObject(
+                functions::lang(str, context.contextSet[context.currentIndex]));
+        });
 
     registry.emplace(
         FUNCTION_CODE::NUMBER_1,

@@ -1,32 +1,48 @@
 #pragma once
 
+#include <optional>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "../index.h"
 
 namespace onyx::dynamic::index {
 
 /**
- * @brief An Index which keeps track of all nodes which have specific attribute
- * name and is queried by values of that attribute. The underlying index data
- * structure is an std::unordered_map.
- *
+ * @brief An Index which keeps track of all nodes which have a specific
+ * attribute name, optionally bound to a namespace URI and is queried by values
+ * of that attribute. The underlying index data structure is an
+ * std::unordered_map.
  */
 class AttributeNameIndex : public Node::Index {
    private:
     /**
-     * @brief The attribute name to index. Constant from creation.
+     * @brief Target namespace URI.
+     * An empty std::nullopt indicates any namespace.
+     * A string with value "" indicates strictly no namespace.
+     */
+    std::optional<std::string> namespaceUri;
+
+    /**
+     * @brief The local attribute name to index. Constant from creation.
      *
      */
-    std::string attributeName;
+    std::string localName;
 
     /**
      * @brief The index storage.
-     * The key is the attribute value, while the value is the std::vector of all
-     * indexed Nodes which have that attribute value.
-     *
+     * The key is the attribute value is the attribute value, while the value is
+     * the std::vector of all indexed Nodes which match.
      */
     std::unordered_map<std::string, std::vector<Node*>> index;
+
+    /**
+     * @brief Helper to find a matching attribute value on a node considering
+     * namespace rules.
+     */
+    std::optional<std::string_view> findMatchingAttributeValue(
+        Node* node) const;
 
    protected:
     bool putIfNeeded(Node* node) override;
@@ -35,21 +51,31 @@ class AttributeNameIndex : public Node::Index {
 
     /**
      * @brief Construct a new AttributeNameIndex object by a given root and
-     * attribute name which is copied.
-     *
+     * attribute name with strictly no namespace.
      * @param root
      * @param attributeName
      */
-    explicit AttributeNameIndex(Node* root, std::string& attributeName);
+    explicit AttributeNameIndex(Node* root, std::string localName);
 
     /**
-     * @brief Construct a new AttributeNameIndex object by a given root and
-     * attribute name which is moved.
+     * @brief Index attributes bound to a specific namespace URI and
+     * local name.
      *
      * @param root
-     * @param attributeName
+     * @param namespaceUri
+     * @param localName
      */
-    explicit AttributeNameIndex(Node* root, std::string&& attributeName);
+    explicit AttributeNameIndex(Node* root, std::string namespaceUri,
+                                std::string localName);
+
+    /**
+     * @brief Index attributes matching local name across any namespace.
+     *
+     * @param root
+     * @param localName
+     */
+    explicit AttributeNameIndex(Node* root, AnyNamespaceTag,
+                                std::string localName);
 
    public:
     /**
@@ -63,7 +89,8 @@ class AttributeNameIndex : public Node::Index {
     const std::vector<Node*> getByValue(const std::string& value);
 
     ADD_INDEX_MOVE_OPERATIONS(public, AttributeNameIndex,
-                              &AttributeNameIndex::attributeName,
+                              &AttributeNameIndex::namespaceUri,
+                              &AttributeNameIndex::localName,
                               &AttributeNameIndex::index);
 
     BEFRIEND_INDEX_CREATOR_FUNCTIONS;

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cctype>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -225,9 +226,17 @@ struct ParseState {
     bool firstTag = true;
     bool foundXmlDeclaration = false;
     bool foundDoctype = false;
-    std::vector<StringType> attributeNames;
+    using AttributeName = std::pair<StringType, typename StringType::size_type>;
+    std::vector<AttributeName> attributeNames;
     std::vector<StringType> attributeValues;
     std::vector<StackType> stack;
+
+    struct NamespaceDecl {
+        CursorStringType prefix;
+        CursorStringType name;
+        std::size_t depth;
+    };
+    std::vector<NamespaceDecl> namespaces;
 };
 
 template <typename StringType>
@@ -668,7 +677,7 @@ bool dispatchProcessingInstructionLike(ParseState<Config, Policy>& state,
             throw std::invalid_argument("Premature end of document");
         }
     }
-    typename State::CursorStringType tagName = readName(pos);
+    typename State::CursorStringType tagName = readNCName(pos);
     if constexpr (Config::validate) {
         if (tagName.empty()) {
             throw std::invalid_argument("Invalid tag name");
@@ -884,13 +893,13 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
                                  Policy& policy, bool validateUTF8) {
     using State = ParseState<Config, Policy>;
     while (pos.current() != '>' && pos.current() != '/') {
-        typename State::CursorStringType attributeName = readName(pos);
+        auto attributeNameWithSeparator = readQName(pos);
         if constexpr (Config::validate) {
-            if (attributeName.empty()) {
+            if (attributeNameWithSeparator.first.empty()) {
                 throw std::invalid_argument("Invalid non-closing tag");
             }
         }
-        pos.advance(attributeName.size());
+        pos.advance(attributeNameWithSeparator.first.size());
 
         /* Invariant - after attribute name */
         skipWhitespace(pos);
@@ -974,22 +983,112 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
             }
         }
 
-        if constexpr (Config::validate && Config::validateDuplicateAttributes) {
-            for (size_t i = 0; i < state.attributeNames.size(); i++) {
-                if (state.attributeNames[i] == attributeName) {
-                    throw std::invalid_argument("Duplicate attribute name");
-                }
-            }
-        }
-
         if constexpr (Config::validate) {
             if (state.attributeNames.size() >= Config::maxAttributeCount) {
                 throw std::invalid_argument("Tag has too many attributes");
             }
+
+            if ((attributeNameWithSeparator.second !=
+                     attributeNameWithSeparator.first.npos &&
+                 attributeNameWithSeparator.first.starts_with("xmlns:")) ||
+                attributeNameWithSeparator.first == "xmlns") {
+                // To validate uniqueness with namespaces available resolving
+                // the namespace names is needed. But to be able to resolve the
+                // namespace names, there cannot be duplicates. The only
+                // attributes that can be literally checked for uniqueness are
+                // those who have a prefix of 'xml' or 'xmlns' since those have
+                // a name by definition and their name cannot be bound to any
+                // other prefix or are the attribute 'xmlns'.
+                // This loop specifically checks for namespace declarations so
+                // they can be safely resolved later.
+                if (Config::validateNamespacePrefixesResolve &&
+                    Config::validateDuplicateAttributes) {
+                    for (size_t i = 0; i < state.attributeNames.size(); i++) {
+                        if (state.attributeNames[i].first ==
+                            attributeNameWithSeparator.first) {
+                            throw std::invalid_argument(
+                                "Duplicate namespace declaration in "
+                                "attributes");
+                        }
+                    }
+                }
+
+                if (attributeNameWithSeparator.first != "xmlns") {
+                    if (attributeValue == "") {
+                        throw std::invalid_argument(
+                            "Cannot bind prefix to empty namespace name");
+                    }
+                }
+
+                if (attributeNameWithSeparator.first == "xmlns:xml") {
+                    if (attributeValue !=
+                        "http://www.w3.org/XML/1998/namespace") {
+                        throw std::invalid_argument(
+                            "Cannot bind 'xml' prefix to a namespace "
+                            "different from "
+                            "'http://www.w3.org/XML/1998/namespace'");
+                    }
+                }
+                if (attributeNameWithSeparator.first == "xmlns:xmlns") {
+                    throw std::invalid_argument(
+                        "Cannot declare prefix 'xmlns'");
+                }
+
+                if (attributeValue == "http://www.w3.org/XML/1998/namespace") {
+                    if (attributeNameWithSeparator.first == "xmlns") {
+                        throw std::invalid_argument(
+                            "Cannot declare namespace name "
+                            "'http://www.w3.org/XML/1998/namespace' as the "
+                            "default namespace because it is "
+                            "bound by definition to 'xml'");
+                    } else {
+                        throw std::invalid_argument(
+                            "Cannot bind namespace name "
+                            "'http://www.w3.org/XML/1998/namespace' to a "
+                            "prefix different from 'xml' because it is "
+                            "bound "
+                            "by definition to 'xml'");
+                    }
+                }
+
+                if (attributeValue == "http://www.w3.org/2000/xmlns/") {
+                    if (attributeNameWithSeparator.first == "xmlns") {
+                        throw std::invalid_argument(
+                            "Cannot declare namespace name "
+                            "'http://www.w3.org/2000/xmlns/' as the "
+                            "default namespace because it is "
+                            "bound by definition to 'xmlns'");
+                    } else {
+                        throw std::invalid_argument(
+                            "Cannot bind namespace name "
+                            "'http://www.w3.org/2000/xmlns/' because it is "
+                            "bound by definition to 'xmlns'");
+                    }
+                }
+            }
         }
-        state.attributeNames.push_back(std::move(policy.transformText(
-            std::move(attributeName), TextTransformationMode::NONE)));
-        state.attributeValues.push_back(std::move(policy.transformText(
+
+        if constexpr (Config::validate &&
+                      Config::validateNamespacePrefixesResolve) {
+            if (attributeNameWithSeparator.second !=
+                attributeNameWithSeparator.first.npos) {
+                if (attributeNameWithSeparator.first.starts_with("xmlns:")) {
+                    state.namespaces.emplace_back(
+                        attributeNameWithSeparator.first.substr(
+                            attributeNameWithSeparator.second + 1),
+                        attributeValue, state.stack.size());
+                }
+            }
+        }
+
+        // Only safe to use CursorStringType::size_type as StringType::size_type
+        // because TextTransformationMode::NONE should not shift indexes
+        state.attributeNames.emplace_back(
+            std::move(policy.transformText(
+                std::move(attributeNameWithSeparator.first),
+                TextTransformationMode::NONE)),
+            attributeNameWithSeparator.second);
+        state.attributeValues.emplace_back(std::move(policy.transformText(
             std::move(attributeValue), transformationMode)));
 
         /* Continues to either >, /> or another attribute */
@@ -1000,6 +1099,29 @@ ONYX_INLINE void parseAttributes(ParseState<Config, Policy>& state,
             }
         }
     }
+}
+
+/**
+ * @brief Resolves the namespace name of an attribute which has a prefix. It
+ * should already be validated that the attribute name resolves. If a namespace
+ * prefix is encountered that cannot be resolved, an std::logic_error is thrown.
+ *
+ */
+template <typename Config, typename Policy>
+ONYX_INLINE const ParseState<Config, Policy>::NamespaceDecl&
+resolveAttributeNamespaceName(
+    ParseState<Config, Policy>& state,
+    typename ParseState<Config, Policy>::AttributeName& attributeName) {
+    using State = ParseState<Config, Policy>;
+    for (const typename State::NamespaceDecl& decl : state.namespaces) {
+        if (decl.prefix.size() != attributeName.second) continue;
+        if (attributeName.first.starts_with(decl.prefix)) {
+            return decl;
+        }
+    }
+
+    throw std::logic_error(
+        "Found unresolvable prefix in already validated attribute names");
 }
 
 /**
@@ -1023,13 +1145,20 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
     }
 
     /* Invariant - pos always at tag name start */
-    typename State::CursorStringType tagName = readName(pos);
+    auto qname = readQNameAndSplit(pos);
     if constexpr (Config::validate) {
-        if (tagName.empty()) {
+        if (qname.first == std::nullopt && qname.second == std::nullopt) {
             throw std::invalid_argument("Invalid tag name");
+        } else if (qname.second == std::nullopt) {
+            throw std::invalid_argument(
+                "Invalid tag name containing only prefix part");
+        }
+
+        if (qname.first != std::nullopt && qname.first == "xmlns") {
+            throw std::invalid_argument(
+                "A tag name cannot have the prefix 'xmlns'");
         }
     }
-    pos.advance(tagName.size());
 
     bool couldHaveAttributes = isWhitespace(pos.current()) && !isClosing;
 
@@ -1044,6 +1173,116 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
     if (couldHaveAttributes) {
         /* Invariant - either at start of attribute or at > */
         parseAttributes<Config>(state, pos, policy, validateUTF8);
+
+        if constexpr (Config::validate &&
+                      Config::validateNamespacePrefixesResolve) {
+            for (const auto& attributeName : state.attributeNames) {
+                if (attributeName.second != attributeName.first.npos) {
+                    if (!attributeName.first.starts_with("xmlns:") &&
+                        !attributeName.first.starts_with("xml:")) {
+                        bool resolved = false;
+                        for (const typename State::NamespaceDecl& decl :
+                             state.namespaces) {
+                            if (decl.prefix.size() != attributeName.second) {
+                                continue;
+                            }
+                            if (attributeName.first.starts_with(decl.prefix)) {
+                                resolved = true;
+                                break;
+                            }
+                        }
+                        if (!resolved) {
+                            throw std::invalid_argument(
+                                "A namespace prefix on an attribute must "
+                                "resolve to a declared namespace URI");
+                        }
+                    }
+                }
+            }
+        }
+
+        if constexpr (Config::validate && Config::validateDuplicateAttributes) {
+            if constexpr (Config::validateNamespacePrefixesResolve) {
+                for (std::size_t i = 0; i < state.attributeNames.size(); i++) {
+                    typename State::AttributeName attrName =
+                        state.attributeNames[i];
+                    // Namespace declaration attributes already are validated
+                    // for uniqueness in parseAttributes
+                    if ((attrName.second != attrName.first.npos &&
+                         attrName.first.starts_with("xmlns:")) ||
+                        attrName.first == "xmlns") {
+                        continue;
+                    }
+
+                    // The name corresponding to prefix 'xml' is
+                    // 'http://www.w3.org/XML/1998/namespace' by definition and
+                    // no other prefix can be bound to it.
+                    // Attribute names without a prefix are not impacted by
+                    // default namespaces and all belong to the empty namespace.
+                    // In short, attribute names starting with 'xml:' or that
+                    // have no prefix can be literally checked
+                    if (attrName.second == attrName.first.npos ||
+                        attrName.first.starts_with("xml:")) {
+                        for (std::size_t j = i + 1;
+                             j < state.attributeNames.size(); j++) {
+                            if (state.attributeNames[j].first ==
+                                attrName.first) {
+                                throw std::invalid_argument(
+                                    "Duplicate attribute name");
+                            }
+                        }
+                    } else {
+                        const typename State::NamespaceDecl&
+                            namespaceDeclaration =
+                                resolveAttributeNamespaceName(
+                                    state, state.attributeNames[i]);
+                        for (std::size_t j = i + 1;
+                             j < state.attributeNames.size(); j++) {
+                            typename State::AttributeName otherAttrName =
+                                state.attributeNames[j];
+                            std::size_t lenAfterSeparator =
+                                attrName.first.length() - attrName.second;
+                            std::size_t otherLenAfterSeparator =
+                                otherAttrName.first.length() -
+                                otherAttrName.second;
+
+                            if (lenAfterSeparator != otherLenAfterSeparator) {
+                                continue;
+                            }
+
+                            if (attrName.first.compare(
+                                    attrName.second + 1, std::string::npos,
+                                    otherAttrName.first,
+                                    otherAttrName.second + 1,
+                                    std::string::npos) != 0) {
+                                continue;
+                            }
+
+                            const typename State::NamespaceDecl&
+                                otherNamespaceDeclaration =
+                                    resolveAttributeNamespaceName(
+                                        state, otherAttrName);
+                            if (namespaceDeclaration.name ==
+                                otherNamespaceDeclaration.name) {
+                                throw std::invalid_argument(
+                                    "Duplicate attribute name");
+                            }
+                        }
+                    }
+                }
+            } else {
+                for (std::size_t i = 0; i < state.attributeNames.size(); i++) {
+                    for (std::size_t j = i + 1; j < state.attributeNames.size();
+                         j++) {
+                        if (state.attributeNames[i].first ==
+                            state.attributeNames[j].first) {
+                            throw std::invalid_argument(
+                                "Duplicate attribute name");
+                        }
+                    }
+                }
+            }
+        }
     }
 
     bool isSelfClosing = false;
@@ -1069,7 +1308,25 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
     } else {
         if constexpr (Config::validate) {
             throw std::invalid_argument("No tag close for tag " +
-                                        std::string(tagName));
+                                        std::string(qname.second.value()));
+        }
+    }
+    if constexpr (Config::validate &&
+                  Config::validateNamespacePrefixesResolve) {
+        if (qname.first != std::nullopt && qname.first != "xml") {
+            bool resolved = false;
+            for (const typename State::NamespaceDecl& decl : state.namespaces) {
+                if (decl.prefix.size() != qname.first.value().size()) continue;
+                if (qname.first == decl.prefix) {
+                    resolved = true;
+                    break;
+                }
+            }
+            if (!resolved) {
+                throw std::invalid_argument(
+                    "A namespace prefix on a tag name must "
+                    "resolve to a declared namespace URI");
+            }
         }
     }
 
@@ -1078,7 +1335,12 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
         /* Invariant - top stack node is always current parent */
         state.firstTag = false;
         policy.openAction(
-            std::move(policy.transformText(std::move(tagName),
+            std::move(policy.transformText(
+                std::move(qname.first == std::nullopt
+                              ? typename State::CursorStringType()
+                              : qname.first.value()),
+                TextTransformationMode::NONE)),
+            std::move(policy.transformText(std::move(qname.second.value()),
                                            TextTransformationMode::NONE)),
             isSelfClosing, state.attributeNames, state.attributeValues,
             state.stack, pos);
@@ -1088,7 +1350,13 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
         /* Invariant - when closing node, the current parent (stack top)
          * must be of the node type */
         if constexpr (Config::validate) {
-            if (!policy.equalStackElementToTag(state.stack.back(), tagName)) {
+            typename State::CursorStringType namespacePrefix;
+            if (qname.first != std::nullopt) {
+                namespacePrefix = qname.first.value();
+            }
+            if (!policy.equalStackElementToTag(state.stack.back(),
+                                               namespacePrefix,
+                                               qname.second.value())) {
                 throw std::invalid_argument("Closing unopened tag");
             }
             if (state.stack.size() == 1) {
@@ -1096,9 +1364,22 @@ ONYX_INLINE void parseTag(ParseState<Config, Policy>& state,
             }
         }
         policy.closeAction(
-            std::move(policy.transformText(std::move(tagName),
+            std::move(policy.transformText(
+                std::move(qname.first == std::nullopt
+                              ? typename State::CursorStringType()
+                              : qname.first.value()),
+                TextTransformationMode::NONE)),
+            std::move(policy.transformText(std::move(qname.second.value()),
                                            TextTransformationMode::NONE)),
             state.stack, pos);
+
+        if constexpr (Config::validate &&
+                      Config::validateNamespacePrefixesResolve) {
+            while (!state.namespaces.empty() &&
+                   state.namespaces.back().depth == state.stack.size()) {
+                state.namespaces.pop_back();
+            }
+        }
     }
 }
 

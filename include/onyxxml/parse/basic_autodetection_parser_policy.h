@@ -17,36 +17,40 @@ struct BasicAutodetectionParserPolicy
         throw std::logic_error("Received non-declaration encoding event");
     }
 
-    ONYX_INLINE void textAction(StringType, Stack&, CursorType&) {
+    ONYX_INLINE void textAction(StringType&&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void commentAction(StringType, Stack&, CursorType&) {
+    ONYX_INLINE void commentAction(StringType&&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void cdataAction(StringType, Stack&, CursorType&) {
+    ONYX_INLINE void cdataAction(StringType&&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void instructionAction(StringType, StringType, Stack&,
+    ONYX_INLINE void instructionAction(StringType&&, StringType&&, Stack&,
                                        CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void xmlDeclarationAction(StringType, StringType, bool, bool,
-                                          bool, Stack&, CursorType&) {
+    ONYX_INLINE void xmlDeclarationAction(StringType&&, StringType&&, bool,
+                                          bool, bool, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void doctypeAction(StringType, Stack&, CursorType&) {
+    ONYX_INLINE void doctypeAction(StringType&&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void openAction(StringType, bool, std::vector<StringType>&,
-                                std::vector<StringType>&, Stack&, CursorType&) {
+    ONYX_INLINE void openAction(
+        StringType&&, StringType&&, bool,
+        std::vector<std::pair<StringType, typename StringType::size_type>>&,
+        std::vector<StringType>&, Stack&, CursorType&) {
         throwRequiresDeclarationEncoding();
     }
-    ONYX_INLINE void closeAction(StringType, Stack&, CursorType&) {
+    ONYX_INLINE void closeAction(StringType&&, StringType&&, Stack&,
+                                 CursorType&) {
         throwRequiresDeclarationEncoding();
     }
 
     ONYX_INLINE void initStack(std::vector<StackType>&) {}
     ONYX_INLINE bool equalStackElementToTag(StackType&,
+                                            typename CursorType::StringType&,
                                             typename CursorType::StringType&) {
         return false;
     }
