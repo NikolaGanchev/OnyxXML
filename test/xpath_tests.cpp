@@ -1,4 +1,5 @@
 #include <limits>
+#include <string_view>
 
 #include "catch2/catch_all.hpp"
 #include "onyx.h"
@@ -472,9 +473,11 @@ TEST_CASE("Virtual machine runs") {
 
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("store"))
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
             .addInstruction(Instruction(OPCODE::HALT))
             .build();
@@ -504,16 +507,19 @@ TEST_CASE("Virtual machine /store/book") {
     // 0="store", 1="book"
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("store"))
             .addData(XPathObject("book"))
             // Select /store
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
 
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 8))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 10))
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
             .addInstruction(Instruction(OPCODE::LOOP_UNION))
             .addInstruction(Instruction(OPCODE::LOOP_NEXT))
@@ -548,6 +554,7 @@ TEST_CASE("Virtual machine predicate /store/book[price > 15]") {
     // 0="store", 1="book", 2="price", 3=15.0
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("store"))
             .addData(XPathObject("book"))
             .addData(XPathObject("price"))
@@ -555,19 +562,22 @@ TEST_CASE("Virtual machine predicate /store/book[price > 15]") {
             // Select /store
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
-            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 16))
-            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
 
-            .addInstruction(
-                Instruction(OPCODE::LOOP_ENTER, 14))  // Jump to UNION
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 19))
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+            .addInstruction(
+                Instruction(OPCODE::LOOP_ENTER, 17))  // Jump to UNION
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))
             .addInstruction(
                 Instruction(OPCODE::COMPARE, COMPARE_MODE::GREATER_THAN))
             .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
@@ -603,6 +613,7 @@ TEST_CASE("Virtual machine attribute Test /store/book[@id='1']") {
     // 0="store", 1="book", 2="id", 3="1"
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("store"))
             .addData(XPathObject("book"))
             .addData(XPathObject("id"))
@@ -610,18 +621,21 @@ TEST_CASE("Virtual machine attribute Test /store/book[@id='1']") {
             // Select /store
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
-            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 16))
-            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
 
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 14))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 19))
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))  // "id"
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 17))
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))  // "id"
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))  // "1"
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))  // "1"
             .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::EQUAL))
             .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
             .addInstruction(Instruction(OPCODE::LOOP_NEXT))
@@ -654,21 +668,25 @@ TEST_CASE("Virtual machine empty /store/book/author") {
     // 0="store", 1="book", 2="author"
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("store"))
             .addData(XPathObject("book"))
             .addData(XPathObject("author"))
             // 1. Select /store
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
-            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 13))
-            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 11))
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 16))
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))  // "author"
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 14))
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))  // "author"
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
             .addInstruction(Instruction(OPCODE::LOOP_UNION))
             .addInstruction(Instruction(OPCODE::LOOP_NEXT))
@@ -698,6 +716,7 @@ TEST_CASE("Virtual machine math /store/book[price div 2 < 15]") {
     // 0="store", 1="book", 2="price", 3=2.0, 4=15.0
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("store"))
             .addData(XPathObject("book"))
             .addData(XPathObject("price"))
@@ -706,23 +725,26 @@ TEST_CASE("Virtual machine math /store/book[price div 2 < 15]") {
             // Select /store/book
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
-            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 20))
-            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 18))
-            // Select 'price'
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 23))
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-            // Load 2
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 21))
+            // Select 'price'
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+            // Load 2
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))
             .addInstruction(
                 Instruction(OPCODE::CALCULATE, CALCULATE_MODE::DIVIDE))
             // Load 15
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 5))
             .addInstruction(
                 Instruction(OPCODE::COMPARE, COMPARE_MODE::LESS_THAN))
             .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
@@ -759,6 +781,7 @@ TEST_CASE(
     // 0="store", 1="book", 2="title", 3="Second"
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("store"))
             .addData(XPathObject("book"))
             .addData(XPathObject("title"))
@@ -766,17 +789,20 @@ TEST_CASE(
             // Select /store/book
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
-            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 20))
-            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 18))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 23))
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 21))
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))
             .addInstruction(
                 Instruction(OPCODE::CALL, FUNCTION_CODE::STARTS_WITH_2))
             .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::NOT_1))
@@ -817,6 +843,7 @@ TEST_CASE("Virtual machine sum function /root/store[sum(book/price) > 50]") {
     // 0="store", 1="book", 2="price", 3=50.0, 4="root"
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("store"))
             .addData(XPathObject("book"))
             .addData(XPathObject("price"))
@@ -824,22 +851,26 @@ TEST_CASE("Virtual machine sum function /root/store[sum(book/price) > 50]") {
             .addData(XPathObject("root"))
             // Select /root/store
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 5))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 24))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 28))
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))  // store
-            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
-
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 22))
-
-            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))  // book
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))  // store
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
 
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 16))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 26))
+
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))  // price
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))  // book
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
+
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 20))
+            .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))  // price
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
             .addInstruction(Instruction(OPCODE::LOOP_UNION))
             .addInstruction(Instruction(OPCODE::LOOP_NEXT))
@@ -847,7 +878,7 @@ TEST_CASE("Virtual machine sum function /root/store[sum(book/price) > 50]") {
             // Call sum()
             .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::SUM_1))
 
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))  // 50.0
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))  // 50.0
             .addInstruction(
                 Instruction(OPCODE::COMPARE, COMPARE_MODE::GREATER_THAN))
             .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
@@ -879,6 +910,7 @@ TEST_CASE("Virtual machine attributes /root/item/@id") {
     // 0="root", 1="item", 2="id"
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("root"))
             .addData(XPathObject("item"))
             .addData(XPathObject("id"))
@@ -886,16 +918,19 @@ TEST_CASE("Virtual machine attributes /root/item/@id") {
             // Select /root
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
 
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 13))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 16))
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))  // "item"
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))  // "item"
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
 
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 11))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 14))
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))  // "id"
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))  // "id"
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
             .addInstruction(Instruction(OPCODE::LOOP_UNION))
             .addInstruction(Instruction(OPCODE::LOOP_NEXT))
@@ -935,6 +970,7 @@ TEST_CASE("Virtual machine booleans item[@x='1' and (@y='2' or @z='3')]") {
     // 0="root", 1="item", 2="x", 3="1", 4="y", 5="2", 6="z", 7="3"
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("root"))
             .addData(XPathObject("item"))
             .addData(XPathObject("x"))
@@ -947,58 +983,63 @@ TEST_CASE("Virtual machine booleans item[@x='1' and (@y='2' or @z='3')]") {
             // Select /root/item
             .addInstruction(Instruction(OPCODE::LOAD_ROOT))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
             .addInstruction(
                 Instruction(OPCODE::LOOP_ENTER, 33))  // Skip to HALT
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::CHILD))
 
-            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 27))
+            .addInstruction(Instruction(OPCODE::LOOP_ENTER, 32))
 
             // Check @x == '1'
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
-            .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 3))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))
             .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::EQUAL))
             // If False, Jump to FAIL
-            .addInstruction(Instruction(OPCODE::JUMP_F, 26))
+            .addInstruction(Instruction(OPCODE::JUMP_F, 31))
 
             // Check (@y='2' OR @z='3')
 
             // Check @y == '2'
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 4))
-            .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 5))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 6))
             .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::EQUAL))
             // If True, Jump to SUCCESS
-            .addInstruction(Instruction(OPCODE::JUMP_T, 28))
+            .addInstruction(Instruction(OPCODE::JUMP_T, 33))
 
             // Check @z == '3'
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 6))
-            .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 7))
+            .addInstruction(Instruction(OPCODE::SELECT, AXIS::ATTRIBUTE))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 8))
             .addInstruction(Instruction(OPCODE::COMPARE, COMPARE_MODE::EQUAL))
             // If True, Jump to SUCCESS
-            .addInstruction(Instruction(OPCODE::JUMP_T, 28))
+            .addInstruction(Instruction(OPCODE::JUMP_T, 33))
 
-            // FAIL (26)
+            // FAIL (31)
             .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::FALSE_0))
-            .addInstruction(Instruction(OPCODE::JUMP, 29))  // Jump to Test
+            .addInstruction(Instruction(OPCODE::JUMP, 34))  // Jump to Test
 
-            // SUCCESS (28)
+            // SUCCESS (33)
             .addInstruction(Instruction(OPCODE::CALL, FUNCTION_CODE::TRUE_0))
 
-            // TEST (29)
+            // TEST (34)
             .addInstruction(Instruction(OPCODE::CONTEXT_NODE_TEST))
             .addInstruction(Instruction(OPCODE::LOOP_NEXT))
             .addInstruction(Instruction(OPCODE::LOOP_UNION))
 
             .addInstruction(Instruction(OPCODE::LOOP_NEXT))
-            .addInstruction(Instruction(OPCODE::HALT))  // 33
+            .addInstruction(Instruction(OPCODE::HALT))  // 34
             .build();
 
     VirtualMachine vm(std::move(pr));
@@ -1024,6 +1065,7 @@ TEST_CASE("Virtual machine union Operator //div | //span") {
     // 0="div", 1="span"
     std::unique_ptr<Program> pr =
         Program::Builder()
+            .addData(XPathObject(""))
             .addData(XPathObject("div"))
             .addData(XPathObject("span"))
 
@@ -1033,11 +1075,13 @@ TEST_CASE("Virtual machine union Operator //div | //span") {
             // Select //div
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
             .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::DESCENDANT))
 
             // Select //span
             .addInstruction(Instruction(OPCODE::LOAD_CONTEXT_NODE))
-            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 1))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 0))
+            .addInstruction(Instruction(OPCODE::LOAD_CONSTANT, 2))
             .addInstruction(Instruction(OPCODE::SELECT, AXIS::DESCENDANT))
             .addInstruction(Instruction(OPCODE::UNION))
 
@@ -1874,8 +1918,8 @@ TEST_CASE("XPath Compiler does not create duplicate data") {
     Compiler compiler(std::move(parser.buildAST()));
     std::unique_ptr<Program> pr = compiler.compile();
 
-    // "div", "class", "2", 2, "id"
-    REQUIRE(pr->getData().size() == 5);
+    // "div", "class", "2", 2, "id", "" (empty namespace URI)
+    REQUIRE(pr->getData().size() == 6);
 }
 
 TEST_CASE("XPath execute /store") {
@@ -2117,15 +2161,16 @@ TEST_CASE(
                                 Attribute("x", "0"), Attribute("y", "2")));
 
     XPathQuery::Result res1 =
-        XPathQuery("item[@x=$var1 and (@y=$var2 or @z=$var3)]")
-            .execute(
-                &doc, [](std::string_view name) -> std::string { return ""; },
-                [](std::string_view name) -> XPathObject {
-                    if (name == "var1") return XPathObject("1");
-                    if (name == "var2") return XPathObject("2");
-                    if (name == "var3") return XPathObject("3");
-                    throw std::runtime_error("Unknown variable");
-                });
+        XPathQuery("item[@x=$var1 and (@y=$var2 or @z=$var3)]",
+                   [](std::string_view name) -> std::string { return ""; })
+            .execute(&doc,
+                     [](std::string_view uri,
+                        std::string_view localName) -> XPathObject {
+                         if (localName == "var1") return XPathObject("1");
+                         if (localName == "var2") return XPathObject("2");
+                         if (localName == "var3") return XPathObject("3");
+                         throw std::runtime_error("Unknown variable");
+                     });
     XPathObject& res = res1.object;
 
     REQUIRE(res.asNodeset().size() == 2);
@@ -2972,21 +3017,21 @@ TEST_CASE("XPath execute namespace element matching") {
     };
 
     XPathQuery::Result resNoNs =
-        XPathQuery("/root/item").execute(&doc, resolver);
+        XPathQuery("/root/item", resolver).execute(&doc);
     REQUIRE(resNoNs.object.asNodeset().size() == 1);
     REQUIRE(resNoNs.object.asNodeset()[0]->getAttributeValue("id") == "1");
 
     XPathQuery::Result resNs1 =
-        XPathQuery("/root/x:item").execute(&doc, resolver);
+        XPathQuery("/root/x:item", resolver).execute(&doc);
     REQUIRE(resNs1.object.asNodeset().size() == 1);
     REQUIRE(resNs1.object.asNodeset()[0]->getAttributeValue("id") == "2");
 
     XPathQuery::Result resNs2 =
-        XPathQuery("/root/y:item").execute(&doc, resolver);
+        XPathQuery("/root/y:item", resolver).execute(&doc);
     REQUIRE(resNs2.object.asNodeset().size() == 1);
     REQUIRE(resNs2.object.asNodeset()[0]->getAttributeValue("id") == "3");
 
-    XPathQuery::Result resWild = XPathQuery("/root/*").execute(&doc, resolver);
+    XPathQuery::Result resWild = XPathQuery("/root/*", resolver).execute(&doc);
     REQUIRE(resWild.object.asNodeset().size() == 3);
 }
 
@@ -3006,16 +3051,16 @@ TEST_CASE("XPath execute built-in 'xml' namespace matching") {
     auto emptyResolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resXmlLang =
-        XPathQuery("/root/para[@xml:lang='en']").execute(&doc, emptyResolver);
+        XPathQuery("/root/para[@xml:lang='en']", emptyResolver).execute(&doc);
     REQUIRE(resXmlLang.object.asNodeset().size() == 1);
     REQUIRE(resXmlLang.object.asNodeset()[0]->getAttributeValue("id") == "1");
 
     XPathQuery::Result resAllXmlLang =
-        XPathQuery("/root/para/@xml:lang").execute(&doc, emptyResolver);
+        XPathQuery("/root/para/@xml:lang", emptyResolver).execute(&doc);
     REQUIRE(resAllXmlLang.object.asNodeset().size() == 2);
 
     XPathQuery::Result resNoNsLang =
-        XPathQuery("/root/para/@lang").execute(&doc, emptyResolver);
+        XPathQuery("/root/para/@lang", emptyResolver).execute(&doc);
     REQUIRE(resNoNsLang.object.asNodeset().size() == 1);
     REQUIRE(
         resNoNsLang.object.asNodeset()[0]->getParentNode()->getAttributeValue(
@@ -3040,33 +3085,29 @@ TEST_CASE("XPath execute namespace-aware attribute matching") {
     };
 
     XPathQuery::Result resCustom =
-        XPathQuery("/root/item[@c:flag='true']").execute(&doc, resolver);
+        XPathQuery("/root/item[@c:flag='true']", resolver).execute(&doc);
     REQUIRE(resCustom.object.asNodeset().size() == 1);
     REQUIRE(resCustom.object.asNodeset()[0]->getAttributeValue("id") == "1");
 
     XPathQuery::Result resNoNs =
-        XPathQuery("/root/item[@flag='true']").execute(&doc, resolver);
+        XPathQuery("/root/item[@flag='true']", resolver).execute(&doc);
     REQUIRE(resNoNs.object.asNodeset().size() == 1);
     REQUIRE(resNoNs.object.asNodeset()[0]->getAttributeValue("id") == "2");
 }
 
-TEST_CASE("XPath execute undeclared namespace prefix throws") {
+TEST_CASE("XPath execute undeclared namespace prefix throws on compile time") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
     using namespace onyx::dynamic;
 
-    GenericNode doc("root", NonVoid,
-                    GenericNode("child", NonVoid, Attribute("attr", "val")));
-
     auto emptyResolver = [](std::string_view) -> std::string { return ""; };
 
-    REQUIRE_THROWS_WITH(
-        XPathQuery("/root/unknown:child").execute(&doc, emptyResolver),
-        "Could not resolve namespace prefix in query");
-
-    REQUIRE_THROWS_WITH(XPathQuery("/root/child[@unknown:attr='val']")
-                            .execute(&doc, emptyResolver),
+    REQUIRE_THROWS_WITH(XPathQuery("/root/unknown:child", emptyResolver),
                         "Could not resolve namespace prefix in query");
+
+    REQUIRE_THROWS_WITH(
+        XPathQuery("/root/child[@unknown:attr='val']", emptyResolver),
+        "Could not resolve namespace prefix in query");
 }
 
 TEST_CASE("XPath execute prefix wildcard element matching (prefix:*)") {
@@ -3092,16 +3133,16 @@ TEST_CASE("XPath execute prefix wildcard element matching (prefix:*)") {
         return "";
     };
 
-    XPathQuery::Result resNs1 = XPathQuery("/root/x:*").execute(&doc, resolver);
+    XPathQuery::Result resNs1 = XPathQuery("/root/x:*", resolver).execute(&doc);
     REQUIRE(resNs1.object.asNodeset().size() == 2);
     REQUIRE(resNs1.object.asNodeset()[0]->getAttributeValue("id") == "1");
     REQUIRE(resNs1.object.asNodeset()[1]->getAttributeValue("id") == "2");
 
-    XPathQuery::Result resNs2 = XPathQuery("/root/y:*").execute(&doc, resolver);
+    XPathQuery::Result resNs2 = XPathQuery("/root/y:*", resolver).execute(&doc);
     REQUIRE(resNs2.object.asNodeset().size() == 1);
     REQUIRE(resNs2.object.asNodeset()[0]->getAttributeValue("id") == "3");
 
-    XPathQuery::Result resAll = XPathQuery("/root/*").execute(&doc, resolver);
+    XPathQuery::Result resAll = XPathQuery("/root/*", resolver).execute(&doc);
     REQUIRE(resAll.object.asNodeset().size() == 4);
 }
 
@@ -3123,16 +3164,16 @@ TEST_CASE("XPath execute prefix wildcard attribute matching (@prefix:*)") {
     };
 
     XPathQuery::Result resMetaAttrs =
-        XPathQuery("/root/item/@m:*").execute(&doc, resolver);
+        XPathQuery("/root/item/@m:*", resolver).execute(&doc);
     REQUIRE(resMetaAttrs.object.asNodeset().size() == 2);
 
     XPathQuery::Result resXmlAttrs =
-        XPathQuery("/root/item/@xml:*").execute(&doc, resolver);
+        XPathQuery("/root/item/@xml:*", resolver).execute(&doc);
     REQUIRE(resXmlAttrs.object.asNodeset().size() == 1);
     REQUIRE(resXmlAttrs.object.asNodeset()[0]->getStringValue() == "en");
 
     XPathQuery::Result resAllAttrs =
-        XPathQuery("/root/item/@*").execute(&doc, resolver);
+        XPathQuery("/root/item/@*", resolver).execute(&doc);
     REQUIRE(resAllAttrs.object.asNodeset().size() == 5);
 }
 
@@ -3157,23 +3198,19 @@ TEST_CASE("XPath execute prefix wildcard in predicates") {
     };
 
     XPathQuery::Result res =
-        XPathQuery("/catalog/book[m:*]").execute(&doc, resolver);
+        XPathQuery("/catalog/book[m:*]", resolver).execute(&doc);
     REQUIRE(res.object.asNodeset().size() == 1);
     REQUIRE(res.object.asNodeset()[0]->getAttributeValue("id") == "1");
 }
 
-TEST_CASE("XPath execute undeclared prefix wildcard throws") {
+TEST_CASE("XPath execute undeclared prefix wildcard throws on compile time") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
-    GenericNode doc("root", NonVoid,
-                    GenericNode("item", NonVoid, Attribute("attr", "1")));
-
     auto emptyResolver = [](std::string_view) -> std::string { return ""; };
 
-    REQUIRE_THROWS(XPathQuery("/root/unknown:*").execute(&doc, emptyResolver));
-    REQUIRE_THROWS(
-        XPathQuery("/root/item/@unknown:*").execute(&doc, emptyResolver));
+    REQUIRE_THROWS(XPathQuery("/root/unknown:*", emptyResolver));
+    REQUIRE_THROWS(XPathQuery("/root/item/@unknown:*", emptyResolver));
 }
 
 TEST_CASE("XPath attribute axis ignores namespace declarations") {
@@ -3192,24 +3229,24 @@ TEST_CASE("XPath attribute axis ignores namespace declarations") {
     auto resolver = [](std::string_view prefix) -> std::string { return ""; };
 
     XPathQuery::Result resWildcard =
-        XPathQuery("/root/*/@*").execute(&doc, resolver);
+        XPathQuery("/root/*/@*", resolver).execute(&doc);
     REQUIRE(resWildcard.object.asNodeset().size() == 3);
 
     XPathQuery::Result resXmlnsDefault =
-        XPathQuery("/root/*/@xmlns").execute(&doc, resolver);
+        XPathQuery("/root/*/@xmlns", resolver).execute(&doc);
     REQUIRE(resXmlnsDefault.object.asNodeset().empty());
 
     XPathQuery::Result resXmlnsPrefixed =
-        XPathQuery("/root/*/@xmlns:custom").execute(&doc, resolver);
+        XPathQuery("/root/*/@xmlns:custom", resolver).execute(&doc);
     REQUIRE(resXmlnsPrefixed.object.asNodeset().empty());
 
     XPathQuery::Result resCountPred =
-        XPathQuery("/root/*[count(@*) = 3]").execute(&doc, resolver);
+        XPathQuery("/root/*[count(@*) = 3]", resolver).execute(&doc);
     REQUIRE(resCountPred.object.asNodeset().size() == 1);
     REQUIRE(resCountPred.object.asNodeset()[0]->getAttributeValue("id") == "1");
 
     XPathQuery::Result resNotXmlns =
-        XPathQuery("/root/*[not(@xmlns)]").execute(&doc, resolver);
+        XPathQuery("/root/*[not(@xmlns)]", resolver).execute(&doc);
     REQUIRE(resNotXmlns.object.asNodeset().size() == 1);
 }
 
@@ -3222,7 +3259,7 @@ TEST_CASE("XPath namespace axis implicit xml namespace node") {
     auto resolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resAll =
-        XPathQuery("/root/namespace::*").execute(&doc, resolver);
+        XPathQuery("/root/namespace::*", resolver).execute(&doc);
     REQUIRE(resAll.object.asNodeset().size() == 1);
 
     Node* nsNode = resAll.object.asNodeset()[0];
@@ -3231,7 +3268,7 @@ TEST_CASE("XPath namespace axis implicit xml namespace node") {
     REQUIRE(nsNode->getStringValue() == "http://www.w3.org/XML/1998/namespace");
 
     XPathQuery::Result resDirectXml =
-        XPathQuery("/root/namespace::xml").execute(&doc, resolver);
+        XPathQuery("/root/namespace::xml", resolver).execute(&doc);
     REQUIRE(resDirectXml.object.asNodeset().size() == 1);
     REQUIRE(resDirectXml.object.asNodeset()[0]->getStringValue() ==
             "http://www.w3.org/XML/1998/namespace");
@@ -3250,23 +3287,23 @@ TEST_CASE("XPath namespace axis local namespace declarations") {
     auto resolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resA =
-        XPathQuery("/root/item/namespace::a").execute(&doc, resolver);
+        XPathQuery("/root/item/namespace::a", resolver).execute(&doc);
     REQUIRE(resA.object.asNodeset().size() == 1);
     REQUIRE(resA.object.asNodeset()[0]->getStringValue() ==
             "http://example.com/nsA");
 
     XPathQuery::Result resB =
-        XPathQuery("/root/item/namespace::b").execute(&doc, resolver);
+        XPathQuery("/root/item/namespace::b", resolver).execute(&doc);
     REQUIRE(resB.object.asNodeset().size() == 1);
     REQUIRE(resB.object.asNodeset()[0]->getStringValue() ==
             "http://example.com/nsB");
 
     XPathQuery::Result resWildcard =
-        XPathQuery("/root/item/namespace::*").execute(&doc, resolver);
+        XPathQuery("/root/item/namespace::*", resolver).execute(&doc);
     REQUIRE(resWildcard.object.asNodeset().size() == 3);
 
     XPathQuery::Result resMissing =
-        XPathQuery("/root/item/namespace::nonexistent").execute(&doc, resolver);
+        XPathQuery("/root/item/namespace::nonexistent", resolver).execute(&doc);
     REQUIRE(resMissing.object.asNodeset().empty());
 }
 
@@ -3289,28 +3326,28 @@ TEST_CASE("XPath namespace axis ancestor inheritance and shadowing") {
 
     // child inherits 'b' from root
     XPathQuery::Result resInheritedB =
-        XPathQuery("//child/namespace::b").execute(&doc, resolver);
+        XPathQuery("//child/namespace::b", resolver).execute(&doc);
     REQUIRE(resInheritedB.object.asNodeset().size() == 1);
     REQUIRE(resInheritedB.object.asNodeset()[0]->getStringValue() ==
             "http://example.com/b_root");
 
     // child sees shadowed 'a' from parent, not root
     XPathQuery::Result resShadowedA =
-        XPathQuery("//child/namespace::a").execute(&doc, resolver);
+        XPathQuery("//child/namespace::a", resolver).execute(&doc);
     REQUIRE(resShadowedA.object.asNodeset().size() == 1);
     REQUIRE(resShadowedA.object.asNodeset()[0]->getStringValue() ==
             "http://example.com/a_parent");
 
     // child sees 'c' from parent
     XPathQuery::Result resInheritedC =
-        XPathQuery("//child/namespace::c").execute(&doc, resolver);
+        XPathQuery("//child/namespace::c", resolver).execute(&doc);
     REQUIRE(resInheritedC.object.asNodeset().size() == 1);
     REQUIRE(resInheritedC.object.asNodeset()[0]->getStringValue() ==
             "http://example.com/c_parent");
 
     // child has 4 namespace nodes - 'xml', 'a', 'b' and 'c'
     XPathQuery::Result resAllChild =
-        XPathQuery("//child/namespace::*").execute(&doc, resolver);
+        XPathQuery("//child/namespace::*", resolver).execute(&doc);
     REQUIRE(resAllChild.object.asNodeset().size() == 4);
 }
 
@@ -3328,15 +3365,17 @@ TEST_CASE(
 
     XPathQuery::Result resAllItem1 =
         XPathQuery(
-            "/*[local-name()='root']/*[local-name()='item1']/namespace::node()")
-            .execute(&doc, resolver);
+            "/*[local-name()='root']/*[local-name()='item1']/namespace::node()",
+            resolver)
+            .execute(&doc);
     // Should have 2 nodes, 'xml' and default ''
     REQUIRE(resAllItem1.object.asNodeset().size() == 2);
 
     XPathQuery::Result resAllItem2 =
         XPathQuery(
-            "/*[local-name()='root']/*[local-name()='item2']/namespace::node()")
-            .execute(&doc, resolver);
+            "/*[local-name()='root']/*[local-name()='item2']/namespace::node()",
+            resolver)
+            .execute(&doc);
     // Only 'xml' should remain
     REQUIRE(resAllItem2.object.asNodeset().size() == 1);
     REQUIRE(static_cast<NamespaceViewNode*>(resAllItem2.object.asNodeset()[0])
@@ -3356,8 +3395,9 @@ TEST_CASE("XPath namespace axis document order") {
     auto resolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resUnion =
-        XPathQuery("/root/item | /root/item/@* | /root/item/namespace::*")
-            .execute(&doc, resolver);
+        XPathQuery("/root/item | /root/item/@* | /root/item/namespace::*",
+                   resolver)
+            .execute(&doc);
 
     const std::vector<Node*>& nodes = resUnion.object.asNodeset();
     // 1 element ('item') + 2 namespaces ('xml', 'foo') + 2 attributes ('id',
@@ -3390,15 +3430,15 @@ TEST_CASE("XPath namespace axis node test filtering") {
     auto resolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resNodeTest =
-        XPathQuery("/root/item/namespace::node()").execute(&doc, resolver);
+        XPathQuery("/root/item/namespace::node()", resolver).execute(&doc);
     REQUIRE(resNodeTest.object.asNodeset().size() == 2);
 
     XPathQuery::Result resTextTest =
-        XPathQuery("/root/item/namespace::text()").execute(&doc, resolver);
+        XPathQuery("/root/item/namespace::text()", resolver).execute(&doc);
     REQUIRE(resTextTest.object.asNodeset().empty());
 
     XPathQuery::Result resCommentTest =
-        XPathQuery("/root/item/namespace::comment()").execute(&doc, resolver);
+        XPathQuery("/root/item/namespace::comment()", resolver).execute(&doc);
     REQUIRE(resCommentTest.object.asNodeset().empty());
 }
 
@@ -3416,20 +3456,21 @@ TEST_CASE("XPath namespace axis within predicates") {
     auto resolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resPrefixPred =
-        XPathQuery("/root/elem[namespace::sec]").execute(&doc, resolver);
+        XPathQuery("/root/elem[namespace::sec]", resolver).execute(&doc);
     REQUIRE(resPrefixPred.object.asNodeset().size() == 1);
     REQUIRE(resPrefixPred.object.asNodeset()[0]->getAttributeValue("id") ==
             "1");
 
     XPathQuery::Result resUriPred =
-        XPathQuery("/root/elem[namespace::* = 'http://example.com/public']")
-            .execute(&doc, resolver);
+        XPathQuery("/root/elem[namespace::* = 'http://example.com/public']",
+                   resolver)
+            .execute(&doc);
     REQUIRE(resUriPred.object.asNodeset().size() == 1);
     REQUIRE(resUriPred.object.asNodeset()[0]->getAttributeValue("id") == "2");
 
     XPathQuery::Result resCount =
-        XPathQuery("/root/elem[count(namespace::*) = 2]")
-            .execute(&doc, resolver);
+        XPathQuery("/root/elem[count(namespace::*) = 2]", resolver)
+            .execute(&doc);
     REQUIRE(resCount.object.asNodeset().size() == 2);
 }
 
@@ -3445,7 +3486,7 @@ TEST_CASE("XPath namespace axis parent axis navigation") {
     auto resolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resParent =
-        XPathQuery("/root/item/namespace::custom/..").execute(&doc, resolver);
+        XPathQuery("/root/item/namespace::custom/..", resolver).execute(&doc);
     REQUIRE(resParent.object.asNodeset().size() == 1);
     REQUIRE(resParent.object.asNodeset()[0]->getAttributeValue("id") ==
             "target");
@@ -3470,24 +3511,24 @@ TEST_CASE("XPath local-name() strips prefix on elements and attributes") {
     };
 
     XPathQuery::Result resElem =
-        XPathQuery("local-name(/root/item)").execute(&doc, resolver);
+        XPathQuery("local-name(/root/item)", resolver).execute(&doc);
     REQUIRE(resElem.object.asString() == "item");
 
     XPathQuery::Result resPrefElem =
-        XPathQuery("local-name(/root/p:gadget)").execute(&doc, resolver);
+        XPathQuery("local-name(/root/p:gadget)", resolver).execute(&doc);
     REQUIRE(resPrefElem.object.asString() == "gadget");
 
     XPathQuery::Result resAttr =
-        XPathQuery("local-name(/root/item/@id)").execute(&doc, resolver);
+        XPathQuery("local-name(/root/item/@id)", resolver).execute(&doc);
     REQUIRE(resAttr.object.asString() == "id");
 
     XPathQuery::Result resPrefAttr =
-        XPathQuery("local-name(/root/item/@p:flag)").execute(&doc, resolver);
+        XPathQuery("local-name(/root/item/@p:flag)", resolver).execute(&doc);
     REQUIRE(resPrefAttr.object.asString() == "flag");
 
     XPathQuery::Result resPrefAttr2 =
-        XPathQuery("local-name(/root/p:gadget/@p:serial)")
-            .execute(&doc, resolver);
+        XPathQuery("local-name(/root/p:gadget/@p:serial)", resolver)
+            .execute(&doc);
     REQUIRE(resPrefAttr2.object.asString() == "serial");
 }
 
@@ -3509,38 +3550,41 @@ TEST_CASE("XPath local-name() test on all node types") {
     };
 
     XPathQuery::Result resDoc =
-        XPathQuery("local-name(/*[local-name()='root']/..)")
-            .execute(&doc, resolver);
+        XPathQuery("local-name(/*[local-name()='root']/..)", resolver)
+            .execute(&doc);
     REQUIRE(resDoc.object.asString() == "");
 
     XPathQuery::Result resText =
-        XPathQuery("local-name(//text())").execute(&doc, resolver);
+        XPathQuery("local-name(//text())", resolver).execute(&doc);
     REQUIRE(resText.object.asString() == "");
 
     XPathQuery::Result resComment =
-        XPathQuery("local-name(//comment())").execute(&doc, resolver);
+        XPathQuery("local-name(//comment())", resolver).execute(&doc);
     REQUIRE(resComment.object.asString() == "");
 
     XPathQuery::Result resPI =
-        XPathQuery("local-name(//processing-instruction())")
-            .execute(&doc, resolver);
+        XPathQuery("local-name(//processing-instruction())", resolver)
+            .execute(&doc);
     REQUIRE(resPI.object.asString() == "render-target");
 
     XPathQuery::Result resNsPref =
-        XPathQuery("local-name(/*[local-name()='root']/namespace::ns)")
-            .execute(&doc, resolver);
+        XPathQuery("local-name(/*[local-name()='root']/namespace::ns)",
+                   resolver)
+            .execute(&doc);
     REQUIRE(resNsPref.object.asString() == "ns");
 
     XPathQuery::Result resNsXml =
-        XPathQuery("local-name(/*[local-name()='root']/namespace::xml)")
-            .execute(&doc, resolver);
+        XPathQuery("local-name(/*[local-name()='root']/namespace::xml)",
+                   resolver)
+            .execute(&doc);
     REQUIRE(resNsXml.object.asString() == "xml");
 
     XPathQuery::Result resNsDef =
         XPathQuery(
             "local-name(/*[local-name()='root']/namespace::*[. = "
-            "'http://example.com/default'])")
-            .execute(&doc, resolver);
+            "'http://example.com/default'])",
+            resolver)
+            .execute(&doc);
     REQUIRE(resNsDef.object.asString() == "");
 }
 
@@ -3563,8 +3607,8 @@ TEST_CASE(
     auto emptyResolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resEntries =
-        XPathQuery("/catalog/*[local-name() = 'entry']")
-            .execute(&doc, emptyResolver);
+        XPathQuery("/catalog/*[local-name() = 'entry']", emptyResolver)
+            .execute(&doc);
     REQUIRE(resEntries.object.asNodeset().size() == 3);
     REQUIRE(resEntries.object.asNodeset()[0]->getAttributeValue("code") ==
             "E1");
@@ -3581,8 +3625,8 @@ TEST_CASE(
                     Attribute("xmlns:b", "http://example.com/b")));
 
     XPathQuery::Result resAttrs =
-        XPathQuery("/root/data/@*[local-name() = 'key']")
-            .execute(&attrDoc, emptyResolver);
+        XPathQuery("/root/data/@*[local-name() = 'key']", emptyResolver)
+            .execute(&attrDoc);
     REQUIRE(resAttrs.object.asNodeset().size() == 2);
 }
 
@@ -3598,20 +3642,23 @@ TEST_CASE(
 
     auto emptyResolver = [](std::string_view) -> std::string { return ""; };
 
-    XPathQuery::Result resEmpty = XPathQuery("local-name(/container/missing)")
-                                      .execute(&doc, emptyResolver);
+    XPathQuery::Result resEmpty =
+        XPathQuery("local-name(/container/missing)", emptyResolver)
+            .execute(&doc);
     REQUIRE(resEmpty.object.asString() == "");
 
     XPathQuery::Result resMultiOrder =
         XPathQuery(
             "local-name(/container/third | /container/first | "
-            "/container/second)")
-            .execute(&doc, emptyResolver);
+            "/container/second)",
+            emptyResolver)
+            .execute(&doc);
     REQUIRE(resMultiOrder.object.asString() == "first");
 
     XPathQuery::Result resReverse =
-        XPathQuery("local-name(/container/third/preceding-sibling::*)")
-            .execute(&doc, emptyResolver);
+        XPathQuery("local-name(/container/third/preceding-sibling::*)",
+                   emptyResolver)
+            .execute(&doc);
     REQUIRE(resReverse.object.asString() == "first");
 }
 
@@ -3633,19 +3680,19 @@ TEST_CASE("XPath name() function on elements and attributes") {
     };
 
     XPathQuery::Result resElem =
-        XPathQuery("name(/root/item)").execute(&doc, resolver);
+        XPathQuery("name(/root/item)", resolver).execute(&doc);
     REQUIRE(resElem.object.asString() == "item");
 
     XPathQuery::Result resPrefElem =
-        XPathQuery("name(/root/p:box)").execute(&doc, resolver);
+        XPathQuery("name(/root/p:box)", resolver).execute(&doc);
     REQUIRE(resPrefElem.object.asString() == "pref:box");
 
     XPathQuery::Result resAttr =
-        XPathQuery("name(/root/item/@id)").execute(&doc, resolver);
+        XPathQuery("name(/root/item/@id)", resolver).execute(&doc);
     REQUIRE(resAttr.object.asString() == "id");
 
     XPathQuery::Result resPrefAttr =
-        XPathQuery("name(/root/item/@p:flag)").execute(&doc, resolver);
+        XPathQuery("name(/root/item/@p:flag)", resolver).execute(&doc);
     REQUIRE(resPrefAttr.object.asString() == "pref:flag");
 }
 
@@ -3662,13 +3709,13 @@ TEST_CASE("XPath name() zero-argument context sensitivity") {
     auto emptyResolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resFilter =
-        XPathQuery("/catalog/*[name() = 'book']").execute(&doc, emptyResolver);
+        XPathQuery("/catalog/*[name() = 'book']", emptyResolver).execute(&doc);
     REQUIRE(resFilter.object.asNodeset().size() == 1);
     REQUIRE(resFilter.object.asNodeset()[0]->getTagName() == "book");
 
     XPathQuery::Result resAttrFilter =
-        XPathQuery("/catalog/*/@*[name() = 'category']")
-            .execute(&doc, emptyResolver);
+        XPathQuery("/catalog/*/@*[name() = 'category']", emptyResolver)
+            .execute(&doc);
     REQUIRE(resAttrFilter.object.asNodeset().size() == 2);
 }
 
@@ -3688,28 +3735,28 @@ TEST_CASE("XPath name() complex test on all node types") {
     };
 
     XPathQuery::Result resRoot =
-        XPathQuery("name(/root/..)").execute(&doc, resolver);
+        XPathQuery("name(/root/..)", resolver).execute(&doc);
     REQUIRE(resRoot.object.asString() == "");
 
     XPathQuery::Result resText =
-        XPathQuery("name(/root/leaf/text())").execute(&doc, resolver);
+        XPathQuery("name(/root/leaf/text())", resolver).execute(&doc);
     REQUIRE(resText.object.asString() == "");
 
     XPathQuery::Result resComment =
-        XPathQuery("name(/root/comment())").execute(&doc, resolver);
+        XPathQuery("name(/root/comment())", resolver).execute(&doc);
     REQUIRE(resComment.object.asString() == "");
 
     XPathQuery::Result resPI =
-        XPathQuery("name(/root/processing-instruction())")
-            .execute(&doc, resolver);
+        XPathQuery("name(/root/processing-instruction())", resolver)
+            .execute(&doc);
     REQUIRE(resPI.object.asString() == "custom-engine");
 
     XPathQuery::Result resNs =
-        XPathQuery("name(/root/namespace::m)").execute(&doc, resolver);
+        XPathQuery("name(/root/namespace::m)", resolver).execute(&doc);
     REQUIRE(resNs.object.asString() == "m");
 
     XPathQuery::Result resNsXml =
-        XPathQuery("name(/root/namespace::xml)").execute(&doc, resolver);
+        XPathQuery("name(/root/namespace::xml)", resolver).execute(&doc);
     REQUIRE(resNsXml.object.asString() == "xml");
 }
 
@@ -3722,11 +3769,11 @@ TEST_CASE("XPath name() empty nodeset and initial context evaluation") {
     auto emptyResolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resEmpty =
-        XPathQuery("name(/root/nonexistent)").execute(&doc, emptyResolver);
+        XPathQuery("name(/root/nonexistent)", emptyResolver).execute(&doc);
     REQUIRE(resEmpty.object.asString() == "");
 
     XPathQuery::Result resDocOrder =
-        XPathQuery("name(/root/* | /root)").execute(&doc, emptyResolver);
+        XPathQuery("name(/root/* | /root)", emptyResolver).execute(&doc);
     REQUIRE(resDocOrder.object.asString() == "root");
 }
 
@@ -3750,19 +3797,19 @@ TEST_CASE("XPath namespace-uri() on elements and attributes") {
     };
 
     XPathQuery::Result resPrefElem =
-        XPathQuery("namespace-uri(/root/p:gadget)").execute(&doc, resolver);
+        XPathQuery("namespace-uri(/root/p:gadget)", resolver).execute(&doc);
     REQUIRE(resPrefElem.object.asString() == "http://example.com/pref");
 
     XPathQuery::Result resNoNsElem =
-        XPathQuery("namespace-uri(/root/plain)").execute(&doc, resolver);
+        XPathQuery("namespace-uri(/root/plain)", resolver).execute(&doc);
     REQUIRE(resNoNsElem.object.asString() == "");
 
     XPathQuery::Result resPrefAttr =
-        XPathQuery("namespace-uri(/root/item/@p:flag)").execute(&doc, resolver);
+        XPathQuery("namespace-uri(/root/item/@p:flag)", resolver).execute(&doc);
     REQUIRE(resPrefAttr.object.asString() == "http://example.com/pref");
 
     XPathQuery::Result resPlainAttr =
-        XPathQuery("namespace-uri(/root/item/@id)").execute(&doc, resolver);
+        XPathQuery("namespace-uri(/root/item/@id)", resolver).execute(&doc);
     REQUIRE(resPlainAttr.object.asString() == "");
 }
 
@@ -3780,12 +3827,12 @@ TEST_CASE("XPath namespace-uri() default namespace behavior") {
     };
 
     XPathQuery::Result resElem =
-        XPathQuery("namespace-uri(/d:container/d:box)").execute(&doc, resolver);
+        XPathQuery("namespace-uri(/d:container/d:box)", resolver).execute(&doc);
     REQUIRE(resElem.object.asString() == "http://example.com/default");
 
     XPathQuery::Result resAttr =
-        XPathQuery("namespace-uri(/d:container/d:box/@weight)")
-            .execute(&doc, resolver);
+        XPathQuery("namespace-uri(/d:container/d:box/@weight)", resolver)
+            .execute(&doc);
     REQUIRE(resAttr.object.asString() == "");
 }
 
@@ -3805,34 +3852,34 @@ TEST_CASE("XPath namespace-uri() test on all node types") {
     };
 
     XPathQuery::Result resDoc =
-        XPathQuery("namespace-uri(/root/..)").execute(&doc, resolver);
+        XPathQuery("namespace-uri(/root/..)", resolver).execute(&doc);
     REQUIRE(resDoc.object.asString() == "");
 
     XPathQuery::Result resText =
-        XPathQuery("namespace-uri(//text())").execute(&doc, resolver);
+        XPathQuery("namespace-uri(//text())", resolver).execute(&doc);
     REQUIRE(resText.object.asString() == "");
 
     XPathQuery::Result resComment =
-        XPathQuery("namespace-uri(//comment())").execute(&doc, resolver);
+        XPathQuery("namespace-uri(//comment())", resolver).execute(&doc);
     REQUIRE(resComment.object.asString() == "");
 
     XPathQuery::Result resPI =
-        XPathQuery("namespace-uri(//processing-instruction())")
-            .execute(&doc, resolver);
+        XPathQuery("namespace-uri(//processing-instruction())", resolver)
+            .execute(&doc);
     REQUIRE(resPI.object.asString() == "");
 
     XPathQuery::Result resXmlAttr =
-        XPathQuery("namespace-uri(/root/@xml:lang)").execute(&doc, resolver);
+        XPathQuery("namespace-uri(/root/@xml:lang)", resolver).execute(&doc);
     REQUIRE(resXmlAttr.object.asString() ==
             "http://www.w3.org/XML/1998/namespace");
 
     XPathQuery::Result resNs =
-        XPathQuery("namespace-uri(/root/namespace::m)").execute(&doc, resolver);
+        XPathQuery("namespace-uri(/root/namespace::m)", resolver).execute(&doc);
     REQUIRE(resNs.object.asString() == "");
 
     XPathQuery::Result resNsXml =
-        XPathQuery("namespace-uri(/root/namespace::xml)")
-            .execute(&doc, resolver);
+        XPathQuery("namespace-uri(/root/namespace::xml)", resolver)
+            .execute(&doc);
     REQUIRE(resNsXml.object.asString() == "");
 }
 
@@ -3854,13 +3901,15 @@ TEST_CASE(
     auto emptyResolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resAlpha =
-        XPathQuery("/feed/*[namespace-uri() = 'http://example.com/alpha']")
-            .execute(&doc, emptyResolver);
+        XPathQuery("/feed/*[namespace-uri() = 'http://example.com/alpha']",
+                   emptyResolver)
+            .execute(&doc);
     REQUIRE(resAlpha.object.asNodeset().size() == 1);
     REQUIRE(resAlpha.object.asNodeset()[0]->getAttributeValue("id") == "1");
 
-    XPathQuery::Result resNone = XPathQuery("/feed/*[namespace-uri() = '']")
-                                     .execute(&doc, emptyResolver);
+    XPathQuery::Result resNone =
+        XPathQuery("/feed/*[namespace-uri() = '']", emptyResolver)
+            .execute(&doc);
     REQUIRE(resNone.object.asNodeset().size() == 1);
     REQUIRE(resNone.object.asNodeset()[0]->getAttributeValue("id") == "3");
 
@@ -3872,8 +3921,9 @@ TEST_CASE(
 
     XPathQuery::Result resAttrs =
         XPathQuery(
-            "/root/node/@*[namespace-uri() = 'http://example.com/custom']")
-            .execute(&attrDoc, emptyResolver);
+            "/root/node/@*[namespace-uri() = 'http://example.com/custom']",
+            emptyResolver)
+            .execute(&attrDoc);
     REQUIRE(resAttrs.object.asNodeset().size() == 1);
     REQUIRE(resAttrs.object.asNodeset()[0]->getStringValue() == "yes");
 }
@@ -3894,16 +3944,18 @@ TEST_CASE("XPath namespace-uri() document order and empty set edge cases") {
     auto emptyResolver = [](std::string_view) -> std::string { return ""; };
 
     XPathQuery::Result resEmpty =
-        XPathQuery("namespace-uri(/root/missing)").execute(&doc, emptyResolver);
+        XPathQuery("namespace-uri(/root/missing)", emptyResolver).execute(&doc);
     REQUIRE(resEmpty.object.asString() == "");
 
     XPathQuery::Result resMultiOrder =
-        XPathQuery("namespace-uri(/root/*[3] | /root/*[1] | /root/*[2])")
-            .execute(&doc, emptyResolver);
+        XPathQuery("namespace-uri(/root/*[3] | /root/*[1] | /root/*[2])",
+                   emptyResolver)
+            .execute(&doc);
     REQUIRE(resMultiOrder.object.asString() == "http://example.com/first");
 
     XPathQuery::Result resReverse =
-        XPathQuery("namespace-uri(/root/*[3]/preceding-sibling::*)")
-            .execute(&doc, emptyResolver);
+        XPathQuery("namespace-uri(/root/*[3]/preceding-sibling::*)",
+                   emptyResolver)
+            .execute(&doc);
     REQUIRE(resReverse.object.asString() == "http://example.com/first");
 }

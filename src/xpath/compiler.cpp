@@ -1,5 +1,6 @@
 #include "xpath/compiler.h"
 
+#include "nodes/util/qualified_name.h"
 #include "xpath/calculate_mode.h"
 #include "xpath/compare_mode.h"
 
@@ -12,6 +13,34 @@ struct CompilerNode {
     uint32_t resolveState = 0;
     uint32_t address1 = 0;
 };
+
+std::pair<std::string, std::string> resolveQName(
+    std::string_view testStr,
+    const std::function<std::string(std::string_view)>& resolver) {
+    if (testStr.find('(') != std::string_view::npos) {
+        return {"", std::string(testStr)};
+    }
+
+    tags::util::QualifiedName qn(testStr);
+    std::string prefix = std::string(qn.prefix);
+    std::string local = std::string(qn.name);
+
+    std::string uri;
+    if (prefix == "") {
+        uri = "";
+    } else if (prefix == "xml") {
+        uri = "http://www.w3.org/XML/1998/namespace";
+    } else if (prefix == "xmlns") {
+        uri = "http://www.w3.org/2000/xmlns/";
+    } else {
+        uri = resolver(prefix);
+        if (uri.empty()) {
+            throw std::runtime_error(
+                "Could not resolve namespace prefix in query");
+        }
+    }
+    return {uri, local};
+}
 
 CALCULATE_MODE resolveCalculateMode(std::string_view op) {
     if (op == "+")
@@ -209,7 +238,8 @@ bool isReverseAxis(AXIS axis) {
            axis == AXIS::PRECEDING || axis == AXIS::PRECEDING_SIBLING;
 }
 
-std::unique_ptr<Program> Compiler::compile() {
+std::unique_ptr<Program> Compiler::compile(
+    std::function<std::string(std::string_view)> namespaceResolver) {
     std::vector<XPathObject> data;
     std::vector<Instruction> instructions;
 
@@ -253,9 +283,18 @@ std::unique_ptr<Program> Compiler::compile() {
             };
             case Parser::AstNode::VarRef: {
                 Parser::VarRef* var = static_cast<Parser::VarRef*>(current);
-                size_t address = pushData(data, std::move(var->name));
+                auto [uri, local] = resolveQName(var->name, namespaceResolver);
+
+                size_t uriAddr = pushData(data, std::move(uri));
+                size_t localAddr = pushData(data, std::move(local));
+
                 pushInstruction(instructions,
-                                Instruction(OPCODE::LOAD_VARIABLE, address));
+                                Instruction(OPCODE::LOAD_CONSTANT, uriAddr));
+                pushInstruction(instructions,
+                                Instruction(OPCODE::LOAD_CONSTANT, localAddr));
+                pushInstruction(instructions,
+                                Instruction(OPCODE::LOAD_VARIABLE));
+
                 stack.pop();
                 break;
             };
@@ -477,10 +516,19 @@ std::unique_ptr<Program> Compiler::compile() {
                 if (currentCompileNode.resolveState == 0) {
                     pushInstruction(instructions,
                                     Instruction(OPCODE::LOAD_CONTEXT_NODE));
-                    size_t address = pushData(data, std::move(step->test));
+
+                    auto [uri, local] =
+                        resolveQName(step->test, namespaceResolver);
+                    size_t uriAddr = pushData(data, std::move(uri));
+                    size_t localAddr = pushData(data, std::move(local));
+
                     pushInstruction(
                         instructions,
-                        Instruction(OPCODE::LOAD_CONSTANT, address));
+                        Instruction(OPCODE::LOAD_CONSTANT, uriAddr));
+                    pushInstruction(
+                        instructions,
+                        Instruction(OPCODE::LOAD_CONSTANT, localAddr));
+
                     AXIS axis = resolveAxis(step->axis);
                     pushInstruction(instructions,
                                     Instruction(OPCODE::SELECT, axis));

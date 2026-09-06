@@ -1,6 +1,7 @@
 #include "xpath/virtual_machine.h"
 
 #include <stack>
+#include <string_view>
 
 #include "nodes/attribute_view_node.h"
 #include "nodes/namespace_view_node.h"
@@ -146,8 +147,8 @@ void VirtualMachine::DocumentOrder::normalizeDocumentOrderSet(
 
 VirtualMachine::ExecutionResult VirtualMachine::executeOn(
     Node* current,
-    std::function<std::string(std::string_view)> namespaceResolver,
-    std::function<XPathObject(std::string_view)> variableProvider) {
+    std::function<XPathObject(std::string_view, std::string_view)>
+        variableProvider) {
     static VirtualMachine::FunctionRegistry functionRegistry =
         registerFunctions();
 
@@ -156,7 +157,6 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(
         this->program->getInstructions();
 
     ExecutionContext ec{};
-    ec.namespaceResolver = std::move(namespaceResolver);
 
     ec.contextStack.emplace(FrameContext({current}, 0, 0, {}));
 
@@ -220,18 +220,22 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(
                 break;
             };
             case OPCODE::LOAD_VARIABLE: {
-                uint32_t address = instruction.getOperandImm();
-
-                if (address >= data.size()) {
+                EMPTY_STACK_GUARD(LOAD_VARIABLE);
+                if (!ec.dataStack.top().isString()) {
                     throw std::runtime_error(
-                        "Data address out of bounds in LOAD_VARIABLE");
+                        "Variable local-name must be a string");
                 }
+                std::string localName = ec.dataStack.top().asString();
+                ec.dataStack.pop();
 
-                if (!data[address].isString()) {
-                    throw std::runtime_error("Variable name must be string.");
+                EMPTY_STACK_GUARD(LOAD_VARIABLE);
+                if (!ec.dataStack.top().isString()) {
+                    throw std::runtime_error("Variable URI must be a string");
                 }
+                std::string uri = ec.dataStack.top().asString();
+                ec.dataStack.pop();
 
-                ec.dataStack.push(variableProvider(data[address].asString()));
+                ec.dataStack.push(variableProvider(uri, localName));
 
                 break;
             };
@@ -312,9 +316,10 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(
                 EMPTY_STACK_GUARD(CONTEXT_NODE_TEST);
 
                 // Encode special predicate behaviour (ancestor::div[5] means
-                // ancestor::div[position() == 5]) This cannot be resolved any
-                // earlier, because until evaluation is is hard to determine the
-                // type of the result in the predicate
+                // ancestor::div[position() == 5]).
+                // This cannot be resolved any earlier, because until evaluation
+                // is is hard to determine the type of the result in the
+                // predicate.
                 if (ec.dataStack.top().isNumber()) {
                     if (context.currentIndex + 1 ==
                         ec.dataStack.top().asNumber()) {
@@ -410,15 +415,21 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(
 
 void VirtualMachine::executeSelect(const Instruction& instruction,
                                    ExecutionContext& ec) {
-    if (ec.dataStack.size() < 2) {
+    if (ec.dataStack.size() < 3) {
         throw std::runtime_error(
-            "Cannot execute SELECT because 2 arguments are required");
+            "Cannot execute SELECT because 3 arguments are required");
     }
 
     if (!ec.dataStack.top().isString()) {
-        throw std::runtime_error("SELECT instruction needs a Node Test string");
+        throw std::runtime_error("SELECT instruction needs a string argument");
     }
-    std::string nodeTest = ec.dataStack.top().asString();
+    std::string localName = ec.dataStack.top().asString();
+    ec.dataStack.pop();
+
+    if (!ec.dataStack.top().isString()) {
+        throw std::runtime_error("SELECT instruction needs a string argument");
+    }
+    std::string uri = ec.dataStack.top().asString();
     ec.dataStack.pop();
 
     if (!ec.dataStack.top().isNodeset()) {
@@ -440,31 +451,34 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
 
     switch (axis) {
         case AXIS::CHILD: {
-            collectChildren(contextNode, axis, nodeTest, nodeset, ec);
+            collectChildren(contextNode, axis, uri, localName, nodeset);
             break;
         }
         case AXIS::DESCENDANT: {
-            collectDescendants(contextNode, axis, nodeTest, nodeset, ec);
+            collectDescendants(contextNode, axis, uri, localName, nodeset);
             break;
         }
         case AXIS::PARENT: {
-            collectParent(contextNode, axis, nodeTest, nodeset, ec.root, ec);
+            collectParent(contextNode, axis, uri, localName, nodeset, ec.root);
             break;
         }
         case AXIS::ANCESTOR: {
-            collectAncestor(contextNode, axis, nodeTest, nodeset, ec.root, ec);
+            collectAncestor(contextNode, axis, uri, localName, nodeset,
+                            ec.root);
             break;
         }
         case AXIS::FOLLOWING_SIBLING: {
-            collectFollowingSiblings(contextNode, axis, nodeTest, nodeset, ec);
+            collectFollowingSiblings(contextNode, axis, uri, localName,
+                                     nodeset);
             break;
         }
         case AXIS::PRECEDING_SIBLING: {
-            collectPrecedingSiblings(contextNode, axis, nodeTest, nodeset, ec);
+            collectPrecedingSiblings(contextNode, axis, uri, localName,
+                                     nodeset);
             break;
         }
         case AXIS::SELF: {
-            if (nodeMatchesTest(contextNode, axis, nodeTest, ec)) {
+            if (nodeMatchesTest(contextNode, axis, uri, localName)) {
                 nodeset.push_back(contextNode);
             }
             break;
@@ -480,7 +494,7 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
                     }
                     AttributeViewNode tempAttr(contextNode, i);
 
-                    if (nodeMatchesTest(&tempAttr, axis, nodeTest, ec)) {
+                    if (nodeMatchesTest(&tempAttr, axis, uri, localName)) {
                         // TODO AttributeViewNodes need to be pointer level
                         // identical for the union to work.
                         // This means we must return existing nodes.
@@ -519,25 +533,26 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
             break;
         }
         case AXIS::DESCENDANT_OR_SELF: {
-            if (nodeMatchesTest(contextNode, axis, nodeTest, ec)) {
+            if (nodeMatchesTest(contextNode, axis, uri, localName)) {
                 nodeset.push_back(contextNode);
             }
-            collectDescendants(contextNode, axis, nodeTest, nodeset, ec);
+            collectDescendants(contextNode, axis, uri, localName, nodeset);
             break;
         }
         case AXIS::ANCESTOR_OR_SELF: {
-            if (nodeMatchesTest(contextNode, axis, nodeTest, ec)) {
+            if (nodeMatchesTest(contextNode, axis, uri, localName)) {
                 nodeset.push_back(contextNode);
             }
-            collectAncestor(contextNode, axis, nodeTest, nodeset, ec.root, ec);
+            collectAncestor(contextNode, axis, uri, localName, nodeset,
+                            ec.root);
             break;
         }
         case AXIS::FOLLOWING: {
-            collectFollowing(contextNode, axis, nodeTest, nodeset, ec);
+            collectFollowing(contextNode, axis, uri, localName, nodeset, ec);
             break;
         };
         case AXIS::PRECEDING: {
-            collectPreceding(contextNode, axis, nodeTest, nodeset, ec);
+            collectPreceding(contextNode, axis, uri, localName, nodeset, ec);
             break;
         };
         case AXIS::NAMESPACE: {
@@ -572,17 +587,17 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
                     currentAncestor = currentAncestor->getParentNode();
                 }
 
-                for (const auto& [prefix, uri] : activeNamespaces) {
+                for (const auto& [prefix, nsUri] : activeNamespaces) {
                     // In XPath 1.0, xmlns="" undeclares the default namespace.
                     // It does not generate a namespace node.
-                    if (prefix == "" && uri == "") continue;
+                    if (prefix == "" && nsUri == "") continue;
 
                     std::unique_ptr<NamespaceViewNode> nsNode =
                         std::make_unique<NamespaceViewNode>(contextNode, prefix,
-                                                            uri);
+                                                            nsUri);
                     Node* temp = nsNode.get();
 
-                    if (nodeMatchesTest(temp, axis, nodeTest, ec)) {
+                    if (nodeMatchesTest(temp, axis, uri, localName)) {
                         bool found = false;
                         for (size_t j = 0; j < ec.temporaryNodes.size(); j++) {
                             if (ec.temporaryNodes[j]->getXPathType() ==

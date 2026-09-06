@@ -48,15 +48,19 @@ enum class OPCODE : uint8_t {
 
     /**
      * @brief Attempts to load the variable indicated by the variable name
-     * provided. Immediate type instruction.
+     * provided. Pops the local name, then pops the namespace URI from the
+     * stack. Pushes the resolved variable value to the top of the stack. Stack
+     * type instruction.
      *
      */
     LOAD_VARIABLE = 0x6,
 
     /**
-     * @brief Selects nodes on a given axis with a given name (from the stack)
-     * into a nodeset and pushes it to the top of the stack based on the node on
-     * top of the stack. Pop the stack. Immediate instruction.
+     * @brief Selects nodes on a given axis with an expanded name test into a
+     * nodeset. Pops the local name (or node test), pops the namespace URI, and
+     * pops the target node from the top of the stack. Pushes the resulting
+     * nodeset to the top of the stack. Immediate type instruction. The Operand
+     * specifies the axis.
      */
     SELECT = 0x10,
 
