@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <stack>
+#include <string>
 
 #include "axis.h"
 #include "calculate_mode.h"
@@ -209,6 +210,7 @@ class VirtualMachine {
         DocumentRoot root;
         DocumentOrder order;
         std::vector<std::unique_ptr<Node>> temporaryNodes;
+        std::function<std::string(std::string_view)> namespaceResolver;
 
         ExecutionContext();
     };
@@ -260,9 +262,10 @@ class VirtualMachine {
      * @param axis
      * @param test
      * @param result
+     * @param ec
      */
     void collectDescendants(Node* current, AXIS axis, const std::string& test,
-                            std::vector<Node*>& result);
+                            std::vector<Node*>& result, ExecutionContext& ec);
 
     /**
      * @brief Collect children of the node
@@ -271,9 +274,10 @@ class VirtualMachine {
      * @param axis
      * @param test
      * @param result
+     * @param ec
      */
     void collectChildren(Node* current, AXIS axis, const std::string& test,
-                         std::vector<Node*>& result);
+                         std::vector<Node*>& result, ExecutionContext& ec);
 
     /**
      * @brief Collect parent of the node
@@ -283,9 +287,11 @@ class VirtualMachine {
      * @param test
      * @param result
      * @param root
+     * @param ec
      */
     void collectParent(Node* current, AXIS axis, const std::string& test,
-                       std::vector<Node*>& result, DocumentRoot& root);
+                       std::vector<Node*>& result, DocumentRoot& root,
+                       ExecutionContext& ec);
 
     /**
      * @brief Collect ancestors of the node
@@ -295,9 +301,11 @@ class VirtualMachine {
      * @param test
      * @param result
      * @param root
+     * @param ec
      */
     void collectAncestor(Node* current, AXIS axis, const std::string& test,
-                         std::vector<Node*>& result, DocumentRoot& root);
+                         std::vector<Node*>& result, DocumentRoot& root,
+                         ExecutionContext& ec);
 
     /**
      * @brief Collect following siblings of the node
@@ -306,10 +314,12 @@ class VirtualMachine {
      * @param axis
      * @param test
      * @param result
+     * @param ec
      */
     void collectFollowingSiblings(Node* current, AXIS axis,
                                   const std::string& test,
-                                  std::vector<Node*>& result);
+                                  std::vector<Node*>& result,
+                                  ExecutionContext& ec);
 
     /**
      * @brief Collect following siblings of the node
@@ -318,10 +328,12 @@ class VirtualMachine {
      * @param axis
      * @param test
      * @param result
+     * @param ec
      */
     void collectPrecedingSiblings(Node* current, AXIS axis,
                                   const std::string& test,
-                                  std::vector<Node*>& result);
+                                  std::vector<Node*>& result,
+                                  ExecutionContext& ec);
 
     /**
      * @brief Collect preceding of the node
@@ -353,10 +365,21 @@ class VirtualMachine {
      * @param node
      * @param axis
      * @param test
+     * @param ec
      * @return true
      * @return false
      */
-    bool nodeMatchesTest(Node* node, AXIS axis, const std::string& test);
+    bool nodeMatchesTest(Node* node, AXIS axis, const std::string& test,
+                         ExecutionContext& ec);
+
+    /**
+     * @brief Resolves the namespace for the given prefix
+     *
+     * @param prefix
+     * @param ec
+     * @return std::string
+     */
+    std::string resolveNamespace(std::string_view prefix, ExecutionContext& ec);
 
    public:
     /**
@@ -403,11 +426,18 @@ class VirtualMachine {
      * execution result.
      *
      * @param current
+     * @param std::function<std::string(std::string_view)> Resolves namespaces
      * @param std::function<XPathObject(std::string_view)> Resolves variables
      * @return ExecutionResult
      */
     ExecutionResult executeOn(
         Node* current,
+        std::function<std::string(std::string_view)> namespaceResolver =
+            [](std::string_view namespacePrefix) -> std::string {
+            throw std::runtime_error(
+                "Found namespace prefix that cannot be resolved " +
+                std::string(namespacePrefix));
+        },
         std::function<XPathObject(std::string_view)> variableProvider =
             [](std::string_view v) -> XPathObject {
             throw std::runtime_error("Found unresolved variable reference to " +

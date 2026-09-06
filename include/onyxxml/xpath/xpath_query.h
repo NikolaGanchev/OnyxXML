@@ -36,11 +36,18 @@ class XPathQuery {
      * @brief Executes the query on the given node.
      *
      * @param node
-     * @param std::function<XPathObject(std::string_view)>
+     * @param std::function<std::string(std::string_view)> Resolves namespaces
+     * @param std::function<XPathObject(std::string_view)> Resolves variables
      * @return Result
      */
     Result execute(
         Node* node,
+        std::function<std::string(std::string_view)> namespaceResolver =
+            [](std::string_view namespacePrefix) -> std::string {
+            throw std::runtime_error(
+                "Found namespace prefix that cannot be resolved " +
+                std::string(namespacePrefix));
+        },
         std::function<XPathObject(std::string_view)> variableProvider =
             [](std::string_view v) -> XPathObject {
             throw std::runtime_error("Found unresolved variable reference to " +

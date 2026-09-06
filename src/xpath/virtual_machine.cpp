@@ -3,14 +3,11 @@
 #include <stack>
 
 #include "nodes/attribute_view_node.h"
-#include "nodes/comment_node.h"
-#include "nodes/processing_instruction_node.h"
 #include "nodes/root_view_node.h"
 #include "xpath/axis.h"
 #include "xpath/calculate_mode.h"
 #include "xpath/compare_mode.h"
 #include "xpath/function_code.h"
-#include "xpath/functions.h"
 
 namespace onyx::dynamic::xpath {
 
@@ -122,6 +119,7 @@ void VirtualMachine::DocumentOrder::normalizeDocumentOrderSet(
 
 VirtualMachine::ExecutionResult VirtualMachine::executeOn(
     Node* current,
+    std::function<std::string(std::string_view)> namespaceResolver,
     std::function<XPathObject(std::string_view)> variableProvider) {
     static VirtualMachine::FunctionRegistry functionRegistry =
         registerFunctions();
@@ -131,6 +129,7 @@ VirtualMachine::ExecutionResult VirtualMachine::executeOn(
         this->program->getInstructions();
 
     ExecutionContext ec{};
+    ec.namespaceResolver = std::move(namespaceResolver);
 
     ec.contextStack.emplace(FrameContext({current}, 0, 0, {}));
 
@@ -414,31 +413,31 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
 
     switch (axis) {
         case AXIS::CHILD: {
-            collectChildren(contextNode, axis, nodeTest, nodeset);
+            collectChildren(contextNode, axis, nodeTest, nodeset, ec);
             break;
         }
         case AXIS::DESCENDANT: {
-            collectDescendants(contextNode, axis, nodeTest, nodeset);
+            collectDescendants(contextNode, axis, nodeTest, nodeset, ec);
             break;
         }
         case AXIS::PARENT: {
-            collectParent(contextNode, axis, nodeTest, nodeset, ec.root);
+            collectParent(contextNode, axis, nodeTest, nodeset, ec.root, ec);
             break;
         }
         case AXIS::ANCESTOR: {
-            collectAncestor(contextNode, axis, nodeTest, nodeset, ec.root);
+            collectAncestor(contextNode, axis, nodeTest, nodeset, ec.root, ec);
             break;
         }
         case AXIS::FOLLOWING_SIBLING: {
-            collectFollowingSiblings(contextNode, axis, nodeTest, nodeset);
+            collectFollowingSiblings(contextNode, axis, nodeTest, nodeset, ec);
             break;
         }
         case AXIS::PRECEDING_SIBLING: {
-            collectPrecedingSiblings(contextNode, axis, nodeTest, nodeset);
+            collectPrecedingSiblings(contextNode, axis, nodeTest, nodeset, ec);
             break;
         }
         case AXIS::SELF: {
-            if (nodeMatchesTest(contextNode, axis, nodeTest)) {
+            if (nodeMatchesTest(contextNode, axis, nodeTest, ec)) {
                 nodeset.push_back(contextNode);
             }
             break;
@@ -449,7 +448,7 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
                      i++) {
                     AttributeViewNode tempAttr(contextNode, i);
 
-                    if (nodeMatchesTest(&tempAttr, axis, nodeTest)) {
+                    if (nodeMatchesTest(&tempAttr, axis, nodeTest, ec)) {
                         // TODO AttributeViewNodes need to be pointer level
                         // identical for the union to work.
                         // This means we must return existing nodes.
@@ -488,17 +487,17 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
             break;
         }
         case AXIS::DESCENDANT_OR_SELF: {
-            if (nodeMatchesTest(contextNode, axis, nodeTest)) {
+            if (nodeMatchesTest(contextNode, axis, nodeTest, ec)) {
                 nodeset.push_back(contextNode);
             }
-            collectDescendants(contextNode, axis, nodeTest, nodeset);
+            collectDescendants(contextNode, axis, nodeTest, nodeset, ec);
             break;
         }
         case AXIS::ANCESTOR_OR_SELF: {
-            if (nodeMatchesTest(contextNode, axis, nodeTest)) {
+            if (nodeMatchesTest(contextNode, axis, nodeTest, ec)) {
                 nodeset.push_back(contextNode);
             }
-            collectAncestor(contextNode, axis, nodeTest, nodeset, ec.root);
+            collectAncestor(contextNode, axis, nodeTest, nodeset, ec.root, ec);
             break;
         }
         case AXIS::FOLLOWING: {

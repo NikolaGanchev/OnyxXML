@@ -2118,12 +2118,14 @@ TEST_CASE(
 
     XPathQuery::Result res1 =
         XPathQuery("item[@x=$var1 and (@y=$var2 or @z=$var3)]")
-            .execute(&doc, [](std::string_view name) -> XPathObject {
-                if (name == "var1") return XPathObject("1");
-                if (name == "var2") return XPathObject("2");
-                if (name == "var3") return XPathObject("3");
-                throw std::runtime_error("Unknown variable");
-            });
+            .execute(
+                &doc, [](std::string_view name) -> std::string { return ""; },
+                [](std::string_view name) -> XPathObject {
+                    if (name == "var1") return XPathObject("1");
+                    if (name == "var2") return XPathObject("2");
+                    if (name == "var3") return XPathObject("3");
+                    throw std::runtime_error("Unknown variable");
+                });
     XPathObject& res = res1.object;
 
     REQUIRE(res.asNodeset().size() == 2);
@@ -2950,4 +2952,119 @@ TEST_CASE("XPath execute lexical errors throw") {
     REQUIRE_THROWS(XPathQuery("'Unfinished string").execute(&doc));
 
     REQUIRE_THROWS(XPathQuery("1 & 1").execute(&doc));
+}
+
+TEST_CASE("XPath execute namespace element matching") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid, GenericNode("item", NonVoid, Attribute("id", "1")),
+        GenericNode("a:item", NonVoid, Attribute("id", "2"),
+                    Attribute("xmlns:a", "http://example.com/ns1")),
+        GenericNode("b:item", NonVoid, Attribute("id", "3"),
+                    Attribute("xmlns:b", "http://example.com/ns2")));
+
+    auto resolver = [](std::string_view prefix) -> std::string {
+        if (prefix == "x") return "http://example.com/ns1";
+        if (prefix == "y") return "http://example.com/ns2";
+        return "";
+    };
+
+    XPathQuery::Result resNoNs =
+        XPathQuery("/root/item").execute(&doc, resolver);
+    REQUIRE(resNoNs.object.asNodeset().size() == 1);
+    REQUIRE(resNoNs.object.asNodeset()[0]->getAttributeValue("id") == "1");
+
+    XPathQuery::Result resNs1 =
+        XPathQuery("/root/x:item").execute(&doc, resolver);
+    REQUIRE(resNs1.object.asNodeset().size() == 1);
+    REQUIRE(resNs1.object.asNodeset()[0]->getAttributeValue("id") == "2");
+
+    XPathQuery::Result resNs2 =
+        XPathQuery("/root/y:item").execute(&doc, resolver);
+    REQUIRE(resNs2.object.asNodeset().size() == 1);
+    REQUIRE(resNs2.object.asNodeset()[0]->getAttributeValue("id") == "3");
+
+    XPathQuery::Result resWild = XPathQuery("/root/*").execute(&doc, resolver);
+    REQUIRE(resWild.object.asNodeset().size() == 3);
+}
+
+TEST_CASE("XPath execute built-in 'xml' namespace matching") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("para", NonVoid, Attribute("id", "1"),
+                    Attribute("xml:lang", "en"), Text("English text")),
+        GenericNode("para", NonVoid, Attribute("id", "2"),
+                    Attribute("lang", "en"), Text("No-namespace lang")),
+        GenericNode("para", NonVoid, Attribute("id", "3"),
+                    Attribute("xml:lang", "bg"), Text("Български текст")));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resXmlLang =
+        XPathQuery("/root/para[@xml:lang='en']").execute(&doc, emptyResolver);
+    REQUIRE(resXmlLang.object.asNodeset().size() == 1);
+    REQUIRE(resXmlLang.object.asNodeset()[0]->getAttributeValue("id") == "1");
+
+    XPathQuery::Result resAllXmlLang =
+        XPathQuery("/root/para/@xml:lang").execute(&doc, emptyResolver);
+    REQUIRE(resAllXmlLang.object.asNodeset().size() == 2);
+
+    XPathQuery::Result resNoNsLang =
+        XPathQuery("/root/para/@lang").execute(&doc, emptyResolver);
+    REQUIRE(resNoNsLang.object.asNodeset().size() == 1);
+    REQUIRE(
+        resNoNsLang.object.asNodeset()[0]->getParentNode()->getAttributeValue(
+            "id") == "2");
+}
+
+TEST_CASE("XPath execute namespace-aware attribute matching") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("item", NonVoid, Attribute("id", "1"),
+                    Attribute("custom:flag", "true"),
+                    Attribute("xmlns:custom", "http://example.com/custom")),
+        GenericNode("item", NonVoid, Attribute("id", "2"),
+                    Attribute("flag", "true")));
+
+    auto resolver = [](std::string_view prefix) -> std::string {
+        if (prefix == "c") return "http://example.com/custom";
+        return "";
+    };
+
+    XPathQuery::Result resCustom =
+        XPathQuery("/root/item[@c:flag='true']").execute(&doc, resolver);
+    REQUIRE(resCustom.object.asNodeset().size() == 1);
+    REQUIRE(resCustom.object.asNodeset()[0]->getAttributeValue("id") == "1");
+
+    XPathQuery::Result resNoNs =
+        XPathQuery("/root/item[@flag='true']").execute(&doc, resolver);
+    REQUIRE(resNoNs.object.asNodeset().size() == 1);
+    REQUIRE(resNoNs.object.asNodeset()[0]->getAttributeValue("id") == "2");
+}
+
+TEST_CASE("XPath execute undeclared namespace prefix throws") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+    using namespace onyx::dynamic;
+
+    GenericNode doc("root", NonVoid,
+                    GenericNode("child", NonVoid, Attribute("attr", "val")));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+
+    REQUIRE_THROWS_WITH(
+        XPathQuery("/root/unknown:child").execute(&doc, emptyResolver),
+        "Could not resolve namespace prefix in query");
+
+    REQUIRE_THROWS_WITH(XPathQuery("/root/child[@unknown:attr='val']")
+                            .execute(&doc, emptyResolver),
+                        "Could not resolve namespace prefix in query");
 }

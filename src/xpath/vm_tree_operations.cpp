@@ -1,16 +1,38 @@
+#include <optional>
 #include <stack>
+#include <stdexcept>
+#include <string_view>
 
+#include "attribute.h"
 #include "nodes/attribute_view_node.h"
 #include "nodes/comment_node.h"
 #include "nodes/processing_instruction_node.h"
 #include "nodes/root_view_node.h"
+#include "nodes/util/qualified_name.h"
 #include "xpath/axis.h"
 #include "xpath/virtual_machine.h"
 
 namespace onyx::dynamic::xpath {
 
+std::string VirtualMachine::resolveNamespace(std::string_view prefix,
+                                             ExecutionContext& ec) {
+    if (prefix == "") return "";
+    if (prefix == "xml") {
+        return "http://www.w3.org/XML/1998/namespace";
+    }
+
+    std::string resolvedNamespace = ec.namespaceResolver(prefix);
+    if (resolvedNamespace == "") {
+        throw std::invalid_argument(
+            "Could not resolve namespace prefix in query");
+    };
+
+    return resolvedNamespace;
+}
+
 bool VirtualMachine::nodeMatchesTest(Node* node, AXIS axis,
-                                     const std::string& test) {
+                                     const std::string& test,
+                                     ExecutionContext& ec) {
     Node::XPathType type = node->getXPathType();
 
     if (type == Node::XPathType::OTHER) return false;
@@ -70,12 +92,27 @@ bool VirtualMachine::nodeMatchesTest(Node* node, AXIS axis,
     }
 
     if (type == principalType) {
+        tags::util::QualifiedName qn(test);
+
+        std::string resolvedNamespaceName = resolveNamespace(qn.prefix, ec);
+
+        std::optional<std::string_view> namespaceNameOptional =
+            resolvedNamespaceName == ""
+                ? std::optional<std::string_view>(std::nullopt)
+                : std::string_view(resolvedNamespaceName);
+
         if (type == Node::XPathType::ATTRIBUTE) {
-            return static_cast<AttributeViewNode*>(node)
-                       ->getReferencedAttribute()
-                       .getName() == test;
+            AttributeViewNode* node = static_cast<AttributeViewNode*>(node);
+
+            const Attribute& attribute = node->getReferencedAttribute();
+
+            return node->getParentNode()->resolveAttributeNamespacePrefix(
+                       attribute.getNamespacePrefix()) ==
+                       namespaceNameOptional &&
+                   attribute.getNCNameWithoutNamespace() == qn.name;
         } else {
-            return node->getTagName() == test;
+            return node->getNamespaceName() == namespaceNameOptional &&
+                   node->getTagName() == qn.name;
         }
     }
 
@@ -93,34 +130,37 @@ bool isAncestor(Node* node, Node* desc) {
 
 void VirtualMachine::collectDescendants(Node* current, AXIS axis,
                                         const std::string& test,
-                                        std::vector<Node*>& result) {
+                                        std::vector<Node*>& result,
+                                        ExecutionContext& ec) {
     current->iterateDirectChildrenReverse(
-        [&current, axis, &test, &result, this](Node* child) {
-            child->iterativeProcessor(
-                [&current, axis, &test, &result, this](Node* child1) -> void {
-                    if (nodeMatchesTest(child1, axis, test)) {
-                        result.push_back(child1);
-                    }
-                });
+        [&current, axis, &test, &result, &ec, this](Node* child) {
+            child->iterativeProcessor([&current, axis, &test, &result, &ec,
+                                       this](Node* child1) -> void {
+                if (nodeMatchesTest(child1, axis, test, ec)) {
+                    result.push_back(child1);
+                }
+            });
         });
 }
 
 void VirtualMachine::collectChildren(Node* current, AXIS axis,
                                      const std::string& test,
-                                     std::vector<Node*>& result) {
-    current->iterateDirectChildren([&axis, &test, &result, this](Node* child) {
-        if (nodeMatchesTest(child, axis, test)) {
-            result.push_back(child);
-        }
-    });
+                                     std::vector<Node*>& result,
+                                     ExecutionContext& ec) {
+    current->iterateDirectChildren(
+        [&axis, &test, &result, &ec, this](Node* child) {
+            if (nodeMatchesTest(child, axis, test, ec)) {
+                result.push_back(child);
+            }
+        });
 }
 
 void VirtualMachine::collectParent(Node* current, AXIS axis,
                                    const std::string& test,
                                    std::vector<Node*>& result,
-                                   DocumentRoot& root) {
+                                   DocumentRoot& root, ExecutionContext& ec) {
     Node* parent = current->getParentNode();
-    if (parent && nodeMatchesTest(parent, axis, test)) {
+    if (parent && nodeMatchesTest(parent, axis, test, ec)) {
         result.push_back(parent);
     } else if (!parent && test == "node()") {
         root.findRoot(parent);
@@ -131,10 +171,10 @@ void VirtualMachine::collectParent(Node* current, AXIS axis,
 void VirtualMachine::collectAncestor(Node* current, AXIS axis,
                                      const std::string& test,
                                      std::vector<Node*>& result,
-                                     DocumentRoot& root) {
+                                     DocumentRoot& root, ExecutionContext& ec) {
     Node* parent = current->getParentNode();
     while (parent) {
-        if (nodeMatchesTest(parent, axis, test)) {
+        if (nodeMatchesTest(parent, axis, test, ec)) {
             result.push_back(parent);
         }
         parent = parent->getParentNode();
@@ -147,11 +187,12 @@ void VirtualMachine::collectAncestor(Node* current, AXIS axis,
 
 void VirtualMachine::collectFollowingSiblings(Node* current, AXIS axis,
                                               const std::string& test,
-                                              std::vector<Node*>& result) {
+                                              std::vector<Node*>& result,
+                                              ExecutionContext& ec) {
     Node* sibling = current->getNextSibling();
     Node* original = sibling;
     do {
-        if (nodeMatchesTest(sibling, axis, test)) {
+        if (nodeMatchesTest(sibling, axis, test, ec)) {
             result.push_back(sibling);
         }
         sibling = sibling->getNextSibling();
@@ -160,11 +201,12 @@ void VirtualMachine::collectFollowingSiblings(Node* current, AXIS axis,
 
 void VirtualMachine::collectPrecedingSiblings(Node* current, AXIS axis,
                                               const std::string& test,
-                                              std::vector<Node*>& result) {
+                                              std::vector<Node*>& result,
+                                              ExecutionContext& ec) {
     Node* sibling = current->getPrevSibling();
     Node* original = sibling;
     do {
-        if (nodeMatchesTest(sibling, axis, test)) {
+        if (nodeMatchesTest(sibling, axis, test, ec)) {
             result.push_back(sibling);
         }
         sibling = sibling->getPrevSibling();
@@ -183,7 +225,7 @@ void VirtualMachine::collectPreceding(Node* current, AXIS axis,
     size_t i = index;
     while (i > 0) {
         i--;
-        if (nodeMatchesTest(ec.order.documentOrderList[i], axis, test) &&
+        if (nodeMatchesTest(ec.order.documentOrderList[i], axis, test, ec) &&
             !isAncestor(ec.order.documentOrderList[i], current)) {
             result.push_back(ec.order.documentOrderList[i]);
         }
@@ -210,7 +252,7 @@ void VirtualMachine::collectFollowing(Node* current, AXIS axis,
     }
 
     for (; i < ec.order.documentOrderList.size(); i++) {
-        if (nodeMatchesTest(ec.order.documentOrderList[i], axis, test)) {
+        if (nodeMatchesTest(ec.order.documentOrderList[i], axis, test, ec)) {
             result.push_back(ec.order.documentOrderList[i]);
         }
     }

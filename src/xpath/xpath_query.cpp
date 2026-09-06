@@ -16,7 +16,8 @@ XPathQuery::XPathQuery(std::string_view query) : vm{nullptr} {
 };
 
 XPathQuery::Result XPathQuery::execute(
-    Node* node, std::function<XPathObject(std::string_view)> variableProvider) {
-    return this->vm.executeOn(node, variableProvider);
+    Node* node, std::function<std::string(std::string_view)> namespaceResolver,
+    std::function<XPathObject(std::string_view)> variableProvider) {
+    return this->vm.executeOn(node, namespaceResolver, variableProvider);
 }
 };  // namespace onyx::dynamic::xpath
