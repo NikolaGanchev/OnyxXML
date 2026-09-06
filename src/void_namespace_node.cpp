@@ -1,5 +1,8 @@
 #include "void_namespace_node.h"
 
+#include "node.h"
+
+
 namespace onyx::dynamic {
 bool VoidNamespaceNode::isVoid() const { return true; }
 
@@ -12,4 +15,11 @@ VoidNamespaceNode::VoidNamespaceNode(NonOwningNodeTag,
                                      std::vector<Attribute> attributes)
     : NamespaceNode(NonOwning, std::move(namespacePrefix),
                     std::move(attributes), {}) {}
+
+VoidNamespaceNode::VoidNamespaceNode(std::vector<Attribute> attributes)
+    : NamespaceNode(std::move(attributes), {}) {}
+
+VoidNamespaceNode::VoidNamespaceNode(NonOwningNodeTag,
+                                     std::vector<Attribute> attributes)
+    : NamespaceNode(NonOwning, std::move(attributes), {}) {}
 }  // namespace onyx::dynamic

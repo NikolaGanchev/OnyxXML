@@ -51,6 +51,41 @@ class VoidNamespaceNode : public NamespaceNode {
     explicit VoidNamespaceNode(NonOwningNodeTag, std::string namespacePrefix,
                                std::vector<Attribute> attributes);
 
+    /**
+     * @brief Constructs an owning Node using the provided rvalue referenced
+     * Attributes
+     *
+     */
+    template <typename... Args>
+    explicit VoidNamespaceNode(Args&&... args)
+        requires(isAttribute<Args> && ...);
+
+    /**
+     * @brief Constructs a non-owning Node using the provided rvalue referenced
+     * Attributes
+     *
+     */
+    template <typename... Args>
+    explicit VoidNamespaceNode(NonOwningNodeTag, Args&&... args)
+        requires(isAttribute<Args> && ...);
+
+    /**
+     * @brief Construct a new owning NamespaceVoidNode from the attributes
+     * vector.
+     *
+     * @param attributes
+     */
+    explicit VoidNamespaceNode(std::vector<Attribute> attributes);
+
+    /**
+     * @brief Construct a new non-owning NamespaceVoidNode from the attributes
+     * vector.
+     *
+     * @param attributes
+     */
+    explicit VoidNamespaceNode(NonOwningNodeTag,
+                               std::vector<Attribute> attributes);
+
     bool isVoid() const override;
 };
 
@@ -67,4 +102,14 @@ VoidNamespaceNode::VoidNamespaceNode(NonOwningNodeTag,
     requires(isAttribute<Args> && ...)
     : NamespaceNode(NonOwning, std::move(namespacePrefix),
                     std::forward<Args>(args)...) {}
+
+template <typename... Args>
+VoidNamespaceNode::VoidNamespaceNode(Args&&... args)
+    requires(isAttribute<Args> && ...)
+    : NamespaceNode(std::forward<Args>(args)...) {}
+
+template <typename... Args>
+VoidNamespaceNode::VoidNamespaceNode(NonOwningNodeTag, Args&&... args)
+    requires(isAttribute<Args> && ...)
+    : NamespaceNode(NonOwning, std::forward<Args>(args)...) {}
 }  // namespace onyx::dynamic
