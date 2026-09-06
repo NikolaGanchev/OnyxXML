@@ -446,6 +446,11 @@ void VirtualMachine::executeSelect(const Instruction& instruction,
             if (contextNode->getXPathType() == Node::XPathType::ELEMENT) {
                 for (size_t i = 0; i < contextNode->getAttributes().size();
                      i++) {
+                    const Attribute& attr = contextNode->getAttributes()[i];
+                    if (attr.getName().starts_with("xmlns:") ||
+                        attr.getName() == "xmlns") {
+                        continue;
+                    }
                     AttributeViewNode tempAttr(contextNode, i);
 
                     if (nodeMatchesTest(&tempAttr, axis, nodeTest, ec)) {

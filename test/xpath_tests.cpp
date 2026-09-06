@@ -3133,7 +3133,7 @@ TEST_CASE("XPath execute prefix wildcard attribute matching (@prefix:*)") {
 
     XPathQuery::Result resAllAttrs =
         XPathQuery("/root/item/@*").execute(&doc, resolver);
-    REQUIRE(resAllAttrs.object.asNodeset().size() == 6);
+    REQUIRE(resAllAttrs.object.asNodeset().size() == 5);
 }
 
 TEST_CASE("XPath execute prefix wildcard in predicates") {
@@ -3174,4 +3174,41 @@ TEST_CASE("XPath execute undeclared prefix wildcard throws") {
     REQUIRE_THROWS(XPathQuery("/root/unknown:*").execute(&doc, emptyResolver));
     REQUIRE_THROWS(
         XPathQuery("/root/item/@unknown:*").execute(&doc, emptyResolver));
+}
+
+TEST_CASE("XPath attribute axis ignores namespace declarations") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("item", NonVoid,
+                    Attribute("xmlns", "http://example.com/default"),
+                    Attribute("xmlns:custom", "http://example.com/custom"),
+                    Attribute("xmlns:extra", "http://example.com/extra"),
+                    Attribute("id", "1"), Attribute("class", "main"),
+                    Attribute("custom:attr", "val")));
+
+    auto resolver = [](std::string_view prefix) -> std::string { return ""; };
+
+    XPathQuery::Result resWildcard =
+        XPathQuery("/root/*/@*").execute(&doc, resolver);
+    REQUIRE(resWildcard.object.asNodeset().size() == 3);
+
+    XPathQuery::Result resXmlnsDefault =
+        XPathQuery("/root/*/@xmlns").execute(&doc, resolver);
+    REQUIRE(resXmlnsDefault.object.asNodeset().empty());
+
+    XPathQuery::Result resXmlnsPrefixed =
+        XPathQuery("/root/*/@xmlns:custom").execute(&doc, resolver);
+    REQUIRE(resXmlnsPrefixed.object.asNodeset().empty());
+
+    XPathQuery::Result resCountPred =
+        XPathQuery("/root/*[count(@*) = 3]").execute(&doc, resolver);
+    REQUIRE(resCountPred.object.asNodeset().size() == 1);
+    REQUIRE(resCountPred.object.asNodeset()[0]->getAttributeValue("id") == "1");
+
+    XPathQuery::Result resNotXmlns =
+        XPathQuery("/root/*[not(@xmlns)]").execute(&doc, resolver);
+    REQUIRE(resNotXmlns.object.asNodeset().size() == 1);
 }
