@@ -609,6 +609,7 @@ void Node::setAttributeValue(const std::string& name,
             }
 
             exists = true;
+            break;
         }
     }
 
@@ -619,11 +620,10 @@ void Node::setAttributeValue(const std::string& name,
     if (updated) {
         if (name.starts_with("xmlns:") || name == "xmlns") {
             this->iterativeProcessor([this](Node* obj) -> void {
-                this->propagateIndexUpdateUp(obj,
-                                             IndexPropagationMessage::UPDATE);
+                obj->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
             });
         } else {
-            updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+            this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
         }
     }
 }
@@ -636,11 +636,10 @@ void Node::removeAttribute(const std::string& name) {
 
             if (name.starts_with("xmlns:") || name == "xmlns") {
                 this->iterativeProcessor([this](Node* obj) -> void {
-                    this->propagateIndexUpdateUp(
-                        obj, IndexPropagationMessage::UPDATE);
+                    obj->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
                 });
             } else {
-                updateAndPropagateUp(IndexPropagationMessage::UPDATE);
+                this->updateAndPropagateUp(IndexPropagationMessage::UPDATE);
             }
 
             return;
