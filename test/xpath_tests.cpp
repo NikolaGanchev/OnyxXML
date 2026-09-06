@@ -3959,3 +3959,179 @@ TEST_CASE("XPath namespace-uri() document order and empty set edge cases") {
             .execute(&doc);
     REQUIRE(resReverse.object.asString() == "http://example.com/first");
 }
+
+TEST_CASE("XPath variable resolution of basic types with unprefixed names") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    GenericNode("item", NonVoid, Attribute("id", "first")),
+                    GenericNode("item", NonVoid, Attribute("id", "second")),
+                    GenericNode("item", NonVoid, Attribute("id", "third")));
+
+    std::map<std::pair<std::string, std::string>, XPathObject> variables{
+        {{"", "targetId"}, XPathObject("second")},
+        {{"", "targetIndex"}, XPathObject(3.0)},
+        {{"", "isEnabled"}, XPathObject(true)}};
+
+    auto varProvider = [&](std::string_view uri,
+                           std::string_view local) -> XPathObject {
+        auto it = variables.find({std::string(uri), std::string(local)});
+        if (it != variables.end()) {
+            return it->second;
+        }
+        throw std::runtime_error("Variable not found");
+    };
+
+    auto nsResolver = [](std::string_view) -> std::string { return ""; };
+
+    XPathQuery::Result resString =
+        XPathQuery("/root/item[@id = $targetId]", nsResolver)
+            .execute(&doc, varProvider);
+    REQUIRE(resString.object.asNodeset().size() == 1);
+    REQUIRE(resString.object.asNodeset()[0]->getAttributeValue("id") ==
+            "second");
+
+    XPathQuery::Result resPos =
+        XPathQuery("/root/item[$targetIndex]", nsResolver)
+            .execute(&doc, varProvider);
+    REQUIRE(resPos.object.asNodeset().size() == 1);
+    REQUIRE(resPos.object.asNodeset()[0]->getAttributeValue("id") == "third");
+
+    XPathQuery::Result resBool =
+        XPathQuery("/root/item[$isEnabled]", nsResolver)
+            .execute(&doc, varProvider);
+    REQUIRE(resBool.object.asNodeset().size() == 3);
+}
+
+TEST_CASE("XPath variable resolution of prefixed QNames with URI decoupling") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid,
+                    GenericNode("box", NonVoid, Attribute("code", "A100")),
+                    GenericNode("box", NonVoid, Attribute("code", "B200")));
+
+    const std::string paramNsUri = "http://example.com/params";
+
+    std::map<std::pair<std::string, std::string>, XPathObject> variables{
+        {{paramNsUri, "filterCode"}, XPathObject("B200")},
+        {{"", "filterCode"}, XPathObject("A100")}};
+
+    auto varProvider = [&](std::string_view uri,
+                           std::string_view local) -> XPathObject {
+        auto it = variables.find({std::string(uri), std::string(local)});
+        if (it != variables.end()) {
+            return it->second;
+        }
+        throw std::runtime_error("Variable not bound: " + std::string(uri) +
+                                 ":" + std::string(local));
+    };
+
+    auto nsResolver = [&](std::string_view prefix) -> std::string {
+        if (prefix == "p") return paramNsUri;
+        return "";
+    };
+
+    XPathQuery::Result resPrefixed =
+        XPathQuery("/root/box[@code = $p:filterCode]", nsResolver)
+            .execute(&doc, varProvider);
+    REQUIRE(resPrefixed.object.asNodeset().size() == 1);
+    REQUIRE(resPrefixed.object.asNodeset()[0]->getAttributeValue("code") ==
+            "B200");
+
+    XPathQuery::Result resUnprefixed =
+        XPathQuery("/root/box[@code = $filterCode]", nsResolver)
+            .execute(&doc, varProvider);
+    REQUIRE(resUnprefixed.object.asNodeset().size() == 1);
+    REQUIRE(resUnprefixed.object.asNodeset()[0]->getAttributeValue("code") ==
+            "A100");
+
+    auto altNsResolver = [&](std::string_view prefix) -> std::string {
+        if (prefix == "custom") return paramNsUri;
+        return "";
+    };
+    XPathQuery::Result resAltPrefix =
+        XPathQuery("/root/box[@code = $custom:filterCode]", altNsResolver)
+            .execute(&doc, varProvider);
+    REQUIRE(resAltPrefix.object.asNodeset().size() == 1);
+    REQUIRE(resAltPrefix.object.asNodeset()[0]->getAttributeValue("code") ==
+            "B200");
+}
+
+TEST_CASE(
+    "XPath variable resolution of nodeset variables and path continuation") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc(
+        "root", NonVoid,
+        GenericNode("section", NonVoid, Attribute("id", "sec1"),
+                    GenericNode("title", NonVoid, Text("Alpha")),
+                    GenericNode("para", NonVoid, Text("First paragraph"))),
+        GenericNode("section", NonVoid, Attribute("id", "sec2"),
+                    GenericNode("title", NonVoid, Text("Beta")),
+                    GenericNode("para", NonVoid, Text("Second paragraph"))));
+
+    auto emptyResolver = [](std::string_view) -> std::string { return ""; };
+    XPathQuery::Result initialQuery =
+        XPathQuery("/root/section[@id = 'sec2']", emptyResolver).execute(&doc);
+
+    std::map<std::pair<std::string, std::string>, XPathObject> variables{
+        {{"", "selectedSection"}, initialQuery.object}};
+
+    auto varProvider = [&](std::string_view uri,
+                           std::string_view local) -> XPathObject {
+        return variables.at({std::string(uri), std::string(local)});
+    };
+
+    XPathQuery::Result resPath =
+        XPathQuery("$selectedSection/title", emptyResolver)
+            .execute(&doc, varProvider);
+    REQUIRE(resPath.object.asNodeset().size() == 1);
+    REQUIRE(resPath.object.asNodeset()[0]->getStringValue() == "Beta");
+
+    XPathQuery::Result resPred =
+        XPathQuery("$selectedSection[para = 'Second paragraph']", emptyResolver)
+            .execute(&doc, varProvider);
+    REQUIRE(resPred.object.asNodeset().size() == 1);
+    REQUIRE(resPred.object.asNodeset()[0]->getAttributeValue("id") == "sec2");
+}
+
+TEST_CASE(
+    "XPath variable resolution with undeclared namespace prefix throws on "
+    "compile time") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    auto resolver = [](std::string_view prefix) -> std::string {
+        if (prefix == "known") return "http://example.com/known";
+        return "";
+    };
+
+    REQUIRE_THROWS_WITH(
+        XPathQuery("/root[$unknownPrefix:var = 'value']", resolver),
+        Catch::Matchers::ContainsSubstring(
+            "Could not resolve namespace prefix in query"));
+}
+
+TEST_CASE("XPath variable resolving exception propagates to caller") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid);
+
+    auto resolver = [](std::string_view prefix) -> std::string {
+        if (prefix == "known") return "http://example.com/known";
+        return "";
+    };
+
+    auto varProvider = [](std::string_view, std::string_view) -> XPathObject {
+        throw std::runtime_error("Variable lookup failure");
+    };
+
+    REQUIRE_THROWS_WITH(
+        XPathQuery("/root[$known:missingVar = 'value']", resolver)
+            .execute(&doc, varProvider),
+        Catch::Matchers::ContainsSubstring("Variable lookup failure"));
+}
