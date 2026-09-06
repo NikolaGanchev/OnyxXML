@@ -59,12 +59,6 @@ class Attribute {
      *
      */
     void setValue(const std::string&);
-    /**
-     * @brief Get a mutable reference to the inner value string
-     *
-     * @return std::string&
-     */
-    std::string& getValueMutable();
 
    public:
     /**

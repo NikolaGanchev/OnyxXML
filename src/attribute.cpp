@@ -28,8 +28,6 @@ const std::string& Attribute::getName() const { return this->name; }
 
 const std::string& Attribute::getValue() const { return this->value; }
 
-std::string& Attribute::getValueMutable() { return this->value; }
-
 bool Attribute::shouldEscape() const { return this->_shouldEscape; }
 
 bool Attribute::shouldEscapeMultiByte() const {
