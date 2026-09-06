@@ -2330,7 +2330,7 @@ TEST_CASE("XPath execute complex boolean and string functions") {
                 ->serialize() == "Wodget");
 }
 
-TEST_CASE("XPath execute substring and translate") {
+TEST_CASE("XPath execute substring") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;
 
@@ -2341,12 +2341,78 @@ TEST_CASE("XPath execute substring and translate") {
     REQUIRE(res1.object.asString() == "234");
 
     XPathQuery::Result res2 =
-        XPathQuery("translate('bar', 'abc', 'ABC')").execute(&doc);
-    REQUIRE(res2.object.asString() == "BAr");
+        XPathQuery("substring('12345', 1.5, 2.6)").execute(&doc);
+    REQUIRE(res2.object.asString() == "234");
 
     XPathQuery::Result res3 =
+        XPathQuery("substring('12345', 0, 3)").execute(&doc);
+    REQUIRE(res3.object.asString() == "12");
+
+    XPathQuery::Result res4 =
+        XPathQuery("substring('12345', 0 div 0, 3)").execute(&doc);
+    REQUIRE(res4.object.asString() == "");
+
+    XPathQuery::Result res5 =
+        XPathQuery("substring('12345', 1, 0 div 0)").execute(&doc);
+    REQUIRE(res5.object.asString() == "");
+
+    XPathQuery::Result res6 =
+        XPathQuery("substring('12345', -42, 1 div 0)").execute(&doc);
+    REQUIRE(res6.object.asString() == "12345");
+
+    XPathQuery::Result res7 =
+        XPathQuery("substring('12345', -1 div 0, 1 div 0)").execute(&doc);
+    REQUIRE(res7.object.asString() == "");
+}
+
+TEST_CASE("XPath substring handles unicode") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid);
+
+    XPathQuery::Result res1 =
+        XPathQuery("substring('Здравей', 2, 3)").execute(&doc);
+    REQUIRE(res1.object.asString() == "дра");
+
+    XPathQuery::Result res2 =
+        XPathQuery("substring('你好世界', 2, 2)").execute(&doc);
+    REQUIRE(res2.object.asString() == "好世");
+
+    XPathQuery::Result res3 =
+        XPathQuery("substring('🍎🍌🍇🍓', 2, 2)").execute(&doc);
+    REQUIRE(res3.object.asString() == "🍌🍇");
+
+    XPathQuery::Result res4 =
+        XPathQuery("substring('Aλ文🍎B', 2, 3)").execute(&doc);
+    REQUIRE(res4.object.asString() == "λ文🍎");
+
+    XPathQuery::Result res5 =
+        XPathQuery("substring('こんにちは', 0, 3)").execute(&doc);
+    REQUIRE(res5.object.asString() == "こん");
+
+    XPathQuery::Result res6 =
+        XPathQuery("substring('🍎💧🌱', 2, 100)").execute(&doc);
+    REQUIRE(res6.object.asString() == "💧🌱");
+
+    XPathQuery::Result res7 =
+        XPathQuery("substring('αβγδε', -2, 1 div 0)").execute(&doc);
+    REQUIRE(res7.object.asString() == "αβγδε");
+}
+
+TEST_CASE("XPath execute translate") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid);
+
+    XPathQuery::Result res1 =
+        XPathQuery("translate('bar', 'abc', 'ABC')").execute(&doc);
+    REQUIRE(res1.object.asString() == "BAr");
+
+    XPathQuery::Result res2 =
         XPathQuery("translate('data', 'd', '')").execute(&doc);
-    REQUIRE(res3.object.asString() == "ata");
+    REQUIRE(res2.object.asString() == "ata");
 }
 
 TEST_CASE("XPath execute parent abbreviation (..) and self (.)") {

@@ -183,21 +183,54 @@ std::string substring(const std::string& str, double start, double length) {
 
     double limit = start + length;
 
+    // Per the XPath spec, if start or limit is NaN, return empty string
     if (std::isnan(start) || std::isnan(limit)) {
         return "";
     }
 
+    // XPath dictates 1-based character positions
     double lower = std::max(1.0, start);
-    double upper = std::min(static_cast<double>(str.length()) + 1.0, limit);
+    double upper = limit;
 
     if (lower >= upper) {
         return "";
     }
 
-    size_t startIndex = static_cast<size_t>(lower - 1.0);
-    size_t count = static_cast<size_t>(upper - lower);
+    size_t startCharIndex = static_cast<size_t>(lower);
+    size_t endCharIndex = (upper > std::numeric_limits<size_t>::max())
+                              ? std::numeric_limits<size_t>::max()
+                              : static_cast<size_t>(upper);
 
-    return str.substr(startIndex, count);
+    parser::StringCursor cursor(str);
+    size_t currentChar = 1;
+
+    // Advance cursor to the start character position
+    while (!cursor.isEOF() && currentChar < startCharIndex) {
+        if (text::getUnicodeCodepoint(cursor) == 0 && cursor.isEOF()) {
+            break;
+        }
+        cursor.advance(1);
+        currentChar++;
+    }
+
+    if (cursor.isEOF()) {
+        return "";
+    }
+
+    const char* byteStart = cursor.ptr;
+
+    // Advance cursor to the end character position
+    while (!cursor.isEOF() && currentChar < endCharIndex) {
+        if (text::getUnicodeCodepoint(cursor) == 0 && cursor.isEOF()) {
+            break;
+        }
+        cursor.advance(1);
+        currentChar++;
+    }
+
+    const char* byteEnd = cursor.ptr;
+
+    return std::string(byteStart, byteEnd - byteStart);
 }
 
 std::string stringBefore(const std::string& str1, const std::string& str2) {
