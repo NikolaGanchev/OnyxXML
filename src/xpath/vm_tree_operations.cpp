@@ -17,8 +17,13 @@ namespace onyx::dynamic::xpath {
 std::string VirtualMachine::resolveNamespace(std::string_view prefix,
                                              ExecutionContext& ec) {
     if (prefix == "") return "";
+
     if (prefix == "xml") {
         return "http://www.w3.org/XML/1998/namespace";
+    }
+
+    if (prefix == "xmlns") {
+        return "http://www.w3.org/2000/xmlns/";
     }
 
     std::string resolvedNamespace = ec.namespaceResolver(prefix);
