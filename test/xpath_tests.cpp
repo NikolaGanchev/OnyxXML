@@ -2450,6 +2450,36 @@ TEST_CASE("XPath translate handles unicode") {
     REQUIRE(res7.object.asString() == "cafe");
 }
 
+TEST_CASE("XPath execute string-length") {
+    using namespace onyx::dynamic::xpath;
+    using namespace onyx::tags;
+
+    GenericNode doc("root", NonVoid);
+
+    XPathQuery::Result res1 = XPathQuery("string-length('')").execute(&doc);
+    REQUIRE(res1.object.asNumber() == 0.0);
+
+    XPathQuery::Result res2 =
+        XPathQuery("string-length('hello')").execute(&doc);
+    REQUIRE(res2.object.asNumber() == 5.0);
+
+    XPathQuery::Result res3 =
+        XPathQuery("string-length('Здравей')").execute(&doc);
+    REQUIRE(res3.object.asNumber() == 7.0);
+
+    XPathQuery::Result res4 =
+        XPathQuery("string-length('你好世界')").execute(&doc);
+    REQUIRE(res4.object.asNumber() == 4.0);
+
+    XPathQuery::Result res5 =
+        XPathQuery("string-length('🍎🍌🍇🍓')").execute(&doc);
+    REQUIRE(res5.object.asNumber() == 4.0);
+
+    XPathQuery::Result res6 =
+        XPathQuery("string-length('Aλ文🍎B')").execute(&doc);
+    REQUIRE(res6.object.asNumber() == 5.0);
+}
+
 TEST_CASE("XPath execute parent abbreviation (..) and self (.)") {
     using namespace onyx::dynamic::xpath;
     using namespace onyx::tags;

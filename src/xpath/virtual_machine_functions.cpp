@@ -184,21 +184,21 @@ VirtualMachine::FunctionRegistry VirtualMachine::registerFunctions() {
         FUNCTION_CODE::STRING_LENGTH_1,
         [](Context context, Stack stack) -> XPathObject {
             if (stack.size() < 1) {
-                throw std::runtime_error("string-length needs one arguments");
+                throw std::runtime_error("string-length needs one argument");
             }
 
             std::string str = stack.top().asString();
 
             stack.pop();
 
-            return XPathObject(static_cast<double>(str.length()));
+            return XPathObject(functions::stringLength(str));
         });
 
     registry.emplace(
         FUNCTION_CODE::NORMALIZE_SPACE_1,
         [](Context context, Stack stack) -> XPathObject {
             if (stack.size() < 1) {
-                throw std::runtime_error("normalize-space needs one arguments");
+                throw std::runtime_error("normalize-space needs one argument");
             }
 
             std::string str = functions::normalizeSpace(stack.top().asString());

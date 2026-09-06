@@ -353,4 +353,20 @@ std::string normalizeSpace(const std::string& str) {
 
     return res;
 }
+
+double stringLength(const std::string& str) {
+    double count = 0.0;
+    parser::StringCursor cursor(str);
+
+    while (!cursor.isEOF()) {
+        uint32_t cp = text::getUnicodeCodepoint(cursor);
+        if (cp == 0 && cursor.isEOF()) {
+            break;
+        }
+        cursor.advance(1);
+        count++;
+    }
+
+    return count;
+}
 };  // namespace onyx::dynamic::xpath::functions
