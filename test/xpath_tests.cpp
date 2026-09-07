@@ -122,8 +122,8 @@ TEST_CASE("xpath number function correctly converts number to number") {
 
     REQUIRE(functions::number(XPathObject(1.0)) == 1.0);
     REQUIRE(functions::number(XPathObject(0.0)) == 0.0);
-    REQUIRE(functions::number(
-        XPathObject(std::isnan(std::numeric_limits<double>::quiet_NaN()))));
+    REQUIRE(std::isnan(functions::number(
+        XPathObject(std::numeric_limits<double>::quiet_NaN()))));
     REQUIRE(functions::number(
                 XPathObject(std::numeric_limits<double>::infinity())) ==
             std::numeric_limits<double>::infinity());
