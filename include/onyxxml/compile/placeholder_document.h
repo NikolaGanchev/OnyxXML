@@ -162,10 +162,7 @@ struct PlaceholderDocument {
             placeholders.erase(name);
         } else {
             throw std::invalid_argument(std::string("No dynamic binding ") +
-                                        name + " exists in map with size " +
-                                        std::to_string(placeholders.size()) +
-                                        placeholders.begin()->first +
-                                        placeholders.end()->first);
+                                        name + " exists in map");
         }
     }
 
