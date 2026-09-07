@@ -16,6 +16,7 @@ struct CompileString {
      *
      */
     char value[N];
+    std::size_t size = N;
 
     /**
      * @brief Constructs a CompileString via a given const char array.
