@@ -2918,6 +2918,17 @@ TEST_CASE(
     REQUIRE(QualifiedNameView("lib:").name == "");
 }
 
+TEST_CASE("Text user-defined literal works") {
+    using namespace onyx::dynamic::tags;
+    using namespace onyx::dynamic::tags::literals;
+
+    GenericNode paragraph("paragraph", NonVoid, Attribute("lang", "en"),
+                          "This is text inside a node"_t);
+
+    REQUIRE(paragraph.serialize() ==
+            "<paragraph lang=\"en\">This is text inside a node</paragraph>");
+}
+
 TEST_CASE("Node flags default initialization", "[Node::flags]") {
     FlagTestNode node;
     constexpr std::size_t TotalBits = FlagTestNode::testMaxFlagBits();

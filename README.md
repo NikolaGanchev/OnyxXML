@@ -163,6 +163,30 @@ auto catalog = catalog("lib",
 std::string xmlOutput = catalog.serializePretty("\t", true);
 ```
 
+One can avoid the repetition the Text node for string literals by using the user-defined literal `_t` in the `onyx::tags::literals` namespace:
+
+```cpp
+using namespace onyx::tags;
+using namespace onyx::tags::literals;
+
+auto catalog = catalog("lib",
+    Attribute("version","1.0"),
+    product(
+        Attribute("id","123"),
+        name("Gadget"_t), // equivalent to name(Text("Gadget"))
+        price("19.99"_t),
+        description("A versatile gadget."_t)
+    ),
+    product(
+        Attribute("id","124"),
+        name("Widget"_t),
+        price("29.99"_t)
+    )
+);
+
+std::string xmlOutput = catalog.serializePretty("\t", true);
+```
+
 ### Indexing API
 
 OnyxXML provides three built-in index types for efficient tree queries and caching. You can also extend the indexing API to define custom indices. For more information on creating a custom index, refer to [the index header](include/onyxxml/index.h). Indexes are namespace aware. They can be given no namespace URI, matching the empty namespace, a specific URI to search for, or the special `AnyNamespace` tag which matches any possible namespace URI.

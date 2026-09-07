@@ -16,6 +16,7 @@
 #include "indices/attribute_name_index.h"
 #include "indices/tag_index.h"
 #include "indices/tag_name_index.h"
+#include "literals.h"
 #include "node_handle.h"
 #include "nodes/_dangerous_raw_text_node.h"
 #include "nodes/attribute_view_node.h"
@@ -42,7 +43,6 @@
 #include "xpath/virtual_machine.h"
 #include "xpath/xpath_object.h"
 #include "xpath/xpath_query.h"
-
 
 #if __has_include("dynamic/tags.h")
 #include "dynamic/tags.h"
