@@ -39,3 +39,24 @@ class IndexFixture : public onyx::dynamic::Node::Index {
 
     using onyx::dynamic::Node::Index::Index;
 };
+
+// Test fixture class to expose protected getFlag and setFlag methods
+class FlagTestNode : public onyx::tags::GenericNode {
+   public:
+    FlagTestNode()
+        : GenericNode(onyx::dynamic::NonOwning, "div", Type::NonVoid) {}
+
+    template <std::size_t Bit>
+    bool testGetFlag() const {
+        return this->getFlag<Bit>();
+    }
+
+    template <std::size_t Bit>
+    void testSetFlag(bool value) {
+        this->setFlag<Bit>(value);
+    }
+
+    static consteval std::size_t testMaxFlagBits() {
+        return GenericNode::maxFlagBits();
+    }
+};

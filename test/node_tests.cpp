@@ -2912,34 +2912,11 @@ TEST_CASE(
 
 TEST_CASE(
     "QualifiedNameView resolves name with no name and last character "
-    "separatorr",
+    "separator",
     "[QualifiedNameView]") {
     using namespace onyx::dynamic::tags::util;
     REQUIRE(QualifiedNameView("lib:").name == "");
 }
-
-namespace {
-// Test fixture class to expose protected getFlag and setFlag methods
-class FlagTestNode : public onyx::tags::GenericNode {
-   public:
-    FlagTestNode()
-        : GenericNode(onyx::dynamic::NonOwning, "div", Type::NonVoid) {}
-
-    template <std::size_t Bit>
-    bool testGetFlag() const {
-        return this->getFlag<Bit>();
-    }
-
-    template <std::size_t Bit>
-    void testSetFlag(bool value) {
-        this->setFlag<Bit>(value);
-    }
-
-    static consteval std::size_t testMaxFlagBits() {
-        return GenericNode::maxFlagBits();
-    }
-};
-}  // namespace
 
 TEST_CASE("Node flags default initialization", "[Node::flags]") {
     FlagTestNode node;
