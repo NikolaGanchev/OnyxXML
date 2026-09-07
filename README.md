@@ -119,7 +119,7 @@ The library is documented via Doxygen comments. The HTML documentation is built 
 ```cpp
 using namespace onyx::tags;
 
-auto catalog = catalog(
+catalog weeklyCatalog = catalog(
     Attribute("version","1.0"),
     product(
         Attribute("id","123"),
@@ -137,14 +137,14 @@ auto catalog = catalog(
 std::string xmlOutput = catalog.serializePretty("\t", true);
 ```
 
-This example builds a product catalog at runtime using tag helpers generated from your XML dialect.
+This example builds a product catalog at runtime using tag helpers generated from an XML dialect.
 
 If a node supports namespace prefixes, i.e., it was generated with the `supports_namespace_prefix` option or inherits `NamespaceNode` or `VoidNamespaceNode`, one can, but does not need to, specify a namespace prefix when creating the node. The node will default to the empty namespace prefix if not specified. Otherwise, the namespace prefix is the first argument of the constructor, after the `NonOwning` ownership tag if applicable. Below is provided an example where all nodes support namespace prefixes.
 
 ```cpp
 using namespace onyx::tags;
 
-auto catalog = catalog("lib",
+catalog weeklyCatalog = catalog("lib",
     Attribute("version","1.0"),
     Attribute("xmlns:lib","https://example.com/lib"),
     product("lib",
@@ -154,7 +154,7 @@ auto catalog = catalog("lib",
         description("lib", Text("A versatile gadget."))
     ),
     product( // Because "lib" is not specified, this is strictly a different node from "lib:product"
-        Attribute("id","124"),
+        Attribute("lib:id","124"),
         name(Text("Widget")),
         price(Text("29.99"))
     )
@@ -163,22 +163,25 @@ auto catalog = catalog("lib",
 std::string xmlOutput = catalog.serializePretty("\t", true);
 ```
 
-One can avoid the repetition the Text node for string literals by using the user-defined literal `_t` in the `onyx::tags::literals` namespace:
+To avoid the repetition of the Text node for string literals, you may use the user-defined literal `_t` in the `onyx::tags::literals` namespace.
+
+To avoid repetition of the Attribute class for string literals, you may use the user-defined literal `_attr` in the `onyx::tags::literals` namespace. The `_attr` UDL allows you to write an attribute in a key-value pair literal string like `"id=123"_attr`. The pair is completely split at compile time. This means that `_attr` does not impose a runtime performance penalty over using the regular `Attribute` constructor. The `_attr` UDL also validates that the attribute literal contains an equal sign (`=`) and that the attribute name has at least one character (i.e., `"=value"_attr` would cause a compile-time error). It does allow, however, the string literal to contain multiple equal signs, such as `"expr=5=10"`. In such cases, the string literal will be split along the `=` with the lowest index. Attribute names in literals may include a namespace prefix the same way they do with the Attribute class constructor, e.g. `"lib:id=123"_attr`.
 
 ```cpp
 using namespace onyx::tags;
 using namespace onyx::tags::literals;
 
-auto catalog = catalog("lib",
-    Attribute("version","1.0"),
-    product(
-        Attribute("id","123"),
-        name("Gadget"_t), // equivalent to name(Text("Gadget"))
-        price("19.99"_t),
-        description("A versatile gadget."_t)
+catalog weeklyCatalog = catalog("lib",
+    "version=1.0"_attr, // Equivalent to Attribute("version", "1.0")
+    "xmlns:lib=https://example.com/lib"_attr,
+    product("lib",
+        "lib:id=123"_attr,
+        name("lib", "Gadget"_t), // Equivalent to name(Text("Gadget"))
+        price("lib", "19.99"_t),
+        description("lib", "A versatile gadget."_t)
     ),
     product(
-        Attribute("id","124"),
+        "lib:id=124"_attr,
         name("Widget"_t),
         price("29.99"_t)
     )
