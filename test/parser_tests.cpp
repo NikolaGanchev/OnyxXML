@@ -13,6 +13,7 @@
 #include "parse/helpers.h"
 #include "parse/string_cursor.h"
 #include "parse/string_view_read_buffer.h"
+#include "util.h"
 
 TEST_CASE("DomParser works") {
     using namespace onyx::tags;
@@ -1625,85 +1626,6 @@ TEST_CASE(
     REQUIRE_THROWS_WITH(DomParser::parse(input), message);
     REQUIRE_THROWS_WITH(DomParser::parse(inputStream), message);
 }
-
-#include <iostream>
-
-class SaxListenerLogger : public virtual onyx::parser::SaxListener {
-   private:
-    int eventCount = 0;
-    std::ostream& os;
-
-   public:
-    SaxListenerLogger(std::ostream& os) : os(os) {}
-
-    void onStart() override {
-        os << "Start\n";
-        eventCount++;
-    }
-
-    void onText(std::string text) override {
-        os << "Text: " << text << "\n";
-        eventCount++;
-    }
-
-    void onComment(std::string text) override {
-        os << "Comment: " << text << "\n";
-        eventCount++;
-    }
-
-    void onCData(std::string text) override {
-        os << "CData: " << text << "\n";
-        eventCount++;
-    }
-
-    void onInstruction(std::string tag, std::string instruction) override {
-        os << "Instruction Tag: " << tag << "\n\tInstruction: " << instruction
-           << "\n";
-        eventCount++;
-    }
-
-    void onTagOpen(std::string namespacePrefix, std::string name,
-                   bool isSelfClosing,
-                   std::vector<onyx::dynamic::Attribute> attributes) override {
-        os << "Tag open: " << namespacePrefix << " " << name
-           << "\n\tisSelfClosing: " << isSelfClosing << "\n";
-        for (size_t i = 0; i < attributes.size(); i++) {
-            os << "\tAttribute Name: " << attributes[i].getName()
-               << " | Attribute Value: " << attributes[i].getValue() << "\n";
-        }
-
-        eventCount++;
-    }
-
-    void onTagClose(std::string namespacePrefix, std::string name) override {
-        os << "Tag close: " << namespacePrefix << " " << name << "\n";
-
-        eventCount++;
-    }
-
-    void onXMLDeclaration(std::string version, std::string encoding,
-                          bool hasEncoding, bool isStandalone,
-                          bool hasStandalone) override {
-        os << "XML Declaration: \t" << "\tVersion: " << version
-           << "\n\tEncoding: " << encoding
-           << "\n\tisStandalone: " << isStandalone << "\n";
-        eventCount++;
-    }
-
-    void onDoctype(std::string text) override {
-        os << "Doctype: " << text << "\n";
-        eventCount++;
-    }
-
-    void onException(std::exception& e) override {
-        os << "Exception: " << e.what() << "\n";
-        eventCount++;
-    }
-
-    void onEnd() override { eventCount++; }
-
-    int getEventCount() { return eventCount; }
-};
 
 TEST_CASE("SAXParser parses complex XML") {
     using namespace onyx::parser;
