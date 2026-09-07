@@ -103,7 +103,7 @@ The last 2 columns are optional when writing out tag names.
 Example:
 
 ```csv
-canonical,is_void,supports_namespace_prefixdynamic,compile
+canonical,is_void,supports_namespace_prefix,dynamic,compile
 product,0,1
 separator,1,1
 auto,0,0,dauto,cauto
