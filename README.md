@@ -20,7 +20,6 @@ OnyxXML is a C++ XML library focused on API design as a first priority, hoping t
      - [TagNameIndex](#tagnameindex)
    - [Compile-Time API](#compile-time-api)
    - [Hybrid API](#hybrid-api)
-   - [Placeholders](#placeholders)
    - [Control Constructs (ForEach, If)](#control-constructs)
    - [Non-Owning Nodes](#non-owning-nodes)
    - [Arena Allocator](#arena-allocator)
@@ -335,25 +334,6 @@ std::string xml = dynamicItems->serialize();
 ```
 
 Start with a static definition and then adjust dynamically. This is mostly an alternative syntax for the Dynamic API, as they do the same thing under the hood.
-
-### Placeholders
-
-```cpp
-using namespace onyx::ctags;
-using Template = PlaceholderDocument<
-    report<Placeholder<"HEADER">, Placeholder<"BODY">>
->;
-
-tags::header header(tags::title(tags::Text("Monthly Report")));
-tags::section body(tags::entry(Text("Data")));
-
-std::string output = Template::serializeWithPlaceholders(
-    "HEADER", header,
-    "BODY", body
-);
-```
-
-Placeholders allow seamless mixing of static templates and dynamic content.
 
 ### Control Constructs
 

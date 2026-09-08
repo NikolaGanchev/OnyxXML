@@ -6,11 +6,9 @@
 #include "compile/compile_comment.h"
 #include "compile/compile_doctype.h"
 #include "compile/compile_generic_node.h"
-#include "compile/compile_placeholder.h"
 #include "compile/compile_processing_instruction.h"
 #include "compile/compile_text.h"
 #include "compile/compile_xml_declaration.h"
-#include "compile/placeholder_document.h"
 #include "document.h"
 #include "index.h"
 #include "indices/attribute_name_index.h"
@@ -71,6 +69,5 @@ using enum onyx::dynamic::tags::GenericNode::Type;
 
 namespace compile::ctags {
 using onyx::compile::Document;
-using onyx::compile::PlaceholderDocument;
 }  // namespace compile::ctags
 }  // namespace onyx

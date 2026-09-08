@@ -2071,36 +2071,6 @@ TEST_CASE("Child replace works", "[Node]") {
     REQUIRE(children[0]->getParentNode() == parent);
 }
 
-TEST_CASE("Compile api dynamic bindings work") {
-    using namespace onyx;
-    using namespace onyx::ctags;
-
-    tags::cdiv cd{tags::Text{"Hello!"}};
-
-    using doc = PlaceholderDocument<
-        html<head<>, body<Placeholder<"cd">, Placeholder<"ab">>>>;
-
-    tags::ul valueToBind{tags::li(tags::Text("1")), tags::li(tags::Text("2")),
-                         tags::li(tags::Text("3")), tags::li(tags::Text("4")),
-                         tags::li(tags::Text("5"))};
-
-    tags::section valueToBind2{tags::article{tags::p{}, tags::p{}, tags::span{},
-                                             tags::p{}, tags::span{},
-                                             tags::img{}}};
-
-    std::string expected =
-        "<html><head></head><body><ul><li>1</li><li>2</li><li>3</li><li>4</"
-        "li><li>5</li></ul><section><article><p></p><p></p><span></span><p></"
-        "p><span></span><img/></article></section></body></html>";
-
-    REQUIRE(doc::serializeWithPlaceholders("cd", valueToBind, "ab",
-                                           valueToBind2) == expected);
-
-    REQUIRE(
-        doc::dynamicTreeWithPlaceholders("cd", valueToBind, "ab", valueToBind2)
-            ->serialize() == expected);
-}
-
 TEST_CASE("Owning NodeHandle reports owning and retains pointer",
           "[NodeHandle]") {
     using namespace onyx::tags;
