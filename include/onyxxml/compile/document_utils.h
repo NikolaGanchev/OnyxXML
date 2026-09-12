@@ -18,27 +18,19 @@ namespace onyx::compile {
 struct DocumentUtils {
     DocumentUtils() = delete;
 
-    /**
-     * @brief Constructs an std::array XML string with the non-void tagName node
-     * as the root and all its children.
-     *
-     * @tparam N The size of the array
-     * @tparam Children
-     * @param tagName
-     * @return std::array<char, N + 1>
-     */
-    template <size_t N, typename... Children>
-    static consteval std::array<char, N + 1> serializeNode(
+    template <std::size_t ContentSize, std::size_t PlaceholderCount,
+              typename... Children>
+    static consteval void evaluateNode(
+        EvaluatedDocument<ContentSize, PlaceholderCount>& result,
         const char* tagName) {
-        std::array<char, N + 1> result = {};
         bool passedAttr = false;
-        size_t index = CompileStringUtils::placeStringInArray(result, "<", 0);
-        index = CompileStringUtils::placeStringInArray(result, tagName, index);
+        CompileStringUtils::placeStringInEvaluatedDocument(result, "<");
+        CompileStringUtils::placeStringInEvaluatedDocument(result, tagName);
         if constexpr (sizeof...(Children) == 0) {
-            index = CompileStringUtils::placeStringInArray(result, ">", index);
+            CompileStringUtils::placeStringInEvaluatedDocument(result, ">");
         } else {
             (
-                ([&] {
+                ([&]() consteval {
                     if constexpr (onyx::compile::ctags::isAttribute<Children>) {
                         if (passedAttr) {
                             throw "Cannot add attribute after first child of node.";
@@ -46,62 +38,39 @@ struct DocumentUtils {
                     } else {
                         if (!passedAttr) {
                             passedAttr = true;
-                            result[index] = '>';
-                            index++;
+                            CompileStringUtils::placeStringInEvaluatedDocument(
+                                result, ">");
                         }
                     }
-
-                    std::array<char, Children::size() + 1> in =
-                        Children::serialize();
-                    for (size_t i = 0; i < Children::size(); i++) {
-                        result[index + i] = in[i];
-                    }
-                    index += Children::size();
+                    Children::evaluate(result);
                 }()),
                 ...);
         }
-        index = CompileStringUtils::placeStringInArray(result, "</", index);
-        index = CompileStringUtils::placeStringInArray(result, tagName, index);
-        index = CompileStringUtils::placeStringInArray(result, ">\0", index);
-        return result;
+        CompileStringUtils::placeStringInEvaluatedDocument(result, "</");
+        CompileStringUtils::placeStringInEvaluatedDocument(result, tagName);
+        CompileStringUtils::placeStringInEvaluatedDocument(result, ">\0");
     }
 
-    /**
-     * @brief Constructs an std::array XML string with the void tagName node as
-     * the root. Throws an error (compile error) if non-attribute children have
-     * been passed.
-     *
-     * @tparam N The size of the array
-     * @tparam Children May only be of type ctags::Attribute
-     * @param tagName
-     * @return std::array<char, N + 1>
-     */
-    template <size_t N, typename... Children>
-    static consteval std::array<char, N + 1> serializeVoidNode(
+    template <std::size_t ContentSize, std::size_t PlaceholderCount,
+              typename... Children>
+    static consteval void evaluateVoidNode(
+        EvaluatedDocument<ContentSize, PlaceholderCount>& result,
         const char* tagName) {
-        std::array<char, N + 1> result = {};
         bool passedAttr = false;
-        size_t index = CompileStringUtils::placeStringInArray(result, "<", 0);
-        index = CompileStringUtils::placeStringInArray(result, tagName, index);
+        CompileStringUtils::placeStringInEvaluatedDocument(result, "<");
+        CompileStringUtils::placeStringInEvaluatedDocument(result, tagName);
         if constexpr (sizeof...(Children) != 0) {
-            (([&] {
+            (([&]() consteval {
                  if constexpr (!onyx::compile::ctags::isAttribute<Children>) {
                      throw "Cannot add non-attribute child for void node.";
                  }
 
-                 std::array<char, Children::size() + 1> in =
-                     Children::serialize();
-                 for (size_t i = 0; i < Children::size(); i++) {
-                     result[index + i] = in[i];
-                 }
-                 index += Children::size();
+                 Children::evaluate(result);
              }()),
              ...);
         }
 
-        index = CompileStringUtils::placeStringInArray(result, " />\0", index);
-
-        return result;
+        CompileStringUtils::placeStringInEvaluatedDocument(result, " />\0");
     }
 
     /**

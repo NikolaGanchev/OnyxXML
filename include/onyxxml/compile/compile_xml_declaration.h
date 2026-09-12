@@ -32,29 +32,41 @@ struct XmlDeclaration {
                    // 'encoding="" ' (12), 'standalone=""' (10) and ?> (2)
     }
 
+    static consteval std::size_t placeholderCount() { return 0; }
+
     /**
      * @brief The XmlDeclaration string; evaluated at compile-time. Does
      * not do any escaping.
      *
      * @return std::array<char, size() + 1>
      */
-    static consteval std::array<char, size() + 1> serialize() {
-        std::array<char, size() + 1> result = {};
-        size_t index = CompileStringUtils::placeStringInArray(
-            result, "<?xml version=\"", 0);
-        index = CompileStringUtils::placeStringInArray(result, Version.value,
-                                                       index);
-        index = CompileStringUtils::placeStringInArray(result, "\" encoding=\"",
-                                                       index);
-        index = CompileStringUtils::placeStringInArray(result, Encoding.value,
-                                                       index);
-        index = CompileStringUtils::placeStringInArray(
-            result, "\" standalone=\"", index);
-        index = CompileStringUtils::placeStringInArray(result, Standalone.value,
-                                                       index);
-        index = CompileStringUtils::placeStringInArray(result, "\"?>", index);
-        index = CompileStringUtils::placeStringInArray(result, "\0", index);
+    static consteval EvaluatedDocument<size() + 1, 0> serialize() {
+        EvaluatedDocument<size() + 1, 0> result = {};
+        evaluate(result);
         return result;
+    }
+
+    /**
+     * @brief Evaluates the XmlDeclaration into an existing EvaluatedDocument
+     *
+     */
+    template <std::size_t ContentSize, std::size_t PlaceholderCount>
+    static consteval void evaluate(
+        EvaluatedDocument<ContentSize, PlaceholderCount>& result) {
+        CompileStringUtils::placeStringInEvaluatedDocument(result,
+                                                           "<?xml version=\"");
+        CompileStringUtils::placeStringInEvaluatedDocument(result,
+                                                           Version.value);
+        CompileStringUtils::placeStringInEvaluatedDocument(result,
+                                                           "\" encoding=\"");
+        CompileStringUtils::placeStringInEvaluatedDocument(result,
+                                                           Encoding.value);
+        CompileStringUtils::placeStringInEvaluatedDocument(result,
+                                                           "\" standalone=\"");
+        CompileStringUtils::placeStringInEvaluatedDocument(result,
+                                                           Standalone.value);
+        CompileStringUtils::placeStringInEvaluatedDocument(result, "\"?>");
+        CompileStringUtils::placeStringInEvaluatedDocument(result, "\0");
     }
 
     /**

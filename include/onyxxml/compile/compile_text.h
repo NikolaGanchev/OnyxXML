@@ -26,18 +26,29 @@ struct Text {
         return std::string_view(Str.value).size();
     }
 
+    static consteval std::size_t placeholderCount() { return 0; }
+
     /**
      * @brief The Text string; evaluated at compile-time. Does not do any
      * escaping.
      *
      * @return std::array<char, size() + 1>
      */
-    static consteval std::array<char, size() + 1> serialize() {
-        std::array<char, size() + 1> result = {};
-        size_t index =
-            CompileStringUtils::placeStringInArray(result, Str.value, 0);
-        index = CompileStringUtils::placeStringInArray(result, "\0", index);
+    static consteval EvaluatedDocument<size() + 1, 0> serialize() {
+        EvaluatedDocument<size() + 1, 0> result = {};
+        evaluate(result);
         return result;
+    }
+
+    /**
+     * @brief Evaluates the Text into an existing EvaluatedDocument
+     *
+     */
+    template <std::size_t ContentSize, std::size_t PlaceholderCount>
+    static consteval void evaluate(
+        EvaluatedDocument<ContentSize, PlaceholderCount>& result) {
+        CompileStringUtils::placeStringInEvaluatedDocument(result, Str.value);
+        CompileStringUtils::placeStringInEvaluatedDocument(result, "\0");
     }
 
     /**

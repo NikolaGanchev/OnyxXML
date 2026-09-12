@@ -1,14 +1,9 @@
 #pragma once
 
-#include <initializer_list>
 #include <string>
-#include <string_view>
-#include <utility>
 
 #include "compile/compile_attribute.h"
-#include "compile/compile_comment.h"
-#include "compile/compile_text.h"
-#include "compile/document_utils.h"
+#include "compile/evaluated_document.h"
 #include "node.h"
 #include "nodes/empty_node.h"
 
@@ -49,39 +44,34 @@ struct Document {
         return size;
     }
 
+    static consteval std::size_t placeholderCount() {
+        std::size_t count = 0;
+        ((count += Children::placeholderCount()), ...);
+        return count;
+    }
+
     /**
      * @brief The compile-time generated non-formatted string built for this
      * Document. Does not do escaping.
      *
      * @return std::array<char, size() + 1> The std::array containing the string
      */
-    static consteval std::array<char, size() + 1> serialize() {
-        std::array<char, size() + 1> result = {};
-        size_t index = 0;
-        (([&] {
+    static consteval EvaluatedDocument<size() + 1, placeholderCount()>
+    serialize() {
+        EvaluatedDocument<size() + 1, placeholderCount()> res;
+        (([&]() consteval {
              if constexpr (onyx::compile::ctags::isAttribute<Children>) {
                  throw "Cannot add attribute as root node of Document.";
              } else {
-                 std::array<char, Children::size() + 1> in =
-                     Children::serialize();
-                 for (size_t i = 0; i < Children::size(); i++) {
-                     result[index + i] = in[i];
-                 }
-                 index += Children::size();
+                 Children::evaluate(res);
              }
          }()),
          ...);
-        result[index] = '\0';
-        return result;
+        CompileStringUtils::placeStringInEvaluatedDocument(res, "\0");
+        return res;
     }
 
-    /**
-     * @brief Casts the compile time std::array from ::serialize() to an
-     * std::string at runtime.
-     *
-     * @return std::string
-     */
-    static std::string toString() { return std::string(serialize().data()); }
+    static std::string toString() { return serialize(); }
 
     /**
      * @brief Returns the dynamic tree from the templated arguments. Calculated

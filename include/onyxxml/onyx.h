@@ -2,6 +2,7 @@
 
 #include "arena.h"
 #include "compile/compile_attribute.h"
+#include "compile/compile_base_serializable_node.h"
 #include "compile/compile_cdata.h"
 #include "compile/compile_comment.h"
 #include "compile/compile_doctype.h"
@@ -9,6 +10,7 @@
 #include "compile/compile_processing_instruction.h"
 #include "compile/compile_text.h"
 #include "compile/compile_xml_declaration.h"
+#include "compile/evaluated_document.h"
 #include "document.h"
 #include "index.h"
 #include "indices/attribute_name_index.h"
@@ -69,5 +71,6 @@ using enum onyx::dynamic::tags::GenericNode::Type;
 
 namespace compile::ctags {
 using onyx::compile::Document;
+using onyx::compile::EvaluatedDocument;
 }  // namespace compile::ctags
 }  // namespace onyx

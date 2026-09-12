@@ -8,6 +8,7 @@
 #include "../attribute.h"
 #include "compile_string.h"
 #include "compile_string_utils.h"
+#include "evaluated_document.h"
 
 namespace onyx::compile::ctags {
 /**
@@ -35,18 +36,25 @@ struct Attribute {
      * account for '\0'; The attribute string is formed as follows: `
      * name="value"`.
      *
-     * @return size_t
      */
-    static consteval std::array<char, size() + 1> serialize() {
-        std::array<char, size() + 1> result = {};
-        size_t index = CompileStringUtils::placeStringInArray(result, " ", 0);
-        index =
-            CompileStringUtils::placeStringInArray(result, Name.value, index);
-        index = CompileStringUtils::placeStringInArray(result, "=\"", index);
-        index =
-            CompileStringUtils::placeStringInArray(result, Value.value, index);
-        index = CompileStringUtils::placeStringInArray(result, "\"\0", index);
+    static consteval EvaluatedDocument<size() + 1, 0> serialize() {
+        EvaluatedDocument<size() + 1, 0> result = {};
+        evaluate(result);
         return result;
+    }
+
+    /**
+     * @brief Evaluates the Attribute into an existing EvaluatedDocument
+     *
+     */
+    template <std::size_t ContentSize, std::size_t PlaceholderCount>
+    static consteval void evaluate(
+        EvaluatedDocument<ContentSize, PlaceholderCount>& result) {
+        CompileStringUtils::placeStringInEvaluatedDocument(result, " ");
+        CompileStringUtils::placeStringInEvaluatedDocument(result, Name.value);
+        CompileStringUtils::placeStringInEvaluatedDocument(result, "=\"");
+        CompileStringUtils::placeStringInEvaluatedDocument(result, Value.value);
+        CompileStringUtils::placeStringInEvaluatedDocument(result, "\"\0");
     }
 
     /**
@@ -57,6 +65,8 @@ struct Attribute {
     static std::unique_ptr<onyx::dynamic::Attribute> dynamicAttribute() {
         return std::make_unique<onyx::dynamic::Attribute>(Name, Value);
     }
+
+    static consteval std::size_t placeholderCount() { return 0; }
 };
 
 /**

@@ -165,35 +165,19 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
     std::ofstream headerCompile(fullPath / "tags.h");
 
     headerCompile << "#pragma once\n";
-    headerCompile << "#include \"onyxxml/compile/document_utils.h\" \n";
+    headerCompile
+        << "#include \"onyxxml/compile/compile_base_serializable_node.h\" \n";
     headerCompile << "#include \"dynamic/tags.h\" \n\n";
     headerCompile << "namespace onyx::compile::ctags {\n";
 
     for (auto& tag : tags) {
-        int serializationSize = tag.isVoid
-                                    ? (tag.tagName.size() + 4)
-                                    : (tag.tagName.size() * 2 +
-                                       5);  // if void, expect <tagName />.
-                                            // Else, expect <tagName></tagName>
         headerCompile
             << "template <typename... Children>\n"
                "struct "
-            << tag.compileName
+            << tag.compileName << ": public BaseSerializableNode<\""
+            << tag.tagName << "\", " << ((tag.isVoid) ? "true" : "false")
+            << ", Children...>"
             << " {\n"
-               "    static consteval size_t size() {\n"
-               "        size_t size = "
-            << serializationSize
-            << ";\n"
-               "        ((size += Children::size()), ...);\n"
-               "        return size;\n"
-               "    }\n"
-               "    static consteval std::array<char, size() + 1> "
-               "serialize() {\n"
-               "        return DocumentUtils::"
-            << ((tag.isVoid) ? "serializeVoidNode" : "serializeNode")
-            << "<size(), Children...>(\"" << tag.tagName
-            << "\");\n"
-               "    }\n"
                "    static std::unique_ptr<onyx::dynamic::Node> "
                "dynamicTree() {\n"
                "        std::unique_ptr<onyx::dynamic::tags::"

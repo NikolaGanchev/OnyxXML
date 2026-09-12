@@ -133,25 +133,14 @@ def generate_compile(tags, output_path):
     
     header_content = io.StringIO()
     header_content.write('#pragma once\n')
-    header_content.write('#include "onyxxml/compile/document_utils.h"\n')
+    header_content.write('#include "onyxxml/compile/compile_base_serializable_node.h"\n')
     header_content.write('#include "dynamic/tags.h"\n\n')
     header_content.write('namespace onyx::compile::ctags {\n\n')
     
     for tag in tags:
-        serialization_size = (len(tag.tagName) + 4) if tag.isVoid else (2 * len(tag.tagName) + 5)
-        
+        isVoidArg = "true" if tag.isVoid else "false"
         header_content.write(f'template <typename... Children>\n')
-        header_content.write(f'struct {tag.compileName} {{\n')
-        header_content.write('    static consteval size_t size() {\n')
-        header_content.write(f'        size_t size = {serialization_size};\n')
-        header_content.write('        ((size += Children::size()), ...);\n')
-        header_content.write('        return size;\n')
-        header_content.write('    }\n')
-        
-        serialize_method = 'serializeVoidNode' if tag.isVoid else 'serializeNode'
-        header_content.write(f'    static consteval std::array<char, size() + 1> serialize() {{\n')
-        header_content.write(f'        return DocumentUtils::{serialize_method}<size(), Children...>("{tag.tagName}");\n')
-        header_content.write('    }\n')
+        header_content.write(f'struct {tag.compileName}: public BaseSerializableNode<"{tag.tagName}", {isVoidArg}, Children...> {{\n')
 
         nsArg = "\"\"" if tag.supportsNamespacePrefix else ""
         header_content.write('    static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {\n')
