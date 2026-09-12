@@ -3,6 +3,8 @@
 #include <array>
 #include <string_view>
 
+#include "evaluated_document.h"
+
 namespace onyx::compile {
 
 /**
@@ -28,6 +30,23 @@ struct CompileStringUtils {
         }
 
         return index + std::string_view(str).size();
+    }
+
+    /**
+     * @brief At compile time, takes an EvaluatedDocument and copies str into
+     * its context starting from index. Sets end to the next free index for
+     * writing.
+     *
+     * @return size_t The next free index
+     */
+    template <size_t ContentSize, size_t PlaceholderCount>
+    static consteval void placeStringInEvaluatedDocument(
+        EvaluatedDocument<ContentSize, PlaceholderCount>& doc,
+        const char* str) {
+        for (size_t i = 0; i < std::string_view(str).size(); i++) {
+            doc.content[doc.end] = str[i];
+            doc.end++;
+        }
     }
 };
 }  // namespace onyx::compile
