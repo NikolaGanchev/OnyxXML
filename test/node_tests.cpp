@@ -1067,6 +1067,82 @@ TEST_CASE("GenericNode void compile tag is serialized correctly") {
           "<html><head></head><body><img src=\"img.jpg\" /></body></html>");
 }
 
+TEST_CASE("Template XML instantiates single placeholder correctly",
+          "[Placeholder]") {
+    using namespace onyx::ctags;
+
+    constexpr auto doc =
+        Document<html<head<>, body<Text<"Hello ">, Placeholder<"name">,
+                                   Text<"!">>>>::serialize();
+
+    PlaceholderBinding bindings[] = {{"name", "Alice"}};
+
+    std::string expected =
+        "<html><head></head><body>Hello Alice!</body></html>";
+    REQUIRE(doc.instantiate(bindings) == expected);
+}
+
+TEST_CASE("Template XML instantiates multiple distinct placeholders",
+          "[Placeholder]") {
+    using namespace onyx::ctags;
+
+    constexpr auto doc = Document<
+        html<Attribute<"lang", "en">, head<>,
+             body<cdiv<Attribute<"class", "message">, Placeholder<"msg">>,
+                  cdiv<Attribute<"class", "user">, Placeholder<"user_id">>>>>::
+        serialize();
+
+    PlaceholderBinding bindings[] = {{"msg", "Access Denied"},
+                                     {"user_id", "404"}};
+
+    std::string expected =
+        "<html lang=\"en\"><head></head><body>"
+        "<div class=\"message\">Access Denied</div>"
+        "<div class=\"user\">404</div>"
+        "</body></html>";
+
+    REQUIRE(doc.instantiate(bindings) == expected);
+}
+
+TEST_CASE(
+    "Back-to-back placeholders instantiate correctly without interleaving text",
+    "[Placeholder]") {
+    using namespace onyx::ctags;
+
+    constexpr auto doc = Document<p<Placeholder<"first">, Placeholder<"second">,
+                                    Placeholder<"third">>>::serialize();
+
+    PlaceholderBinding bindings[] = {
+        {"first", "One"}, {"second", "Two"}, {"third", "Three"}};
+
+    std::string expected = "<p>OneTwoThree</p>";
+    REQUIRE(doc.instantiate(bindings) == expected);
+}
+
+TEST_CASE(
+    "Instantiating with a missing placeholder binding throws invalid_argument",
+    "[Placeholder]") {
+    using namespace onyx::ctags;
+
+    constexpr auto doc =
+        Document<html<body<Placeholder<"username">>>>::serialize();
+
+    PlaceholderBinding bindings[] = {{"wrong_key", "Alice"}};
+
+    REQUIRE_THROWS_AS(doc.instantiate(bindings), std::invalid_argument);
+}
+
+TEST_CASE(
+    "Document::dynamicTree throws when attempting to build a tree containing a "
+    "Placeholder",
+    "[Placeholder]") {
+    using namespace onyx::ctags;
+
+    using doc = Document<html<body<Placeholder<"username">>>>;
+
+    REQUIRE_THROWS(doc::dynamicTree());
+}
+
 TEST_CASE("Special compile-time tags are serialized correctly") {
     using namespace onyx::ctags;
     using doc = Document<
