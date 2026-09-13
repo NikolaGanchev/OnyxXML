@@ -50,15 +50,19 @@ struct Document {
         return count;
     }
 
+    constexpr static std::size_t computedSize = size();
+    constexpr static std::size_t computedPlaceholderCount = placeholderCount();
+
     /**
      * @brief The compile-time generated non-formatted string built for this
      * Document. Does not do escaping.
      *
      * @return std::array<char, size() + 1> The std::array containing the string
      */
-    static consteval EvaluatedDocument<size() + 1, placeholderCount()>
+    static consteval EvaluatedDocument<computedSize + 1,
+                                       computedPlaceholderCount>
     serialize() {
-        EvaluatedDocument<size() + 1, placeholderCount()> res;
+        EvaluatedDocument<computedSize + 1, computedPlaceholderCount> res;
         (([&]() consteval {
              if constexpr (onyx::compile::ctags::isAttribute<Children>) {
                  throw "Cannot add attribute as root node of Document.";
