@@ -1080,6 +1080,7 @@ TEST_CASE("Template XML instantiates single placeholder correctly",
     std::string expected =
         "<html><head></head><body>Hello Alice!</body></html>";
     REQUIRE(doc.instantiate(bindings) == expected);
+    REQUIRE(instantiate<doc>(Bind<"name">{"Alice"}) == expected);
 }
 
 TEST_CASE("Template XML instantiates multiple distinct placeholders",
@@ -1102,6 +1103,8 @@ TEST_CASE("Template XML instantiates multiple distinct placeholders",
         "</body></html>";
 
     REQUIRE(doc.instantiate(bindings) == expected);
+    REQUIRE(instantiate<doc>(Bind<"msg">{"Access Denied"},
+                             Bind<"user_id">{"404"}) == expected);
 }
 
 TEST_CASE(
@@ -1117,6 +1120,8 @@ TEST_CASE(
 
     std::string expected = "<p>OneTwoThree</p>";
     REQUIRE(doc.instantiate(bindings) == expected);
+    REQUIRE(instantiate<doc>(Bind<"first">{"One"}, Bind<"second">{"Two"},
+                             Bind<"third">{"Three"}) == expected);
 }
 
 TEST_CASE(

@@ -71,8 +71,10 @@ using enum onyx::dynamic::tags::GenericNode::Type;
 }  // namespace dynamic::tags
 
 namespace compile::ctags {
+using onyx::compile::Bind;
 using onyx::compile::Document;
 using onyx::compile::EvaluatedDocument;
+using onyx::compile::instantiate;
 using onyx::compile::PlaceholderBinding;
 }  // namespace compile::ctags
 }  // namespace onyx
