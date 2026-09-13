@@ -44,7 +44,7 @@ struct Attribute {
     }
 
     /**
-     * @brief Evaluates the Attribute into an existing EvaluatedDocument
+     * @brief Evaluates the Attribute into an existing EvaluatedDocument.
      *
      */
     template <std::size_t ContentSize, std::size_t PlaceholderCount>
@@ -66,6 +66,12 @@ struct Attribute {
         return std::make_unique<onyx::dynamic::Attribute>(Name, Value);
     }
 
+    /**
+     * @brief An Attribute trivially has 0 Placeholder children, as it has no
+     * children.
+     *
+     * @return 0
+     */
     static consteval std::size_t placeholderCount() { return 0; }
 };
 

@@ -18,7 +18,7 @@ template <CompileString Str>
 struct DOCTYPE {
     /**
      * @brief The compile-time size of the DOCTYPE string. Does not account for
-     * '\0'
+     * '\0'.
      *
      * @return std::size_t
      */
@@ -40,7 +40,7 @@ struct DOCTYPE {
     }
 
     /**
-     * @brief Evaluates the Doctype into an existing EvaluatedDocument
+     * @brief Evaluates the Doctype into an existing EvaluatedDocument.
      *
      */
     template <std::size_t ContentSize, std::size_t PlaceholderCount>
@@ -63,6 +63,12 @@ struct DOCTYPE {
         return std::make_unique<onyx::dynamic::tags::Doctype>(Str);
     }
 
+    /**
+     * @brief A Doctype trivially has 0 Placeholder children, as it has no
+     * children.
+     *
+     * @return 0
+     */
     static consteval std::size_t placeholderCount() { return 0; }
 };
 }  // namespace onyx::compile::ctags

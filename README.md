@@ -3,7 +3,7 @@
 ![CI](https://github.com/NikolaGanchev/OnyxXML/actions/workflows/ci.yml/badge.svg)
 ![Coverage Badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/NikolaGanchev/OnyxXML/badges/coverage-badge.json)
 
-OnyxXML is a C++ XML library focused on API design as a first priority, hoping to bring expressive, modern and safe APIs while not sacrificing performance and compliance. This is achieved via modern C++ features, exhaustive and rigorous automated testing, and granular control over behavior. OnyxXML provides multiple standout features, such as a fluent runtime API for constructing XML trees, the ability to construct owning or non-owning trees, compile-time construction of XML, a highly generic fully-iterative parser backend to tailor to specific applications needs, coupled with multiple optimized frontends and a custom fully-iterative XPath 1.0 execution pipeline that compiles queries into virtual machine bytecode. OnyxXML aims to be completely recursion-free and memory-safe. OnyxXML currently has an extensive automated test suite containing over 600 tests and over 2300 assertions within them.
+OnyxXML is a C++ XML library focused on API design as a first priority, hoping to bring expressive, modern, and safe APIs while not sacrificing performance and compliance. This is achieved via modern C++ features, exhaustive and rigorous automated testing, and granular control over behavior. OnyxXML provides multiple standout features, such as a fluent runtime API for constructing XML trees, the ability to construct owning or non-owning trees, compile-time construction of XML, a highly generic fully-iterative parser backend to tailor to specific application needs, coupled with multiple optimized frontends and a custom fully-iterative XPath 1.0 execution pipeline that compiles queries into virtual machine bytecode. OnyxXML aims to be completely recursion-free and memory-safe. OnyxXML currently has an extensive automated test suite containing over 600 tests and over 2300 assertions within them.
 
 ## Table of Contents
 
@@ -19,6 +19,7 @@ OnyxXML is a C++ XML library focused on API design as a first priority, hoping t
      - [TagIndex](#tagindex)
      - [TagNameIndex](#tagnameindex)
    - [Compile-Time API](#compile-time-api)
+     - [Placeholders](#placeholders)
    - [Hybrid API](#hybrid-api)
    - [Control Constructs (ForEach, If)](#control-constructs)
    - [Non-Owning Nodes](#non-owning-nodes)
@@ -304,7 +305,7 @@ Refer to the built-in Doxygen documentation, [`include/onyxxml/index.h`](include
 
 ```cpp
 using namespace onyx::ctags;
-using MyDoc = Document<
+using doc = Document<
     catalog<
         product<Attribute<"id","001">,
             name<Text<"Gizmo">>,
@@ -313,12 +314,82 @@ using MyDoc = Document<
     >
 >;
 
-constexpr auto xml = MyDoc::serialize();
-static_assert(std::string(xml.data()).find("<price>9.99</price>") != std::string::npos);
+constexpr auto evaluatedDoc = doc::serialize(); // Returns an EvaluatedDocument instance at compile time.
+static_assert(std::string(serializedDoc).find("<price>9.99</price>") != std::string::npos);
+
+// For convenience, the Document type also has a ::toString method.
+static_assert(doc::toString().find("<price>9.99</price>") != std::string::npos);
 ```
 
 All serialization logic is resolved at compile time, ensuring zero-cost runtime performance.
 The compile-time API does not currently support namespaces for generated tags. Use `GenericNode` instead.
+
+#### Placeholders
+
+The compile-time API supports placeholders. Placeholders are named and declared within a `Document`. Names are case-sensitive. A `Document` which contains placeholders cannot be converted to a string or have its internal content `std::array` accessed; for example, the above cast to `std::string` and the invocation of `Document::toString()` would fail at compile-time if there was at least one `Placeholder` in the `Document`. It needs to be instantiated into an std::string, which happens via calling the `onyx::compile::instantiate` free function: 
+
+```cpp
+using namespace onyx::ctags;
+using doc = Document<
+    Placeholder<"header">,
+    catalog<
+        product<Attribute<"id","001">,
+            name<Text<"Gizmo">>,
+            price<Text<"9.99">>
+        >
+    >,
+    Placeholder<"footer">
+>;
+
+constexpr auto evaluatedDoc = doc::serialize();
+
+// The EvaluatedDocument is embedded at compile-time and can be reused many times.
+std::string generateCatalog() {
+    tags::header header(tags::title(tags::Text("Catalog")));
+    const auto now = std::chrono::system_clock::now();
+    tags::header footer(tags::Text("Timestamp: " + std::format("{:%Y-%m-%d %H%M}", now)));
+
+    return compile::instantiate<evaluatedDoc>(
+        Bind<"header">{header.serialize()},
+        Bind<"footer">{footer.serialize()},
+    );
+}
+
+std::string output = generateCatalog();
+
+static_assert(output.find("<header><title>Catalog</title></header>") == std::string::npos);
+```
+
+The `onyx::compile::instantiate` free function validates at compile-time that there are no duplicate placeholder names, all required placeholder names were bound, and no redundant names were bound. Usage of `instantiate` also requires at least one placeholder.
+
+At compile-time, all placeholder names are embedded into the content of the `EvaluatedDocument`, and their positions and lengths are recorded externally into another `std::array` within the `EvaluatedDocument`. Instantiation happens via copying from the content array into the result string, where placeholders are substituted for their bound value. The original generated content is never modified. Due to this architecture, an invocation of `instantiate` using a correctly constructed `EvaluatedDocument` is safe from intentional runtime injections, such as trying to insert XML which contains the name of another Placeholder to create an infinite loop or leave unexpanded placeholder names into the output. 
+
+When using the `Document` struct, `Placeholder` keys are known fully at compile-time, and you should generally use `onyx::compile::instantiate`. However, there are valid reasons why one might want to construct the names at runtime; one such reason is using `instantiate` to double as a validation layer for an external data source. To this end, an `instantiate` member function is available in the `EvaluatedDocument` struct. The member `instantiate` accepts a C-style array of key-value pairs. However, only the size of that array is validated at compile-time to be exactly the number of placeholders in the `Document`. The function does validate that there are no duplicate placeholder names, all required placeholder names were bound, and no redundant names were bound, but it only happens at runtime.
+
+```cpp
+using namespace onyx::ctags;
+using doc = Document<
+    Placeholder<"header">,
+    Placeholder<"footer">
+>;
+
+constexpr auto evaluatedDoc = doc::serialize();
+
+// A generic rendering function receiving data from an external source.
+// Since the keys are runtime variables, onyx::compile::instantiate cannot be used.
+std::string render(const std::string& dynamicKey1, const std::string& val1, 
+                   const std::string& dynamicKey2, const std::string& val2) {
+                   
+    // The compiler validates that exactly 2 pairs are provided.
+    // Validations for duplicate, missing, or redundant names happen at runtime.
+    return evaluatedDoc.instantiate({
+        {dynamicKey1, val1},
+        {dynamicKey2, val2}
+    });
+}
+
+std::string output = render("header", "<title>Catalog</title>", "footer", "<b>End</b>");
+```
 
 ### Hybrid API
 
@@ -520,7 +591,7 @@ The backend parser is defined in [`include/onyxxml/parse/parser.h`](include/onyx
 
     An instance of a Policy is how the parser backend communicates with the outer world. As it parses, the parses dispatches events via the Policy methods, not unlike a SAX parser. The Policy chooses how to handle them. The Policy also provides to the cursor the types it requires, and offers methods for certain string related transformation. 
     
-    For example, it is responsibility of the policy to correctly transform text per accordance with the specification via the `Policy::transformText` method, which the parser calls with an appropriate [`TextTransformationMode`](include/onyxxml/parse/text_transformation_mode.h). The functions `text::expandEntitiesAndNormalizeEol`, `text::expandText`, `text::expandAttributeValue` and `text::expandEOLOnly` defined in [`include/onyxxml/text.h`](include/onyxxml/text.h) are compliant and may be used.
+    For example, it is the responsibility of the policy to correctly transform text in accordance with the specification via the `Policy::transformText` method, which the parser calls with an appropriate [`TextTransformationMode`](include/onyxxml/parse/text_transformation_mode.h). The functions `text::expandEntitiesAndNormalizeEol`, `text::expandText`, `text::expandAttributeValue` and `text::expandEOLOnly` defined in [`include/onyxxml/text.h`](include/onyxxml/text.h) are compliant and may be used.
 
     A Policy is any class (or struct) which satisfies the [`isParserPolicy`](include/onyxxml/parse/is_parser_policy.h) concept.
 

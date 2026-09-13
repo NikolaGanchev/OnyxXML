@@ -38,7 +38,7 @@ struct CompileString {
     }
 
     /**
-     * @brief Cast to std::string
+     * @brief Cast to std::string.
      *
      * @return std::string
      */

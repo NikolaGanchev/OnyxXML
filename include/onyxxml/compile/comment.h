@@ -19,7 +19,7 @@ template <CompileString Str>
 struct Comment {
     /**
      * @brief The compile-time size of the Comment string. Does not account for
-     * '\0'
+     * '\0'.
      *
      * @return std::size_t
      */
@@ -41,7 +41,7 @@ struct Comment {
     }
 
     /**
-     * @brief Evaluates the Comment into an existing EvaluatedDocument
+     * @brief Evaluates the Comment into an existing EvaluatedDocument.
      *
      */
     template <std::size_t ContentSize, std::size_t PlaceholderCount>
@@ -63,6 +63,12 @@ struct Comment {
         return std::make_unique<onyx::dynamic::tags::Comment>(Str);
     }
 
+    /**
+     * @brief A Comment trivially has 0 Placeholder children, as it has no
+     * children.
+     *
+     * @return 0
+     */
     static consteval std::size_t placeholderCount() { return 0; }
 };
 }  // namespace onyx::compile::ctags

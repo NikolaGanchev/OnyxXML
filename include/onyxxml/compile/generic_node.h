@@ -18,6 +18,12 @@ namespace onyx::compile::ctags {
  */
 template <CompileString Name, bool isVoid, typename... Children>
 struct GenericNode : BaseSerializableNode<Name, isVoid, Children...> {
+    /**
+     * @brief Construct a dynamic GenericNode from a compile time GenericNode
+     * struct.
+     *
+     * @return std::unique_ptr<onyx::dynamic::Node>
+     */
     static std::unique_ptr<onyx::dynamic::Node> dynamicTree() {
         std::unique_ptr<onyx::dynamic::tags::GenericNode> node =
             std::make_unique<onyx::dynamic::tags::GenericNode>(

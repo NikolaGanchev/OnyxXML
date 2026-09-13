@@ -8,11 +8,21 @@
 
 namespace onyx::compile::ctags {
 
+/**
+ * @brief A base compile-time serializable node. Provides the basics for
+ * compile-time serialization: size(), placeholderCount(), serialize() and
+ * evaluate(). The dynamicTree() function still needs to be created by the
+ * inheriting class.
+ *
+ * @tparam Name
+ * @tparam isVoid
+ * @tparam Children
+ */
 template <CompileString Name, bool isVoid, typename... Children>
 struct BaseSerializableNode {
     /**
      * @brief The compile-time size of the Node string. Does not account
-     * for '\0'
+     * for '\0'.
      *
      * @return std::size_t
      */
@@ -40,7 +50,7 @@ struct BaseSerializableNode {
 
     /**
      * @brief The compile-time evaluation of this Node. Does not account for
-     * '\0';
+     * '\0'.
      *
      */
     static consteval EvaluatedDocument<computedSize + 1,
@@ -54,7 +64,7 @@ struct BaseSerializableNode {
     }
 
     /**
-     * @brief Evaluates this Attribute into an existing EvaluatedDocument
+     * @brief Evaluates this Node into an existing EvaluatedDocument.
      *
      */
     template <std::size_t ContentSize, std::size_t PlaceholderCount>

@@ -18,6 +18,11 @@ namespace onyx::compile {
 struct DocumentUtils {
     DocumentUtils() = delete;
 
+    /**
+     * @brief Constructs an XML string with the non-void tagName node
+     * as the root and all its children into the EvaluatedDocument.
+     *
+     */
     template <std::size_t ContentSize, std::size_t PlaceholderCount,
               typename... Children>
     static consteval void evaluateNode(
@@ -51,6 +56,12 @@ struct DocumentUtils {
         CompileStringUtils::placeStringInEvaluatedDocument(result, ">\0");
     }
 
+    /**
+     * @brief Constructs an XML string with the non-void tagName node
+     * as the root and all its children into the EvaluatedDocument. Throws at
+     * compile-time if a non-attribute child is given.
+     *
+     */
     template <std::size_t ContentSize, std::size_t PlaceholderCount,
               typename... Children>
     static consteval void evaluateVoidNode(
