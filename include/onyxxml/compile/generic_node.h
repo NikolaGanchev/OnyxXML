@@ -5,7 +5,7 @@
 #include <string_view>
 
 #include "../nodes/generic_node.h"
-#include "compile_base_serializable_node.h"
+#include "base_serializable_node.h"
 #include "compile_string.h"
 #include "compile_string_utils.h"
 #include "document_utils.h"

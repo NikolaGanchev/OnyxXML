@@ -133,7 +133,7 @@ def generate_compile(tags, output_path):
     
     header_content = io.StringIO()
     header_content.write('#pragma once\n')
-    header_content.write('#include "onyxxml/compile/compile_base_serializable_node.h"\n')
+    header_content.write('#include "onyxxml/compile/base_serializable_node.h"\n')
     header_content.write('#include "dynamic/tags.h"\n\n')
     header_content.write('namespace onyx::compile::ctags {\n\n')
     

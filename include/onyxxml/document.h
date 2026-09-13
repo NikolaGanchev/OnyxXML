@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "compile/compile_attribute.h"
+#include "compile/attribute.h"
 #include "compile/evaluated_document.h"
 #include "node.h"
 #include "nodes/empty_node.h"
