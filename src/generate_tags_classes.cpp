@@ -165,8 +165,7 @@ void generateCompile(const std::vector<Tag>& tags, const char* path) {
     std::ofstream headerCompile(fullPath / "tags.h");
 
     headerCompile << "#pragma once\n";
-    headerCompile
-        << "#include \"onyxxml/compile/compile_base_serializable_node.h\" \n";
+    headerCompile << "#include \"onyxxml/compile/base_serializable_node.h\" \n";
     headerCompile << "#include \"dynamic/tags.h\" \n\n";
     headerCompile << "namespace onyx::compile::ctags {\n";
 
