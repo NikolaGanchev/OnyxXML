@@ -26,7 +26,7 @@ namespace onyx::dynamic {
  *
  * parent->addChild(child);
  * @{endcode}
- * The nodes will be automatically released at the end of the scope 
+ * The nodes will be automatically released at the end of the scope
  */
 class Arena {
    private:
@@ -40,13 +40,13 @@ class Arena {
      * @brief The capacity of the Arena.
      *
      */
-    size_t capacity;
+    std::size_t capacity;
 
     /**
      * @brief The current offset from the beginning of the buffer.
      *
      */
-    size_t position;
+    std::size_t position;
 
     /**
      * @brief Tracks allocated Nodes in the buffer for destruction.
@@ -79,13 +79,13 @@ class Arena {
          * @brief Current computed size.
          *
          */
-        size_t size;
+        std::size_t size;
 
         /**
          * @brief Current node count
-         * 
+         *
          */
-        size_t nodeCount;
+        std::size_t nodeCount;
 
        public:
         /**
@@ -109,9 +109,9 @@ class Arena {
          * @brief Returns the current size of all preallocated nodes, including
          * alignment.
          *
-         * @return size_t
+         * @return std::size_t
          */
-        size_t totalSize() const;
+        std::size_t totalSize() const;
 
         /**
          * @brief Constructs an Arena with the current size.
@@ -122,12 +122,13 @@ class Arena {
     };
 
     /**
-     * @brief Construct a new Arena object via precomputed capacity and node count
+     * @brief Construct a new Arena object via precomputed capacity and node
+     * count
      *
      * @param capacity
-     * @param nodeCount 
+     * @param nodeCount
      */
-    Arena(size_t capacity, size_t nodeCount = 0);
+    Arena(size_t capacity, std::size_t nodeCount = 0);
 
     /**
      * @brief Construct a new Arena object via move.
@@ -171,10 +172,10 @@ template <typename T, typename... Args>
 T* Arena::allocate(Args... args)
     requires(isNode<T>)
 {
-    size_t alignment = alignof(T);
-    size_t size = sizeof(T);
+    std::size_t alignment = alignof(T);
+    std::size_t size = sizeof(T);
 
-    size_t aligned = (this->position + alignment - 1) & ~(alignment - 1);
+    std::size_t aligned = (this->position + alignment - 1) & ~(alignment - 1);
 
     if (aligned + size > this->capacity) {
         throw std::overflow_error(
@@ -193,8 +194,8 @@ template <typename T>
 Arena::Builder& Arena::Builder::preallocate()
     requires(isNode<T>)
 {
-    size_t alignment = alignof(T);
-    size_t size = sizeof(T);
+    std::size_t alignment = alignof(T);
+    std::size_t size = sizeof(T);
 
     this->size = (this->size + alignment - 1) & ~(alignment - 1);
 

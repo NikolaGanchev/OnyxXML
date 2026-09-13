@@ -22,9 +22,9 @@ struct XmlDeclaration {
      * not account for
      * '\0'
      *
-     * @return size_t
+     * @return std::size_t
      */
-    static consteval size_t size() {
+    static consteval std::size_t size() {
         return 6 + std::string_view(Version.value).size() + 11 +
                std::string_view(Encoding.value).size() + 12 +
                std::string_view(Standalone.value).size() + 13 +

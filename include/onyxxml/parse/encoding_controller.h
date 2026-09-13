@@ -66,7 +66,7 @@ class EncodingController {
      * triggerParse().
      *
      */
-    size_t parseCallCount = 0;
+    std::size_t parseCallCount = 0;
     /**
      * @brief The current known input encoding.
      *

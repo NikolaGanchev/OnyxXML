@@ -23,9 +23,9 @@ struct Attribute {
      * @brief The compile-time size of the attribute string. Does not account
      * for '\0'; The attribute string is formed as follows: ` name="value"`.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    static consteval size_t size() {
+    static consteval std::size_t size() {
         return std::string_view(Name.value).size() +
                std::string_view(Value.value).size() +
                4;  // +4 for the space, =, and ""

@@ -20,9 +20,9 @@ struct DOCTYPE {
      * @brief The compile-time size of the DOCTYPE string. Does not account for
      * '\0'
      *
-     * @return size_t
+     * @return std::size_t
      */
-    static consteval size_t size() {
+    static consteval std::size_t size() {
         return std::string_view(Str.value).size() + 10 +
                1;  // added size for '<!DOCTYPE ' (10) and > (1)
     }

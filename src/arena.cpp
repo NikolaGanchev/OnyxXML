@@ -2,7 +2,8 @@
 
 namespace onyx::dynamic {
 
-Arena::Arena(size_t capacity, size_t nodeCount) : capacity{capacity}, allocations{} {
+Arena::Arena(size_t capacity, std::size_t nodeCount)
+    : capacity{capacity}, allocations{} {
     this->buffer = new char[capacity];
     this->position = 0;
     this->allocations.reserve(nodeCount);
@@ -40,5 +41,7 @@ Arena::Builder::Builder() : size(0), nodeCount(0) {};
 
 size_t Arena::Builder::totalSize() const { return this->size; }
 
-Arena Arena::Builder::build() const { return Arena(this->size, this->nodeCount); }
+Arena Arena::Builder::build() const {
+    return Arena(this->size, this->nodeCount);
+}
 }  // namespace onyx::dynamic

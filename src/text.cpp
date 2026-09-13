@@ -48,7 +48,7 @@ std::string escape(const std::string& str,
     // Calculate the total size required for the escaped string.
     // This pre-calculation helps in allocating the exact amount of memory
     // needed.
-    size_t escapedSize = 0;
+    std::size_t escapedSize = 0;
     bool safe = true;
 
     for (size_t i = 0; i < str.size(); i++) {
@@ -500,7 +500,7 @@ std::string replaceSequence(const std::string& str, const char* sequence,
     // Calculate the total size required for the escaped string.
     // This pre-calculation helps in allocating the exact amount of memory
     // needed.
-    size_t escapedSize = 0;
+    std::size_t escapedSize = 0;
     bool safe = true;
 
     for (size_t i = 0; i < str.size(); i++) {
@@ -571,7 +571,7 @@ std::string replaceSequences(
     // Calculate the total size required for the escaped string.
     // This pre-calculation helps in allocating the exact amount of memory
     // needed.
-    size_t escapedSize = 0;
+    std::size_t escapedSize = 0;
     bool safe = true;
 
     bool foundMatch = true;
@@ -579,7 +579,7 @@ std::string replaceSequences(
         for (const auto& [key, replacement] : dictionary) {
             foundMatch = true;
             if (key == "") continue;
-            size_t k = i;
+            std::size_t k = i;
             for (size_t j = 0; j < key.size(); j++, k++) {
                 if (k >= str.size() || (unsigned char)str[k] != key[j]) {
                     foundMatch = false;
@@ -664,21 +664,21 @@ std::optional<std::string> transcodeToUtf8(std::string_view str,
     // POSIX iconv takes `char **` for the input buffer, but promises not to
     // modify the memory.
     char* inbuf = const_cast<char*>(str.data());
-    size_t inbytesLeft = str.size();
+    std::size_t inbytesLeft = str.size();
 
     std::string result;
-    size_t currentCapacity = inbytesLeft + (inbytesLeft / 2) + 1;
+    std::size_t currentCapacity = inbytesLeft + (inbytesLeft / 2) + 1;
     result.resize(currentCapacity);
 
-    size_t bytesWrittenTotal = 0;
+    std::size_t bytesWrittenTotal = 0;
 
     while (inbytesLeft > 0) {
         char* outbuf = &result[bytesWrittenTotal];
-        size_t bytesLeft = currentCapacity - bytesWrittenTotal;
+        std::size_t bytesLeft = currentCapacity - bytesWrittenTotal;
 
-        size_t res = iconv(cd, &inbuf, &inbytesLeft, &outbuf, &bytesLeft);
+        std::size_t res = iconv(cd, &inbuf, &inbytesLeft, &outbuf, &bytesLeft);
 
-        size_t bytesWrittenThisPass =
+        std::size_t bytesWrittenThisPass =
             (currentCapacity - bytesWrittenTotal) - bytesLeft;
         bytesWrittenTotal += bytesWrittenThisPass;
 

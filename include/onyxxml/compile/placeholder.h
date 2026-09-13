@@ -34,9 +34,9 @@ struct Placeholder {
     /**
      * @brief The compile-time size of the Placeholder; always 0.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    static consteval size_t size() { return Name.size - 1; }
+    static consteval std::size_t size() { return Name.size - 1; }
 
     /**
      * @brief Throws as Placeholders cannot be individually serialized.

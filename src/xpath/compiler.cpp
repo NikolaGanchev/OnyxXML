@@ -174,8 +174,8 @@ bool hasDefaultArgument(FUNCTION_CODE fc) {
            fc == FUNCTION_CODE::NUMBER_1;
 }
 
-bool verifyArgumentCount(std::pair<FUNCTION_CODE, size_t> definition,
-                         size_t argCount) {
+bool verifyArgumentCount(std::pair<FUNCTION_CODE, std::size_t> definition,
+                         std::size_t argCount) {
     FUNCTION_CODE fc = definition.first;
     if (hasDefaultArgument(fc) || fc == FUNCTION_CODE::SUBSTRING_3) {
         return (argCount == definition.second) ||
@@ -261,7 +261,7 @@ std::unique_ptr<Program> Compiler::compile(
         switch (current->getType()) {
             case Parser::AstNode::Literal: {
                 Parser::Literal* lit = static_cast<Parser::Literal*>(current);
-                size_t address = pushData(data, std::move(lit->value));
+                std::size_t address = pushData(data, std::move(lit->value));
                 pushInstruction(instructions,
                                 Instruction(OPCODE::LOAD_CONSTANT, address));
                 stack.pop();
@@ -269,7 +269,7 @@ std::unique_ptr<Program> Compiler::compile(
             };
             case Parser::AstNode::Number: {
                 Parser::Number* num = static_cast<Parser::Number*>(current);
-                size_t address =
+                std::size_t address =
                     pushData(data, XPathObject(num->num).asNumber());
                 pushInstruction(instructions,
                                 Instruction(OPCODE::LOAD_CONSTANT, address));
@@ -285,8 +285,8 @@ std::unique_ptr<Program> Compiler::compile(
                 Parser::VarRef* var = static_cast<Parser::VarRef*>(current);
                 auto [uri, local] = resolveQName(var->name, namespaceResolver);
 
-                size_t uriAddr = pushData(data, std::move(uri));
-                size_t localAddr = pushData(data, std::move(local));
+                std::size_t uriAddr = pushData(data, std::move(uri));
+                std::size_t localAddr = pushData(data, std::move(local));
 
                 pushInstruction(instructions,
                                 Instruction(OPCODE::LOAD_CONSTANT, uriAddr));
@@ -519,8 +519,8 @@ std::unique_ptr<Program> Compiler::compile(
 
                     auto [uri, local] =
                         resolveQName(step->test, namespaceResolver);
-                    size_t uriAddr = pushData(data, std::move(uri));
-                    size_t localAddr = pushData(data, std::move(local));
+                    std::size_t uriAddr = pushData(data, std::move(uri));
+                    std::size_t localAddr = pushData(data, std::move(local));
 
                     pushInstruction(
                         instructions,

@@ -59,7 +59,7 @@ std::string string(const XPathObject& obj) {
                 bool isInteger = (std::trunc(arg) == arg);
 
                 if (isInteger) {
-                    size_t dotPosition = result.find('.');
+                    std::size_t dotPosition = result.find('.');
                     if (dotPosition != std::string::npos) {
                         result.resize(dotPosition);
                     }
@@ -203,13 +203,13 @@ std::string substring(const std::string& str, double start, double length) {
         return "";
     }
 
-    size_t startCharIndex = static_cast<size_t>(lower);
-    size_t endCharIndex = (upper > std::numeric_limits<size_t>::max())
-                              ? std::numeric_limits<size_t>::max()
-                              : static_cast<size_t>(upper);
+    std::size_t startCharIndex = static_cast<size_t>(lower);
+    std::size_t endCharIndex = (upper > std::numeric_limits<size_t>::max())
+                                   ? std::numeric_limits<size_t>::max()
+                                   : static_cast<size_t>(upper);
 
     parser::StringCursor cursor(str);
-    size_t currentChar = 1;
+    std::size_t currentChar = 1;
 
     // Advance cursor to the start character position
     while (!cursor.isEOF() && currentChar < startCharIndex) {
@@ -277,7 +277,7 @@ std::string translate(const std::string& str1, const std::string& str2,
     // An empty std::string_view represents character deletion.
     std::unordered_map<uint32_t, std::string_view> map;
     parser::StringCursor c2(str2);
-    size_t charIndex = 0;
+    std::size_t charIndex = 0;
 
     while (!c2.isEOF()) {
         uint32_t codepoint = text::getUnicodeCodepoint(c2);

@@ -13,7 +13,7 @@ bool startsStep(const Lexer::Token& t) {
            t.getType() == Lexer::TokenType::NODE_TYPE;
 }
 
-bool Parser::requireToken(Lexer::TokenType t, size_t relPos) {
+bool Parser::requireToken(Lexer::TokenType t, std::size_t relPos) {
     if (pos + relPos >= tokens.size()) {
         throw std::runtime_error("Unexpected end of token list");
     }

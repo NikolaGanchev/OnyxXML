@@ -1,7 +1,7 @@
 #include "nodes/attribute_view_node.h"
 
 namespace onyx::dynamic::xpath {
-AttributeViewNode::AttributeViewNode(Node* owner, size_t index)
+AttributeViewNode::AttributeViewNode(Node* owner, std::size_t index)
     : Node{}, owner{owner}, index{index} {
     this->parent = owner;
 }

@@ -20,11 +20,12 @@ struct CompileStringUtils {
      * @param arr The array
      * @param str The string
      * @param index The starting index
-     * @return size_t The next free index
+     * @return std::size_t The next free index
      */
     template <size_t N>
-    static consteval size_t placeStringInArray(std::array<char, N>& arr,
-                                               const char* str, size_t index) {
+    static consteval std::size_t placeStringInArray(std::array<char, N>& arr,
+                                                    const char* str,
+                                                    std::size_t index) {
         for (size_t i = 0; i < std::string_view(str).size(); i++) {
             arr[index + i] = str[i];
         }
@@ -37,9 +38,9 @@ struct CompileStringUtils {
      * its context starting from index. Sets end to the next free index for
      * writing.
      *
-     * @return size_t The next free index
+     * @return std::size_t The next free index
      */
-    template <size_t ContentSize, size_t PlaceholderCount>
+    template <size_t ContentSize, std::size_t PlaceholderCount>
     static consteval void placeStringInEvaluatedDocument(
         EvaluatedDocument<ContentSize, PlaceholderCount>& doc,
         const char* str) {

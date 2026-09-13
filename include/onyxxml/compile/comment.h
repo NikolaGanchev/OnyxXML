@@ -21,9 +21,9 @@ struct Comment {
      * @brief The compile-time size of the Comment string. Does not account for
      * '\0'
      *
-     * @return size_t
+     * @return std::size_t
      */
-    static consteval size_t size() {
+    static consteval std::size_t size() {
         return std::string_view(Str.value).size() + 4 +
                3;  // added size for <!-- (4) and --> (3)
     }

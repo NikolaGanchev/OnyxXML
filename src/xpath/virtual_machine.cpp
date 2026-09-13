@@ -16,7 +16,7 @@ namespace onyx::dynamic::xpath {
 VirtualMachine::VirtualMachine(std::unique_ptr<Program> program)
     : program{std::move(program)} {}
 
-size_t jump(size_t address, const size_t instructionsSize) {
+size_t jump(size_t address, const std::size_t instructionsSize) {
     if (address >= instructionsSize) {
         throw std::runtime_error("Instruction address out of bounds");
     }
@@ -55,7 +55,7 @@ Node* VirtualMachine::DocumentRoot::getXPathRoot() { return this->xpathRoot; }
 void VirtualMachine::DocumentOrder::buildIndex(Node* root) {
     if (!documentOrderList.empty()) return;
 
-    size_t idx = 0;
+    std::size_t idx = 0;
     root->iterativeProcessor([&idx, this](Node* obj) -> void {
         this->documentOrderList.push_back(obj);
         this->documentOrderMap[obj] = idx++;

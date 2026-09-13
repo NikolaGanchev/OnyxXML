@@ -53,20 +53,20 @@ struct StreamCursor {
      * @brief The pointer to the position in the buffer
      *
      */
-    size_t pos;
+    std::size_t pos;
 
     /**
      * @brief The position of the captured index
      *
      */
-    size_t captured;
+    std::size_t captured;
 
     /**
      * @brief Specifies what is the maximum byte value at which
      * the internal buffer must make space by erasing old data. To facilitate
      * erases, the buffer may hold twice that number of bytes.
      */
-    size_t bufferThreshold;
+    std::size_t bufferThreshold;
 
     /**
      * @brief Construct a new StreamCursor object
@@ -75,7 +75,7 @@ struct StreamCursor {
      * @param inputEncoding The encoding of the stream
      * @param bufferThreshold The threshold for clearing old data
      */
-    StreamCursor(std::istream& is, size_t bufferThreshold = 4096)
+    StreamCursor(std::istream& is, std::size_t bufferThreshold = 4096)
         : pos(0),
           captured(0),
           buf(is.rdbuf()),
@@ -123,13 +123,13 @@ struct StreamCursor {
                 }
 
                 char* inbuf = rawBuffer.data();
-                size_t inbytesLeft = rawBuffer.size();
+                std::size_t inbytesLeft = rawBuffer.size();
 
                 char outChunk[32];
                 char* outbuf = outChunk;
-                size_t outbytesLeft = sizeof(outChunk);
+                std::size_t outbytesLeft = sizeof(outChunk);
 
-                size_t res =
+                std::size_t res =
                     iconv(cd, &inbuf, &inbytesLeft, &outbuf, &outbytesLeft);
 
                 if (res == (size_t)-1) {
@@ -146,12 +146,12 @@ struct StreamCursor {
                     }
                 }
 
-                size_t converted = sizeof(outChunk) - outbytesLeft;
+                std::size_t converted = sizeof(outChunk) - outbytesLeft;
                 if (converted > 0) {
                     buffer.insert(buffer.end(), outChunk, outChunk + converted);
                 }
 
-                size_t consumed = rawBuffer.size() - inbytesLeft;
+                std::size_t consumed = rawBuffer.size() - inbytesLeft;
                 if (consumed > 0) {
                     rawBuffer.erase(rawBuffer.begin(),
                                     rawBuffer.begin() + consumed);
@@ -236,7 +236,7 @@ struct StreamCursor {
     void bringToCapture() {
         pos = captured;
         if (pos >= bufferThreshold) {
-            size_t remaining = buffer.size() - pos;
+            std::size_t remaining = buffer.size() - pos;
 
             if (remaining > 0) {
                 std::memmove(buffer.data(), buffer.data() + pos, remaining);
@@ -362,7 +362,7 @@ struct StreamCursor {
             } else {
                 // We still aren't transcoding, just shift the unconsumed raw
                 // bytes to the front
-                size_t remaining = buffer.size() - pos;
+                std::size_t remaining = buffer.size() - pos;
                 std::memmove(buffer.data(), buffer.data() + pos, remaining);
                 buffer.resize(remaining);
             }
@@ -382,7 +382,7 @@ struct StreamCursor {
         inputEncoding = std::move(newInputEncoding);
 
         if (buffer.size() > pos) {
-            size_t remaining = buffer.size() - pos;
+            std::size_t remaining = buffer.size() - pos;
             std::memmove(buffer.data(), buffer.data() + pos, remaining);
             buffer.resize(remaining);
         } else {

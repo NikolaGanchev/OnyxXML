@@ -47,7 +47,7 @@ class Compiler {
      * of arguments, returns 2.
      *
      */
-    std::unordered_map<std::string_view, std::pair<FUNCTION_CODE, size_t>>
+    std::unordered_map<std::string_view, std::pair<FUNCTION_CODE, std::size_t>>
         functionCache;
 
     /**

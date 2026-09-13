@@ -37,7 +37,7 @@ class Parser {
      * @brief The current positions in the token list.
      *
      */
-    size_t pos;
+    std::size_t pos;
 
     /**
      * @brief Checks if the tokens list has the given token type at an offset
@@ -47,7 +47,7 @@ class Parser {
      * @return true The token with the given token type was found
      * @return false The token was not found
      */
-    bool requireToken(Lexer::TokenType t, size_t relPos);
+    bool requireToken(Lexer::TokenType t, std::size_t relPos);
 
     /**
      * @brief Checks if the current context suggests an operator should be

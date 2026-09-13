@@ -36,10 +36,10 @@ struct Document {
      * @brief The compile-time size of the Document's string. Does not account
      * for '\0';
      *
-     * @return size_t
+     * @return std::size_t
      */
-    static consteval size_t size() {
-        size_t size = 0;
+    static consteval std::size_t size() {
+        std::size_t size = 0;
         ((size += Children::size()), ...);
         return size;
     }

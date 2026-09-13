@@ -225,9 +225,9 @@ void VirtualMachine::collectPreceding(Node* current, AXIS axis,
     ec.root.findRoot(current);
     ec.order.buildIndex(ec.root.getDocumentRoot());
 
-    size_t index = ec.order.documentOrderMap[current];
+    std::size_t index = ec.order.documentOrderMap[current];
 
-    size_t i = index;
+    std::size_t i = index;
     while (i > 0) {
         i--;
         if (nodeMatchesTest(ec.order.documentOrderList[i], axis, uri,
@@ -250,9 +250,9 @@ void VirtualMachine::collectFollowing(Node* current, AXIS axis,
     ec.root.findRoot(current);
     ec.order.buildIndex(ec.root.getDocumentRoot());
 
-    size_t index = ec.order.documentOrderMap[current];
+    std::size_t index = ec.order.documentOrderMap[current];
 
-    size_t i = index + 1;
+    std::size_t i = index + 1;
     while (i < ec.order.documentOrderList.size() &&
            isAncestor(current, ec.order.documentOrderList[i])) {
         i++;

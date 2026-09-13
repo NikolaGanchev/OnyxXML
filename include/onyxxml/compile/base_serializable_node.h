@@ -17,8 +17,9 @@ struct BaseSerializableNode {
      * @return std::size_t
      */
     static consteval std::size_t size() {
-        size_t size = isVoid ? (std::string_view(Name.value).size() + 4)
-                             : (2 * std::string_view(Name.value).size() + 5);
+        std::size_t size = isVoid
+                               ? (std::string_view(Name.value).size() + 4)
+                               : (2 * std::string_view(Name.value).size() + 5);
         ((size += Children::size()), ...);
         return size;
     }

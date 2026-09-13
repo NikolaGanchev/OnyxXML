@@ -30,8 +30,8 @@ class PagedArena {
      */
     struct Page {
         std::unique_ptr<char[]> buffer;
-        size_t capacity;
-        size_t position;
+        std::size_t capacity;
+        std::size_t position;
 
         /**
          * @brief Construct a new Page object
@@ -49,7 +49,7 @@ class PagedArena {
          * @return true
          * @return false
          */
-        bool canAllocate(size_t size, size_t alignment) const;
+        bool canAllocate(size_t size, std::size_t alignment) const;
 
         /**
          * @brief Allocates a portion of the buffer.
@@ -58,7 +58,7 @@ class PagedArena {
          * @param alignment
          * @return char*
          */
-        char* allocateRaw(size_t size, size_t alignment);
+        char* allocateRaw(size_t size, std::size_t alignment);
     };
 
     /**
@@ -74,7 +74,7 @@ class PagedArena {
     /**
      * @brief The default size for new pages.
      */
-    size_t pageSize;
+    std::size_t pageSize;
 
     /**
      * @brief Pointer to the active page.
@@ -144,11 +144,11 @@ template <typename T, typename... Args>
 T* PagedArena::allocate(Args&&... args)
     requires(isNode<T>)
 {
-    size_t alignment = alignof(T);
-    size_t size = sizeof(T);
+    std::size_t alignment = alignof(T);
+    std::size_t size = sizeof(T);
 
     if (!currentPage || !currentPage->canAllocate(size, alignment)) {
-        size_t required = size + alignment;
+        std::size_t required = size + alignment;
         expand(std::max(this->pageSize, required));
     }
 

@@ -9,6 +9,6 @@ concept isParserConfig = requires {
     { T::validateDuplicateAttributes } -> std::same_as<const bool&>;
     { T::validateNamespacePrefixesResolve } -> std::same_as<const bool&>;
     { T::requireEncoding } -> std::same_as<const bool&>;
-    { T::maxAttributeCount } -> std::same_as<const size_t&>;
+    { T::maxAttributeCount } -> std::same_as<const std::size_t&>;
 };
 }  // namespace onyx::dynamic::parser

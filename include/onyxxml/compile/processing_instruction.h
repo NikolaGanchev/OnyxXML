@@ -21,9 +21,9 @@ struct ProcessingInstruction {
      * not account for
      * '\0'
      *
-     * @return size_t
+     * @return std::size_t
      */
-    static consteval size_t size() {
+    static consteval std::size_t size() {
         return std::string_view(Target.value).size() + 2 +
                std::string_view(Instruction.value).size() + 2 +
                1;  // added size for <? (2), ?> (2) and space between target and

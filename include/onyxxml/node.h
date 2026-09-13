@@ -651,9 +651,9 @@ class Node {
      * @brief Get the children count of the current node. Only counts immediate
      * children.
      *
-     * @return size_t The count of the children.
+     * @return std::size_t The count of the children.
      */
-    size_t getChildrenCount() const;
+    std::size_t getChildrenCount() const;
 
     /**
      * @brief Get all children that have the given "class" attribute value.
@@ -861,24 +861,24 @@ class Node {
      * @brief Returns the count of the nodes in the tree with the current node
      * as the root, counted iteratively.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    size_t size() const;
+    std::size_t size() const;
 
     /**
      * @brief Returns the max depth of the tree, calculated iteratively.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    size_t depth() const;
+    std::size_t depth() const;
 
     /**
      * @brief Returns the leaf count of the tree. Leaves are nodes which have no
      * children.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    size_t leafCount() const;
+    std::size_t leafCount() const;
 
     /**
      * @brief Serializes the tree defined by the current node to an XML string

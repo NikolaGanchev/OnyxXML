@@ -6,13 +6,13 @@ PagedArena::Page::Page(size_t size) : capacity(size), position(0) {
     buffer = std::make_unique<char[]>(size);
 }
 
-bool PagedArena::Page::canAllocate(size_t size, size_t alignment) const {
-    size_t aligned = (position + alignment - 1) & ~(alignment - 1);
+bool PagedArena::Page::canAllocate(size_t size, std::size_t alignment) const {
+    std::size_t aligned = (position + alignment - 1) & ~(alignment - 1);
     return (aligned + size <= capacity);
 }
 
-char* PagedArena::Page::allocateRaw(size_t size, size_t alignment) {
-    size_t aligned = (position + alignment - 1) & ~(alignment - 1);
+char* PagedArena::Page::allocateRaw(size_t size, std::size_t alignment) {
+    std::size_t aligned = (position + alignment - 1) & ~(alignment - 1);
     char* ptr = buffer.get() + aligned;
     position = aligned + size;
     return ptr;

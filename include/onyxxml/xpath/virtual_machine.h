@@ -42,13 +42,13 @@ class VirtualMachine {
          * @brief The index of the context node
          *
          */
-        size_t currentIndex;
+        std::size_t currentIndex;
 
         /**
          * @brief The start address of the loop for automatic returns
          *
          */
-        size_t startAddress;
+        std::size_t startAddress;
 
         /**
          * @brief Nodes that have been added by the CONTEXT_NODE_TEST
@@ -66,9 +66,9 @@ class VirtualMachine {
         /**
          * @brief The size of the current set of nodes
          *
-         * @return size_t
+         * @return std::size_t
          */
-        size_t getContextSize() const { return contextSet.size(); }
+        std::size_t getContextSize() const { return contextSet.size(); }
     };
 
     /**
@@ -110,7 +110,7 @@ class VirtualMachine {
          * @brief Map from Node* to the position in the order list
          *
          */
-        std::unordered_map<Node*, size_t> documentOrderMap{};
+        std::unordered_map<Node*, std::size_t> documentOrderMap{};
         /**
          * @brief The list of the Nodes in document order
          *
@@ -207,7 +207,7 @@ class VirtualMachine {
        public:
         DataStack dataStack;
         std::stack<FrameContext, std::vector<FrameContext>> contextStack;
-        size_t instructionPointer = 0;
+        std::size_t instructionPointer = 0;
         DocumentRoot root;
         DocumentOrder order;
         std::vector<std::unique_ptr<Node>> temporaryNodes;

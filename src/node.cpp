@@ -244,7 +244,7 @@ std::vector<Node*> Node::getChildren() const {
 }
 
 size_t Node::getChildrenCount() const {
-    size_t count = 0;
+    std::size_t count = 0;
 
     this->iterateDirectChildrenReverse(
         [&count](const Node* current) { count++; });
@@ -511,7 +511,7 @@ bool Node::deepEquals(const Node& other) const {
 }
 
 size_t Node::size() const {
-    size_t size = 1;
+    std::size_t size = 1;
     iterativeChildrenParse([&size](Node* cur) -> bool {
         size++;
         return false;
@@ -521,8 +521,8 @@ size_t Node::size() const {
 
 size_t Node::depth() const {
     std::vector<const Node*> s;
-    size_t maxDepth = 0;
-    size_t depth = 0;
+    std::size_t maxDepth = 0;
+    std::size_t depth = 0;
 
     s.emplace_back(this);
 
@@ -553,7 +553,7 @@ size_t Node::depth() const {
 
 size_t Node::leafCount() const {
     std::vector<const Node*> s;
-    size_t leaves = 0;
+    std::size_t leaves = 0;
 
     s.emplace_back(this);
 

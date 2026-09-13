@@ -13,7 +13,7 @@ namespace onyx::dynamic::xpath {
 class AttributeViewNode : public Node {
    private:
     Node* owner;
-    size_t index;
+    std::size_t index;
 
    public:
     /**
@@ -22,7 +22,7 @@ class AttributeViewNode : public Node {
      * @param owner
      * @param index
      */
-    AttributeViewNode(Node* owner, size_t index);
+    AttributeViewNode(Node* owner, std::size_t index);
 
     /**
      * @brief AttributeViewNode move
@@ -81,9 +81,9 @@ class AttributeViewNode : public Node {
      * @brief Get the index at which this Node is in the Attribute structure of
      * the parent
      *
-     * @return size_t
+     * @return std::size_t
      */
-    size_t getAttributeOffset() const;
+    std::size_t getAttributeOffset() const;
 
     /**
      * @brief Get a constant reference to the referenced Attribute
