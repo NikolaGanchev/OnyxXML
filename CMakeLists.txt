@@ -233,6 +233,6 @@ configure_package_config_file(
 )
 
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/OnyxXMLConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/OnyxXMLConfig.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OnyxXML
 )
