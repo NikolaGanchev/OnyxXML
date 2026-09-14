@@ -200,3 +200,66 @@ jobs:
           git add coverage-badge.json
           git commit -m "Update coverage badge data" || echo "No changes to commit"
           git push origin badges --force
+
+  install-test:
+    name: Install and consume via find_package
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+ 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-13 g++-13 libc6-dev doxygen graphviz
+ 
+      - name: Configure CMake
+        env:
+          CC: gcc-13
+          CXX: g++-13
+        run: >
+          cmake -B ${{ github.workspace }}/build-install
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_TESTING=ON
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-prefix
+ 
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build-install --config Release --parallel
+ 
+      - name: Install
+        run: cmake --install ${{ github.workspace }}/build-install --config Release
+ 
+      - name: Scaffold a minimal external consumer
+        run: |
+          mkdir -p ${{ github.workspace }}/consumer
+          cat > ${{ github.workspace }}/consumer/CMakeLists.txt << 'EOF'
+          cmake_minimum_required(VERSION 3.24)
+          project(OnyxXMLConsumer CXX)
+          set(CMAKE_CXX_STANDARD 20)
+          set(CMAKE_CXX_STANDARD_REQUIRED ON)
+          find_package(OnyxXML REQUIRED)
+          add_executable(Consumer main.cpp)
+          target_link_libraries(Consumer PRIVATE OnyxXML::OnyxXML)
+          EOF
+          cat > ${{ github.workspace }}/consumer/main.cpp << 'EOF'
+          #include "onyxxml/onyx.h"
+          #include <cassert>
+          int main() {
+              using namespace onyx::tags;
+              GenericNode root("root", NonVoid, Text("Hello World!"));
+              assert(root.serialize() == "<root>Hello World!</root>");
+              return 0;
+          }
+          EOF
+ 
+      - name: Configure consumer against the installed package
+        run: >
+          cmake -B ${{ github.workspace }}/consumer/build
+          -S ${{ github.workspace }}/consumer
+          -DCMAKE_PREFIX_PATH=${{ github.workspace }}/install-prefix
+ 
+      - name: Build consumer
+        run: cmake --build ${{ github.workspace }}/consumer/build --parallel
+ 
+      - name: Run consumer
+        run: ${{ github.workspace }}/consumer/build/Consumer
