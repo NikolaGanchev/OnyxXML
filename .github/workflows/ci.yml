@@ -263,3 +263,63 @@ jobs:
  
       - name: Run consumer
         run: ${{ github.workspace }}/consumer/build/Consumer
+
+  cmake-fetchcontent-test:
+    name: Consume via CMake FetchContent
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: onyxxml-src
+ 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-13 g++-13 libc6-dev doxygen graphviz
+ 
+      - name: Scaffold a consumer project using FetchContent
+        run: |
+          mkdir -p ${{ github.workspace }}/fc-consumer
+          cat > ${{ github.workspace }}/fc-consumer/CMakeLists.txt << 'EOF'
+          cmake_minimum_required(VERSION 3.24)
+          project(OnyxXMLFetchContent CXX)
+          set(CMAKE_CXX_STANDARD 20)
+          set(CMAKE_CXX_STANDARD_REQUIRED ON)
+ 
+          include(FetchContent)
+          FetchContent_Declare(
+            OnyxXML
+            SOURCE_DIR "${{ github.workspace }}/onyxxml-src"
+          )
+          FetchContent_MakeAvailable(OnyxXML)
+ 
+          include(use_tags_file)
+ 
+          add_executable(Consumer main.cpp)
+          target_link_libraries(Consumer PRIVATE OnyxXML)
+          EOF
+          cat > ${{ github.workspace }}/fc-consumer/main.cpp << 'EOF'
+          #include "onyx.h"
+          #include <cassert>
+          int main() {
+              using namespace onyx::tags;
+              GenericNode root("root", NonVoid, Text("Hello World!"));
+              assert(root.serialize() == "<root>Hello World!</root>");
+              return 0;
+          }
+          EOF
+ 
+      - name: Configure consumer
+        env:
+          CC: gcc-13
+          CXX: g++-13
+        run: >
+          cmake -B ${{ github.workspace }}/fc-consumer/build
+          -S ${{ github.workspace }}/fc-consumer
+ 
+      - name: Build consumer
+        run: cmake --build ${{ github.workspace }}/fc-consumer/build --parallel
+ 
+      - name: Run consumer
+        run: ${{ github.workspace }}/fc-consumer/build/Consumer
