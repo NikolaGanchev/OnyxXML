@@ -4,7 +4,7 @@ project ("OnyxXML" VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project documentation" ON)
+option(ENABLE_DOCUMENTATION "Specifies whether to enable building the project documentation" OFF)
 option(OnyxXML_USE_ICONV "Enable Iconv support" OFF)
 option(OnyxXML_COVERAGE "Enable coverage reporting" OFF)
 
