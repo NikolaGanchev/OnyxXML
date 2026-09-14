@@ -3,7 +3,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "parse/string_cursor.h"
+#include "onyxxml/parse/string_cursor.h"
 
 namespace onyx::dynamic::xpath {
 class Parser;

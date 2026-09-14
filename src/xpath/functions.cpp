@@ -6,6 +6,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <variant>
 
 #include "attribute.h"
@@ -15,6 +16,7 @@
 #include "nodes/processing_instruction_node.h"
 #include "parse/helpers.h"
 #include "parse/string_cursor.h"
+
 
 namespace onyx::dynamic::xpath::functions {
 

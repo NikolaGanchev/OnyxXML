@@ -1,8 +1,9 @@
 #pragma once
 
+#include <functional>
 #include <string_view>
 
-#include "virtual_machine.h"
+#include "onyxxml/xpath/virtual_machine.h"
 
 
 namespace onyx::dynamic::xpath {

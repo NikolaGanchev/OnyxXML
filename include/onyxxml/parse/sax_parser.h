@@ -3,7 +3,7 @@
 #include <istream>
 #include <vector>
 
-#include "attribute.h"
+#include "onyxxml/attribute.h"
 
 namespace onyx::dynamic::parser {
 /**

@@ -5,10 +5,10 @@
 #include <string>
 #include <string_view>
 
-#include "../attribute.h"
-#include "compile_string.h"
-#include "compile_string_utils.h"
-#include "evaluated_document.h"
+#include "onyxxml/attribute.h"
+#include "onyxxml/compile/compile_string.h"
+#include "onyxxml/compile/compile_string_utils.h"
+#include "onyxxml/compile/evaluated_document.h"
 
 namespace onyx::compile::ctags {
 /**

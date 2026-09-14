@@ -8,12 +8,11 @@
 #include <utility>
 #include <vector>
 
-#include "helpers.h"
-#include "is_cursor.h"
-#include "is_parse_policy.h"
-#include "is_parser_config.h"
-#include "parse/helpers.h"
-#include "text_transformation_mode.h"
+#include "onyxxml/parse/helpers.h"
+#include "onyxxml/parse/is_cursor.h"
+#include "onyxxml/parse/is_parse_policy.h"
+#include "onyxxml/parse/is_parser_config.h"
+#include "onyxxml/parse/text_transformation_mode.h"
 
 namespace onyx::dynamic::parser {
 

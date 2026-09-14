@@ -1,13 +1,10 @@
 #pragma once
 
-#include <array>
 #include <string>
-#include <string_view>
 
-#include "attribute.h"
-#include "compile_string.h"
-#include "compile_string_utils.h"
-#include "node.h"
+#include "onyxxml/attribute.h"
+#include "onyxxml/compile/compile_string_utils.h"
+#include "onyxxml/node.h"
 
 namespace onyx::compile {
 

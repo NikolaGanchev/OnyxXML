@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "instruction.h"
-#include "xpath_object.h"
+#include "onyxxml/xpath/instruction.h"
+#include "onyxxml/xpath/xpath_object.h"
 
 namespace onyx::dynamic::xpath {
 /**

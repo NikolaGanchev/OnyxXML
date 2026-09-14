@@ -1,7 +1,7 @@
 #pragma once
 
-#include "base_parser_policy.h"
-#include "parse/helpers.h"
+#include "onyxxml/parse/base_parser_policy.h"
+#include "onyxxml/parse/helpers.h"
 
 namespace onyx::dynamic::parser {
 template <typename _CursorType, typename _StringType, typename _StackType,

@@ -1,16 +1,16 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <stack>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 
-#include "axis.h"
-#include "calculate_mode.h"
-#include "compare_mode.h"
-#include "function_code.h"
-#include "program.h"
-#include "xpath_object.h"
+#include "onyxxml/xpath/axis.h"
+#include "onyxxml/xpath/function_code.h"
+#include "onyxxml/xpath/program.h"
+#include "onyxxml/xpath/xpath_object.h"
 
 namespace onyx::dynamic::xpath {
 /**

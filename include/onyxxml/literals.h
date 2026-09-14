@@ -2,9 +2,9 @@
 
 #include <string_view>
 
-#include "./nodes/text_node.h"
-#include "attribute.h"
-#include "compile/compile_string.h"
+#include "onyxxml/attribute.h"
+#include "onyxxml/compile/compile_string.h"
+#include "onyxxml/nodes/text_node.h"
 
 namespace onyx::dynamic::tags::literals {
 

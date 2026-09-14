@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include "compile/attribute.h"
-#include "compile/evaluated_document.h"
-#include "node.h"
-#include "nodes/empty_node.h"
+#include "onyxxml/compile/attribute.h"
+#include "onyxxml/compile/evaluated_document.h"
+#include "onyxxml/node.h"
+#include "onyxxml/nodes/empty_node.h"
 
 #define RAW_XML(...) std::string(#__VA_ARGS__)
 

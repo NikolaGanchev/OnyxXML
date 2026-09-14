@@ -2,9 +2,8 @@
 
 #include <string_view>
 
-#include "../nodes/generic_node.h"
-#include "compile_string.h"
-#include "document_utils.h"
+#include "onyxxml/compile/compile_string.h"
+#include "onyxxml/compile/document_utils.h"
 
 namespace onyx::compile::ctags {
 

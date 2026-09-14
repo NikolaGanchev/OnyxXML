@@ -1,8 +1,9 @@
 #pragma once
 #include <concepts>
 #include <cstddef>
+#include <functional>
 
-#include "../node.h"
+#include "onyxxml/node.h"
 
 namespace onyx::dynamic::tags {
 

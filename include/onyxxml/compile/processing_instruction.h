@@ -4,9 +4,10 @@
 #include <string>
 #include <string_view>
 
-#include "../nodes/processing_instruction_node.h"
-#include "compile_string.h"
-#include "compile_string_utils.h"
+#include "onyxxml/compile/compile_string.h"
+#include "onyxxml/compile/compile_string_utils.h"
+#include "onyxxml/nodes/processing_instruction_node.h"
+
 
 namespace onyx::compile::ctags {
 /**

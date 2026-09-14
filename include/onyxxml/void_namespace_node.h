@@ -1,7 +1,7 @@
 #pragma once
 
-#include "namespace_node.h"
-#include "node.h"
+#include "onyxxml/namespace_node.h"
+#include "onyxxml/node.h"
 
 namespace onyx::dynamic {
 

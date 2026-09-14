@@ -4,18 +4,16 @@
 #include <cstdint>
 #include <cstring>
 #include <forward_list>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
 
-#include "attribute.h"
-#include "node_handle.h"
+#include "onyxxml/attribute.h"
+#include "onyxxml/node_handle.h"
 
 namespace onyx::dynamic {
 class Node;

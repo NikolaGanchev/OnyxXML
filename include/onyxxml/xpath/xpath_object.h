@@ -7,7 +7,7 @@
 #include <variant>
 #include <vector>
 
-#include "../node.h"
+#include "onyxxml/node.h"
 
 namespace onyx::dynamic::xpath {
 /**

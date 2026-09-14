@@ -2,10 +2,10 @@
 
 #include <istream>
 
-#include "../arena.h"
-#include "../node.h"
-#include "../paged_arena.h"
-#include "parse/encoding_string_state.h"
+#include "onyxxml/arena.h"
+#include "onyxxml/node.h"
+#include "onyxxml/paged_arena.h"
+#include "onyxxml/parse/encoding_string_state.h"
 
 namespace onyx::dynamic::parser {
 class DomParser;

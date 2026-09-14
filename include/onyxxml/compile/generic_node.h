@@ -4,11 +4,11 @@
 #include <string>
 #include <string_view>
 
-#include "../nodes/generic_node.h"
-#include "base_serializable_node.h"
-#include "compile_string.h"
-#include "compile_string_utils.h"
-#include "document_utils.h"
+#include "onyxxml/compile/base_serializable_node.h"
+#include "onyxxml/compile/compile_string.h"
+#include "onyxxml/compile/document_utils.h"
+#include "onyxxml/nodes/generic_node.h"
+
 
 namespace onyx::compile::ctags {
 

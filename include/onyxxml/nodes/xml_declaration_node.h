@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../node.h"
-#include "processing_instruction_node.h"
+#include "onyxxml/node.h"
+#include "onyxxml/nodes/processing_instruction_node.h"
 
 namespace onyx::dynamic::tags {
 

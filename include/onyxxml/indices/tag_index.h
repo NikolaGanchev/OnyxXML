@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-#include "../index.h"
+#include "onyxxml/index.h"
 
 namespace onyx::dynamic::index {
 

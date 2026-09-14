@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
 
-#include "../node.h"
-#include "xpath_object.h"
+#include "onyxxml/node.h"
+#include "onyxxml/xpath/xpath_object.h"
 
 namespace onyx::dynamic::xpath::functions {
 using XPathObject = onyx::dynamic::xpath::XPathObject;

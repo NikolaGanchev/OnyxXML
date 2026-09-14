@@ -3,7 +3,7 @@
 #include <memory>
 #include <stack>
 
-#include "lexer.h"
+#include "onyxxml/xpath/lexer.h"
 
 namespace onyx::dynamic::xpath {
 /**

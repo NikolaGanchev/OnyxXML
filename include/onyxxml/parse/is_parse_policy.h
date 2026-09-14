@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 
-#include "text_transformation_mode.h"
+#include "onyxxml/parse/text_transformation_mode.h"
 
 namespace onyx::dynamic::parser {
 template <typename T>

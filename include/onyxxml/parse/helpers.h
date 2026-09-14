@@ -4,8 +4,9 @@
 #include <optional>
 #include <utility>
 
-#include "../text.h"
-#include "is_cursor.h"
+#include "onyxxml/parse/is_cursor.h"
+#include "onyxxml/text.h"
+
 
 #if defined(_MSC_VER)
 #define ONYX_NOINLINE __declspec(noinline)

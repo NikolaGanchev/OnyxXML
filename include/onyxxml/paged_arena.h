@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "node.h"
+#include "onyxxml/node.h"
 
 namespace onyx::dynamic {
 

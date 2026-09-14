@@ -7,8 +7,8 @@
 #include <stdexcept>
 #include <utility>
 
-#include "node.h"
-#include "parse/is_cursor.h"
+#include "onyxxml/node.h"
+#include "onyxxml/parse/is_cursor.h"
 
 namespace onyx::dynamic {
 namespace text {

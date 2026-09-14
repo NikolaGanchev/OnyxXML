@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../namespace_node.h"
-#include "util/qualified_name_view.h"
+#include "onyxxml/namespace_node.h"
+#include "onyxxml/nodes/util/qualified_name_view.h"
 
 namespace onyx::dynamic::tags {
 

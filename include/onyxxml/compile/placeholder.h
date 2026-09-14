@@ -1,17 +1,13 @@
 #pragma once
 
 #include <array>
-#include <concepts>
 #include <stdexcept>
-#include <string>
 #include <string_view>
 
-#include "../nodes/empty_node.h"
-#include "../nodes/generic_node.h"
-#include "compile/placeholder_info.h"
-#include "compile_string.h"
-#include "compile_string_utils.h"
-#include "document_utils.h"
+#include "onyxxml/compile/compile_string.h"
+#include "onyxxml/compile/compile_string_utils.h"
+#include "onyxxml/compile/placeholder_info.h"
+
 
 namespace onyx::compile::ctags {
 

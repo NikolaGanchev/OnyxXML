@@ -1,11 +1,13 @@
 #pragma once
 
+#include <functional>
 #include <memory>
+#include <unordered_map>
 
-#include "parser.h"
-#include "program.h"
-#include "xpath/axis.h"
-#include "xpath/function_code.h"
+#include "onyxxml/xpath/axis.h"
+#include "onyxxml/xpath/function_code.h"
+#include "onyxxml/xpath/parser.h"
+#include "onyxxml/xpath/program.h"
 
 namespace onyx::dynamic::xpath {
 /**

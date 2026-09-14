@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <stdexcept>
 
 namespace onyx::dynamic {
 class Node;

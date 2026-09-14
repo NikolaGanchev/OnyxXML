@@ -4,8 +4,8 @@
 #include <string>
 #include <string_view>
 
-#include "compile_string.h"
-#include "placeholder_info.h"
+#include "onyxxml/compile/compile_string.h"
+#include "onyxxml/compile/placeholder_info.h"
 
 namespace onyx::compile {
 

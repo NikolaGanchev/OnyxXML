@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-#include "text.h"
+#include "onyxxml/text.h"
 
 namespace onyx::dynamic::parser {
 /**

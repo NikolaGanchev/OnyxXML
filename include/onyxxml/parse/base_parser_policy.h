@@ -1,6 +1,7 @@
 #pragma once
 
-#include "parse/helpers.h"
+#include "onyxxml/parse/helpers.h"
+
 namespace onyx::dynamic::parser {
 
 template <typename _CursorType, typename _StringType, typename _StackType,

@@ -3,7 +3,7 @@
 #include <array>
 #include <string_view>
 
-#include "evaluated_document.h"
+#include "onyxxml/compile/evaluated_document.h"
 
 namespace onyx::compile {
 

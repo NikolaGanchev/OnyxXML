@@ -1,11 +1,11 @@
 #pragma once
 #include <string_view>
 
-#include "axis.h"
-#include "calculate_mode.h"
-#include "compare_mode.h"
-#include "function_code.h"
-#include "opcode.h"
+#include "onyxxml/xpath/axis.h"
+#include "onyxxml/xpath/calculate_mode.h"
+#include "onyxxml/xpath/compare_mode.h"
+#include "onyxxml/xpath/function_code.h"
+#include "onyxxml/xpath/opcode.h"
 
 namespace onyx::dynamic::xpath {
 
