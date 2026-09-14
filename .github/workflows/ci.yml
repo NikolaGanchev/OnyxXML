@@ -300,7 +300,7 @@ jobs:
           target_link_libraries(Consumer PRIVATE OnyxXML)
           EOF
           cat > ${{ github.workspace }}/fc-consumer/main.cpp << 'EOF'
-          #include "onyx.h"
+          #include "onyxxml/onyx.h"
           #include <cassert>
           int main() {
               using namespace onyx::tags;
