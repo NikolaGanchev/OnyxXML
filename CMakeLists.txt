@@ -222,6 +222,15 @@ install(FILES
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OnyxXML/scripts
 )
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/OnyxXMLConfig.cmake
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/OnyxXMLConfig.cmake.in"	
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/OnyxXMLConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OnyxXML
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/OnyxXMLConfig.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OnyxXML
 )
