@@ -497,7 +497,6 @@ Users that wish to set up a custom frontend should skip to [Creating a custom fr
 #### DOM Parser
 
 ```cpp
-#include "dom_parser.h"
 ParseResult document = DomParser::parse(xmlString);
 ```
 
